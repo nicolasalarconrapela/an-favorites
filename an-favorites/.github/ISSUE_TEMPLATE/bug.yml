@@ -1,0 +1,17 @@
+name: Bug report
+description: Reporta un problema
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Descripción
+      description: ¿Qué pasó?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducir
+    validations:
+      required: true

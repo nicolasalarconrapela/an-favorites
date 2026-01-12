@@ -1,0 +1,65 @@
+{
+  "name": "yes",
+  "displayName": "AnFavorites",
+  "description": "Application for managing favorites",
+  "version": "0.1.0",
+  "publisher": "anappwilos",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onCommand:anfavorites.hello"
+    ,
+    "onCommand:anfavorites.openWebview"
+    
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "anfavorites.hello",
+        "title": "AnFavorites: Hello"
+      }
+      ,
+      {
+        "command": "anfavorites.openWebview",
+        "title": "AnFavorites: Open Webview"
+      }
+      
+    ],
+    "configuration": {
+      "title": "AnFavorites",
+      "properties": {
+        "anfavorites.enableGreeting": {
+          "type": "boolean",
+          "default": true,
+          "description": "Habilita el saludo."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --check .",
+    "format:write": "prettier --write .",
+    "build": "node scripts/build.js",
+    "compile-tests": "tsc -p test/tsconfig.json",
+    "test": "npm run compile-tests && node ./out/test/runTest.js",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.11.30",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^7.3.1",
+    "@typescript-eslint/parser": "^7.3.1",
+    "@vscode/test-electron": "^2.3.9",
+    "esbuild": "^0.20.2",
+    "eslint": "^8.57.0",
+    "mocha": "^10.3.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.2",
+    "vsce": "^2.15.0"
+  }
+}

@@ -1,0 +1,11 @@
+**/*.ts
+**/*.map
+**/*.test.ts
+node_modules
+out
+dist
+.vscode
+.gitignore
+.eslintrc.cjs
+.prettierrc.json
+.editorconfig
