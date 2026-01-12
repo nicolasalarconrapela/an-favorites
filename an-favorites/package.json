@@ -9,24 +9,28 @@
   },
   "categories": ["Other"],
   "activationEvents": [
-    "onCommand:anfavorites.hello"
-    ,
+    "onCommand:anfavorites.hello",
     "onCommand:anfavorites.openWebview"
-    
   ],
   "main": "./dist/extension.js",
+
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
+
   "contributes": {
     "commands": [
       {
         "command": "anfavorites.hello",
         "title": "AnFavorites: Hello"
-      }
-      ,
+      },
       {
         "command": "anfavorites.openWebview",
         "title": "AnFavorites: Open Webview"
       }
-      
     ],
     "configuration": {
       "title": "AnFavorites",
@@ -39,27 +43,31 @@
       }
     }
   },
+
   "scripts": {
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint .",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
-    "build": "node scripts/build.js",
+    "compile": "node scripts/esbuild.js",
+    "watch": "node scripts/esbuild.js --watch",
     "compile-tests": "tsc -p test/tsconfig.json",
     "test": "npm run compile-tests && node ./out/test/runTest.js",
+    "prepublishOnly": "npm run lint && npm run test && npm run compile",
     "package": "vsce package --no-dependencies"
   },
+
   "devDependencies": {
     "@types/mocha": "^10.0.6",
-    "@types/node": "^20.11.30",
+    "@types/node": "^25.0.6",
     "@types/vscode": "^1.85.0",
-    "@typescript-eslint/eslint-plugin": "^7.3.1",
-    "@typescript-eslint/parser": "^7.3.1",
-    "@vscode/test-electron": "^2.3.9",
-    "esbuild": "^0.20.2",
-    "eslint": "^8.57.0",
-    "mocha": "^10.3.0",
-    "prettier": "^3.2.5",
-    "typescript": "^5.4.2",
-    "vsce": "^2.15.0"
+    "@typescript-eslint/eslint-plugin": "^8.52.0",
+    "@typescript-eslint/parser": "^8.52.0",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.7.1",
+    "esbuild": "^0.27.2",
+    "eslint": "^9.39.2",
+    "mocha": "^11.7.5",
+    "prettier": "^3.7.4",
+    "typescript": "^5.9.3"
   }
 }
