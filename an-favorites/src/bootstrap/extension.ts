@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-
 import { createAppLogger } from '../logging/loggingModule';
 import { registerHelloCommand } from '../commands/helloCommand';
 import { registerWebviewCommand } from '../commands/webviewCommand';
@@ -7,10 +6,12 @@ import { registerShowLogsCommand } from '../commands/showLogsCommand';
 import { registerAddToFavoritesCommand } from '../commands/addToFavoritesCommand';
 import { registerRemoveFromFavoritesCommand } from '../commands/removeFromFavoritesCommand';
 import { registerManageCategoriesCommands } from '../commands/manageCategoriesCommand';
+import { registerQuickOpenCommand } from '../commands/quickOpenCommand';
 import { loadSettings } from '../config/settings';
 import { HelloService } from '../services/helloService';
 import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
+import { MRUService } from '../services/mruService';
 
 export function activate(context: vscode.ExtensionContext): void {
   const logger = createAppLogger(context, {
@@ -25,6 +26,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const settings = loadSettings();
   const helloService = new HelloService();
   const telemetry = new TelemetryService();
+  const mruService = new MRUService(context);
 
   // Registrar comandos existentes
   registerHelloCommand(context, helloService, logger, settings);
@@ -43,6 +45,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerAddToFavoritesCommand(context, favoritesProvider, logger);
   registerRemoveFromFavoritesCommand(context, favoritesProvider, logger);
   registerManageCategoriesCommands(context, favoritesProvider, logger);
+  registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
 
   telemetry.track('activated');
   logger.info('━━━ Extension activation completed successfully ━━━');
