@@ -9,8 +9,16 @@ export class VsCodeLogger implements Logger {
     this.channel = vscode.window.createOutputChannel(channelName);
   }
 
+  debug(message: string): void {
+    this.channel.appendLine(`[debug] ${message}`);
+  }
+
   info(message: string): void {
     this.channel.appendLine(`[info] ${message}`);
+  }
+
+  warn(message: string): void {
+    this.channel.appendLine(`[warn] ${message}`);
   }
 
   error(message: string, error?: Error): void {
@@ -19,4 +27,9 @@ export class VsCodeLogger implements Logger {
       this.channel.appendLine(error.stack ?? error.message);
     }
   }
+
+  dispose(): void {
+    this.channel.dispose();
+  }
 }
+
