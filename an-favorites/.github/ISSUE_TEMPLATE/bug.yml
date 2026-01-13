@@ -1,17 +1,17 @@
 name: Bug report
-description: Reporta un problema
+description: Report a problem
 labels: [bug]
 body:
   - type: textarea
     id: description
     attributes:
-      label: Descripción
-      description: ¿Qué pasó?
+      label: Description
+      description: What happened?
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
-      label: Pasos para reproducir
+      label: Steps to reproduce
     validations:
       required: true

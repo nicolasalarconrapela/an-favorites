@@ -1,16 +1,16 @@
 name: Feature request
-description: Solicita una mejora
+description: Suggest an improvement or new idea
 labels: [enhancement]
 body:
   - type: textarea
     id: problem
     attributes:
-      label: Problema
+      label: Problem
     validations:
       required: true
   - type: textarea
     id: solution
     attributes:
-      label: Solución propuesta
+      label: Suggested solution
     validations:
       required: true
