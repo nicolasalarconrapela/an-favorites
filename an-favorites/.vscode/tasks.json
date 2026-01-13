@@ -5,31 +5,14 @@
       "label": "watch",
       "type": "shell",
       "command": "npm",
-      "args": ["run", "watch"],
-      "isBackground": true,
-      "problemMatcher": [
-        {
-          "owner": "esbuild",
-          "pattern": [
-            {
-              "regexp": "^(.*)$",
-              "message": 1
-            }
-          ],
-          "background": {
-            "activeOnStart": true,
-            "beginsPattern": "\\[esbuild\\] watching",
-            "endsPattern": "watching"
-          }
-        }
-      ]
-    },
-    {
-      "label": "build",
-      "type": "shell",
-      "command": "npm",
-      "args": ["run", "compile"],
-      "problemMatcher": []
+      "args": [
+        "run",
+        "compile",
+        "--loglevel",
+        "verbose"
+      ],
+      "isBackground": false,
+      "problemMatcher": "$tsc"
     }
   ]
 }
