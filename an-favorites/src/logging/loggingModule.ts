@@ -14,6 +14,13 @@ const LEVEL_PRIORITY: Record<InternalLogLevel, number> = {
   error: 40,
 };
 
+interface LogEntry {
+  timestamp: string;
+  level: LogLevel;
+  message: string;
+  metadata?: unknown;
+}
+
 interface LoggingModuleOptions extends LoggerOptions {
   /**
    * Establece el nivel mínimo de logs que se escribirán.
@@ -26,8 +33,8 @@ interface LoggingModuleOptions extends LoggerOptions {
    */
   channelName?: string;
   /**
-   * Nombre del archivo de log.
-   * Por defecto: extension.log.
+   * Nombre base del archivo de log (sin extensión).
+   * Por defecto: extension.
    */
   logFileName?: string;
   /**
@@ -39,13 +46,20 @@ interface LoggingModuleOptions extends LoggerOptions {
 
 export class LoggingModule implements Logger {
   private readonly channel: vscode.OutputChannel;
-  private readonly logFilePath: string;
+  private readonly logFilePathTxt: string;
+  private readonly logFilePathJson: string;
   private readonly maxFileSizeBytes: number;
   private level: InternalLogLevel;
 
-  private constructor(channel: vscode.OutputChannel, logFilePath: string, options: LoggingModuleOptions) {
+  private constructor(
+    channel: vscode.OutputChannel,
+    logFilePathTxt: string,
+    logFilePathJson: string,
+    options: LoggingModuleOptions,
+  ) {
     this.channel = channel;
-    this.logFilePath = logFilePath;
+    this.logFilePathTxt = logFilePathTxt;
+    this.logFilePathJson = logFilePathJson;
     this.maxFileSizeBytes = options.maxFileSizeBytes ?? 5 * 1024 * 1024;
     this.level = options.level ?? 'info';
 
@@ -56,10 +70,11 @@ export class LoggingModule implements Logger {
     const channelName = options.channelName ?? 'AnFavorites';
     const channel = vscode.window.createOutputChannel(channelName);
     const baseLogDir = path.join(context.logUri.fsPath, 'anfavorites');
-    const logFileName = options.logFileName ?? 'extension.log';
-    const logFilePath = path.join(baseLogDir, logFileName);
+    const logFileNameBase = options.logFileName ?? 'extension';
+    const logFilePathTxt = path.join(baseLogDir, `${logFileNameBase}.txt`);
+    const logFilePathJson = path.join(baseLogDir, `${logFileNameBase}.json`);
 
-    return new LoggingModule(channel, logFilePath, options);
+    return new LoggingModule(channel, logFilePathTxt, logFilePathJson, options);
   }
 
   setLevel(level: LogLevel): void {
@@ -98,11 +113,19 @@ export class LoggingModule implements Logger {
     }
 
     const timestamp = new Date().toISOString();
+    const logEntry: LogEntry = {
+      timestamp,
+      level,
+      message,
+      metadata,
+    };
+
     const serializedMetadata = metadata !== undefined ? ` ${this.serializeMetadata(metadata)}` : '';
     const line = `[${timestamp}] [${level}] ${message}${serializedMetadata}`;
 
     this.appendToChannel(level, line);
-    this.appendToFile(line);
+    this.appendToFileTxt(line);
+    this.appendToFileJson(logEntry);
   }
 
   private appendToChannel(level: LogLevel, line: string): void {
@@ -113,32 +136,44 @@ export class LoggingModule implements Logger {
     this.channel.appendLine(`[${level}] ${line}`);
   }
 
-  private appendToFile(line: string): void {
+  private appendToFileTxt(line: string): void {
     try {
-      this.rotateIfNeeded();
-      fs.appendFileSync(this.logFilePath, `${line}\n`, 'utf8');
+      this.rotateIfNeeded(this.logFilePathTxt);
+      fs.appendFileSync(this.logFilePathTxt, `${line}\n`, 'utf8');
     } catch (err) {
       // Evitar bucle recursivo: no escribimos errores de logging al propio logger,
       // solo informamos en el canal de salida.
-      this.channel.appendLine(`[logger-error] No se pudo escribir en disco: ${String(err)}`);
+      this.channel.appendLine(`[logger-error] No se pudo escribir en archivo TXT: ${String(err)}`);
     }
   }
 
-  private rotateIfNeeded(): void {
+  private appendToFileJson(entry: LogEntry): void {
     try {
-      if (!fs.existsSync(this.logFilePath)) {
+      this.rotateIfNeeded(this.logFilePathJson);
+      const jsonLine = JSON.stringify(entry);
+      fs.appendFileSync(this.logFilePathJson, `${jsonLine}\n`, 'utf8');
+    } catch (err) {
+      // Evitar bucle recursivo: no escribimos errores de logging al propio logger,
+      // solo informamos en el canal de salida.
+      this.channel.appendLine(`[logger-error] No se pudo escribir en archivo JSON: ${String(err)}`);
+    }
+  }
+
+  private rotateIfNeeded(filePath: string): void {
+    try {
+      if (!fs.existsSync(filePath)) {
         return;
       }
 
-      const stats = fs.statSync(this.logFilePath);
+      const stats = fs.statSync(filePath);
       if (stats.size < this.maxFileSizeBytes) {
         return;
       }
 
-      const { dir, name, ext } = path.parse(this.logFilePath);
+      const { dir, name, ext } = path.parse(filePath);
       const timestamp = this.buildTimestamp();
       const rotatedName = `${name}-${timestamp}${ext || '.log'}`;
-      fs.renameSync(this.logFilePath, path.join(dir, rotatedName));
+      fs.renameSync(filePath, path.join(dir, rotatedName));
     } catch (err) {
       this.channel.appendLine(`[logger-error] No se pudo rotar el log: ${String(err)}`);
     }
@@ -161,7 +196,7 @@ export class LoggingModule implements Logger {
   }
 
   private ensureLogDirectory(): void {
-    const dir = path.dirname(this.logFilePath);
+    const dir = path.dirname(this.logFilePathTxt);
     fs.mkdirSync(dir, { recursive: true });
   }
 
