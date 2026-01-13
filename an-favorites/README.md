@@ -2,33 +2,34 @@
 
 Application for managing favorites
 
-## Comandos
+## Commands
 
-- `anfavorites.hello`: muestra un mensaje.
-- `anfavorites.openWebview`: abre un webview.
+- `anfavorites.hello`: shows a message.
+- `anfavorites.openWebview`: opens a webview.
+- `anfavorites.showLogs`: shows the log channel.
 
+## Configuration
 
-## Configuración
+- `anfavorites.enableGreeting`: enable/disable greeting message.
 
-- `anfavorites.enableGreeting`: habilita/deshabilita el saludo.
-
-## Desarrollo rápido
+## Quick Start
 
 ```bash
 npm install
-npm run build
+npm run compile
+npm run watch
 ```
 
-## Estructura
+## Project Structure
 
-- `src/bootstrap`: inicialización.
-- `src/commands`: comandos de VS Code.
-- `src/services`: lógica de negocio.
-- `src/adapters`: integración con VS Code.
+- `src/bootstrap`: application initialization.
+- `src/commands`: VS Code commands.
+- `src/services`: business logic.
+- `src/adapters`: VS Code integration.
 - `src/config`: settings.
-- `src/logging`: logging.
-- `src/types`: tipos compartidos.
+- `src/logging`: logging system.
+- `src/types`: shared types.
 
-## Licencia
+## License
 
 MIT

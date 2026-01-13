@@ -37,24 +37,24 @@ interface LogEntry {
 
 interface LoggingModuleOptions extends LoggerOptions {
   /**
-   * Establece el nivel mínimo de logs que se escribirán.
-   * Por defecto: info.
+   * Sets the minimum log level to be written.
+   * Default: info.
    */
   level?: LogLevel;
   /**
-   * Nombre del canal de salida en VS Code.
-   * Este nombre aparecerá en el panel de Output de VS Code.
-   * Por defecto: "AnFavorites Logs".
+   * Name of the output channel in VS Code.
+   * This name will appear in the VS Code Output panel.
+   * Default: "AnFavorites Logs".
    */
   channelName?: string;
   /**
-   * Nombre base del archivo de log (sin extensión).
-   * Por defecto: extension.
+   * Base name of the log file (without extension).
+   * Default: extension.
    */
   logFileName?: string;
   /**
-   * Tamaño máximo del archivo antes de rotarlo (bytes).
-   * Por defecto: 5 MB.
+   * Maximum file size before rotation (bytes).
+   * Default: 5 MB.
    */
   maxFileSizeBytes?: number;
 }
@@ -95,14 +95,14 @@ export class LoggingModule implements Logger {
 
     const logger = new LoggingModule(channel, logFilePathTxt, logFilePathJson, options);
 
-    // Mensaje de inicio con encoding UTF-8 (esto asegura que haya contenido antes de mostrar)
+    // Startup message with UTF-8 encoding (this ensures content before showing)
     logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     logger.info('📋 Canal de logs AnFavorites iniciado');
     logger.info(`📁 Archivos de log: ${logFilePathTxt} | ${logFilePathJson}`);
     logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-    // Mostrar el canal en el panel de Output después de escribir contenido
-    // Usar setTimeout para asegurar que VS Code procese el contenido primero
+    // Show channel in Output panel after writing content
+    // Use setTimeout to ensure VS Code processes content first
     setTimeout(() => {
       channel.show(false);
     }, 100);
@@ -137,15 +137,15 @@ export class LoggingModule implements Logger {
   }
 
   /**
-   * Muestra el canal de logs en el panel de Output de VS Code.
-   * @param preserveFocus Si es true, no quita el foco del editor actual.
+   * Shows the log channel in the VS Code Output panel.
+   * @param preserveFocus If true, does not remove focus from the current editor.
    */
   show(preserveFocus?: boolean): void {
     this.channel.show(preserveFocus);
   }
 
   /**
-   * Obtiene el nombre del canal de logs.
+   * Gets the name of the log channel.
    */
   getChannelName(): string {
     return this.channel.name;
@@ -182,7 +182,7 @@ export class LoggingModule implements Logger {
     const formattedLine = `${icon} ${colorIndicator} [${level.toUpperCase()}] ${line}`;
     this.channel.appendLine(formattedLine);
 
-    // Mostrar el canal automáticamente para errores y advertencias
+    // Show channel automatically for errors and warnings
     if (level === 'error' || level === 'warn') {
       this.channel.show(false);
     }
@@ -192,14 +192,14 @@ export class LoggingModule implements Logger {
     try {
       this.rotateIfNeeded(this.logFilePathTxt);
 
-      // Asegurar que el archivo tenga BOM UTF-8 si es nuevo
+      // Ensure file has UTF-8 BOM if new
       if (!fs.existsSync(this.logFilePathTxt)) {
         fs.writeFileSync(this.logFilePathTxt, '\uFEFF', 'utf8');
       }
 
       fs.appendFileSync(this.logFilePathTxt, `${line}\n`, { encoding: 'utf8', flag: 'a' });
     } catch (err) {
-      // Evitar bucle recursivo: no escribimos errores de logging al propio logger,
+      // Avoid recursive loop: don't write logging errors to the logger itself,
       // solo informamos en el canal de salida.
       this.channel.appendLine(`❌ [logger-error] No se pudo escribir en archivo TXT: ${String(err)}`);
     }
@@ -209,7 +209,7 @@ export class LoggingModule implements Logger {
     try {
       this.rotateIfNeeded(this.logFilePathJson);
 
-      // Asegurar que el archivo tenga BOM UTF-8 si es nuevo
+      // Ensure file has UTF-8 BOM if new
       if (!fs.existsSync(this.logFilePathJson)) {
         fs.writeFileSync(this.logFilePathJson, '\uFEFF', 'utf8');
       }
@@ -217,7 +217,7 @@ export class LoggingModule implements Logger {
       const jsonLine = JSON.stringify(entry, null, 0);
       fs.appendFileSync(this.logFilePathJson, `${jsonLine}\n`, { encoding: 'utf8', flag: 'a' });
     } catch (err) {
-      // Evitar bucle recursivo: no escribimos errores de logging al propio logger,
+      // Avoid recursive loop: don't write logging errors to the logger itself,
       // solo informamos en el canal de salida.
       this.channel.appendLine(`❌ [logger-error] No se pudo escribir en archivo JSON: ${String(err)}`);
     }

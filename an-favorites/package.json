@@ -41,7 +41,7 @@
         "anfavorites.enableGreeting": {
           "type": "boolean",
           "default": true,
-          "description": "Habilita el saludo."
+          "description": "Enable greeting message."
         }
       }
     }

@@ -1,3 +1,3 @@
-# Seguridad
+# Security
 
-Reporta vulnerabilidades a security@example.org.
+Report security vulnerabilities to anappwilos@gmail.com.

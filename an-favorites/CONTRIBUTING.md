@@ -1,8 +1,8 @@
-# Contribuir
+# Contributing
 
-1. Abre un issue.
-2. Crea un branch.
-3. Envía un PR.
+1. Open an issue.
+2. Create a branch.
+3. Submit a PR.
 
 ## Checks
 

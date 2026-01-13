@@ -1,16 +1,17 @@
-# Desarrollo
+# Development
 
-## Requisitos
+## Requirements
 
 - Node.js 20+
 
 ## Scripts
 
-- `npm run lint`
-- `npm test`
-- `npm run build`
-- `npm run package`
+- `npm run lint` - Run ESLint
+- `npm test` - Run tests
+- `npm run compile` - Compile TypeScript
+- `npm run watch` - Watch mode compilation
+- `npm run package` - Package extension
 
 ## Release
 
-Revisa `docs/RELEASE_CHECKLIST.md` antes de publicar.
+Review `docs/RELEASE_CHECKLIST.md` before publishing.

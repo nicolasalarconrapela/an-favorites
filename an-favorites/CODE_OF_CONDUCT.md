@@ -1,11 +1,11 @@
-# Código de Conducta
+# Code of Conduct
 
-Este proyecto adopta el Contributor Covenant.
+This project adopts the Contributor Covenant.
 
-## Compromiso
+## Commitment
 
-Nos comprometemos a hacer la participación en nuestra comunidad libre de acoso para todos.
+We commit to making participation in our community harassment-free for everyone.
 
-## Aplicación
+## Enforcement
 
-Reporta incidentes a security@example.org.
+Report incidents to security@example.org.
