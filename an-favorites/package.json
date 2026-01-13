@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "publisher": "anappwilos",
   "engines": {
     "vscode": "^1.85.0"
@@ -13,7 +13,7 @@
   "activationEvents": [
     "onStartupFinished"
   ],
-  "main": "./dist/extension.js",
+  "main": "./dist/bootstrap/extension.js",
   "files": [
     "dist/**",
     "README.md",
@@ -41,6 +41,22 @@
       {
         "command": "anfavorites.removeFromFavorites",
         "title": "Eliminar de Favoritos"
+      },
+      {
+        "command": "anfavorites.addCategory",
+        "title": "Nueva Categoría"
+      },
+      {
+        "command": "anfavorites.removeCategory",
+        "title": "Eliminar Categoría"
+      },
+      {
+        "command": "anfavorites.renameCategory",
+        "title": "Renombrar Categoría"
+      },
+      {
+        "command": "anfavorites.moveFavorite",
+        "title": "Mover a Categoría"
       }
     ],
     "views": {
@@ -60,11 +76,33 @@
           "group": "2_workspace@1"
         }
       ],
+      "view/title": [
+        {
+          "command": "anfavorites.addCategory",
+          "when": "view == anfavorites.favoritesView",
+          "group": "navigation"
+        }
+      ],
       "view/item/context": [
         {
           "command": "anfavorites.removeFromFavorites",
           "when": "view == anfavorites.favoritesView && viewItem == favoriteItem",
-          "group": "inline"
+          "group": "favorites@1"
+        },
+        {
+          "command": "anfavorites.moveFavorite",
+          "when": "view == anfavorites.favoritesView && viewItem == favoriteItem",
+          "group": "favorites@2"
+        },
+        {
+          "command": "anfavorites.renameCategory",
+          "when": "view == anfavorites.favoritesView && viewItem == categoryItem",
+          "group": "category@1"
+        },
+        {
+          "command": "anfavorites.removeCategory",
+          "when": "view == anfavorites.favoritesView && viewItem == categoryItem",
+          "group": "category@2"
         }
       ]
     },
