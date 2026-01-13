@@ -9,10 +9,14 @@ import { TelemetryService } from '../services/telemetry';
 
 export function activate(context: vscode.ExtensionContext): void {
   const logger = createAppLogger(context, {
-    channelName: 'AnFavorites',
+    channelName: 'AnFavorites Logs',
     level: 'info',
     maxFileSizeBytes: 5 * 1024 * 1024,
   });
+
+  // Asegurar que el canal se muestre en el panel de Output
+  logger.show(false);
+
   const settings = loadSettings();
   const helloService = new HelloService();
   const telemetry = new TelemetryService();

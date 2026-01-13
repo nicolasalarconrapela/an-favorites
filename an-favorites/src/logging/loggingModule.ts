@@ -14,6 +14,20 @@ const LEVEL_PRIORITY: Record<InternalLogLevel, number> = {
   error: 40,
 };
 
+const LEVEL_ICONS: Record<LogLevel, string> = {
+  debug: '🔍',
+  info: 'ℹ️',
+  warn: '⚠️',
+  error: '❌',
+};
+
+const LEVEL_COLORS: Record<LogLevel, string> = {
+  debug: '🔵',
+  info: '🟢',
+  warn: '🟡',
+  error: '🔴',
+};
+
 interface LogEntry {
   timestamp: string;
   level: LogLevel;
@@ -29,7 +43,8 @@ interface LoggingModuleOptions extends LoggerOptions {
   level?: LogLevel;
   /**
    * Nombre del canal de salida en VS Code.
-   * Por defecto: AnFavorites.
+   * Este nombre aparecerá en el panel de Output de VS Code.
+   * Por defecto: "AnFavorites Logs".
    */
   channelName?: string;
   /**
@@ -67,14 +82,32 @@ export class LoggingModule implements Logger {
   }
 
   static create(context: vscode.ExtensionContext, options: LoggingModuleOptions = {}): LoggingModule {
-    const channelName = options.channelName ?? 'AnFavorites';
+    const channelName = options.channelName ?? 'AnFavorites Logs';
     const channel = vscode.window.createOutputChannel(channelName);
+
+    // Escribir BOM UTF-8 al inicio del canal para asegurar encoding correcto
+    channel.append('\uFEFF');
+
     const baseLogDir = path.join(context.logUri.fsPath, 'anfavorites');
     const logFileNameBase = options.logFileName ?? 'extension';
     const logFilePathTxt = path.join(baseLogDir, `${logFileNameBase}.txt`);
     const logFilePathJson = path.join(baseLogDir, `${logFileNameBase}.json`);
 
-    return new LoggingModule(channel, logFilePathTxt, logFilePathJson, options);
+    const logger = new LoggingModule(channel, logFilePathTxt, logFilePathJson, options);
+
+    // Mensaje de inicio con encoding UTF-8 (esto asegura que haya contenido antes de mostrar)
+    logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    logger.info('📋 Canal de logs AnFavorites iniciado');
+    logger.info(`📁 Archivos de log: ${logFilePathTxt} | ${logFilePathJson}`);
+    logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    // Mostrar el canal en el panel de Output después de escribir contenido
+    // Usar setTimeout para asegurar que VS Code procese el contenido primero
+    setTimeout(() => {
+      channel.show(false);
+    }, 100);
+
+    return logger;
   }
 
   setLevel(level: LogLevel): void {
@@ -103,6 +136,21 @@ export class LoggingModule implements Logger {
     this.write('error', message, metadata);
   }
 
+  /**
+   * Muestra el canal de logs en el panel de Output de VS Code.
+   * @param preserveFocus Si es true, no quita el foco del editor actual.
+   */
+  show(preserveFocus?: boolean): void {
+    this.channel.show(preserveFocus);
+  }
+
+  /**
+   * Obtiene el nombre del canal de logs.
+   */
+  getChannelName(): string {
+    return this.channel.name;
+  }
+
   dispose(): void {
     this.channel.dispose();
   }
@@ -129,33 +177,49 @@ export class LoggingModule implements Logger {
   }
 
   private appendToChannel(level: LogLevel, line: string): void {
-    if (level === 'error') {
-      this.channel.appendLine(`[error] ${line}`);
-      return;
+    const icon = LEVEL_ICONS[level];
+    const colorIndicator = LEVEL_COLORS[level];
+    const formattedLine = `${icon} ${colorIndicator} [${level.toUpperCase()}] ${line}`;
+    this.channel.appendLine(formattedLine);
+
+    // Mostrar el canal automáticamente para errores y advertencias
+    if (level === 'error' || level === 'warn') {
+      this.channel.show(false);
     }
-    this.channel.appendLine(`[${level}] ${line}`);
   }
 
   private appendToFileTxt(line: string): void {
     try {
       this.rotateIfNeeded(this.logFilePathTxt);
-      fs.appendFileSync(this.logFilePathTxt, `${line}\n`, 'utf8');
+
+      // Asegurar que el archivo tenga BOM UTF-8 si es nuevo
+      if (!fs.existsSync(this.logFilePathTxt)) {
+        fs.writeFileSync(this.logFilePathTxt, '\uFEFF', 'utf8');
+      }
+
+      fs.appendFileSync(this.logFilePathTxt, `${line}\n`, { encoding: 'utf8', flag: 'a' });
     } catch (err) {
       // Evitar bucle recursivo: no escribimos errores de logging al propio logger,
       // solo informamos en el canal de salida.
-      this.channel.appendLine(`[logger-error] No se pudo escribir en archivo TXT: ${String(err)}`);
+      this.channel.appendLine(`❌ [logger-error] No se pudo escribir en archivo TXT: ${String(err)}`);
     }
   }
 
   private appendToFileJson(entry: LogEntry): void {
     try {
       this.rotateIfNeeded(this.logFilePathJson);
-      const jsonLine = JSON.stringify(entry);
-      fs.appendFileSync(this.logFilePathJson, `${jsonLine}\n`, 'utf8');
+
+      // Asegurar que el archivo tenga BOM UTF-8 si es nuevo
+      if (!fs.existsSync(this.logFilePathJson)) {
+        fs.writeFileSync(this.logFilePathJson, '\uFEFF', 'utf8');
+      }
+
+      const jsonLine = JSON.stringify(entry, null, 0);
+      fs.appendFileSync(this.logFilePathJson, `${jsonLine}\n`, { encoding: 'utf8', flag: 'a' });
     } catch (err) {
       // Evitar bucle recursivo: no escribimos errores de logging al propio logger,
       // solo informamos en el canal de salida.
-      this.channel.appendLine(`[logger-error] No se pudo escribir en archivo JSON: ${String(err)}`);
+      this.channel.appendLine(`❌ [logger-error] No se pudo escribir en archivo JSON: ${String(err)}`);
     }
   }
 
@@ -175,7 +239,7 @@ export class LoggingModule implements Logger {
       const rotatedName = `${name}-${timestamp}${ext || '.log'}`;
       fs.renameSync(filePath, path.join(dir, rotatedName));
     } catch (err) {
-      this.channel.appendLine(`[logger-error] No se pudo rotar el log: ${String(err)}`);
+      this.channel.appendLine(`❌ [logger-error] No se pudo rotar el log: ${String(err)}`);
     }
   }
 
@@ -202,12 +266,12 @@ export class LoggingModule implements Logger {
 
   private serializeMetadata(metadata: unknown): string {
     if (metadata instanceof Error) {
-      return JSON.stringify({ message: metadata.message, stack: metadata.stack });
+      return JSON.stringify({ message: metadata.message, stack: metadata.stack }, null, 0);
     }
 
-    if (typeof metadata === 'object') {
+    if (typeof metadata === 'object' && metadata !== null) {
       try {
-        return JSON.stringify(metadata);
+        return JSON.stringify(metadata, null, 0);
       } catch {
         return '[metadata: no serializable]';
       }
