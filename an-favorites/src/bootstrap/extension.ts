@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { createAppLogger } from '../logging/loggingModule';
 import { registerHelloCommand } from '../commands/helloCommand';
 import { registerWebviewCommand } from '../commands/webviewCommand';
+import { registerShowLogsCommand } from '../commands/showLogsCommand';
 import { loadSettings } from '../config/settings';
 import { HelloService } from '../services/helloService';
 import { TelemetryService } from '../services/telemetry';
@@ -14,7 +15,7 @@ export function activate(context: vscode.ExtensionContext): void {
     maxFileSizeBytes: 5 * 1024 * 1024,
   });
 
-  // Asegurar que el canal se muestre en el panel de Output
+  vscode.commands.executeCommand('workbench.action.output.show');
   logger.show(false);
 
   const settings = loadSettings();
@@ -23,6 +24,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   registerHelloCommand(context, helloService, logger, settings);
   registerWebviewCommand(context);
+  registerShowLogsCommand(context);
 
   telemetry.track('activated');
   logger.info('Extension activada');
