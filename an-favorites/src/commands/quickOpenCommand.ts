@@ -135,9 +135,16 @@ export function registerQuickOpenCommand(
       // Force refresh item
       const index = quickPick.items.indexOf(item);
       if (index !== -1) {
+        // Al actualizar la lista, VS Code puede perder la posición.
+        // ESTRATEGIA: Convertimos el item clicado en el "activo".
+        // Esto fuerza a VS Code a mantener el scroll en este elemento (que es lo que queremos)
+        // en lugar de saltar al elemento que estaba seleccionado anteriormente (que suele ser el primero).
+
         const newItems = [...quickPick.items];
         newItems[index] = item;
         quickPick.items = newItems;
+
+        quickPick.activeItems = [item];
       }
     });
   });
