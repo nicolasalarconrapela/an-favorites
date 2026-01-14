@@ -195,13 +195,15 @@ export function registerQuickOpenCommand(
         .map(v => toSafeFileUri(v, logger))
         .filter((u): u is vscode.Uri => !!u);
 
-      // Si quieres filtrar archivos inexistentes, descomenta:
-      // const recentUris = await filterExistingFiles(recentUrisUnsafe);
-      const recentUris = recentUrisUnsafe.filter(u => u.scheme === 'file');
+      // Filtrar: SOLO archivos que pertenezcan al workspace abierto actualmente.
+      // Esto evita ver archivos recientes de otros proyectos.
+      const recentUris = recentUrisUnsafe.filter(u => {
+        return u.scheme === 'file' && !!vscode.workspace.getWorkspaceFolder(u);
+      });
 
       const recentNormSet = new Set(recentUris.map(u => normalizeFsPath(u.fsPath)));
 
-      // 2) Todos los ficheros del workspace
+      // 2) Todos los ficheros del workspace (findFiles ya respeta el workspace)
       const allUris = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
 
       // 3) Items
