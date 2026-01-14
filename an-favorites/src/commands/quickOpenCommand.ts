@@ -129,7 +129,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     // Detail opcional útil para búsquedas: carpeta padre relativa
     const relNorm = rel.replace(/\\/g, '/');
     const parentRel = relNorm.includes('/') ? relNorm.slice(0, relNorm.lastIndexOf('/')) : '';
-    this.detail = parentRel ? `Carpeta: ${parentRel}` : undefined;
+    // this.detail = parentRel ? `Carpeta: ${parentRel}` : undefined;
 
     // Indicador de “reciente”
     if (isRecentlyOpened) {

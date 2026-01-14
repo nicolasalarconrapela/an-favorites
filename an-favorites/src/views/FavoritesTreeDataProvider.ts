@@ -57,6 +57,11 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
 
   constructor(private context: vscode.ExtensionContext) {
     this.loadFavorites();
+
+    // Refresh when workspace folders change (Multi-root support)
+    vscode.workspace.onDidChangeWorkspaceFolders(() => {
+        this.refresh();
+    });
   }
 
   refresh(): void {
@@ -72,15 +77,30 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
       // Root level: return categories
       const categories: CategoryItem[] = [];
 
-      // Ensure default category exists
+      // Ensure default category exists internally, but we might not show it if empty/filtered
       if (!this.favorites.has(FavoritesTreeDataProvider.DEFAULT_CATEGORY)) {
         this.favorites.set(FavoritesTreeDataProvider.DEFAULT_CATEGORY, new Set());
       }
 
       this.favorites.forEach((files, categoryName) => {
-        categories.push(
-          new CategoryItem(categoryName, vscode.TreeItemCollapsibleState.Expanded)
-        );
+        // Filter: Check if this category has ANY file visible in current workspace
+        let hasVisibleFiles = false;
+
+        for (const filePath of files) {
+          const uri = vscode.Uri.file(filePath);
+          if (vscode.workspace.getWorkspaceFolder(uri)) {
+             hasVisibleFiles = true;
+             break;
+          }
+        }
+
+        const isEmpty = files.size === 0;
+
+        if (hasVisibleFiles || isEmpty) {
+           categories.push(
+            new CategoryItem(categoryName, vscode.TreeItemCollapsibleState.Expanded)
+          );
+        }
       });
 
       return Promise.resolve(categories);
@@ -91,7 +111,10 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
 
       files.forEach((favPath) => {
         const uri = vscode.Uri.file(favPath);
-        items.push(new FavoriteItem(uri, element.categoryName, vscode.TreeItemCollapsibleState.None));
+        // Filter: Only show files belonging to current workspace(s)
+        if (vscode.workspace.getWorkspaceFolder(uri)) {
+            items.push(new FavoriteItem(uri, element.categoryName, vscode.TreeItemCollapsibleState.None));
+        }
       });
 
       return Promise.resolve(items);
