@@ -22,7 +22,6 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     this.label = path.basename(uri.fsPath);
     this.description = vscode.workspace.asRelativePath(uri);
     this.isFavorite = isFavorite;
-    this.iconPath = vscode.ThemeIcon.File;
 
     // Mimic native: Recently opened often have a distinct indicator or group
     // We will use sections instead, but we could add detail
@@ -34,6 +33,12 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   }
 
   updateIcon() {
+    // Left icon: Star if favorite (Always visible), File if not
+    this.iconPath = this.isFavorite
+      ? new vscode.ThemeIcon('star-full')
+      : vscode.ThemeIcon.File;
+
+    // Right button: Interactive Star (Hover only)
     this.buttons = [{
       iconPath: this.isFavorite
         ? new vscode.ThemeIcon('star-full')
