@@ -43,6 +43,12 @@ export class FavoriteItem extends vscode.TreeItem {
 interface FavoriteData {
   path: string;
   category: string;
+  addedAt?: number;
+}
+
+interface FavoriteMetadata {
+  category: string;
+  addedAt: number;
 }
 
 export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<CategoryItem | FavoriteItem> {
@@ -52,7 +58,8 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
   readonly onDidChangeTreeData: vscode.Event<CategoryItem | FavoriteItem | undefined | null | void> =
     this._onDidChangeTreeData.event;
 
-  private favorites: Map<string, Set<string>> = new Map(); // category -> Set of file paths
+  // New structure: Map<filePath, FavoriteMetadata>
+  private favorites: Map<string, FavoriteMetadata> = new Map();
   public static readonly DEFAULT_CATEGORY = 'Sin Categoría';
 
   constructor(private context: vscode.ExtensionContext) {
@@ -76,17 +83,13 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
     if (!element) {
       // Root level: return categories
       const categories: CategoryItem[] = [];
+      const categoryMap = this.getCategoryMap();
 
-      // Ensure default category exists internally, but we might not show it if empty/filtered
-      if (!this.favorites.has(FavoritesTreeDataProvider.DEFAULT_CATEGORY)) {
-        this.favorites.set(FavoritesTreeDataProvider.DEFAULT_CATEGORY, new Set());
-      }
-
-      this.favorites.forEach((files, categoryName) => {
+      categoryMap.forEach((filePaths, categoryName) => {
         // Filter: Check if this category has ANY file visible in current workspace
         let hasVisibleFiles = false;
 
-        for (const filePath of files) {
+        for (const filePath of filePaths) {
           const uri = vscode.Uri.file(filePath);
           if (vscode.workspace.getWorkspaceFolder(uri)) {
              hasVisibleFiles = true;
@@ -94,7 +97,7 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
           }
         }
 
-        const isEmpty = files.size === 0;
+        const isEmpty = filePaths.length === 0;
 
         if (hasVisibleFiles || isEmpty) {
            categories.push(
@@ -107,13 +110,14 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
     } else if (element instanceof CategoryItem) {
       // Category level: return files in this category
       const items: FavoriteItem[] = [];
-      const files = this.favorites.get(element.categoryName) || new Set();
 
-      files.forEach((favPath) => {
-        const uri = vscode.Uri.file(favPath);
-        // Filter: Only show files belonging to current workspace(s)
-        if (vscode.workspace.getWorkspaceFolder(uri)) {
-            items.push(new FavoriteItem(uri, element.categoryName, vscode.TreeItemCollapsibleState.None));
+      this.favorites.forEach((metadata, filePath) => {
+        if (metadata.category === element.categoryName) {
+          const uri = vscode.Uri.file(filePath);
+          // Filter: Only show files belonging to current workspace(s)
+          if (vscode.workspace.getWorkspaceFolder(uri)) {
+              items.push(new FavoriteItem(uri, element.categoryName, vscode.TreeItemCollapsibleState.None));
+          }
         }
       });
 
@@ -123,85 +127,97 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
     return Promise.resolve([]);
   }
 
-  addFavorite(uri: vscode.Uri, category?: string): void {
-    const targetCategory = category || FavoritesTreeDataProvider.DEFAULT_CATEGORY;
+  // Helper to get category -> filePaths mapping
+  private getCategoryMap(): Map<string, string[]> {
+    const categoryMap = new Map<string, string[]>();
 
-    if (!this.favorites.has(targetCategory)) {
-      this.favorites.set(targetCategory, new Set());
-    }
+    // Ensure default category exists
+    categoryMap.set(FavoritesTreeDataProvider.DEFAULT_CATEGORY, []);
 
-    this.favorites.get(targetCategory)!.add(uri.fsPath);
-    this.saveFavorites();
-    this.refresh();
+    this.favorites.forEach((metadata, filePath) => {
+      if (!categoryMap.has(metadata.category)) {
+        categoryMap.set(metadata.category, []);
+      }
+      categoryMap.get(metadata.category)!.push(filePath);
+    });
+
+    return categoryMap;
   }
 
-  removeFavorite(uri: vscode.Uri): void {
-    // Remove from all categories
-    this.favorites.forEach((files) => {
-      files.delete(uri.fsPath);
+  addFavorite(uri: vscode.Uri, category?: string): void {
+    const targetCategory = category || FavoritesTreeDataProvider.DEFAULT_CATEGORY;
+    const filePath = uri.fsPath;
+
+    // Add or update with current timestamp
+    this.favorites.set(filePath, {
+      category: targetCategory,
+      addedAt: Date.now()
     });
 
     this.saveFavorites();
     this.refresh();
   }
 
+  removeFavorite(uri: vscode.Uri): void {
+    this.favorites.delete(uri.fsPath);
+    this.saveFavorites();
+    this.refresh();
+  }
+
   hasFavorite(uri: vscode.Uri): boolean {
-    for (const files of this.favorites.values()) {
-      if (files.has(uri.fsPath)) {
-        return true;
-      }
-    }
-    return false;
+    return this.favorites.has(uri.fsPath);
   }
 
   getCategoryForFavorite(uri: vscode.Uri): string | undefined {
-    for (const [category, files] of this.favorites.entries()) {
-      if (files.has(uri.fsPath)) {
-        return category;
-      }
-    }
-    return undefined;
+    return this.favorites.get(uri.fsPath)?.category;
   }
 
   addCategory(categoryName: string): boolean {
-    if (this.favorites.has(categoryName)) {
+    const categoryMap = this.getCategoryMap();
+
+    if (categoryMap.has(categoryName)) {
       return false; // Category already exists
     }
 
-    this.favorites.set(categoryName, new Set());
+    // Category will be created implicitly when first favorite is added
+    // For now, just ensure it's in our map
     this.saveFavorites();
     this.refresh();
     return true;
   }
 
   removeCategory(categoryName: string): void {
-    const files = this.favorites.get(categoryName);
-
-    if (files && categoryName !== FavoritesTreeDataProvider.DEFAULT_CATEGORY) {
-      // Move files to default category
-      const defaultFiles = this.favorites.get(FavoritesTreeDataProvider.DEFAULT_CATEGORY) || new Set();
-      files.forEach((file) => defaultFiles.add(file));
-      this.favorites.set(FavoritesTreeDataProvider.DEFAULT_CATEGORY, defaultFiles);
-
-      // Remove category
-      this.favorites.delete(categoryName);
-      this.saveFavorites();
-      this.refresh();
+    if (categoryName === FavoritesTreeDataProvider.DEFAULT_CATEGORY) {
+      return; // Cannot remove default category
     }
+
+    // Move all favorites from this category to default
+    this.favorites.forEach((metadata, filePath) => {
+      if (metadata.category === categoryName) {
+        metadata.category = FavoritesTreeDataProvider.DEFAULT_CATEGORY;
+      }
+    });
+
+    this.saveFavorites();
+    this.refresh();
   }
 
   renameCategory(oldName: string, newName: string): boolean {
-    if (!this.favorites.has(oldName) || this.favorites.has(newName)) {
-      return false; // Old category doesn't exist or new name already exists
-    }
-
     if (oldName === FavoritesTreeDataProvider.DEFAULT_CATEGORY) {
       return false; // Cannot rename default category
     }
 
-    const files = this.favorites.get(oldName)!;
-    this.favorites.delete(oldName);
-    this.favorites.set(newName, files);
+    const categoryMap = this.getCategoryMap();
+    if (!categoryMap.has(oldName) || categoryMap.has(newName)) {
+      return false; // Old category doesn't exist or new name already exists
+    }
+
+    // Update all favorites in the old category
+    this.favorites.forEach((metadata, filePath) => {
+      if (metadata.category === oldName) {
+        metadata.category = newName;
+      }
+    });
 
     this.saveFavorites();
     this.refresh();
@@ -209,15 +225,40 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
   }
 
   moveFavorite(uri: vscode.Uri, newCategory: string): void {
-    // Remove from current category
-    this.removeFavorite(uri);
-
-    // Add to new category
-    this.addFavorite(uri, newCategory);
+    const metadata = this.favorites.get(uri.fsPath);
+    if (metadata) {
+      metadata.category = newCategory;
+      this.saveFavorites();
+      this.refresh();
+    }
   }
 
   getCategories(): string[] {
-    return Array.from(this.favorites.keys());
+    return Array.from(this.getCategoryMap().keys());
+  }
+
+  /**
+   * Get the N most recently added favorites
+   */
+  getRecentFavorites(count: number = 5): vscode.Uri[] {
+    const allFavorites = Array.from(this.favorites.entries())
+      .map(([filePath, metadata]) => ({
+        uri: vscode.Uri.file(filePath),
+        addedAt: metadata.addedAt
+      }))
+      .sort((a, b) => b.addedAt - a.addedAt) // Sort by most recent first
+      .slice(0, count);
+
+    return allFavorites.map(f => f.uri);
+  }
+
+  /**
+   * Reload favorites from storage
+   * Useful to ensure we have the latest data
+   */
+  reloadFavorites(): void {
+    this.favorites.clear();
+    this.loadFavorites();
   }
 
   private loadFavorites(): void {
@@ -225,12 +266,12 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
     const storedFavorites = this.context.globalState.get<FavoriteData[]>('anfavorites.favorites.v2');
 
     if (storedFavorites) {
-      // Load standard v2 data
+      // Load v2 data
       storedFavorites.forEach((fav) => {
-        if (!this.favorites.has(fav.category)) {
-          this.favorites.set(fav.category, new Set());
-        }
-        this.favorites.get(fav.category)!.add(fav.path);
+        this.favorites.set(fav.path, {
+          category: fav.category,
+          addedAt: fav.addedAt || Date.now() // Use stored timestamp or current time as fallback
+        });
       });
     } else {
       // 2. Migration: Check for v1 format
@@ -238,29 +279,29 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
 
       if (legacyFavorites && legacyFavorites.length > 0) {
         console.log('[AnFavorites] Migrating legacy favorites to v2...');
-        // Migrate all to default category
-        const defaultSet = new Set<string>(legacyFavorites);
-        this.favorites.set(FavoritesTreeDataProvider.DEFAULT_CATEGORY, defaultSet);
+        // Migrate all to default category with current timestamp
+        const now = Date.now();
+        legacyFavorites.forEach((filePath, index) => {
+          this.favorites.set(filePath, {
+            category: FavoritesTreeDataProvider.DEFAULT_CATEGORY,
+            addedAt: now - (legacyFavorites.length - index) // Preserve some ordering
+          });
+        });
 
         // Save immediately in new format
         this.saveFavorites();
-
-        // Optional: you might want to keep or clear the old one. We'll leave it for safety now.
       }
-    }
-
-    // Ensure default category exists
-    if (!this.favorites.has(FavoritesTreeDataProvider.DEFAULT_CATEGORY)) {
-      this.favorites.set(FavoritesTreeDataProvider.DEFAULT_CATEGORY, new Set());
     }
   }
 
   private saveFavorites(): void {
     const favoritesArray: FavoriteData[] = [];
 
-    this.favorites.forEach((files, category) => {
-      files.forEach((filePath) => {
-        favoritesArray.push({ path: filePath, category });
+    this.favorites.forEach((metadata, filePath) => {
+      favoritesArray.push({
+        path: filePath,
+        category: metadata.category,
+        addedAt: metadata.addedAt
       });
     });
 

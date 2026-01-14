@@ -188,60 +188,100 @@ export function registerQuickOpenCommand(
       })
     );
 
-    quickPick.show();
-    quickPick.busy = true;
+    // Function to build/rebuild items
+    const buildItems = async (): Promise<void> => {
+      quickPick.busy = true;
 
-    try {
-      // 1) Recientes (MRU) — sanitize total
-      const rawRecent: unknown[] = (mruService.getRecentFiles?.() as any) ?? [];
-      const recentUrisUnsafe = rawRecent
-        .map(v => toSafeFileUri(v, logger))
-        .filter((u): u is vscode.Uri => !!u);
+      try {
+        // 0) Reload favorites from storage to ensure we have the latest data
+        favoritesProvider.reloadFavorites();
 
-      // Filtrar: SOLO archivos que pertenezcan al workspace abierto actualmente.
-      // Esto evita ver archivos recientes de otros proyectos.
-      const recentUris = recentUrisUnsafe.filter(u => {
-        return u.scheme === 'file' && !!vscode.workspace.getWorkspaceFolder(u);
-      });
+        // 1) Recientes (MRU) — sanitize total
+        const rawRecent: unknown[] = (mruService.getRecentFiles?.() as any) ?? [];
+        const recentUrisUnsafe = rawRecent
+          .map(v => toSafeFileUri(v, logger))
+          .filter((u): u is vscode.Uri => !!u);
 
-      const recentNormSet = new Set(recentUris.map(u => normalizeFsPath(u.fsPath)));
-
-      // 2) Todos los ficheros del workspace (findFiles ya respeta el workspace)
-      const allUris = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
-
-      // 3) Items
-      const recentItems: FileQuickPickItem[] = recentUris.map(uri => {
-        const isFav = favoritesProvider.hasFavorite(uri);
-        return new FileQuickPickItem({ uri, isFavorite: isFav, isRecentlyOpened: true });
-      });
-
-      const otherItems: FileQuickPickItem[] = allUris
-        .filter(uri => !recentNormSet.has(normalizeFsPath(uri.fsPath)))
-        .map(uri => {
-          const isFav = favoritesProvider.hasFavorite(uri);
-          return new FileQuickPickItem({ uri, isFavorite: isFav, isRecentlyOpened: false });
+        // Filtrar: SOLO archivos que pertenezcan al workspace abierto actualmente.
+        // Esto evita ver archivos recientes de otros proyectos.
+        const recentUris = recentUrisUnsafe.filter(u => {
+          return u.scheme === 'file' && !!vscode.workspace.getWorkspaceFolder(u);
         });
 
-      // 4) Combinar con separadores (SIN any)
-      const items: QuickOpenItem[] = [];
+        const recentNormSet = new Set(recentUris.map(u => normalizeFsPath(u.fsPath)));
 
-      if (recentItems.length > 0) {
-        items.push({ label: 'Recientemente abiertos', kind: vscode.QuickPickItemKind.Separator });
-        items.push(...recentItems);
+        // 2) Todos los ficheros del workspace (findFiles ya respeta el workspace)
+        const allUris = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
+
+        // 3) Get recent favorites (last 5 added to favorites)
+        const recentFavUris = favoritesProvider.getRecentFavorites(5).filter(uri => {
+          return uri.scheme === 'file' && !!vscode.workspace.getWorkspaceFolder(uri);
+        });
+        const recentFavNormSet = new Set(recentFavUris.map(u => normalizeFsPath(u.fsPath)));
+
+        // 4) Items
+        const recentFavItems: FileQuickPickItem[] = recentFavUris.map(uri => {
+          return new FileQuickPickItem({ uri, isFavorite: true, isRecentlyOpened: false });
+        });
+
+        const recentItems: FileQuickPickItem[] = recentUris
+          .filter(uri => !recentFavNormSet.has(normalizeFsPath(uri.fsPath))) // Exclude if already in recent favorites
+          .map(uri => {
+            const isFav = favoritesProvider.hasFavorite(uri);
+            return new FileQuickPickItem({ uri, isFavorite: isFav, isRecentlyOpened: true });
+          });
+
+        const otherItems: FileQuickPickItem[] = allUris
+          .filter(uri => {
+            const normalizedPath = normalizeFsPath(uri.fsPath);
+            return !recentNormSet.has(normalizedPath) && !recentFavNormSet.has(normalizedPath);
+          })
+          .map(uri => {
+            const isFav = favoritesProvider.hasFavorite(uri);
+            return new FileQuickPickItem({ uri, isFavorite: isFav, isRecentlyOpened: false });
+          });
+
+        // 5) Combinar con separadores (SIN any)
+        const items: QuickOpenItem[] = [];
+
+        // First section: Favoritos (top 5 most recent)
+        if (recentFavItems.length > 0) {
+          items.push({ label: 'Favoritos', kind: vscode.QuickPickItemKind.Separator });
+          items.push(...recentFavItems);
+        }
+
+        // Second section: Recientes (Recently Opened)
+        if (recentItems.length > 0) {
+          items.push({ label: 'Recientes', kind: vscode.QuickPickItemKind.Separator });
+          items.push(...recentItems);
+        }
+
+        // Third section: Archivos (All other files)
+        items.push({ label: 'Archivos', kind: vscode.QuickPickItemKind.Separator });
+        items.push(...otherItems);
+
+        quickPick.items = items;
+      } catch (error) {
+        logger.error('Error loading files for QuickOpen', error);
+        quickPick.items = [
+          { label: 'Error cargando archivos (ver logs)', kind: vscode.QuickPickItemKind.Separator },
+        ];
+      } finally {
+        quickPick.busy = false;
       }
+    };
 
-      items.push({ label: 'Archivos', kind: vscode.QuickPickItemKind.Separator });
-      items.push(...otherItems);
+    // Initial load
+    quickPick.show();
+    await buildItems();
 
-      quickPick.items = items;
-    } catch (error) {
-      logger.error('Error loading files for QuickOpen', error);
-      quickPick.items = [
-        { label: 'Error cargando archivos (ver logs)', kind: vscode.QuickPickItemKind.Separator },
-      ];
-    } finally {
-      quickPick.busy = false;
-    }
+    // Listen to favorites changes and rebuild items in real-time
+    disposables.push(
+      favoritesProvider.onDidChangeTreeData(async () => {
+        logger.debug('Favorites changed, rebuilding QuickOpen items');
+        await buildItems();
+      })
+    );
 
     // Enter: abrir fichero
     disposables.push(
@@ -279,7 +319,8 @@ export function registerQuickOpenCommand(
 
           item.updateIcon();
 
-          // Mantener scroll/posición: refrescar lista + marcar como activo
+          // The list will be automatically rebuilt by the onDidChangeTreeData listener
+          // But we update the current item immediately for instant feedback
           const currentItems = quickPick.items;
           const index = currentItems.indexOf(item);
           if (index !== -1) {
