@@ -143,7 +143,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 
     // 2. Label: Actualizamos para mostrar estrella llena o vacía
     const baseName = safeBasenameFromUri(this.resourceUri);
-    const starIcon = this.isFavorite ? '$(star-full)' : '$(star-empty)';
+    const starIcon = this.isFavorite ? '$(star-full) ' : '     ';
     this.label = `${starIcon} ${baseName}`;
 
     // 3. Derecha: botón interactivo (acción al hacer hover)
