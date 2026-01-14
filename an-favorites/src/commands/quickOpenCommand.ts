@@ -117,19 +117,17 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     this.resourceUri = uri;
     this.isFavorite = isFavorite;
 
-    // Label: nombre fichero (a prueba de bombas)
-    this.label = safeBasenameFromUri(uri);
+    // Label base: nombre fichero
+    const baseName = safeBasenameFromUri(uri);
+
+    // Alineación visual: SIEMPRE mostramos una estrella (llena o vacía)
+    // Esto crea una "columna" virtual uniforme junto al icono de archivo
+    const starIcon = isFavorite ? '$(star-full)' : '$(star-empty)';
+    this.label = `${starIcon} ${baseName}`;
 
     // Description/detail: RELATIVO al proyecto (workspace)
     const { rel, rootName } = workspaceRelativeLabel(uri);
-
-    // Aquí mandas lo importante: ruta relativa para el usuario
     this.description = rootName ? `${rootName} • ${rel}` : rel;
-
-    // Detail opcional útil para búsquedas: carpeta padre relativa
-    const relNorm = rel.replace(/\\/g, '/');
-    const parentRel = relNorm.includes('/') ? relNorm.slice(0, relNorm.lastIndexOf('/')) : '';
-    // this.detail = parentRel ? `Carpeta: ${parentRel}` : undefined;
 
     // Indicador de “reciente”
     if (isRecentlyOpened) {
@@ -140,10 +138,15 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   }
 
   updateIcon(): void {
-    // Izquierda: estrella o fichero
-    this.iconPath = this.isFavorite ? new vscode.ThemeIcon('star-full') : new vscode.ThemeIcon('file');
+    // 1. Icono Izquierdo: SIEMPRE el de archivo (ThemeIcon.File) para respetar el tema de iconos del usuario
+    this.iconPath = vscode.ThemeIcon.File;
 
-    // Derecha: botón interactivo
+    // 2. Label: Actualizamos para mostrar estrella llena o vacía
+    const baseName = safeBasenameFromUri(this.resourceUri);
+    const starIcon = this.isFavorite ? '$(star-full)' : '$(star-empty)';
+    this.label = `${starIcon} ${baseName}`;
+
+    // 3. Derecha: botón interactivo (acción al hacer hover)
     this.buttons = [
       {
         iconPath: this.isFavorite ? new vscode.ThemeIcon('star-full') : new vscode.ThemeIcon('star-empty'),
