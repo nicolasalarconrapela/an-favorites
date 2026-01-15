@@ -196,6 +196,13 @@ export function registerQuickOpenCommand(
         // 0) Reload favorites from storage to ensure we have the latest data
         favoritesProvider.reloadFavorites();
 
+        // 0.1) Read configuration values
+        const config = vscode.workspace.getConfiguration('anfavorites.quickOpen');
+        const maxRecentFavorites = config.get<number>('maxRecentFavorites', 3);
+        const maxRecentFiles = config.get<number>('maxRecentFiles', 3);
+
+        logger.debug(`QuickOpen config: maxRecentFavorites=${maxRecentFavorites}, maxRecentFiles=${maxRecentFiles}`);
+
         // 1) Recientes (MRU) — sanitize total
         const rawRecent: unknown[] = (mruService.getRecentFiles?.() as any) ?? [];
         const recentUrisUnsafe = rawRecent
@@ -210,8 +217,8 @@ export function registerQuickOpenCommand(
 
         const recentNormSet = new Set(recentUris.map(u => normalizeFsPath(u.fsPath)));
 
-        // 2) Get recent favorites (last 5 added to favorites)
-        const recentFavUris = favoritesProvider.getRecentFavorites(5).filter(uri => {
+        // 2) Get recent favorites (usar configuración)
+        const recentFavUris = favoritesProvider.getRecentFavorites(maxRecentFavorites).filter(uri => {
           return uri.scheme === 'file' && !!vscode.workspace.getWorkspaceFolder(uri);
         });
         const recentFavNormSet = new Set(recentFavUris.map(u => normalizeFsPath(u.fsPath)));
@@ -223,6 +230,7 @@ export function registerQuickOpenCommand(
 
         const recentItems: FileQuickPickItem[] = recentUris
           .filter(uri => !recentFavNormSet.has(normalizeFsPath(uri.fsPath))) // Exclude if already in recent favorites
+          .slice(0, maxRecentFiles) // Limitar a la cantidad configurada
           .map(uri => {
             const isFav = favoritesProvider.hasFavorite(uri);
             return new FileQuickPickItem({ uri, isFavorite: isFav, isRecentlyOpened: true });

@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.6.9",
+  "version": "0.7.1",
   "publisher": "anappwilos",
   "engines": {
     "vscode": "^1.86.0"
@@ -124,6 +124,30 @@
           "type": "boolean",
           "default": true,
           "description": "Enable greeting message."
+        },
+        "anfavorites.quickOpen.maxRecentFavorites": {
+          "type": "number",
+          "default": 3,
+          "enum": [
+            2,
+            3,
+            4,
+            5,
+            10
+          ],
+          "description": "Número de favoritos recientes a mostrar en Quick Open."
+        },
+        "anfavorites.quickOpen.maxRecentFiles": {
+          "type": "number",
+          "default": 3,
+          "enum": [
+            2,
+            3,
+            4,
+            5,
+            10
+          ],
+          "description": "Número de archivos recientemente abiertos a mostrar en Quick Open."
         }
       }
     }
