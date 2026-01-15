@@ -252,6 +252,13 @@ export function registerQuickOpenCommand(
         // Second section: Recientes (Recently Opened)
         if (recentItems.length > 0) {
           items.push({ label: 'Recientes', kind: vscode.QuickPickItemKind.Separator });
+          // Add clear action item at the beginning
+          items.push({
+            label: '$(trash) Limpiar lista de recientes',
+            description: 'Eliminar todos los archivos de esta sección',
+            alwaysShow: true,
+            kind: undefined as any // Regular item, not a separator
+          });
           items.push(...recentItems);
         }
 
@@ -311,11 +318,25 @@ export function registerQuickOpenCommand(
       })
     );
 
-    // Enter: abrir fichero
+    // Enter: abrir fichero o ejecutar acción
     disposables.push(
       quickPick.onDidAccept(async () => {
         const selected = quickPick.selectedItems[0];
-        if (!selected || !isFileItem(selected)) return;
+        if (!selected) return;
+
+        // Check if it's the clear recent files action
+        if (selected.label === '$(trash) Limpiar lista de recientes') {
+          mruService.clear();
+          logger.info('Recent files list cleared from Quick Open');
+          // Rebuild the picker without closing it
+          allFilesLoaded = false; // Reset to avoid loading all files again
+          await buildItems(false);
+          vscode.window.showInformationMessage('Lista de archivos recientes limpiada');
+          return;
+        }
+
+        // Normal file selection
+        if (!isFileItem(selected)) return;
 
         try {
           mruService.add(selected.resourceUri.fsPath);

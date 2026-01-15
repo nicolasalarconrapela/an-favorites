@@ -45,4 +45,9 @@ export class MRUService {
   public getRecentFiles(): string[] {
     return [...this.mruList];
   }
+
+  public clear(): void {
+    this.mruList = [];
+    this.save();
+  }
 }
