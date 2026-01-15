@@ -248,17 +248,34 @@ export function registerQuickOpenCommand(
           items.push({ label: 'Favoritos', kind: vscode.QuickPickItemKind.Separator });
           items.push(...recentFavItems);
         }
+        // Define un tipo extendido para poder identificar acciones
+        type FavoritesAction = 'clearRecents';
+
+        interface ActionQuickPickItem extends vscode.QuickPickItem {
+          action: FavoritesAction;
+        }
 
         // Second section: Recientes (Recently Opened)
-        if (recentItems.length > 0) {
-          items.push({ label: 'Recientes', kind: vscode.QuickPickItemKind.Separator });
-          // Add clear action item at the beginning
+        // Mostrar la sección si hay items en el MRU (incluso si están filtrados)
+        const hasRecentFiles = recentUris.length > 0;
+
+        if (hasRecentFiles) {
           items.push({
+            label: 'Recientes',
+            kind: vscode.QuickPickItemKind.Separator
+          });
+
+          // Acción "Limpiar" - siempre mostrar si hay archivos en MRU
+          const clearRecentsItem: ActionQuickPickItem = {
             label: '$(trash) Limpiar lista de recientes',
             description: 'Eliminar todos los archivos de esta sección',
             alwaysShow: true,
-            kind: undefined as any // Regular item, not a separator
-          });
+            action: 'clearRecents'
+          };
+
+          items.push(clearRecentsItem);
+
+          // Luego los ítems recientes reales (pueden estar vacíos por filtrado)
           items.push(...recentItems);
         }
 
