@@ -269,7 +269,6 @@ export function registerQuickOpenCommand(
           const clearRecentsItem: ActionQuickPickItem = {
             label: '$(trash) Limpiar lista de recientes',
             description: 'Eliminar todos los archivos de esta sección',
-            alwaysShow: true,
             action: 'clearRecents'
           };
 
