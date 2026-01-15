@@ -170,6 +170,10 @@ export function registerQuickOpenCommand(
     quickPick.matchOnDetail = true;
     quickPick.canSelectMany = false;
 
+    // Configurar ignoreFocusOut desde settings
+    const config = vscode.workspace.getConfiguration('anfavorites.quickOpen');
+    quickPick.ignoreFocusOut = config.get<boolean>('ignoreFocusOut', false);
+
     logger.debug('QuickOpen triggered');
 
     const disposables: vscode.Disposable[] = [];
