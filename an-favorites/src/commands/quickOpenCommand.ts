@@ -243,11 +243,14 @@ export function registerQuickOpenCommand(
         // 4) Combinar con separadores (SIN any)
         const items: QuickOpenItem[] = [];
 
-        // First section: Favoritos (top 5 most recent)
+        // First section: Favoritos (Siempre visible)
+        items.push({ label: 'Favoritos', kind: vscode.QuickPickItemKind.Separator });
         if (recentFavItems.length > 0) {
-          items.push({ label: 'Favoritos', kind: vscode.QuickPickItemKind.Separator });
           items.push(...recentFavItems);
+        } else {
+          items.push({ label: '   (No hay favoritos guardados)', description: '', detail: '', alwaysShow: true });
         }
+
         // Define un tipo extendido para poder identificar acciones
         type FavoritesAction = 'clearRecents';
 
@@ -255,17 +258,16 @@ export function registerQuickOpenCommand(
           action: FavoritesAction;
         }
 
-        // Second section: Recientes (Recently Opened)
-        // Mostrar la sección si hay items en el MRU (incluso si están filtrados)
+        // Second section: Recientes (Recientemente Abierto) - Siempre visible
         const hasRecentFiles = recentUris.length > 0;
 
-        if (hasRecentFiles) {
-          items.push({
-            label: 'Recientes',
-            kind: vscode.QuickPickItemKind.Separator
-          });
+        items.push({
+          label: 'Recientes',
+          kind: vscode.QuickPickItemKind.Separator
+        });
 
-          // Acción "Limpiar" - siempre mostrar si hay archivos en MRU
+        if (hasRecentFiles) {
+          // Acción "Limpiar" - solo mostrar si hay archivos en MRU
           const clearRecentsItem: ActionQuickPickItem = {
             label: '$(trash) Limpiar lista de recientes',
             description: 'Eliminar todos los archivos de esta sección',
@@ -274,8 +276,10 @@ export function registerQuickOpenCommand(
 
           items.push(clearRecentsItem);
 
-          // Luego los ítems recientes reales (pueden estar vacíos por filtrado)
+          // Luego los ítems recientes reales
           items.push(...recentItems);
+        } else {
+          items.push({ label: '   (No hay archivos recientes)', description: '', detail: '', alwaysShow: true });
         }
 
         // Third section: Archivos (All other files) - Solo cargar si se solicita
