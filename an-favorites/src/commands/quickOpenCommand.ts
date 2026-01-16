@@ -192,11 +192,21 @@ export function registerQuickOpenCommand(
       })
     );
 
+    // Cache de archivos para no volver a buscar en disco cada vez que se actualiza la UI
+    // Esto es vital para que al borrar el texto de búsqueda la respuesta sea instantánea
+    let cachedAllFileItems: FileQuickPickItem[] | null = null;
+
     // Function to build/rebuild items
     const buildItems = async (loadAllFiles: boolean = false): Promise<void> => {
-      quickPick.busy = true;
+      // No poner busy true si estamos tecleando para evitar parpadeos,
+      // a menos que sea la carga pesada inicial
+      if (loadAllFiles && !cachedAllFileItems) {
+        quickPick.busy = true;
+      }
 
       try {
+        const isSearching = quickPick.value.length > 0;
+
         // 0) Reload favorites from storage to ensure we have the latest data
         favoritesProvider.reloadFavorites();
 
@@ -252,8 +262,9 @@ export function registerQuickOpenCommand(
 
         if (hasFavoriteItems) {
           items.push(...recentFavItems);
-        } else {
-          items.push({ label: '', description: '', detail: '', alwaysShow: true });
+        } else if (!isSearching) {
+          // Solo mostrar el placeholder si NO se está buscando
+          items.push({ label: 'Busque un archivo para añadirlo a favoritos en icono de la derecha', description: '', detail: '' });
         }
 
         // Define un tipo extendido para poder identificar acciones
@@ -283,27 +294,44 @@ export function registerQuickOpenCommand(
 
           // Luego los ítems recientes reales
           items.push(...recentItems);
-        } else {
-          items.push({ label: '', description: '', detail: '', alwaysShow: true });
+        } else if (!isSearching) {
+           // Solo mostrar el placeholder si NO se está buscando
+          items.push({ label: '', description: '', detail: '' });
         }
 
         // Third section: Archivos (All other files) - Solo cargar si se solicita
         if (loadAllFiles) {
-          const allUris = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
+          // Usar caché si está disponible
+          if (!cachedAllFileItems) {
+             const allUris = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
+             cachedAllFileItems = allUris.map(uri => {
+                // Creamos los items base, el estado de favorito se actualiza abajo dinámicamente
+                // Nota: para la caché inicial asumimos isFavorite false, luego se recalcula
+                return new FileQuickPickItem({ uri, isFavorite: false, isRecentlyOpened: false });
+             });
+          }
 
-          const otherItems: FileQuickPickItem[] = allUris
-            .filter(uri => {
-              const normalizedPath = normalizeFsPath(uri.fsPath);
-              return !recentNormSet.has(normalizedPath) && !recentFavNormSet.has(normalizedPath);
-            })
-            .map(uri => {
-              const isFav = favoritesProvider.hasFavorite(uri);
-              return new FileQuickPickItem({ uri, isFavorite: isFav, isRecentlyOpened: false });
-            });
+          if (cachedAllFileItems) {
+            // Filtrar y actualizar estado favorito en tiempo real
+            const otherItems = cachedAllFileItems
+              .filter(item => {
+                const normalizedPath = normalizeFsPath(item.resourceUri.fsPath);
+                return !recentNormSet.has(normalizedPath) && !recentFavNormSet.has(normalizedPath);
+              })
+              .map(item => {
+                 // Actualizar estado de favorito antes de mostrar
+                 const isFav = favoritesProvider.hasFavorite(item.resourceUri);
+                 if (item.isFavorite !== isFav) {
+                    item.isFavorite = isFav;
+                    item.updateIcon(); // Regenerar label e icono
+                 }
+                 return item;
+              });
 
-          if (otherItems.length > 0) {
-            items.push({ label: 'Archivos', kind: vscode.QuickPickItemKind.Separator });
-            items.push(...otherItems);
+            if (otherItems.length > 0) {
+              items.push({ label: 'Archivos', kind: vscode.QuickPickItemKind.Separator });
+              items.push(...otherItems);
+            }
           }
         }
 
@@ -322,15 +350,29 @@ export function registerQuickOpenCommand(
     quickPick.show();
     await buildItems(false);
 
-    // Listen to user input to load all files when searching
+    // Listen to user input to load all files when searching OR toggle placeholders
     let allFilesLoaded = false;
+    let previousValue = '';
+
     disposables.push(
       quickPick.onDidChangeValue(async (value) => {
-        // Si el usuario empieza a escribir y aún no hemos cargado todos los archivos
-        if (value.length > 0 && !allFilesLoaded) {
+        const wasEmpty = previousValue.length === 0;
+        const isEmpty = value.length === 0;
+        previousValue = value;
+
+        // 1. Carga diferida de archivos (primera búsqueda)
+        if (!isEmpty && !allFilesLoaded) {
           logger.debug('User started searching, loading all files...');
           allFilesLoaded = true;
+          // Esto ocultará placeholders y cargará archivos
           await buildItems(true);
+          return;
+        }
+
+        // 2. Si cambia el estado (empezó a buscar O borró la búsqueda)
+        // reconstruimos para mostrar/ocultar los placeholders
+        if (wasEmpty !== isEmpty) {
+           await buildItems(allFilesLoaded);
         }
       })
     );
