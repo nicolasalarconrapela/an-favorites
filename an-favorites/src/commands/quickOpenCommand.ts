@@ -244,11 +244,16 @@ export function registerQuickOpenCommand(
         const items: QuickOpenItem[] = [];
 
         // First section: Favoritos (Siempre visible)
-        items.push({ label: 'Favoritos', kind: vscode.QuickPickItemKind.Separator });
-        if (recentFavItems.length > 0) {
+        const hasFavoriteItems = recentFavItems.length > 0;
+        items.push({
+          label: hasFavoriteItems ? 'Favoritos' : 'No hay favoritos recientes',
+          kind: vscode.QuickPickItemKind.Separator
+        });
+
+        if (hasFavoriteItems) {
           items.push(...recentFavItems);
         } else {
-          items.push({ label: '   (No hay favoritos guardados)', description: '', detail: '', alwaysShow: true });
+          items.push({ label: '', description: '', detail: '', alwaysShow: true });
         }
 
         // Define un tipo extendido para poder identificar acciones
@@ -262,15 +267,15 @@ export function registerQuickOpenCommand(
         const hasRecentFiles = recentUris.length > 0;
 
         items.push({
-          label: 'Recientes',
+          label: hasRecentFiles ? 'Recientes' : 'No hay recientes nuevos',
           kind: vscode.QuickPickItemKind.Separator
         });
 
         if (hasRecentFiles) {
           // Acción "Limpiar" - solo mostrar si hay archivos en MRU
           const clearRecentsItem: ActionQuickPickItem = {
-            label: '$(trash) Limpiar lista de recientes',
-            description: 'Eliminar todos los archivos de esta sección',
+            label: '                      $(trash) Limpiar',
+            // description: 'Eliminar todos los archivos de esta sección',
             action: 'clearRecents'
           };
 
@@ -279,7 +284,7 @@ export function registerQuickOpenCommand(
           // Luego los ítems recientes reales
           items.push(...recentItems);
         } else {
-          items.push({ label: '   (No hay archivos recientes)', description: '', detail: '', alwaysShow: true });
+          items.push({ label: '', description: '', detail: '', alwaysShow: true });
         }
 
         // Third section: Archivos (All other files) - Solo cargar si se solicita
