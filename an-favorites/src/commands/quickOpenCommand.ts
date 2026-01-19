@@ -66,30 +66,25 @@ function safeBasenameFromUri(uri: vscode.Uri): string {
 
 /**
  * Ruta relativa al workspace (y si es multi-root, prefija con el nombre del root).
- * Devuelve solo el directorio, sin el nombre del archivo.
  */
 function workspaceRelativeLabel(uri: vscode.Uri): { rel: string; rootName?: string } {
   const folders = vscode.workspace.workspaceFolders ?? [];
   if (folders.length === 0) {
     // Sin workspace abierto: muestra lo que haya
     const fsPath = (uri as any)?.fsPath;
-    const dirPath = typeof fsPath === 'string' && fsPath ? path.dirname(fsPath) : uri.toString();
-    return { rel: dirPath };
+    return { rel: typeof fsPath === 'string' && fsPath ? fsPath : uri.toString() };
   }
 
   const folder = vscode.workspace.getWorkspaceFolder(uri);
 
   // asRelativePath puede devolver absoluto si está fuera del workspace
-  const relPath = vscode.workspace.asRelativePath(uri, false);
-
-  // Extraer solo el directorio (sin el nombre del archivo)
-  const dirPath = path.dirname(relPath);
+  const rel = vscode.workspace.asRelativePath(uri, false);
 
   if (folders.length > 1 && folder) {
-    return { rel: dirPath, rootName: folder.name };
+    return { rel, rootName: folder.name };
   }
 
-  return { rel: dirPath };
+  return { rel };
 }
 
 /**
@@ -122,7 +117,9 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   resourceUri: vscode.Uri;
   isFavorite: boolean;
   isRecentlyOpened: boolean;
-  private _rawDescription: string;
+
+  private _fullPathLabel: string;
+  private _dirPathLabel: string;
 
   constructor(params: { uri: vscode.Uri; isFavorite: boolean; isRecentlyOpened?: boolean }) {
     const { uri, isFavorite, isRecentlyOpened = false } = params;
@@ -141,22 +138,39 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 
     // Description/detail: RELATIVO al proyecto (workspace)
     const { rel, rootName } = workspaceRelativeLabel(uri);
-    this._rawDescription = rootName ? `${rootName} • ${rel}` : rel;
 
-    // Default to plain description, but will be updated by setShowDescription immediately after
-    this.description = this._rawDescription;
+    // Ruta completa
+    this._fullPathLabel = rootName ? `${rootName} • ${rel}` : rel;
+
+    // Ruta solo directorio (si es root, queda vacío o solo rootName)
+    const dir = path.dirname(rel);
+    // Si dirname es '.' (archivo en raíz) o vacío, mostrar cadena vacía para evitar '.'
+    const cleanDir = (dir === '.' || dir === '') ? '' : dir;
+
+    this._dirPathLabel = rootName
+      ? (cleanDir ? `${rootName} • ${cleanDir}` : rootName)
+      : cleanDir;
+
+    // Default to dir path
+    this.description = this._dirPathLabel;
 
     this.updateIcon();
 
-    // Default hiding strictly unless a collision is found in the controller
+    // Default to no-duplicate mode
     this.setShowDescription(false);
   }
 
-  public setShowDescription(show: boolean): void {
-    if (show) {
-      this.description = this.isRecentlyOpened ? `🕘 ${this._rawDescription}` : this._rawDescription;
+  public setShowDescription(isDuplicate: boolean): void {
+    const text = isDuplicate ? this._fullPathLabel : this._dirPathLabel;
+
+    // Si hay texto, lo mostramos. Si es reciente, añadimos reloj.
+    // Si no hay texto (archivo en raiz sin duplicado), y es reciente, solo reloj.
+    // Si no hay texto y no es reciente, undefined (oculto).
+
+    if (this.isRecentlyOpened) {
+      this.description = text ? `🕘 ${text}` : '🕘';
     } else {
-      this.description = this.isRecentlyOpened ? '🕘' : undefined;
+      this.description = text || undefined;
     }
   }
 
