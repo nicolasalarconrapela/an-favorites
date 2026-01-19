@@ -297,8 +297,8 @@ export function registerQuickOpenCommand(
           items.push({ label: '', description: '', detail: '' });
         }
 
-        // Third section: Archivos (All other files) - Solo cargar si se solicita
-        if (loadAllFiles) {
+        // Third section: Archivos (All other files) - Solo cargar si se solicita Y estamos buscando
+        if (loadAllFiles && isSearching) {
           // Usar caché si está disponible
           if (!cachedAllFileItems) {
              const allUris = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
