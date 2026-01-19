@@ -8,8 +8,14 @@ type QuickOpenItem = vscode.QuickPickItem;
 /**
  * Type guard: separadores y QuickPickItem genéricos no tienen resourceUri.
  */
-function isFileItem(item: QuickOpenItem): item is FileQuickPickItem {
+function isFileItem(item: vscode.QuickPickItem): item is FileQuickPickItem {
   return typeof (item as any)?.resourceUri?.fsPath === 'string';
+}
+
+type FavoritesAction = 'clearRecents';
+
+interface ActionQuickPickItem extends vscode.QuickPickItem {
+  action: FavoritesAction;
 }
 
 function isWindows(): boolean {
@@ -256,7 +262,7 @@ export function registerQuickOpenCommand(
         // First section: Favoritos (Siempre visible)
         const hasFavoriteItems = recentFavItems.length > 0;
         items.push({
-          label: hasFavoriteItems ? 'Favoritos' : 'No hay favoritos recientes',
+          label: hasFavoriteItems ? 'Favoritos' : 'Aún no hay favoritos',
           kind: vscode.QuickPickItemKind.Separator
         });
 
@@ -265,13 +271,6 @@ export function registerQuickOpenCommand(
         } else if (!isSearching) {
           // Solo mostrar el placeholder si NO se está buscando
           items.push({ label: 'Busque un archivo para añadirlo a favoritos en icono de la derecha', description: '', detail: '' });
-        }
-
-        // Define un tipo extendido para poder identificar acciones
-        type FavoritesAction = 'clearRecents';
-
-        interface ActionQuickPickItem extends vscode.QuickPickItem {
-          action: FavoritesAction;
         }
 
         // Second section: Recientes (Recientemente Abierto) - Siempre visible
@@ -391,8 +390,8 @@ export function registerQuickOpenCommand(
         const selected = quickPick.selectedItems[0];
         if (!selected) return;
 
-        // Check if it's the clear recent files action
-        if (selected.label === '$(trash) Limpiar lista de recientes') {
+        const actionItem = selected as unknown as ActionQuickPickItem;
+        if (actionItem.action === 'clearRecents') {
           mruService.clear();
           logger.info('Recent files list cleared from Quick Open');
           // Rebuild the picker without closing it
