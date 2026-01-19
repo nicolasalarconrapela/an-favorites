@@ -383,6 +383,14 @@ export function registerQuickOpenCommand(
       })
     );
 
+    // Listen to MRU changes and rebuild items in real-time
+    disposables.push(
+      mruService.onDidChangeRecentFiles(async () => {
+        logger.debug('MRU list changed, rebuilding QuickOpen items');
+        await buildItems(allFilesLoaded);
+      })
+    );
+
     // Enter: abrir fichero o ejecutar acción
     disposables.push(
       quickPick.onDidAccept(async () => {

@@ -5,6 +5,9 @@ export class MRUService {
   private static readonly MAX_ENTRIES = 50;
   private mruList: string[] = [];
 
+  private _onDidChangeRecentFiles = new vscode.EventEmitter<void>();
+  public readonly onDidChangeRecentFiles = this._onDidChangeRecentFiles.event;
+
   constructor(private context: vscode.ExtensionContext) {
     this.load();
 
@@ -40,6 +43,7 @@ export class MRUService {
     }
 
     this.save();
+    this._onDidChangeRecentFiles.fire();
   }
 
   public getRecentFiles(): string[] {
@@ -49,5 +53,6 @@ export class MRUService {
   public clear(): void {
     this.mruList = [];
     this.save();
+    this._onDidChangeRecentFiles.fire();
   }
 }
