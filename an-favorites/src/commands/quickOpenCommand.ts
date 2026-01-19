@@ -116,12 +116,15 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   // Props propias
   resourceUri: vscode.Uri;
   isFavorite: boolean;
+  isRecentlyOpened: boolean;
+  private _rawDescription: string;
 
   constructor(params: { uri: vscode.Uri; isFavorite: boolean; isRecentlyOpened?: boolean }) {
     const { uri, isFavorite, isRecentlyOpened = false } = params;
 
     this.resourceUri = uri;
     this.isFavorite = isFavorite;
+    this.isRecentlyOpened = isRecentlyOpened;
 
     // Label base: nombre fichero
     const baseName = safeBasenameFromUri(uri);
@@ -133,14 +136,23 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 
     // Description/detail: RELATIVO al proyecto (workspace)
     const { rel, rootName } = workspaceRelativeLabel(uri);
-    this.description = rootName ? `${rootName} • ${rel}` : rel;
+    this._rawDescription = rootName ? `${rootName} • ${rel}` : rel;
 
-    // Indicador de “reciente”
-    if (isRecentlyOpened) {
-      this.description = `🕘 ${this.description}`;
-    }
+    // Default to plain description, but will be updated by setShowDescription immediately after
+    this.description = this._rawDescription;
 
     this.updateIcon();
+
+    // Default hiding strictly unless a collision is found in the controller
+    this.setShowDescription(false);
+  }
+
+  public setShowDescription(show: boolean): void {
+    if (show) {
+      this.description = this.isRecentlyOpened ? `🕘 ${this._rawDescription}` : this._rawDescription;
+    } else {
+      this.description = this.isRecentlyOpened ? '🕘' : undefined;
+    }
   }
 
   updateIcon(): void {
@@ -298,6 +310,8 @@ export function registerQuickOpenCommand(
         }
 
         // Third section: Archivos (All other files) - Solo cargar si se solicita Y estamos buscando
+        let otherItems: FileQuickPickItem[] = [];
+
         if (loadAllFiles && isSearching) {
           // Usar caché si está disponible
           if (!cachedAllFileItems) {
@@ -311,7 +325,7 @@ export function registerQuickOpenCommand(
 
           if (cachedAllFileItems) {
             // Filtrar y actualizar estado favorito en tiempo real
-            const otherItems = cachedAllFileItems
+            otherItems = cachedAllFileItems
               .filter(item => {
                 const normalizedPath = normalizeFsPath(item.resourceUri.fsPath);
                 return !recentNormSet.has(normalizedPath) && !recentFavNormSet.has(normalizedPath);
@@ -325,12 +339,27 @@ export function registerQuickOpenCommand(
                  }
                  return item;
               });
-
-            if (otherItems.length > 0) {
-              items.push({ label: 'Archivos', kind: vscode.QuickPickItemKind.Separator });
-              items.push(...otherItems);
-            }
           }
+        }
+
+        // --- Collision detection to toggle path visibility ---
+        const allFileItems = [...recentFavItems, ...recentItems, ...otherItems];
+        const nameCounts = new Map<string, number>();
+
+        for (const item of allFileItems) {
+          const name = safeBasenameFromUri(item.resourceUri);
+          nameCounts.set(name, (nameCounts.get(name) || 0) + 1);
+        }
+
+        for (const item of allFileItems) {
+          const name = safeBasenameFromUri(item.resourceUri);
+          item.setShowDescription((nameCounts.get(name) || 0) > 1);
+        }
+        // ----------------------------------------------------
+
+        if (otherItems.length > 0) {
+          items.push({ label: 'Archivos', kind: vscode.QuickPickItemKind.Separator });
+          items.push(...otherItems);
         }
 
         quickPick.items = items;
