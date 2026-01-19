@@ -66,25 +66,30 @@ function safeBasenameFromUri(uri: vscode.Uri): string {
 
 /**
  * Ruta relativa al workspace (y si es multi-root, prefija con el nombre del root).
+ * Devuelve solo el directorio, sin el nombre del archivo.
  */
 function workspaceRelativeLabel(uri: vscode.Uri): { rel: string; rootName?: string } {
   const folders = vscode.workspace.workspaceFolders ?? [];
   if (folders.length === 0) {
     // Sin workspace abierto: muestra lo que haya
     const fsPath = (uri as any)?.fsPath;
-    return { rel: typeof fsPath === 'string' && fsPath ? fsPath : uri.toString() };
+    const dirPath = typeof fsPath === 'string' && fsPath ? path.dirname(fsPath) : uri.toString();
+    return { rel: dirPath };
   }
 
   const folder = vscode.workspace.getWorkspaceFolder(uri);
 
   // asRelativePath puede devolver absoluto si está fuera del workspace
-  const rel = vscode.workspace.asRelativePath(uri, false);
+  const relPath = vscode.workspace.asRelativePath(uri, false);
+
+  // Extraer solo el directorio (sin el nombre del archivo)
+  const dirPath = path.dirname(relPath);
 
   if (folders.length > 1 && folder) {
-    return { rel, rootName: folder.name };
+    return { rel: dirPath, rootName: folder.name };
   }
 
-  return { rel };
+  return { rel: dirPath };
 }
 
 /**
