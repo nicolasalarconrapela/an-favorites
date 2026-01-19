@@ -284,8 +284,7 @@ export function registerQuickOpenCommand(
         if (hasRecentFiles) {
           // Acción "Limpiar" - solo mostrar si hay archivos en MRU
           const clearRecentsItem: ActionQuickPickItem = {
-            label: '                      $(trash) Limpiar',
-            // description: 'Eliminar todos los archivos de esta sección',
+            label: '\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t       $(trash) Limpiar',
             action: 'clearRecents'
           };
 
