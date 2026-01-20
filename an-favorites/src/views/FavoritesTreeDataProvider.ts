@@ -307,4 +307,29 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
 
     this.context.globalState.update('anfavorites.favorites.v2', favoritesArray);
   }
+
+  public async validateFavorites(): Promise<void> {
+    const originalSize = this.favorites.size;
+    const toDelete: string[] = [];
+
+    // Parallel validation might be faster but sticking to sequential for safety/simplicity in this context
+    // or Promise.all for better performance if list is large
+    const validations = Array.from(this.favorites.keys()).map(async (filePath) => {
+      try {
+        const uri = vscode.Uri.file(filePath);
+        await vscode.workspace.fs.stat(uri);
+      } catch {
+        toDelete.push(filePath);
+      }
+    });
+
+    await Promise.all(validations);
+
+    if (toDelete.length > 0) {
+      toDelete.forEach(filePath => this.favorites.delete(filePath));
+      this.saveFavorites();
+      this.refresh();
+      // Use console/logger if available, or just strict update
+    }
+  }
 }

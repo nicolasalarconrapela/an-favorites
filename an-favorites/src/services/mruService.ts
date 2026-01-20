@@ -55,4 +55,24 @@ export class MRUService {
     this.save();
     this._onDidChangeRecentFiles.fire();
   }
+
+  public async validateFiles(): Promise<void> {
+    const originalLength = this.mruList.length;
+    const validFiles: string[] = [];
+
+    for (const fsPath of this.mruList) {
+      try {
+        const uri = vscode.Uri.file(fsPath);
+        await vscode.workspace.fs.stat(uri);
+        validFiles.push(fsPath);
+      } catch (error) {
+      }
+    }
+
+    if (validFiles.length !== originalLength) {
+      this.mruList = validFiles;
+      this.save();
+      this._onDidChangeRecentFiles.fire();
+    }
+  }
 }

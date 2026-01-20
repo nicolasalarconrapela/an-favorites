@@ -50,6 +50,21 @@ export function activate(context: vscode.ExtensionContext): void {
   telemetry.track('activated');
   logger.info('━━━ Extension activation completed successfully ━━━');
 
+  // Watch for file deletions to automatically clean up favorites and recent files
+  const fileWatcher = vscode.workspace.createFileSystemWatcher('**/*');
+
+  fileWatcher.onDidDelete(async (uri) => {
+    logger.debug(`File deleted: ${uri.fsPath}`);
+
+    await Promise.all([
+      favoritesProvider.validateFavorites(),
+      mruService.validateFiles()
+    ]);
+
+    logger.debug(`Validated lists after file deletion: ${uri.fsPath}`);
+  });
+
+  context.subscriptions.push(fileWatcher);
   context.subscriptions.push({ dispose: () => logger.dispose?.() });
 }
 

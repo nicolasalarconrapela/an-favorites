@@ -213,6 +213,11 @@ export function registerQuickOpenCommand(
 
     logger.debug('QuickOpen triggered');
 
+    await Promise.all([
+      favoritesProvider.validateFavorites(),
+      mruService.validateFiles()
+    ]);
+
     const disposables: vscode.Disposable[] = [];
 
     const safeDispose = () => {
@@ -456,9 +461,30 @@ export function registerQuickOpenCommand(
           return;
         }
 
+
         // Normal file selection
         if (!isFileItem(selected)) return;
 
+        // Verify file exists before attempting to open
+        try {
+          await vscode.workspace.fs.stat(selected.resourceUri);
+        } catch (error) {
+          // File doesn't exist
+          logger.warn(`File no longer exists: ${selected.resourceUri.fsPath}`);
+          vscode.window.showErrorMessage(`El archivo no existe: ${selected.resourceUri.fsPath}`);
+
+          // Clean up both lists
+          await Promise.all([
+            favoritesProvider.validateFavorites(),
+            mruService.validateFiles()
+          ]);
+
+          // Rebuild the picker to reflect the cleanup
+          await buildItems(allFilesLoaded);
+          return;
+        }
+
+        // File exists, proceed to add to MRU and open
         try {
           mruService.add(selected.resourceUri.fsPath);
         } catch (e) {
