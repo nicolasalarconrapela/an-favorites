@@ -139,17 +139,18 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     // Description/detail: RELATIVO al proyecto (workspace)
     const { rel, rootName } = workspaceRelativeLabel(uri);
 
-    // Ruta completa
-    this._fullPathLabel = rootName ? `${rootName} • ${rel}` : rel;
-
-    // Ruta solo directorio (si es root, queda vacío o solo rootName)
+    // Extraer directorio de la ruta relativa (sin nombre de archivo)
     const dir = path.dirname(rel);
     // Si dirname es '.' (archivo en raíz) o vacío, mostrar cadena vacía para evitar '.'
     const cleanDir = (dir === '.' || dir === '') ? '' : dir;
 
-    this._dirPathLabel = rootName
+    // Ruta completa (solo directorio, sin archivo)
+    this._fullPathLabel = rootName
       ? (cleanDir ? `${rootName} • ${cleanDir}` : rootName)
       : cleanDir;
+
+    // Ruta solo directorio (mismo que fullPath, ya que ambos muestran solo directorio)
+    this._dirPathLabel = this._fullPathLabel;
 
     // Default to dir path
     this.description = this._dirPathLabel;
