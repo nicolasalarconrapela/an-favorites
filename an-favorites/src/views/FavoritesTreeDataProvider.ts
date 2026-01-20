@@ -16,6 +16,9 @@ export class CategoryItem extends vscode.TreeItem {
 }
 
 export class FavoriteItem extends vscode.TreeItem {
+  private _fullPath: string;
+  private _dirPath: string;
+
   constructor(
     public readonly resourceUri: vscode.Uri,
     public readonly category: string,
@@ -24,7 +27,11 @@ export class FavoriteItem extends vscode.TreeItem {
     super(resourceUri, collapsibleState);
 
     this.tooltip = resourceUri.fsPath;
-    this.description = path.dirname(resourceUri.fsPath);
+    this._fullPath = resourceUri.fsPath;
+    this._dirPath = path.dirname(resourceUri.fsPath);
+
+    // Default: hide description
+    this.description = undefined;
 
     // Usar el comando de VS Code para abrir el archivo
     this.command = {
@@ -35,6 +42,10 @@ export class FavoriteItem extends vscode.TreeItem {
 
     // Configurar el icono basado en el tipo de archivo
     this.iconPath = vscode.ThemeIcon.File;
+  }
+
+  public setShowDescription(isDuplicate: boolean): void {
+    this.description = isDuplicate ? this._dirPath : undefined;
   }
 
   contextValue = 'favoriteItem';
@@ -120,6 +131,19 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
           }
         }
       });
+
+      // Detect name collisions and set description visibility
+      const nameCounts = new Map<string, number>();
+
+      for (const item of items) {
+        const basename = path.basename(item.resourceUri.fsPath);
+        nameCounts.set(basename, (nameCounts.get(basename) || 0) + 1);
+      }
+
+      for (const item of items) {
+        const basename = path.basename(item.resourceUri.fsPath);
+        item.setShowDescription((nameCounts.get(basename) || 0) > 1);
+      }
 
       return Promise.resolve(items);
     }
