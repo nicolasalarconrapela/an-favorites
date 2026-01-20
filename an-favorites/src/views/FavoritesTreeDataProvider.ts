@@ -356,4 +356,14 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
       // Use console/logger if available, or just strict update
     }
   }
+
+  public updatePath(oldPath: string, newPath: string): void {
+    const metadata = this.favorites.get(oldPath);
+    if (metadata) {
+      this.favorites.delete(oldPath);
+      this.favorites.set(newPath, metadata);
+      this.saveFavorites();
+      this.refresh();
+    }
+  }
 }

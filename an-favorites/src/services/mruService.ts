@@ -75,4 +75,13 @@ export class MRUService {
       this._onDidChangeRecentFiles.fire();
     }
   }
+
+  public updatePath(oldPath: string, newPath: string): void {
+    const index = this.mruList.indexOf(oldPath);
+    if (index !== -1) {
+      this.mruList[index] = newPath;
+      this.save();
+      this._onDidChangeRecentFiles.fire();
+    }
+  }
 }

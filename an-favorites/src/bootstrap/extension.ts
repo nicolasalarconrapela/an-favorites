@@ -65,6 +65,24 @@ export function activate(context: vscode.ExtensionContext): void {
   });
 
   context.subscriptions.push(fileWatcher);
+
+  // Watch for file renames/moves to update paths in favorites and recent files
+  const renameListener = vscode.workspace.onDidRenameFiles(async (event) => {
+    logger.debug(`Files renamed/moved: ${event.files.length} files`);
+
+    for (const file of event.files) {
+      const oldPath = file.oldUri.fsPath;
+      const newPath = file.newUri.fsPath;
+
+      logger.debug(`Updating path: ${oldPath} -> ${newPath}`);
+
+      // Update in both lists
+      favoritesProvider.updatePath(oldPath, newPath);
+      mruService.updatePath(oldPath, newPath);
+    }
+  });
+
+  context.subscriptions.push(renameListener);
   context.subscriptions.push({ dispose: () => logger.dispose?.() });
 }
 
