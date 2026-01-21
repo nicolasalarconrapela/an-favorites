@@ -28,12 +28,38 @@ export class MRUService {
 
 
   private load(): void {
-    const stored = this.context.globalState.get<string[]>(MRUService.STORAGE_KEY);
-    if (stored) {
-      this.mruList = stored;
-      this.logger.info(`[storage] loadMRU -> count=${stored.length}`);
+    // 1. Try workspace state first
+    const workspaceStored = this.context.workspaceState.get<string[]>(MRUService.STORAGE_KEY);
+    if (workspaceStored) {
+      this.mruList = workspaceStored;
+      this.logger.info(`[storage] loadMRU (workspace) -> count=${workspaceStored.length}`);
+      this.checkForDuplicateNames();
+      return;
+    }
+
+    // 2. Migration: Check global state
+    const globalStored = this.context.globalState.get<string[]>(MRUService.STORAGE_KEY);
+    if (globalStored && globalStored.length > 0) {
+      this.logger.info(`[storage] Migrating MRU from global -> workspace. Total global=${globalStored.length}`);
+
+      // Filter items belonging to current workspace
+      const migrated: string[] = [];
+      for (const filePath of globalStored) {
+        const uri = vscode.Uri.file(filePath);
+        if (vscode.workspace.getWorkspaceFolder(uri)) {
+          migrated.push(filePath);
+        }
+      }
+
+      if (migrated.length > 0) {
+        this.mruList = migrated;
+        this.save(); // Save to workspace state immediately
+        this.logger.info(`[storage] Migration complete. Imported ${migrated.length} items for this workspace.`);
+      } else {
+        this.logger.info('[storage] Migration: No global items belong to this workspace.');
+      }
     } else {
-      this.logger.info('[storage] No MRU history found');
+      this.logger.info('[storage] No MRU history found (workspace or global)');
     }
 
     this.checkForDuplicateNames();
@@ -67,7 +93,7 @@ export class MRUService {
   }
 
   private save(): void {
-    this.context.globalState.update(MRUService.STORAGE_KEY, this.mruList);
+    this.context.workspaceState.update(MRUService.STORAGE_KEY, this.mruList);
   }
 
   public add(fsPath: string): void {

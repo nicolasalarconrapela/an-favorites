@@ -413,44 +413,77 @@ export class FavoritesTreeDataProvider
   }
 
   private loadFavorites(): void {
-    // 1) Try v2
-    const storedFavorites = this.context.globalState.get<FavoriteData[]>('anfavorites.favorites.v2');
-    this.logger.info('[storage] storedFavorites', storedFavorites);
-    if (storedFavorites) {
-      this.logger.info(`[storage] loadFavorites v2 -> count=${storedFavorites.length}`);
-
-      storedFavorites.forEach((fav) => {
+    // 1) Try workspace v2
+    const workspaceStored = this.context.workspaceState.get<FavoriteData[]>('anfavorites.favorites.v2');
+    if (workspaceStored) {
+      this.logger.info(`[storage] loadFavorites v2 (workspace) -> count=${workspaceStored.length}`);
+      workspaceStored.forEach((fav) => {
         this.favorites.set(fav.path, {
           category: fav.category,
           addedAt: fav.addedAt || Date.now(),
         });
       });
-
       this.checkForDuplicateNames();
       return;
     }
 
-    // 2) Migration from v1
-    const legacyFavorites = this.context.globalState.get<string[]>('anfavorites.favorites');
+    // 2) Migration from GLOBAL v2 -> WORKSPACE v2
+    const globalStored = this.context.globalState.get<FavoriteData[]>('anfavorites.favorites.v2');
+    if (globalStored && globalStored.length > 0) {
+      this.logger.info(`[storage] Migrating global v2 -> workspace v2. Total global=${globalStored.length}`);
 
-    if (legacyFavorites && legacyFavorites.length > 0) {
-      this.logger.info(`[storage] Migrating v1 -> v2. count=${legacyFavorites.length}`);
-
-      const now = Date.now();
-      legacyFavorites.forEach((filePath, index) => {
-        this.favorites.set(filePath, {
-          category: FavoritesTreeDataProvider.DEFAULT_CATEGORY,
-          // preserva algo de ordering
-          addedAt: now - (legacyFavorites.length - index),
-        });
+      let importedCount = 0;
+      globalStored.forEach((fav) => {
+        const uri = vscode.Uri.file(fav.path);
+        // Sólo importar si pertenece al workspace actual
+        if (vscode.workspace.getWorkspaceFolder(uri)) {
+           this.favorites.set(fav.path, {
+            category: fav.category,
+            addedAt: fav.addedAt || Date.now(),
+          });
+          importedCount++;
+        }
       });
 
-      this.saveFavorites();
+      if (importedCount > 0) {
+        this.saveFavorites(); // Guardar en workspaceState
+        this.logger.info(`[storage] Migration complete. Imported ${importedCount} favorites for this workspace.`);
+      } else {
+        this.logger.info('[storage] Migration: No global favorites belong to this workspace.');
+      }
+
       this.checkForDuplicateNames();
       return;
     }
 
-    this.logger.info('[storage] No favorites found (v1/v2 empty)');
+    // 3) Migration from v1 (legacy global) -> WORKSPACE
+    const legacyFavorites = this.context.globalState.get<string[]>('anfavorites.favorites');
+    if (legacyFavorites && legacyFavorites.length > 0) {
+      this.logger.info(`[storage] Migrating v1 (legacy) -> workspace. Total legacy=${legacyFavorites.length}`);
+
+      const now = Date.now();
+      let importedCount = 0;
+      legacyFavorites.forEach((filePath, index) => {
+         const uri = vscode.Uri.file(filePath);
+         if (vscode.workspace.getWorkspaceFolder(uri)) {
+            this.favorites.set(filePath, {
+              category: FavoritesTreeDataProvider.DEFAULT_CATEGORY,
+              addedAt: now - (legacyFavorites.length - index),
+            });
+            importedCount++;
+         }
+      });
+
+      if (importedCount > 0) {
+        this.saveFavorites();
+        this.logger.info(`[storage] Migration v1 complete. Imported ${importedCount} favorites.`);
+      }
+
+      this.checkForDuplicateNames();
+      return;
+    }
+
+    this.logger.info('[storage] No favorites found (workspace or global)');
     this.checkForDuplicateNames();
   }
 
@@ -492,8 +525,8 @@ export class FavoritesTreeDataProvider
       });
     });
 
-    this.logger.info(`[storage] saveFavorites v2 -> count=${favoritesArray.length}`);
-    this.context.globalState.update('anfavorites.favorites.v2', favoritesArray);
+    this.logger.info(`[storage] saveFavorites v2 (workspace) -> count=${favoritesArray.length}`);
+    this.context.workspaceState.update('anfavorites.favorites.v2', favoritesArray);
   }
 
   public async validateFavorites(): Promise<void> {
