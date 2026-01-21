@@ -13,6 +13,7 @@ import { HelloService } from '../services/helloService';
 import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
+import { SharedStorageService } from '../services/sharedStorageService';
 
 export function activate(context: vscode.ExtensionContext): void {
   const logger = createAppLogger(context, {
@@ -25,9 +26,10 @@ export function activate(context: vscode.ExtensionContext): void {
   logger.show(true);
 
   const settings = loadSettings();
+  const sharedStorage = new SharedStorageService(logger);
   const helloService = new HelloService();
   const telemetry = new TelemetryService();
-  const mruService = new MRUService(context, logger);
+  const mruService = new MRUService(context, logger, sharedStorage);
 
   // Registrar comandos existentes
   registerHelloCommand(context, helloService, logger, settings);
@@ -37,7 +39,7 @@ export function activate(context: vscode.ExtensionContext): void {
   logger.info('Registering favorites tree provider...');
 
   // Registrar el árbol de favoritos
-  const favoritesProvider = new FavoritesTreeDataProvider(context, logger);
+  const favoritesProvider = new FavoritesTreeDataProvider(context, logger, sharedStorage);
   vscode.window.registerTreeDataProvider('anfavorites.favoritesView', favoritesProvider);
 
   logger.info('Registering favorites commands...');
@@ -96,6 +98,7 @@ export function activate(context: vscode.ExtensionContext): void {
   });
 
   context.subscriptions.push(renameListener);
+  context.subscriptions.push({ dispose: () => sharedStorage.dispose() });
   context.subscriptions.push({ dispose: () => logger.dispose?.() });
 }
 

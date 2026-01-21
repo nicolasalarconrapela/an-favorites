@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { Logger } from '../logging/logger';
+import { SharedStorageService } from '../services/sharedStorageService';
 
 export class CategoryItem extends vscode.TreeItem {
   constructor(
     public readonly categoryName: string,
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState
+    public readonly collapsibleState: vscode.TreeItemCollapsibleState,
   ) {
     super(categoryName, collapsibleState);
 
@@ -22,7 +23,7 @@ export class FavoriteItem extends vscode.TreeItem {
   constructor(
     public readonly resourceUri: vscode.Uri,
     public readonly category: string,
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState
+    public readonly collapsibleState: vscode.TreeItemCollapsibleState,
   ) {
     // ✅ IMPORTANTE:
     // NO uses `super(resourceUri, ...)` porque VS Code tiende a autogenerar
@@ -89,26 +90,23 @@ interface FavoriteMetadata {
   addedAt: number;
 }
 
-export class FavoritesTreeDataProvider
-  implements vscode.TreeDataProvider<CategoryItem | FavoriteItem>
-{
-  private _onDidChangeTreeData: vscode.EventEmitter<
-    CategoryItem | FavoriteItem | undefined | null | void
-  > = new vscode.EventEmitter<CategoryItem | FavoriteItem | undefined | null | void>();
+export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<CategoryItem | FavoriteItem> {
+    private _onDidChangeTreeData: vscode.EventEmitter<CategoryItem | FavoriteItem | undefined | null | void> = new vscode.EventEmitter<CategoryItem | FavoriteItem | undefined | null | void>();
 
-  readonly onDidChangeTreeData: vscode.Event<
-    CategoryItem | FavoriteItem | undefined | null | void
-  > = this._onDidChangeTreeData.event;
+  readonly onDidChangeTreeData: vscode.Event<CategoryItem | FavoriteItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
   // Map<filePath, FavoriteMetadata>
   private favorites: Map<string, FavoriteMetadata> = new Map();
 
   public static readonly DEFAULT_CATEGORY = 'Sin Categoría';
 
-
-
-  constructor(private context: vscode.ExtensionContext, private logger: Logger) {
+  constructor(private context: vscode.ExtensionContext, private logger: Logger, private storage: SharedStorageService) {
     this.loadFavorites();
+    this.storage.onDidChange(() => {
+      this.logger.info('[storage] External change detected -> reloading');
+      this.reloadFavorites();
+      this.refresh();
+    });
 
     // Refresh when workspace folders change (Multi-root support)
     vscode.workspace.onDidChangeWorkspaceFolders(() => {
@@ -139,9 +137,9 @@ export class FavoritesTreeDataProvider
       const categoryMap = this.getCategoryMap();
 
       const ws = (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath);
-      this.logger.info(`[getChildren:root] Start. favorites=${this.favorites.size} categories=${categoryMap.size}`, {
-        workspaceFolders: ws,
-      });
+      this.logger.info(`[getChildren:root] Start. favorites=${this.favorites.size} categories=${categoryMap.size}`,
+        { workspaceFolders: ws }
+      );
       // TODO: Poder individualizar las categorias por workspace
       // TODO: Individualizar los archivos por workspace
       categoryMap.forEach((filePaths, categoryName) => {
@@ -161,15 +159,22 @@ export class FavoritesTreeDataProvider
 
         this.logger.info(
           '[getChildren:root] ' +
-          `Category "${categoryName}" -> files=${filePaths.length} hasVisibleFiles=${hasVisibleFiles} isEmpty=${isEmpty} included=${included}`
+            `Category "${categoryName}" -> files=${filePaths.length} hasVisibleFiles=${hasVisibleFiles} isEmpty=${isEmpty} included=${included}`,
         );
 
         if (included) {
-          categories.push(new CategoryItem(categoryName, vscode.TreeItemCollapsibleState.Expanded));
+          categories.push(
+            new CategoryItem(
+              categoryName,
+              vscode.TreeItemCollapsibleState.Expanded,
+            ),
+          );
         }
       });
 
-      this.logger.info(`[getChildren:root] End. returnedCategories=${categories.length} in ${Date.now() - t0}ms`);
+      this.logger.info(
+        `[getChildren:root] End. returnedCategories=${categories.length} in ${Date.now() - t0}ms`,
+      );
       return Promise.resolve(categories);
     }
 
@@ -186,11 +191,19 @@ export class FavoritesTreeDataProvider
         // Filter: Only show files belonging to current workspace(s)
         const wf = vscode.workspace.getWorkspaceFolder(uri);
         if (!wf) {
-          this.logger.info(`[getChildren:category] EXCLUDED (not in workspace): ${filePath}`);
+          this.logger.info(
+            `[getChildren:category] EXCLUDED (not in workspace): ${filePath}`,
+          );
           return;
         }
 
-        items.push(new FavoriteItem(uri, element.categoryName, vscode.TreeItemCollapsibleState.None));
+        items.push(
+          new FavoriteItem(
+            uri,
+            element.categoryName,
+            vscode.TreeItemCollapsibleState.None,
+          ),
+        );
       });
 
       this.logger.info(`[getChildren:category] Collected items=${items.length}`);
@@ -225,10 +238,12 @@ export class FavoritesTreeDataProvider
           if (!isDup) {
             item.setShowDescription(false);
             // Debug fino: confirmar que description queda undefined
-            this.logger.info(`[collisions] OK  "${nameKey}" -> description OFF`, {
-              file: item.resourceUri.fsPath,
-              description: item.description,
-            });
+            this.logger.info(`[collisions] OK  "${nameKey}" -> description OFF`,
+              {
+                file: item.resourceUri.fsPath,
+                description: item.description,
+              }
+            );
             continue;
           }
 
@@ -247,7 +262,7 @@ export class FavoritesTreeDataProvider
 
       this.logger.info(
         '[getChildren:category] ' +
-        `End "${element.categoryName}" returnedItems=${items.length} in ${Date.now() - t0}ms`
+          `End "${element.categoryName}" returnedItems=${items.length} in ${Date.now() - t0}ms`,
       );
       return Promise.resolve(items);
     }
@@ -273,10 +288,13 @@ export class FavoritesTreeDataProvider
   }
 
   addFavorite(uri: vscode.Uri, category?: string): void {
-    const targetCategory = category || FavoritesTreeDataProvider.DEFAULT_CATEGORY;
+    const targetCategory =
+      category || FavoritesTreeDataProvider.DEFAULT_CATEGORY;
     const filePath = uri.fsPath;
 
-    this.logger.info(`[favorites] addFavorite -> ${filePath}`, { category: targetCategory });
+    this.logger.info(`[favorites] addFavorite -> ${filePath}`, {
+      category: targetCategory,
+    });
 
     // Add or update with current timestamp
     this.favorites.set(filePath, {
@@ -331,7 +349,9 @@ export class FavoritesTreeDataProvider
     this.favorites.forEach((metadata, filePath) => {
       if (metadata.category === categoryName) {
         metadata.category = FavoritesTreeDataProvider.DEFAULT_CATEGORY;
-        this.logger.info(`[categories] Moved favorite to default`, { filePath });
+        this.logger.info(`[categories] Moved favorite to default`, {
+          filePath
+        });
       }
     });
 
@@ -348,9 +368,9 @@ export class FavoritesTreeDataProvider
     const categoryMap = this.getCategoryMap();
     if (!categoryMap.has(oldName) || categoryMap.has(newName)) {
       this.logger.warn(`[categories] renameCategory FAILED -> "${oldName}" to "${newName}"`, {
-        oldExists: categoryMap.has(oldName),
-        newExists: categoryMap.has(newName),
-      });
+          oldExists: categoryMap.has(oldName),
+          newExists: categoryMap.has(newName),
+        });
       return false;
     }
 
@@ -360,7 +380,10 @@ export class FavoritesTreeDataProvider
     this.favorites.forEach((metadata, filePath) => {
       if (metadata.category === oldName) {
         metadata.category = newName;
-        this.logger.info(`[categories] Updated favorite category`, { filePath, newName });
+        this.logger.info(`[categories] Updated favorite category`, {
+          filePath,
+          newName,
+        });
       }
     });
 
@@ -376,7 +399,10 @@ export class FavoritesTreeDataProvider
       return;
     }
 
-    this.logger.info(`[favorites] moveFavorite -> ${uri.fsPath}`, { from: metadata.category, to: newCategory });
+    this.logger.info(`[favorites] moveFavorite -> ${uri.fsPath}`, {
+      from: metadata.category,
+      to: newCategory,
+    });
     metadata.category = newCategory;
 
     this.saveFavorites();
@@ -413,11 +439,15 @@ export class FavoritesTreeDataProvider
   }
 
   private loadFavorites(): void {
-    // 1) Try workspace v2
-    const workspaceStored = this.context.workspaceState.get<FavoriteData[]>('anfavorites.favorites.v2');
-    if (workspaceStored) {
-      this.logger.info(`[storage] loadFavorites v2 (workspace) -> count=${workspaceStored.length}`);
-      workspaceStored.forEach((fav) => {
+    // 1) Try shared storage first
+    const sharedData = this.storage.get<FavoriteData[]>(
+      'anfavorites.favorites.v2',
+    );
+    if (sharedData) {
+      this.logger.info(
+        `[storage] loadFavorites (shared) -> count=${sharedData.length}`,
+      );
+      sharedData.forEach((fav) => {
         this.favorites.set(fav.path, {
           category: fav.category,
           addedAt: fav.addedAt || Date.now(),
@@ -427,63 +457,59 @@ export class FavoritesTreeDataProvider
       return;
     }
 
-    // 2) Migration from GLOBAL v2 -> WORKSPACE v2
-    const globalStored = this.context.globalState.get<FavoriteData[]>('anfavorites.favorites.v2');
-    if (globalStored && globalStored.length > 0) {
-      this.logger.info(`[storage] Migrating global v2 -> workspace v2. Total global=${globalStored.length}`);
+    // 2) Migration from WORKSPACE v2 -> SHARED
+    const workspaceStored = this.context.workspaceState.get<FavoriteData[]>(
+      'anfavorites.favorites.v2',
+    );
+    if (workspaceStored && workspaceStored.length > 0) {
+      this.logger.info(
+        `[storage] Migrating workspace v2 -> shared. Total=${workspaceStored.length}`,
+      );
+      workspaceStored.forEach((fav) => {
+        this.favorites.set(fav.path, {
+          category: fav.category,
+          addedAt: fav.addedAt || Date.now(),
+        });
+      });
+      this.saveFavorites(); // Save to shared storage
+      this.checkForDuplicateNames();
+      return;
+    }
 
+    // 3) Migration from v1 (legacy global) -> SHARED
+    const legacyFavorites = this.context.globalState.get<string[]>(
+      'anfavorites.favorites',
+    );
+    if (legacyFavorites && legacyFavorites.length > 0) {
+      this.logger.info(
+        `[storage] Migrating v1 (legacy) -> workspace. Total legacy=${legacyFavorites.length}`,
+      );
+
+      const now = Date.now();
       let importedCount = 0;
-      globalStored.forEach((fav) => {
-        const uri = vscode.Uri.file(fav.path);
-        // Sólo importar si pertenece al workspace actual
+      legacyFavorites.forEach((filePath, index) => {
+        const uri = vscode.Uri.file(filePath);
         if (vscode.workspace.getWorkspaceFolder(uri)) {
-           this.favorites.set(fav.path, {
-            category: fav.category,
-            addedAt: fav.addedAt || Date.now(),
+          this.favorites.set(filePath, {
+            category: FavoritesTreeDataProvider.DEFAULT_CATEGORY,
+            addedAt: now - (legacyFavorites.length - index),
           });
           importedCount++;
         }
       });
 
       if (importedCount > 0) {
-        this.saveFavorites(); // Guardar en workspaceState
-        this.logger.info(`[storage] Migration complete. Imported ${importedCount} favorites for this workspace.`);
-      } else {
-        this.logger.info('[storage] Migration: No global favorites belong to this workspace.');
-      }
-
-      this.checkForDuplicateNames();
-      return;
-    }
-
-    // 3) Migration from v1 (legacy global) -> WORKSPACE
-    const legacyFavorites = this.context.globalState.get<string[]>('anfavorites.favorites');
-    if (legacyFavorites && legacyFavorites.length > 0) {
-      this.logger.info(`[storage] Migrating v1 (legacy) -> workspace. Total legacy=${legacyFavorites.length}`);
-
-      const now = Date.now();
-      let importedCount = 0;
-      legacyFavorites.forEach((filePath, index) => {
-         const uri = vscode.Uri.file(filePath);
-         if (vscode.workspace.getWorkspaceFolder(uri)) {
-            this.favorites.set(filePath, {
-              category: FavoritesTreeDataProvider.DEFAULT_CATEGORY,
-              addedAt: now - (legacyFavorites.length - index),
-            });
-            importedCount++;
-         }
-      });
-
-      if (importedCount > 0) {
         this.saveFavorites();
-        this.logger.info(`[storage] Migration v1 complete. Imported ${importedCount} favorites.`);
+        this.logger.info(
+          `[storage] Migration v1 complete. Imported ${importedCount} favorites.`,
+        );
       }
 
       this.checkForDuplicateNames();
       return;
     }
 
-    this.logger.info('[storage] No favorites found (workspace or global)');
+    this.logger.info('[storage] No favorites found (shared or migrated)');
     this.checkForDuplicateNames();
   }
 
@@ -525,8 +551,8 @@ export class FavoritesTreeDataProvider
       });
     });
 
-    this.logger.info(`[storage] saveFavorites v2 (workspace) -> count=${favoritesArray.length}`);
-    this.context.workspaceState.update('anfavorites.favorites.v2', favoritesArray);
+    this.logger.info(`[storage] saveFavorites (shared) -> count=${favoritesArray.length}`);
+    this.storage.update('anfavorites.favorites.v2', favoritesArray);
   }
 
   public async validateFavorites(): Promise<void> {
@@ -535,14 +561,16 @@ export class FavoritesTreeDataProvider
 
     this.logger.info(`[validate] validateFavorites start. size=${originalSize}`);
 
-    const validations = Array.from(this.favorites.keys()).map(async (filePath) => {
-      try {
-        const uri = vscode.Uri.file(filePath);
-        await vscode.workspace.fs.stat(uri);
-      } catch {
-        toDelete.push(filePath);
+    const validations = Array.from(this.favorites.keys()).map(
+      async (filePath) => {
+        try {
+          const uri = vscode.Uri.file(filePath);
+          await vscode.workspace.fs.stat(uri);
+        } catch {
+          toDelete.push(filePath);
+        }
       }
-    });
+    );
 
     await Promise.all(validations);
 
@@ -564,7 +592,9 @@ export class FavoritesTreeDataProvider
       return;
     }
 
-    this.logger.info(`[favorites] updatePath -> ${oldPath} => ${newPath}`, { category: metadata.category });
+    this.logger.info(`[favorites] updatePath -> ${oldPath} => ${newPath}`, {
+      category: metadata.category
+    });
 
     this.favorites.delete(oldPath);
     this.favorites.set(newPath, metadata);

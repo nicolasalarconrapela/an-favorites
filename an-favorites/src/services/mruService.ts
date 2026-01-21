@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { Logger } from '../logging/logger';
+import { SharedStorageService } from './sharedStorageService';
 
 export class MRUService {
   private static readonly STORAGE_KEY = 'anfavorites.mru.history';
@@ -10,10 +11,13 @@ export class MRUService {
   private _onDidChangeRecentFiles = new vscode.EventEmitter<void>();
   public readonly onDidChangeRecentFiles = this._onDidChangeRecentFiles.event;
 
-
-
-  constructor(private context: vscode.ExtensionContext, private logger: Logger) {
+  constructor(private context: vscode.ExtensionContext, private logger: Logger, private storage: SharedStorageService) {
     this.load();
+    this.storage.onDidChange(() => {
+      this.logger.info('[mru] External change detected -> reloading');
+      this.load();
+      this._onDidChangeRecentFiles.fire();
+    });
 
     // Listen for file changes to update MRU
     vscode.window.onDidChangeActiveTextEditor((editor) => {
@@ -28,19 +32,37 @@ export class MRUService {
 
 
   private load(): void {
-    // 1. Try workspace state first
-    const workspaceStored = this.context.workspaceState.get<string[]>(MRUService.STORAGE_KEY);
-    if (workspaceStored) {
-      this.mruList = workspaceStored;
-      this.logger.info(`[storage] loadMRU (workspace) -> count=${workspaceStored.length}`);
+    // 1. Try shared storage first
+    const sharedData = this.storage.get<string[]>(MRUService.STORAGE_KEY);
+    if (sharedData) {
+      this.mruList = sharedData;
+      this.logger.info(
+        `[storage] loadMRU (shared) -> count=${sharedData.length}`,
+      );
       this.checkForDuplicateNames();
       return;
     }
 
-    // 2. Migration: Check global state
-    const globalStored = this.context.globalState.get<string[]>(MRUService.STORAGE_KEY);
+    // 2. Migration: Check workspace state
+    const workspaceStored = this.context.workspaceState.get<string[]>(
+      MRUService.STORAGE_KEY,
+    );
+    if (workspaceStored && workspaceStored.length > 0) {
+      this.logger.info(
+        `[storage] Migrating MRU from workspace -> shared. Total=${workspaceStored.length}`,
+      );
+      this.mruList = workspaceStored;
+      this.save(); // Save to shared storage immediately
+      this.checkForDuplicateNames();
+      return;
+    }
+
+    // 3. Migration: Check global state (legacy)
+    const globalStored = this.context.globalState.get<string[]>(
+      MRUService.STORAGE_KEY,
+    );
     if (globalStored && globalStored.length > 0) {
-      this.logger.info(`[storage] Migrating MRU from global -> workspace. Total global=${globalStored.length}`);
+      this.logger.info(`[storage] Migrating MRU from global -> shared. Total global=${globalStored.length}`);
 
       // Filter items belonging to current workspace
       const migrated: string[] = [];
@@ -53,13 +75,13 @@ export class MRUService {
 
       if (migrated.length > 0) {
         this.mruList = migrated;
-        this.save(); // Save to workspace state immediately
+        this.save(); // Save to shared storage immediately
         this.logger.info(`[storage] Migration complete. Imported ${migrated.length} items for this workspace.`);
       } else {
         this.logger.info('[storage] Migration: No global items belong to this workspace.');
       }
     } else {
-      this.logger.info('[storage] No MRU history found (workspace or global)');
+      this.logger.info('[storage] No MRU history found (shared, workspace or global)');
     }
 
     this.checkForDuplicateNames();
@@ -93,12 +115,12 @@ export class MRUService {
   }
 
   private save(): void {
-    this.context.workspaceState.update(MRUService.STORAGE_KEY, this.mruList);
+    this.storage.update(MRUService.STORAGE_KEY, this.mruList);
   }
 
   public add(fsPath: string): void {
     // Remove if already exists to move it to top
-    this.mruList = this.mruList.filter(p => p !== fsPath);
+    this.mruList = this.mruList.filter((p) => p !== fsPath);
 
     // Add to top
     this.mruList.unshift(fsPath);
@@ -135,6 +157,7 @@ export class MRUService {
         await vscode.workspace.fs.stat(uri);
         validFiles.push(fsPath);
       } catch (error) {
+        this.logger.error(`[validate] Skipping invalid file: ${fsPath}`);
       }
     }
 
