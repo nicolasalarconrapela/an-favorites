@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.19",
+  "version": "0.8.20",
   "publisher": "anappwilos",
   "engines": {
     "vscode": "^1.86.0"
@@ -153,6 +153,48 @@
           "type": "boolean",
           "default": false,
           "description": "Controla si el Quick Open se cierra al perder el foco (false) o se mantiene abierto (true)."
+        },
+        "anfavorites.quickOpen.searchExclusions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/build/**",
+            "**/out/**",
+            "**/coverage/**",
+            "**/.cache/**",
+            "**/.parcel-cache/**",
+            "**/.turbo/**",
+            "**/.next/**",
+            "**/.nuxt/**",
+            "**/.vite/**",
+            "**/__pycache__/**",
+            "**/.venv/**",
+            "**/venv/**",
+            "**/env/**",
+            "**/ENV/**",
+            "**/.pytest_cache/**",
+            "**/.mypy_cache/**",
+            "**/.ruff_cache/**",
+            "**/.tox/**",
+            "**/.ipynb_checkpoints/**",
+            "**/target/**",
+            "**/.gradle/**",
+            "**/.settings/**",
+            "**/.idea/**",
+            "**/bin/**",
+            "**/obj/**",
+            "**/.vs/**",
+            "**/TestResults/**",
+            "**/artifacts/**",
+            "**/cmake-build-*/**",
+            "**/CMakeFiles/**",
+            "**/.history/**"
+          ],
+          "description": "Patrones de exclusión para búsqueda de archivos (node_modules, dist, build, caches, etc.)."
         }
       }
     }

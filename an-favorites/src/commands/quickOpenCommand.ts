@@ -88,8 +88,99 @@ function workspaceRelativeLabel(uri: vscode.Uri): { rel: string; rootName?: stri
 }
 
 /**
- * (Opcional) Filtra URIs que no existen (evita MRU con rutas muertas).
- * Si no lo quieres, deja la función pero no la uses.
+ * Generic debounce utility
+ */
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  waitMs: number
+): (...args: Parameters<T>) => void {
+  let timeoutId: NodeJS.Timeout | undefined;
+  return (...args: Parameters<T>) => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, waitMs);
+  };
+}
+
+/**
+ * Validates existence of files and returns a map of Uri -> exists boolean
+ */
+async function validateFilesExistence(uris: vscode.Uri[]): Promise<Map<string, boolean>> {
+  const results = new Map<string, boolean>();
+  await Promise.all(
+    uris.map(async (uri) => {
+      if (uri.scheme !== 'file') {
+        results.set(uri.fsPath, false);
+        return;
+      }
+      try {
+        await vscode.workspace.fs.stat(uri);
+        results.set(uri.fsPath, true);
+      } catch {
+        results.set(uri.fsPath, false);
+      }
+    })
+  );
+  return results;
+}
+
+/**
+ * Detects name collisions for a set of file URIs using findFiles (Ripgrep).
+ * Returns a Set of basenames that have collisions (appear more than once in workspace).
+ * Uses configured exclusion patterns.
+ */
+async function detectCollisions(
+  uris: vscode.Uri[],
+  exclusionPatterns: string[]
+): Promise<Set<string>> {
+  const collisions = new Set<string>();
+  if (uris.length === 0) return collisions;
+
+  // Group URIs by basename
+  const byBasename = new Map<string, vscode.Uri[]>();
+  for (const uri of uris) {
+    const basename = safeBasenameFromUri(uri);
+    const arr = byBasename.get(basename);
+    if (arr) {
+      arr.push(uri);
+    } else {
+      byBasename.set(basename, [uri]);
+    }
+  }
+
+  // For each unique basename, check if there are duplicates in the workspace
+  const exclusionGlob = `{${exclusionPatterns.join(',')}}`;
+
+  for (const [basename, urisWithName] of byBasename.entries()) {
+    // Si ya tenemos más de una URI con este nombre en nuestro set, es colisión automática
+    if (urisWithName.length > 1) {
+      collisions.add(basename);
+      continue;
+    }
+
+    // Buscar en todo el workspace archivos con este nombre
+    try {
+      const pattern = `**/${basename}`;
+      const found = await vscode.workspace.findFiles(pattern, exclusionGlob);
+
+      // Si encontramos más de 1, hay colisión
+      if (found.length > 1) {
+        collisions.add(basename);
+      }
+    } catch {
+      // En caso de error, asumimos no hay colisión
+    }
+  }
+
+  return collisions;
+}
+
+/**
+ * (Deprecated - replaced by validateFilesExistence)
+ * Filtra URIs que no existen (evita MRU con rutas muertas).
  */
 async function filterExistingFiles(uris: vscode.Uri[]): Promise<vscode.Uri[]> {
   const results: vscode.Uri[] = [];
@@ -257,6 +348,9 @@ export function registerQuickOpenCommand(
         const config = vscode.workspace.getConfiguration('anfavorites.quickOpen');
         const maxRecentFavorites = config.get<number>('maxRecentFavorites', 3);
         const maxRecentFiles = config.get<number>('maxRecentFiles', 3);
+        const searchExclusions = config.get<string[]>('searchExclusions', [
+          '**/node_modules/**'
+        ]);
 
         logger.debug(`QuickOpen config: maxRecentFavorites=${maxRecentFavorites}, maxRecentFiles=${maxRecentFiles}`);
 
@@ -267,7 +361,6 @@ export function registerQuickOpenCommand(
           .filter((u): u is vscode.Uri => !!u);
 
         // Filtrar: SOLO archivos que pertenezcan al workspace abierto actualmente.
-        // Esto evita ver archivos recientes de otros proyectos.
         const recentUris = recentUrisUnsafe.filter(u => {
           return u.scheme === 'file' && !!vscode.workspace.getWorkspaceFolder(u);
         });
@@ -280,12 +373,35 @@ export function registerQuickOpenCommand(
         });
         const recentFavNormSet = new Set(recentFavUris.map(u => normalizeFsPath(u.fsPath)));
 
+        // ✅ VALIDACIÓN SIEMPRE ACTIVA: Validar todos los archivos que vamos a mostrar
+        const allUrisToDisplay = [...recentFavUris, ...recentUris];
+        const existenceMap = await validateFilesExistence(allUrisToDisplay);
+
+        // Eliminar archivos que no existen de las listas y del almacenamiento
+        const validRecentFavUris = recentFavUris.filter(uri => {
+          const exists = existenceMap.get(uri.fsPath) ?? false;
+          if (!exists) {
+            logger.warn(`[validation] Removing non-existent favorite: ${uri.fsPath}`);
+            favoritesProvider.removeFavorite(uri);
+          }
+          return exists;
+        });
+
+        const validRecentUris = recentUris.filter(uri => {
+          const exists = existenceMap.get(uri.fsPath) ?? false;
+          if (!exists) {
+            logger.warn(`[validation] Removing non-existent recent file: ${uri.fsPath}`);
+            mruService.updatePath(uri.fsPath, ''); // Forzar eliminación
+          }
+          return exists;
+        });
+
         // 3) Items
-        const recentFavItems: FileQuickPickItem[] = recentFavUris.map(uri => {
+        const recentFavItems: FileQuickPickItem[] = validRecentFavUris.map(uri => {
           return new FileQuickPickItem({ uri, isFavorite: true, isRecentlyOpened: false });
         });
 
-        const recentItems: FileQuickPickItem[] = recentUris
+        const recentItems: FileQuickPickItem[] = validRecentUris
           .filter(uri => !recentFavNormSet.has(normalizeFsPath(uri.fsPath))) // Exclude if already in recent favorites
           .slice(0, maxRecentFiles) // Limitar a la cantidad configurada
           .map(uri => {
@@ -293,7 +409,7 @@ export function registerQuickOpenCommand(
             return new FileQuickPickItem({ uri, isFavorite: isFav, isRecentlyOpened: true });
           });
 
-        // 4) Combinar con separadores (SIN any)
+        // 4) Combinar con separadores
         const items: QuickOpenItem[] = [];
 
         // First section: Favoritos (Siempre visible)
@@ -306,12 +422,11 @@ export function registerQuickOpenCommand(
         if (hasFavoriteItems) {
           items.push(...recentFavItems);
         } else if (!isSearching) {
-          // Solo mostrar el placeholder si NO se está buscando
           items.push({ label: 'Busque un archivo para añadirlo a favoritos en icono de la derecha', description: '', detail: '' });
         }
 
-        // Second section: Recientes (Recientemente Abierto) - Siempre visible
-        const hasRecentFiles = recentUris.length > 0;
+        // Second section: Recientes
+        const hasRecentFiles = validRecentUris.length > 0;
 
         items.push({
           label: hasRecentFiles ? 'Recientes' : 'No hay recientes nuevos',
@@ -319,18 +434,14 @@ export function registerQuickOpenCommand(
         });
 
         if (hasRecentFiles) {
-          // Acción "Limpiar" - solo mostrar si hay archivos en MRU
           const clearRecentsItem: ActionQuickPickItem = {
             label: '\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t       $(trash) Limpiar',
             action: 'clearRecents'
           };
 
           items.push(clearRecentsItem);
-
-          // Luego los ítems recientes reales
           items.push(...recentItems);
         } else if (!isSearching) {
-           // Solo mostrar el placeholder si NO se está buscando
           items.push({ label: '', description: '', detail: '' });
         }
 
@@ -338,49 +449,40 @@ export function registerQuickOpenCommand(
         let otherItems: FileQuickPickItem[] = [];
 
         if (loadAllFiles && isSearching) {
-          // Usar caché si está disponible
           if (!cachedAllFileItems) {
-             const allUris = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
+             const exclusionGlob = `{${searchExclusions.join(',')}}`;
+             const allUris = await vscode.workspace.findFiles('**/*', exclusionGlob);
              cachedAllFileItems = allUris.map(uri => {
-                // Creamos los items base, el estado de favorito se actualiza abajo dinámicamente
-                // Nota: para la caché inicial asumimos isFavorite false, luego se recalcula
                 return new FileQuickPickItem({ uri, isFavorite: false, isRecentlyOpened: false });
              });
           }
 
           if (cachedAllFileItems) {
-            // Filtrar y actualizar estado favorito en tiempo real
             otherItems = cachedAllFileItems
               .filter(item => {
                 const normalizedPath = normalizeFsPath(item.resourceUri.fsPath);
                 return !recentNormSet.has(normalizedPath) && !recentFavNormSet.has(normalizedPath);
               })
               .map(item => {
-                 // Actualizar estado de favorito antes de mostrar
                  const isFav = favoritesProvider.hasFavorite(item.resourceUri);
                  if (item.isFavorite !== isFav) {
                     item.isFavorite = isFav;
-                    item.updateIcon(); // Regenerar label e icono
+                    item.updateIcon();
                  }
                  return item;
               });
           }
         }
 
-        // --- Collision detection to toggle path visibility ---
+        // ✅ DETECCIÓN DE COLISIONES con Ripgrep (findFiles)
         const allFileItems = [...recentFavItems, ...recentItems, ...otherItems];
-        const nameCounts = new Map<string, number>();
+        const allUris = allFileItems.map(item => item.resourceUri);
+        const collisions = await detectCollisions(allUris, searchExclusions);
 
         for (const item of allFileItems) {
-          const name = safeBasenameFromUri(item.resourceUri);
-          nameCounts.set(name, (nameCounts.get(name) || 0) + 1);
+          const basename = safeBasenameFromUri(item.resourceUri);
+          item.setShowDescription(collisions.has(basename));
         }
-
-        for (const item of allFileItems) {
-          const name = safeBasenameFromUri(item.resourceUri);
-          item.setShowDescription((nameCounts.get(name) || 0) > 1);
-        }
-        // ----------------------------------------------------
 
         if (otherItems.length > 0) {
           items.push({ label: 'Archivos', kind: vscode.QuickPickItemKind.Separator });
@@ -442,6 +544,35 @@ export function registerQuickOpenCommand(
       mruService.onDidChangeRecentFiles(async () => {
         logger.debug('MRU list changed, rebuilding QuickOpen items');
         await buildItems(allFilesLoaded);
+      })
+    );
+
+    // ✅ Listen to file system changes (rename, delete, create) with debouncing
+    const debouncedRebuild = debounce(async () => {
+      logger.debug('File system changed (debounced), rebuilding QuickOpen items');
+      // Invalidar caché para reflejar cambios del FS
+      cachedAllFileItems = null;
+      await buildItems(allFilesLoaded);
+    }, 200);
+
+    disposables.push(
+      vscode.workspace.onDidRenameFiles(event => {
+        logger.debug(`Files renamed: ${event.files.length} file(s)`);
+        debouncedRebuild();
+      })
+    );
+
+    disposables.push(
+      vscode.workspace.onDidDeleteFiles(event => {
+        logger.debug(`Files deleted: ${event.files.length} file(s)`);
+        debouncedRebuild();
+      })
+    );
+
+    disposables.push(
+      vscode.workspace.onDidCreateFiles(event => {
+        logger.debug(`Files created: ${event.files.length} file(s)`);
+        debouncedRebuild();
       })
     );
 
