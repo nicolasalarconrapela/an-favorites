@@ -232,12 +232,12 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 
     // Extraer directorio de la ruta relativa (sin nombre de archivo)
     const dir = path.dirname(rel);
-    // Si dirname es '.' (archivo en raíz) o vacío, mostrar cadena vacía para evitar '.'
-    const cleanDir = (dir === '.' || dir === '') ? '' : dir;
+    // Si dirname es '.' (archivo en raíz) o vacío, mostrar '.'
+    const cleanDir = (dir === '.' || dir === '') ? '.' : dir;
 
     // Ruta completa (solo directorio, sin archivo)
     this._fullPathLabel = rootName
-      ? (cleanDir ? `${rootName} • ${cleanDir}` : rootName)
+      ? (cleanDir === '.' ? rootName : `${rootName} • ${cleanDir}`)
       : cleanDir;
 
     // Ruta solo directorio (mismo que fullPath, ya que ambos muestran solo directorio)
