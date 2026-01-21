@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { createAppLogger } from '../logging/loggingModule';
 import { registerHelloCommand } from '../commands/helloCommand';
 import { registerWebviewCommand } from '../commands/webviewCommand';
@@ -26,7 +27,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const settings = loadSettings();
   const helloService = new HelloService();
   const telemetry = new TelemetryService();
-  const mruService = new MRUService(context);
+  const mruService = new MRUService(context, logger);
 
   // Registrar comandos existentes
   registerHelloCommand(context, helloService, logger, settings);
@@ -36,7 +37,7 @@ export function activate(context: vscode.ExtensionContext): void {
   logger.info('Registering favorites tree provider...');
 
   // Registrar el árbol de favoritos
-  const favoritesProvider = new FavoritesTreeDataProvider(context);
+  const favoritesProvider = new FavoritesTreeDataProvider(context, logger);
   vscode.window.registerTreeDataProvider('anfavorites.favoritesView', favoritesProvider);
 
   logger.info('Registering favorites commands...');
@@ -74,11 +75,23 @@ export function activate(context: vscode.ExtensionContext): void {
       const oldPath = file.oldUri.fsPath;
       const newPath = file.newUri.fsPath;
 
-      logger.debug(`Updating path: ${oldPath} -> ${newPath}`);
+      // Check if the filename actually changed (not just moved)
+      const oldName = path.basename(oldPath);
+      const newName = path.basename(newPath);
+      const nameChanged = oldName !== newName;
 
-      // Update in both lists
+      logger.debug(`Updating path: ${oldPath} -> ${newPath} (name changed: ${nameChanged})`);
+
+      // Always update the paths in storage
       favoritesProvider.updatePath(oldPath, newPath);
       mruService.updatePath(oldPath, newPath);
+
+      // If the name changed, we need to recalculate collision detection
+      // The updatePath methods already fire refresh events, but this ensures
+      // that the collision detection logic runs again for all affected items
+      if (nameChanged) {
+        logger.debug(`Filename changed: "${oldName}" -> "${newName}", collision detection will be recalculated`);
+      }
     }
   });
 

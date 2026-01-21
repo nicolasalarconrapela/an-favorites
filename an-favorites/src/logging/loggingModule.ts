@@ -214,7 +214,7 @@ export class LoggingModule implements Logger {
         fs.writeFileSync(this.logFilePathJson, '\uFEFF', 'utf8');
       }
 
-      const jsonLine = JSON.stringify(entry, null, 0);
+      const jsonLine = JSON.stringify(entry, null, 2);
       fs.appendFileSync(this.logFilePathJson, `${jsonLine}\n`, { encoding: 'utf8', flag: 'a' });
     } catch (err) {
       // Avoid recursive loop: don't write logging errors to the logger itself,
@@ -266,12 +266,12 @@ export class LoggingModule implements Logger {
 
   private serializeMetadata(metadata: unknown): string {
     if (metadata instanceof Error) {
-      return JSON.stringify({ message: metadata.message, stack: metadata.stack }, null, 0);
+      return JSON.stringify({ message: metadata.message, stack: metadata.stack }, null, 2);
     }
 
     if (typeof metadata === 'object' && metadata !== null) {
       try {
-        return JSON.stringify(metadata, null, 0);
+        return JSON.stringify(metadata, null, 2);
       } catch {
         return '[metadata: no serializable]';
       }
