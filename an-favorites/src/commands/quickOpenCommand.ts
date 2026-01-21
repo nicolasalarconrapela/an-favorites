@@ -134,7 +134,8 @@ async function validateFilesExistence(uris: vscode.Uri[]): Promise<Map<string, b
  */
 async function detectCollisions(
   uris: vscode.Uri[],
-  exclusionPatterns: string[]
+  exclusionPatterns: string[],
+  logger?: any
 ): Promise<Set<string>> {
   const collisions = new Set<string>();
   if (uris.length === 0) return collisions;
@@ -157,6 +158,7 @@ async function detectCollisions(
   for (const [basename, urisWithName] of byBasename.entries()) {
     // Si ya tenemos más de una URI con este nombre en nuestro set, es colisión automática
     if (urisWithName.length > 1) {
+      logger?.debug(`[collision] ${basename}: múltiples en display list (${urisWithName.length})`);
       collisions.add(basename);
       continue;
     }
@@ -166,11 +168,14 @@ async function detectCollisions(
       const pattern = `**/${basename}`;
       const found = await vscode.workspace.findFiles(pattern, exclusionGlob);
 
+      logger?.debug(`[collision] ${basename}: findFiles found ${found.length} file(s)`, found.map(u => u.fsPath));
+
       // Si encontramos más de 1, hay colisión
       if (found.length > 1) {
         collisions.add(basename);
       }
-    } catch {
+    } catch (error) {
+      logger?.warn(`[collision] Error searching for ${basename}:`, error);
       // En caso de error, asumimos no hay colisión
     }
   }
@@ -253,17 +258,11 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   }
 
   public setShowDescription(isDuplicate: boolean): void {
-    const text = isDuplicate ? this._fullPathLabel : this._dirPathLabel;
+    // Solo queremos mostrar path si hay colisión
+    const text = isDuplicate ? this._fullPathLabel : '';
 
-    // Si hay texto, lo mostramos. Si es reciente, añadimos reloj.
-    // Si no hay texto (archivo en raiz sin duplicado), y es reciente, solo reloj.
-    // Si no hay texto y no es reciente, undefined (oculto).
-
-    if (this.isRecentlyOpened) {
-      this.description = text ? `🕘 ${text}` : '🕘';
-    } else {
+      // Si no hay colisión: ocultar
       this.description = text || undefined;
-    }
   }
 
   updateIcon(): void {
@@ -450,7 +449,7 @@ export function registerQuickOpenCommand(
 
         if (loadAllFiles && isSearching) {
           if (!cachedAllFileItems) {
-             const exclusionGlob = `{${searchExclusions.join(',')}}`;
+             const exclusionGlob = searchExclusions.length ? `{${searchExclusions.join(',')}}` : undefined;
              const allUris = await vscode.workspace.findFiles('**/*', exclusionGlob);
              cachedAllFileItems = allUris.map(uri => {
                 return new FileQuickPickItem({ uri, isFavorite: false, isRecentlyOpened: false });
@@ -477,7 +476,7 @@ export function registerQuickOpenCommand(
         // ✅ DETECCIÓN DE COLISIONES con Ripgrep (findFiles)
         const allFileItems = [...recentFavItems, ...recentItems, ...otherItems];
         const allUris = allFileItems.map(item => item.resourceUri);
-        const collisions = await detectCollisions(allUris, searchExclusions);
+        const collisions = await detectCollisions(allUris, searchExclusions, logger);
 
         for (const item of allFileItems) {
           const basename = safeBasenameFromUri(item.resourceUri);
