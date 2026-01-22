@@ -258,8 +258,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   }
 
   public setShowDescription(isDuplicate: boolean): void {
-    // Solo queremos mostrar path si hay colisión
-    const text = isDuplicate ? this._fullPathLabel : '';
+    this.description = isDuplicate ? this._fullPathLabel : '';
 
       // Si no hay colisión: ocultar
       this.description = text || undefined;
