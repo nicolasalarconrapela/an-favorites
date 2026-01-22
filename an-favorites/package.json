@@ -220,7 +220,7 @@
     "@vscode/vsce": "^3.7.1",
     "esbuild": "^0.27.2",
     "eslint": "^9.39.2",
-    "mocha": "^11.7.5",
+    "mocha": "^11.3.0",
     "prettier": "^3.7.4",
     "typescript": "^5.9.3"
   }
