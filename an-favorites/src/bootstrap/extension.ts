@@ -29,7 +29,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const sharedStorage = new SharedStorageService(logger);
   const helloService = new HelloService();
   const telemetry = new TelemetryService();
-  const mruService = new MRUService(context, logger, sharedStorage);
+  const mruService = new MRUService(context, logger);
 
   // Registrar comandos existentes
   registerHelloCommand(context, helloService, logger, settings);
@@ -40,7 +40,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // Registrar el árbol de favoritos
   const favoritesProvider = new FavoritesTreeDataProvider(context, logger, sharedStorage);
-  vscode.window.registerTreeDataProvider('anfavorites.favoritesView', favoritesProvider);
+  vscode.window.registerTreeDataProvider('anfavorites.favoritesView',favoritesProvider);
 
   logger.info('Registering favorites commands...');
 
@@ -48,7 +48,9 @@ export function activate(context: vscode.ExtensionContext): void {
   registerAddToFavoritesCommand(context, favoritesProvider, logger);
   registerRemoveFromFavoritesCommand(context, favoritesProvider, logger);
   registerManageCategoriesCommands(context, favoritesProvider, logger);
+  logger.info('[activate] registering quickOpen...');
   registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
+  logger.info('[activate] quickOpen registered.');
 
   telemetry.track('activated');
   logger.info('━━━ Extension activation completed successfully ━━━');

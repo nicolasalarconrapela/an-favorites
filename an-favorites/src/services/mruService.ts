@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { Logger } from '../logging/logger';
-import { SharedStorageService } from './sharedStorageService';
 
 export class MRUService {
   private static readonly STORAGE_KEY = 'anfavorites.mru.history';
@@ -11,13 +10,8 @@ export class MRUService {
   private _onDidChangeRecentFiles = new vscode.EventEmitter<void>();
   public readonly onDidChangeRecentFiles = this._onDidChangeRecentFiles.event;
 
-  constructor(private context: vscode.ExtensionContext, private logger: Logger, private storage: SharedStorageService) {
+  constructor(private context: vscode.ExtensionContext, private logger: Logger) {
     this.load();
-    this.storage.onDidChange(() => {
-      this.logger.info('[mru] External change detected -> reloading');
-      this.load();
-      this._onDidChangeRecentFiles.fire();
-    });
 
     // Listen for file changes to update MRU
     vscode.window.onDidChangeActiveTextEditor((editor) => {
@@ -26,62 +20,22 @@ export class MRUService {
       }
     });
 
-    this.logger.info(`[init] MRUService created. items=${this.mruList.length}`);
+    this.logger.info(`[init] MRUService created (Local Storage). items=${this.mruList.length}`);
   }
 
 
 
   private load(): void {
-    // 1. Try shared storage first
-    const sharedData = this.storage.get<string[]>(MRUService.STORAGE_KEY);
-    if (sharedData) {
-      this.mruList = sharedData;
-      this.logger.info(
-        `[storage] loadMRU (shared) -> count=${sharedData.length}`,
-      );
-      this.checkForDuplicateNames();
-      return;
-    }
-
-    // 2. Migration: Check workspace state
-    const workspaceStored = this.context.workspaceState.get<string[]>(
+    const stored = this.context.globalState.get<string[]>(
       MRUService.STORAGE_KEY,
     );
-    if (workspaceStored && workspaceStored.length > 0) {
-      this.logger.info(
-        `[storage] Migrating MRU from workspace -> shared. Total=${workspaceStored.length}`,
-      );
-      this.mruList = workspaceStored;
-      this.save(); // Save to shared storage immediately
-      this.checkForDuplicateNames();
-      return;
-    }
 
-    // 3. Migration: Check global state (legacy)
-    const globalStored = this.context.globalState.get<string[]>(
-      MRUService.STORAGE_KEY,
-    );
-    if (globalStored && globalStored.length > 0) {
-      this.logger.info(`[storage] Migrating MRU from global -> shared. Total global=${globalStored.length}`);
-
-      // Filter items belonging to current workspace
-      const migrated: string[] = [];
-      for (const filePath of globalStored) {
-        const uri = vscode.Uri.file(filePath);
-        if (vscode.workspace.getWorkspaceFolder(uri)) {
-          migrated.push(filePath);
-        }
-      }
-
-      if (migrated.length > 0) {
-        this.mruList = migrated;
-        this.save(); // Save to shared storage immediately
-        this.logger.info(`[storage] Migration complete. Imported ${migrated.length} items for this workspace.`);
-      } else {
-        this.logger.info('[storage] Migration: No global items belong to this workspace.');
-      }
+    if (stored && stored.length > 0) {
+      this.mruList = stored;
+      this.logger.info(`[mru] Loaded from globalState. count=${stored.length}`);
     } else {
-      this.logger.info('[storage] No MRU history found (shared, workspace or global)');
+      this.mruList = [];
+      this.logger.info('[mru] No history in globalState.');
     }
 
     this.checkForDuplicateNames();
@@ -115,7 +69,7 @@ export class MRUService {
   }
 
   private save(): void {
-    this.storage.update(MRUService.STORAGE_KEY, this.mruList);
+    this.context.globalState.update(MRUService.STORAGE_KEY, this.mruList);
   }
 
   public add(fsPath: string): void {
