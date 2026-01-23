@@ -284,7 +284,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 
   public setShowDescription(isDuplicate: boolean): void {
     const text = isDuplicate ? this._fullPathLabel : '';
-    this.description = text || 'Fail';
+    this.description = text || '';
   }
 
   updateIcon(): void {
