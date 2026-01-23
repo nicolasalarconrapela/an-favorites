@@ -336,13 +336,11 @@ export function registerQuickOpenCommand(
         `[QuickOpen] Config loaded - ignoreFocusOut: ${quickPick.ignoreFocusOut}`,
       );
 
-      // Show immediately to ensure user feedback
-      logger.info('[QuickOpen] Showing QuickPick UI...');
-      quickPick.show();
-      logger.info('[QuickOpen] QuickPick.show() called successfully');
-
-      quickPick.busy = true;
-      logger.info('[QuickOpen] Set busy = true, starting validation...');
+      // ⚠️ DO NOT show() here! If ignoreFocusOut=false, the picker will close immediately
+      // during async operations. We show() AFTER buildItems completes.
+      logger.info(
+        '[QuickOpen] Preparing QuickPick (not showing yet to avoid focus loss)...',
+      );
 
       try {
         logger.info('[QuickOpen] Validating favorites...');
@@ -676,8 +674,13 @@ export function registerQuickOpenCommand(
       // Initial load - NO cargamos todos los archivos al inicio
       logger.info('[QuickOpen] Starting initial buildItems(false)...');
       await buildItems(false);
+      logger.info('[QuickOpen] ✓ Initial buildItems complete');
+
+      // ✅ NOW show the QuickPick - items are ready, no risk of premature focus loss
+      logger.info('[QuickOpen] Showing QuickPick UI NOW (items ready)...');
+      quickPick.show();
       logger.info(
-        '[QuickOpen] ✓ Initial buildItems complete - QuickPick should be visible now',
+        '[QuickOpen] ✓ QuickPick visible and ready for user interaction',
       );
 
       // Listen to user input to load all files when searching OR toggle placeholders

@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.26",
+  "version": "0.8.27",
   "publisher": "anappwilos",
   "engines": {
     "vscode": "^1.86.0"
@@ -148,11 +148,6 @@
             10
           ],
           "description": "Número de archivos recientemente abiertos a mostrar en Quick Open."
-        },
-        "anfavorites.quickOpen.ignoreFocusOut": {
-          "type": "boolean",
-          "default": false,
-          "description": "Controla si el Quick Open se cierra al perder el foco (false) o se mantiene abierto (true)."
         },
         "anfavorites.quickOpen.searchExclusions": {
           "type": "array",
