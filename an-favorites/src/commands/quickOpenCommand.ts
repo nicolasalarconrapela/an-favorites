@@ -329,12 +329,10 @@ export function registerQuickOpenCommand(
       quickPick.matchOnDetail = true;
       quickPick.canSelectMany = false;
 
-      // Configurar ignoreFocusOut desde settings
-      const config = vscode.workspace.getConfiguration('anfavorites.quickOpen');
-      quickPick.ignoreFocusOut = config.get<boolean>('ignoreFocusOut', false);
-      logger.info(
-        `[QuickOpen] Config loaded - ignoreFocusOut: ${quickPick.ignoreFocusOut}`,
-      );
+      // ✅ Always keep QuickPick open even when focus is lost
+      // This provides better UX - users can switch windows and come back without losing their search
+      quickPick.ignoreFocusOut = true;
+      logger.info('[QuickOpen] ignoreFocusOut set to true (hardcoded)');
 
       // ⚠️ DO NOT show() here! If ignoreFocusOut=false, the picker will close immediately
       // during async operations. We show() AFTER buildItems completes.
