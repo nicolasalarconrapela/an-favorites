@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.29",
+  "version": "0.8.30",
   "publisher": "anappwilos",
   "engines": {
     "vscode": "^1.86.0"
@@ -113,77 +113,84 @@
         }
       ]
     },
-    "configuration": {
-      "title": "AnFavorites",
-      "properties": {
-        "anfavorites.quickOpen.maxRecentFavorites": {
-          "type": "number",
-          "default": 3,
-          "enum": [
-            2,
-            3,
-            4,
-            5,
-            10
-          ],
-          "description": "Número de favoritos recientes a mostrar en Quick Open."
-        },
-        "anfavorites.quickOpen.maxRecentFiles": {
-          "type": "number",
-          "default": 3,
-          "enum": [
-            2,
-            3,
-            4,
-            5,
-            10
-          ],
-          "description": "Número de archivos recientemente abiertos a mostrar en Quick Open."
-        },
-        "anfavorites.quickOpen.searchExclusions": {
-          "type": "array",
-          "items": {
-            "type": "string"
+    "configuration": [
+      {
+        "title": "General",
+        "properties": {
+          "anfavorites.maxItems.favorites": {
+            "type": "number",
+            "default": 3,
+            "enum": [
+              2,
+              3,
+              4,
+              5,
+              10
+            ],
+            "description": "Número de favoritos recientes a mostrar en Quick Open."
           },
-          "default": [
-            "**/node_modules/**",
-            "**/dist/**",
-            "**/build/**",
-            "**/out/**",
-            "**/coverage/**",
-            "**/.cache/**",
-            "**/.parcel-cache/**",
-            "**/.turbo/**",
-            "**/.next/**",
-            "**/.nuxt/**",
-            "**/.vite/**",
-            "**/__pycache__/**",
-            "**/.venv/**",
-            "**/venv/**",
-            "**/env/**",
-            "**/ENV/**",
-            "**/.pytest_cache/**",
-            "**/.mypy_cache/**",
-            "**/.ruff_cache/**",
-            "**/.tox/**",
-            "**/.ipynb_checkpoints/**",
-            "**/target/**",
-            "**/.gradle/**",
-            "**/.settings/**",
-            "**/.idea/**",
-            "**/bin/**",
-            "**/obj/**",
-            "**/.vs/**",
-            "**/TestResults/**",
-            "**/artifacts/**",
-            "**/cmake-build-*/**",
-            "**/CMakeFiles/**",
-            "**/.history/**"
-          ],
-          "description": "Patrones de exclusión para búsqueda de archivos (node_modules, dist, build, caches, etc.)."
+          "anfavorites.maxItems.recentFiles": {
+            "type": "number",
+            "default": 3,
+            "enum": [
+              2,
+              3,
+              4,
+              5,
+              10
+            ],
+            "description": "Número de archivos recientemente abiertos a mostrar en Quick Open."
+          }
+        }
+      },
+      {
+        "title": "Search",
+        "properties": {
+          "anfavorites.search.exclusions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**",
+              "**/out/**",
+              "**/coverage/**",
+              "**/.cache/**",
+              "**/.parcel-cache/**",
+              "**/.turbo/**",
+              "**/.next/**",
+              "**/.nuxt/**",
+              "**/.vite/**",
+              "**/__pycache__/**",
+              "**/.venv/**",
+              "**/venv/**",
+              "**/env/**",
+              "**/ENV/**",
+              "**/.pytest_cache/**",
+              "**/.mypy_cache/**",
+              "**/.ruff_cache/**",
+              "**/.tox/**",
+              "**/.ipynb_checkpoints/**",
+              "**/target/**",
+              "**/.gradle/**",
+              "**/.settings/**",
+              "**/.idea/**",
+              "**/bin/**",
+              "**/obj/**",
+              "**/.vs/**",
+              "**/TestResults/**",
+              "**/artifacts/**",
+              "**/cmake-build-*/**",
+              "**/CMakeFiles/**",
+              "**/.history/**"
+            ],
+            "description": "Patrones de exclusión para búsqueda de archivos (node_modules, dist, build, caches, etc.)."
+          }
         }
       }
-    }
+    ]
   },
   "scripts": {
     "lint": "eslint .",

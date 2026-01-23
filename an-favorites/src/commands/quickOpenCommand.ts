@@ -417,9 +417,11 @@ export function registerQuickOpenCommand(
           logger.debug('[QuickOpen] Favorites reloaded');
 
           // 0.1) Read configuration values
-          const config = vscode.workspace.getConfiguration(
-            'anfavorites.quickOpen',
+          const configMaxItems = vscode.workspace.getConfiguration(
+            'anfavorites.maxItems',
           );
+          const configSearch =
+            vscode.workspace.getConfiguration('anfavorites.search');
 
           const folders = vscode.workspace.workspaceFolders ?? [];
           const hasWorkspace = folders.length > 0;
@@ -434,12 +436,9 @@ export function registerQuickOpenCommand(
               ),
             );
           }
-          const maxRecentFavorites = config.get<number>(
-            'maxRecentFavorites',
-            3,
-          );
-          const maxRecentFiles = config.get<number>('maxRecentFiles', 3);
-          const searchExclusions = config.get<string[]>('searchExclusions', [
+          const maxRecentFavorites = configMaxItems.get<number>('favorites', 3);
+          const maxRecentFiles = configMaxItems.get<number>('recentFiles', 3);
+          const searchExclusions = configSearch.get<string[]>('exclusions', [
             '**/node_modules/**',
           ]);
 
