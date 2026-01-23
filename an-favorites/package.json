@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.28",
+  "version": "0.8.29",
   "publisher": "anappwilos",
   "engines": {
     "vscode": "^1.86.0"
@@ -22,10 +22,6 @@
   ],
   "contributes": {
     "commands": [
-      {
-        "command": "anfavorites.hello",
-        "title": "AnFavorites: Hello"
-      },
       {
         "command": "anfavorites.openWebview",
         "title": "AnFavorites: Open Webview"
@@ -120,11 +116,6 @@
     "configuration": {
       "title": "AnFavorites",
       "properties": {
-        "anfavorites.enableGreeting": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable greeting message."
-        },
         "anfavorites.quickOpen.maxRecentFavorites": {
           "type": "number",
           "default": 3,

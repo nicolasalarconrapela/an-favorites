@@ -1,15 +1,12 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { createAppLogger } from '../logging/loggingModule';
-import { registerHelloCommand } from '../commands/helloCommand';
 import { registerWebviewCommand } from '../commands/webviewCommand';
 import { registerShowLogsCommand } from '../commands/showLogsCommand';
 import { registerAddToFavoritesCommand } from '../commands/addToFavoritesCommand';
 import { registerRemoveFromFavoritesCommand } from '../commands/removeFromFavoritesCommand';
 import { registerManageCategoriesCommands } from '../commands/manageCategoriesCommand';
 import { registerQuickOpenCommand } from '../commands/quickOpenCommand';
-import { loadSettings } from '../config/settings';
-import { HelloService } from '../services/helloService';
 import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
@@ -25,14 +22,11 @@ export function activate(context: vscode.ExtensionContext): void {
   logger.info('━━━ Extension activation started ━━━');
   logger.show(true);
 
-  const settings = loadSettings();
   const sharedStorage = new SharedStorageService(logger);
-  const helloService = new HelloService();
   const telemetry = new TelemetryService();
   const mruService = new MRUService(context, logger);
 
   // Registrar comandos existentes
-  registerHelloCommand(context, helloService, logger, settings);
   registerWebviewCommand(context);
   registerShowLogsCommand(context);
 
