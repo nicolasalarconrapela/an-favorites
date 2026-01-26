@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { Logger } from '../logging/logger';
 import { SharedStorageService } from '../services/sharedStorageService';
+import { detectCollisions, safeBasenameFromUri } from '../utils/collisionUtils';
 
 export class CategoryItem extends vscode.TreeItem {
   constructor(
@@ -90,17 +91,29 @@ interface FavoriteMetadata {
   addedAt: number;
 }
 
-export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<CategoryItem | FavoriteItem> {
-    private _onDidChangeTreeData: vscode.EventEmitter<CategoryItem | FavoriteItem | undefined | null | void> = new vscode.EventEmitter<CategoryItem | FavoriteItem | undefined | null | void>();
+export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
+  CategoryItem | FavoriteItem
+> {
+  private _onDidChangeTreeData: vscode.EventEmitter<
+    CategoryItem | FavoriteItem | undefined | null | void
+  > = new vscode.EventEmitter<
+    CategoryItem | FavoriteItem | undefined | null | void
+  >();
 
-  readonly onDidChangeTreeData: vscode.Event<CategoryItem | FavoriteItem | undefined | null | void> = this._onDidChangeTreeData.event;
+  readonly onDidChangeTreeData: vscode.Event<
+    CategoryItem | FavoriteItem | undefined | null | void
+  > = this._onDidChangeTreeData.event;
 
   // Map<filePath, FavoriteMetadata>
   private favorites: Map<string, FavoriteMetadata> = new Map();
 
   public static readonly DEFAULT_CATEGORY = 'Sin Categoría';
 
-  constructor(private context: vscode.ExtensionContext, private logger: Logger, private storage: SharedStorageService) {
+  constructor(
+    private context: vscode.ExtensionContext,
+    private logger: Logger,
+    private storage: SharedStorageService,
+  ) {
     this.loadFavorites();
     this.storage.onDidChange(() => {
       this.logger.info('[storage] External change detected -> reloading');
@@ -114,10 +127,10 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
       this.refresh();
     });
 
-    this.logger.info(`[init] Provider created. favorites=${this.favorites.size}`);
+    this.logger.info(
+      `[init] Provider created. favorites=${this.favorites.size}`,
+    );
   }
-
-
 
   refresh(): void {
     this.logger.info('[tree] refresh() fired');
@@ -128,7 +141,9 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
     return element;
   }
 
-  getChildren(element?: CategoryItem | FavoriteItem): Thenable<(CategoryItem | FavoriteItem)[]> {
+  async getChildren(
+    element?: CategoryItem | FavoriteItem,
+  ): Promise<(CategoryItem | FavoriteItem)[]> {
     const t0 = Date.now();
 
     if (!element) {
@@ -136,9 +151,12 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
       const categories: CategoryItem[] = [];
       const categoryMap = this.getCategoryMap();
 
-      const ws = (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath);
-      this.logger.info(`[getChildren:root] Start. favorites=${this.favorites.size} categories=${categoryMap.size}`,
-        { workspaceFolders: ws }
+      const ws = (vscode.workspace.workspaceFolders ?? []).map(
+        (f) => f.uri.fsPath,
+      );
+      this.logger.info(
+        `[getChildren:root] Start. favorites=${this.favorites.size} categories=${categoryMap.size}`,
+        { workspaceFolders: ws },
       );
       // TODO: Poder individualizar las categorias por workspace
       // TODO: Individualizar los archivos por workspace
@@ -181,7 +199,9 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
     if (element instanceof CategoryItem) {
       // Category level: return files in this category
       const items: FavoriteItem[] = [];
-      this.logger.info(`[getChildren:category] Start "${element.categoryName}"`);
+      this.logger.info(
+        `[getChildren:category] Start "${element.categoryName}"`,
+      );
 
       this.favorites.forEach((metadata, filePath) => {
         if (metadata.category !== element.categoryName) return;
@@ -206,58 +226,50 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
         );
       });
 
-      this.logger.info(`[getChildren:category] Collected items=${items.length}`);
+      this.logger.info(
+        `[getChildren:category] Collected items=${items.length}`,
+      );
 
-      // ✅ Detect name collisions and set description visibility
-      // Mejorado: agrupa por basename normalizado (case-insensitive) para Windows/macOS
-      const byName = new Map<string, FavoriteItem[]>();
+      // ✅ Detect name collisions and set description visibility (using workspace-wide check)
+      const allUris = items.map((i) => i.resourceUri);
 
-      for (const item of items) {
-        const key = path.basename(item.resourceUri.fsPath).toLowerCase();
-        const bucket = byName.get(key);
-        if (bucket) bucket.push(item);
-        else byName.set(key, [item]);
-      }
+      // Read config/state for exclusions
+      const configSearch =
+        vscode.workspace.getConfiguration('anfavorites.search');
+      const searchExclusions = configSearch.get<string[]>('exclusions', [
+        '**/node_modules/**',
+      ]);
 
-      // Log: colisiones detectadas
-      const collisions = Array.from(byName.entries())
-        .filter(([_, bucket]) => bucket.length > 1)
-        .map(([name, bucket]) => ({
-          name,
-          count: bucket.length,
-          files: bucket.map((b) => b.resourceUri.fsPath),
-        }));
+      try {
+        const collisions = await detectCollisions(
+          allUris,
+          searchExclusions,
+          this.logger,
+        );
 
-      this.logger.info(`[collisions] Found collisions=${collisions.length} in "${element.categoryName}"`, collisions);
+        this.logger.info(
+          `[collisions] Found ${collisions.size} colliding basenames in "${element.categoryName}"`,
+        );
 
-      // Decide description por item
-      for (const [nameKey, bucket] of byName.entries()) {
-        const isDup = bucket.length > 1;
-
-        for (const item of bucket) {
-          if (!isDup) {
-            item.setShowDescription(false);
-            // Debug fino: confirmar que description queda undefined
-            this.logger.info(`[collisions] OK  "${nameKey}" -> description OFF`,
-              {
-                file: item.resourceUri.fsPath,
-                description: item.description,
-              }
+        for (const item of items) {
+          const basename = safeBasenameFromUri(item.resourceUri);
+          if (collisions.has(basename)) {
+            // Show relative directory path
+            const rel = vscode.workspace.asRelativePath(
+              item.resourceUri,
+              false,
             );
-            continue;
+            const relDir = path.dirname(rel);
+            item.setDescriptionText(relDir);
+          } else {
+            item.setShowDescription(false);
           }
-
-          // ✅ Cuando hay duplicado, mostrar directorio relativo al workspace (mejor UX)
-          const rel = vscode.workspace.asRelativePath(item.resourceUri, false);
-          const relDir = path.dirname(rel);
-
-          item.setDescriptionText(relDir);
-
-          this.logger.info(`[collisions] DUP "${nameKey}" -> description ON`, {
-            file: item.resourceUri.fsPath,
-            description: item.description,
-          });
         }
+      } catch (err) {
+        this.logger.error(
+          '[collisions] Error detecting collisions in tree view',
+          err,
+        );
       }
 
       this.logger.info(
@@ -325,13 +337,17 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
     const categoryMap = this.getCategoryMap();
 
     if (categoryMap.has(categoryName)) {
-      this.logger.warn(`[categories] addCategory FAILED (exists) -> "${categoryName}"`);
+      this.logger.warn(
+        `[categories] addCategory FAILED (exists) -> "${categoryName}"`,
+      );
       return false;
     }
 
     // Nota: con tu diseño actual, la categoría “real” existe si hay items;
     // aquí solo refrescamos.
-    this.logger.info(`[categories] addCategory OK -> "${categoryName}" (implicit until used)`);
+    this.logger.info(
+      `[categories] addCategory OK -> "${categoryName}" (implicit until used)`,
+    );
     this.saveFavorites();
     this.refresh();
     return true;
@@ -339,18 +355,22 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
 
   removeCategory(categoryName: string): void {
     if (categoryName === FavoritesTreeDataProvider.DEFAULT_CATEGORY) {
-      this.logger.warn(`[categories] removeCategory IGNORED (default) -> "${categoryName}"`);
+      this.logger.warn(
+        `[categories] removeCategory IGNORED (default) -> "${categoryName}"`,
+      );
       return;
     }
 
-    this.logger.info(`[categories] removeCategory -> "${categoryName}" (move to default)`);
+    this.logger.info(
+      `[categories] removeCategory -> "${categoryName}" (move to default)`,
+    );
 
     // Move all favorites from this category to default
     this.favorites.forEach((metadata, filePath) => {
       if (metadata.category === categoryName) {
         metadata.category = FavoritesTreeDataProvider.DEFAULT_CATEGORY;
         this.logger.info(`[categories] Moved favorite to default`, {
-          filePath
+          filePath,
         });
       }
     });
@@ -361,20 +381,27 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
 
   renameCategory(oldName: string, newName: string): boolean {
     if (oldName === FavoritesTreeDataProvider.DEFAULT_CATEGORY) {
-      this.logger.warn(`[categories] renameCategory FAILED (default) -> "${oldName}"`);
+      this.logger.warn(
+        `[categories] renameCategory FAILED (default) -> "${oldName}"`,
+      );
       return false;
     }
 
     const categoryMap = this.getCategoryMap();
     if (!categoryMap.has(oldName) || categoryMap.has(newName)) {
-      this.logger.warn(`[categories] renameCategory FAILED -> "${oldName}" to "${newName}"`, {
+      this.logger.warn(
+        `[categories] renameCategory FAILED -> "${oldName}" to "${newName}"`,
+        {
           oldExists: categoryMap.has(oldName),
           newExists: categoryMap.has(newName),
-        });
+        },
+      );
       return false;
     }
 
-    this.logger.info(`[categories] renameCategory -> "${oldName}" => "${newName}"`);
+    this.logger.info(
+      `[categories] renameCategory -> "${oldName}" => "${newName}"`,
+    );
 
     // Update all favorites in the old category
     this.favorites.forEach((metadata, filePath) => {
@@ -395,7 +422,9 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
   moveFavorite(uri: vscode.Uri, newCategory: string): void {
     const metadata = this.favorites.get(uri.fsPath);
     if (!metadata) {
-      this.logger.warn(`[favorites] moveFavorite FAILED (not found) -> ${uri.fsPath}`);
+      this.logger.warn(
+        `[favorites] moveFavorite FAILED (not found) -> ${uri.fsPath}`,
+      );
       return;
     }
 
@@ -425,7 +454,10 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
       .sort((a, b) => b.addedAt - a.addedAt)
       .slice(0, count);
 
-    this.logger.info(`[favorites] getRecentFavorites count=${count}`, allFavorites.map((f) => f.uri.fsPath));
+    this.logger.info(
+      `[favorites] getRecentFavorites count=${count}`,
+      allFavorites.map((f) => f.uri.fsPath),
+    );
     return allFavorites.map((f) => f.uri);
   }
 
@@ -534,7 +566,10 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
       .map(([name, paths]) => ({ name, count: paths.length, paths }));
 
     if (duplicates.length > 0) {
-      this.logger.warn(`[duplicates] Found ${duplicates.length} duplicate basenames after load`, duplicates);
+      this.logger.warn(
+        `[duplicates] Found ${duplicates.length} duplicate basenames after load`,
+        duplicates,
+      );
     } else {
       this.logger.info('[duplicates] No duplicate basenames found');
     }
@@ -551,7 +586,9 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
       });
     });
 
-    this.logger.info(`[storage] saveFavorites (shared) -> count=${favoritesArray.length}`);
+    this.logger.info(
+      `[storage] saveFavorites (shared) -> count=${favoritesArray.length}`,
+    );
     this.storage.update('anfavorites.favorites.v2', favoritesArray);
   }
 
@@ -559,7 +596,9 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
     const originalSize = this.favorites.size;
     const toDelete: string[] = [];
 
-    this.logger.info(`[validate] validateFavorites start. size=${originalSize}`);
+    this.logger.info(
+      `[validate] validateFavorites start. size=${originalSize}`,
+    );
 
     const validations = Array.from(this.favorites.keys()).map(
       async (filePath) => {
@@ -569,13 +608,16 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
         } catch {
           toDelete.push(filePath);
         }
-      }
+      },
     );
 
     await Promise.all(validations);
 
     if (toDelete.length > 0) {
-      this.logger.info(`[validate] Removing missing favorites count=${toDelete.length}`, toDelete);
+      this.logger.info(
+        `[validate] Removing missing favorites count=${toDelete.length}`,
+        toDelete,
+      );
 
       toDelete.forEach((filePath) => this.favorites.delete(filePath));
       this.saveFavorites();
@@ -588,12 +630,14 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<Catego
   public updatePath(oldPath: string, newPath: string): void {
     const metadata = this.favorites.get(oldPath);
     if (!metadata) {
-      this.logger.warn(`[favorites] updatePath FAILED (not found) -> ${oldPath}`);
+      this.logger.warn(
+        `[favorites] updatePath FAILED (not found) -> ${oldPath}`,
+      );
       return;
     }
 
     this.logger.info(`[favorites] updatePath -> ${oldPath} => ${newPath}`, {
-      category: metadata.category
+      category: metadata.category,
     });
 
     this.favorites.delete(oldPath);
