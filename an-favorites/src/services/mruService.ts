@@ -10,7 +10,10 @@ export class MRUService {
   private _onDidChangeRecentFiles = new vscode.EventEmitter<void>();
   public readonly onDidChangeRecentFiles = this._onDidChangeRecentFiles.event;
 
-  constructor(private context: vscode.ExtensionContext, private logger: Logger) {
+  constructor(
+    private context: vscode.ExtensionContext,
+    private logger: Logger,
+  ) {
     this.load();
 
     // Listen for file changes to update MRU
@@ -20,10 +23,10 @@ export class MRUService {
       }
     });
 
-    this.logger.info(`[init] MRUService created (Local Storage). items=${this.mruList.length}`);
+    this.logger.info(
+      `[init] MRUService created (Local Storage). items=${this.mruList.length}`,
+    );
   }
-
-
 
   private load(): void {
     const stored = this.context.globalState.get<string[]>(
@@ -62,7 +65,10 @@ export class MRUService {
       .map(([name, paths]) => ({ name, count: paths.length, paths }));
 
     if (duplicates.length > 0) {
-      this.logger.warn(`[duplicates] Found ${duplicates.length} duplicate basenames in MRU`, duplicates);
+      this.logger.warn(
+        `[duplicates] Found ${duplicates.length} duplicate basenames in MRU`,
+        duplicates,
+      );
     } else {
       this.logger.info('[duplicates] No duplicate basenames in MRU');
     }
@@ -135,6 +141,16 @@ export class MRUService {
       this._onDidChangeRecentFiles.fire();
     } else {
       this.logger.warn(`[mru] updatePath FAILED (not found) -> ${oldPath}`);
+    }
+  }
+  public remove(fsPath: string): void {
+    const originalLength = this.mruList.length;
+    this.mruList = this.mruList.filter((p) => p !== fsPath);
+
+    if (this.mruList.length !== originalLength) {
+      this.logger.info(`[mru] Removed file: ${fsPath}`);
+      this.save();
+      this._onDidChangeRecentFiles.fire();
     }
   }
 }

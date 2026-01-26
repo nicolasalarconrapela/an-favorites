@@ -212,18 +212,32 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 
     // 3. Derecha: botones interactivos
     // Orden: [Open to Side] [Toggle Favorite]
-    this.buttons = [
-      {
-        iconPath: new vscode.ThemeIcon('split-horizontal'),
-        tooltip: 'Abrir al lado',
-      },
+    // 3. Derecha: botones interactivos
+    // Orden: [Open to Side] [Toggle Favorite] [Remove from Recents (if applicable)]
+
+    // Iniciar con los botones base
+    const buttons: vscode.QuickInputButton[] = [
       {
         iconPath: this.isFavorite
           ? new vscode.ThemeIcon('star-full')
           : new vscode.ThemeIcon('star-empty'),
         tooltip: this.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos',
       },
+      {
+        iconPath: new vscode.ThemeIcon('split-horizontal'),
+        tooltip: 'Abrir al lado',
+      },
     ];
+
+    // Añadir botón de eliminar si es reciente
+    if (this.isRecentlyOpened) {
+      buttons.push({
+        iconPath: new vscode.ThemeIcon('close'),
+        tooltip: 'Eliminar de recientes',
+      });
+    }
+
+    this.buttons = buttons;
   }
 }
 
@@ -793,7 +807,14 @@ export function registerQuickOpenCommand(
             return;
           }
 
-          // Si no es "Abrir al lado", asumimos que es Toggle Favorito
+          if (button.tooltip === 'Eliminar de recientes') {
+            logger.info(`[QuickOpen] Removing from recents: ${uri.fsPath}`);
+            mruService.remove(uri.fsPath);
+            // No hide(), let the list rebuild automatically via event listener
+            return;
+          }
+
+          // Si no es "Abrir al lado" ni "Eliminar de recientes", asumimos que es Toggle Favorito
           logger.info(`[QuickOpen] Toggling favorite for: ${uri.fsPath}`);
 
           try {
