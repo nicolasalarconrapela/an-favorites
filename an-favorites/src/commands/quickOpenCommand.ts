@@ -474,8 +474,7 @@ export function registerQuickOpenCommand(
 
           if (hasRecentFiles) {
             const clearRecentsItem: ActionQuickPickItem = {
-              label:
-                '\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t       $(trash) Limpiar',
+              label: '\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t  $(trash) Limpiar',
               action: 'clearRecents',
             };
 
@@ -599,7 +598,6 @@ export function registerQuickOpenCommand(
 
       disposables.push(
         quickPick.onDidChangeValue(async (value) => {
-          logger.debug(`[QuickOpen] onDidChangeValue: "${value}"`);
           const wasEmpty = previousValue.length === 0;
           const isEmpty = value.length === 0;
           previousValue = value;
@@ -694,9 +692,6 @@ export function registerQuickOpenCommand(
             // Rebuild the picker without closing it
             allFilesLoaded = false; // Reset to avoid loading all files again
             await buildItems(false);
-            // vscode.window.showInformationMessage(
-            //   'Lista de archivos recientes limpiada',
-            // );
             return;
           }
 
@@ -748,7 +743,9 @@ export function registerQuickOpenCommand(
           }
 
           logger.info('[QuickOpen] Showing text document...');
-          await vscode.window.showTextDocument(selected.resourceUri);
+          await vscode.window.showTextDocument(selected.resourceUri, {
+            preview: false,
+          });
           logger.info(
             '[QuickOpen] ✓ File opened successfully, hiding QuickPick',
           );
