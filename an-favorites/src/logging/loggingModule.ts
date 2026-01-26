@@ -101,12 +101,6 @@ export class LoggingModule implements Logger {
     logger.info(`📁 Archivos de log: ${logFilePathTxt} | ${logFilePathJson}`);
     logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-    // Show channel in Output panel after writing content
-    // Use setTimeout to ensure VS Code processes content first
-    setTimeout(() => {
-      channel.show(false);
-    }, 100);
-
     return logger;
   }
 
@@ -182,10 +176,6 @@ export class LoggingModule implements Logger {
     const formattedLine = `${icon} ${colorIndicator} [${level.toUpperCase()}] ${line}`;
     this.channel.appendLine(formattedLine);
 
-    // Show channel automatically for errors and warnings
-    if (level === 'error' || level === 'warn') {
-      this.channel.show(false);
-    }
   }
 
   private appendToFileTxt(line: string): void {
