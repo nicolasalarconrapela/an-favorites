@@ -47,64 +47,11 @@ export function registerAddToFavoritesCommand(
           return;
         }
 
-        // Obtener grupos existentes
-        const groups = favoritesProvider.getGroups();
-        logger.debug(`Available groups: ${groups.join(', ')}`);
-
-        const items: vscode.QuickPickItem[] = groups.map((grp) => ({
-          label: grp,
-          description: 'Grupo existente',
-        }));
-
-        // Añadir opción para crear nuevo grupo
-        items.push({
-          label: '$(add) Nuevo Grupo...',
-          description: 'Crear un nuevo grupo',
-        });
-
-        const selected = await vscode.window.showQuickPick(items, {
-          placeHolder: 'Selecciona un grupo para el favorito',
-        });
-
-        if (!selected) {
-          logger.debug('User cancelled group selection');
-          return; // User cancelled
-        }
-
-        logger.debug(`Selected group option: ${selected.label}`);
-
-        let groupName: string;
-
-        if (selected.label.startsWith('$(add)')) {
-          // Create new group
-          const newGroupName = await vscode.window.showInputBox({
-            prompt: 'Nombre del nuevo grupo',
-            placeHolder: 'Ej: Proyectos, Documentación, etc.',
-            validateInput: (value) => {
-              if (!value || value.trim().length === 0) {
-                return 'El nombre no puede estar vacío';
-              }
-              if (groups.includes(value.trim())) {
-                return 'Este grupo ya existe';
-              }
-              return null;
-            },
-          });
-
-          if (!newGroupName) {
-            logger.debug('User cancelled new group creation');
-            return; // User cancelled
-          }
-
-          groupName = newGroupName.trim();
-          logger.info(`Creating new group: ${groupName}`);
-          favoritesProvider.addGroup(groupName);
-        } else {
-          groupName = selected.label;
-        }
+        // Por defecto, añadir a "Sin Grupo" (DEFAULT_GROUP)
+        const groupName = FavoritesTreeDataProvider.DEFAULT_GROUP;
 
         logger.info(
-          `Adding favorite to group "${groupName}": ${targetUri.fsPath}`,
+          `Adding favorite directly to default group: ${targetUri.fsPath}`,
         );
         favoritesProvider.addFavorite(targetUri, groupName);
 
