@@ -6,6 +6,7 @@ import { registerShowLogsCommand } from '../commands/showLogsCommand';
 import { registerAddToFavoritesCommand } from '../commands/addToFavoritesCommand';
 import { registerRemoveFromFavoritesCommand } from '../commands/removeFromFavoritesCommand';
 import { registerManageGroupsCommands } from '../commands/manageGroupsCommand';
+import { registerOpenToSideCommand } from '../commands/openToSideCommand';
 import { registerQuickOpenCommand } from '../commands/quickOpenCommand';
 import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
@@ -49,6 +50,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerAddToFavoritesCommand(context, favoritesProvider, logger);
   registerRemoveFromFavoritesCommand(context, favoritesProvider, logger);
   registerManageGroupsCommands(context, favoritesProvider, logger);
+  registerOpenToSideCommand(context, logger);
   logger.info('[activate] registering quickOpen...');
   registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
   logger.info('[activate] quickOpen registered.');

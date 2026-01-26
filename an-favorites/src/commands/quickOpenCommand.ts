@@ -210,8 +210,13 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     const starIcon = this.isFavorite ? '$(star-full) ' : '     ';
     this.label = `${starIcon} ${baseName}`;
 
-    // 3. Derecha: botón interactivo (acción al hacer hover)
+    // 3. Derecha: botones interactivos
+    // Orden: [Open to Side] [Toggle Favorite]
     this.buttons = [
+      {
+        iconPath: new vscode.ThemeIcon('split-horizontal'),
+        tooltip: 'Abrir al lado',
+      },
       {
         iconPath: this.isFavorite
           ? new vscode.ThemeIcon('star-full')
@@ -763,7 +768,32 @@ export function registerQuickOpenCommand(
             return;
           }
 
+          // Botón estrella: Favoritos
+          // Botón split: Abrir al lado
+          // Usamos la propiedad `tooltip` para distinguir los botones
+
+          const button = e.button; // El botón pulsado
           const uri = item.resourceUri;
+
+          if (button.tooltip === 'Abrir al lado') {
+            logger.info(`[QuickOpen] Opening to side: ${uri.fsPath}`);
+            try {
+              // Add to MRU as well
+              mruService.add(uri.fsPath);
+
+              await vscode.window.showTextDocument(uri, {
+                viewColumn: vscode.ViewColumn.Beside,
+                preview: false,
+              });
+
+              quickPick.hide();
+            } catch (err) {
+              logger.error(`[QuickOpen] Error opening to side`, err);
+            }
+            return;
+          }
+
+          // Si no es "Abrir al lado", asumimos que es Toggle Favorito
           logger.info(`[QuickOpen] Toggling favorite for: ${uri.fsPath}`);
 
           try {

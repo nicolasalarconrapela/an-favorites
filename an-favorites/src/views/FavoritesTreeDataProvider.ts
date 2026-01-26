@@ -44,13 +44,16 @@ export class FavoriteItem extends vscode.TreeItem {
     // Por defecto: ocultar description
     this.description = undefined;
 
-    // Comando: abrir archivo
     this.command = {
       command: 'vscode.open',
       title: 'Abrir Archivo',
-      arguments: [resourceUri],
+      arguments: [
+        resourceUri,
+        {
+          preview: false,
+        },
+      ],
     };
-
     this.iconPath = vscode.ThemeIcon.File;
     this.contextValue = 'favoriteItem';
   }
@@ -624,7 +627,7 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
     }
 
     this.logger.info(`[favorites] updatePath -> ${oldPath} => ${newPath}`, {
-      category: metadata.category,
+      group: metadata.group,
     });
 
     this.favorites.delete(oldPath);
