@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.37",
+  "version": "0.8.38",
   "publisher": "anappwilos",
   "engines": {
     "vscode": "^1.86.0"
@@ -22,14 +22,6 @@
   ],
   "contributes": {
     "commands": [
-      {
-        "command": "anfavorites.openWebview",
-        "title": "AnFavorites: Open Webview"
-      },
-      {
-        "command": "anfavorites.showLogs",
-        "title": "AnFavorites: Show Logs"
-      },
       {
         "command": "anfavorites.addToFavorites",
         "title": "Añadir a Favoritos"
@@ -121,6 +113,16 @@
           "command": "anfavorites.removeGroup",
           "when": "view == anfavorites.favoritesView && viewItem == groupItem",
           "group": "group@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "anfavorites.addToFavorites",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.removeFromFavorites",
+          "when": "false"
         }
       ]
     },

@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { createAppLogger } from '../logging/loggingModule';
-import { registerWebviewCommand } from '../commands/webviewCommand';
-import { registerShowLogsCommand } from '../commands/showLogsCommand';
+
 import { registerAddToFavoritesCommand } from '../commands/addToFavoritesCommand';
 import { registerRemoveFromFavoritesCommand } from '../commands/removeFromFavoritesCommand';
 import { registerManageGroupsCommands } from '../commands/manageGroupsCommand';
@@ -26,10 +25,6 @@ export function activate(context: vscode.ExtensionContext): void {
   const sharedStorage = new SharedStorageService(logger);
   const telemetry = new TelemetryService();
   const mruService = new MRUService(context, logger);
-
-  // Registrar comandos existentes
-  registerWebviewCommand(context);
-  registerShowLogsCommand(context);
 
   logger.info('Registering favorites tree provider...');
 
