@@ -109,6 +109,10 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
 
   // Map<filePath, FavoriteMetadata>
   private favorites: Map<string, FavoriteMetadata> = new Map();
+  // Set<groupName>
+  private groups: Set<string> = new Set([
+    FavoritesTreeDataProvider.DEFAULT_GROUP,
+  ]);
 
   public static readonly DEFAULT_GROUP = 'Sin Grupo';
 
@@ -282,11 +286,20 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
   private getGroupMap(): Map<string, string[]> {
     const groupMap = new Map<string, string[]>();
 
-    // Ensure default group exists
-    groupMap.set(FavoritesTreeDataProvider.DEFAULT_GROUP, []);
+    // 1. Initialize with explicit groups
+    this.groups.forEach((g) => groupMap.set(g, []));
 
+    // Ensure default group exists
+    if (!groupMap.has(FavoritesTreeDataProvider.DEFAULT_GROUP)) {
+      groupMap.set(FavoritesTreeDataProvider.DEFAULT_GROUP, []);
+      this.groups.add(FavoritesTreeDataProvider.DEFAULT_GROUP);
+    }
+
+    // 2. Populate with favorites
     this.favorites.forEach((metadata, filePath) => {
       if (!groupMap.has(metadata.group)) {
+        // Auto-recover missing group
+        this.groups.add(metadata.group);
         groupMap.set(metadata.group, []);
       }
       groupMap.get(metadata.group)!.push(filePath);
@@ -336,9 +349,8 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
       return false;
     }
 
-    this.logger.info(
-      `[groups] addGroup OK -> "${groupName}" (implicit until used)`,
-    );
+    this.logger.info(`[groups] addGroup OK -> "${groupName}"`);
+    this.groups.add(groupName);
     this.saveFavorites();
     this.refresh();
     return true;
@@ -366,6 +378,7 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
       }
     });
 
+    this.groups.delete(groupName);
     this.saveFavorites();
     this.refresh();
   }
@@ -400,6 +413,9 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
         });
       }
     });
+
+    this.groups.delete(oldName);
+    this.groups.add(newName);
 
     this.saveFavorites();
     this.refresh();
@@ -462,6 +478,12 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
     const sharedData = this.storage.get<FavoriteData[]>(
       'anfavorites.favorites.v2',
     );
+    const sharedGroups = this.storage.get<string[]>('anfavorites.groups');
+
+    if (sharedGroups) {
+      sharedGroups.forEach((g) => this.groups.add(g));
+    }
+
     if (sharedData) {
       this.logger.info(
         `[storage] loadFavorites (shared) -> count=${sharedData.length}`,
@@ -473,6 +495,7 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
           group: groupName,
           addedAt: fav.addedAt || Date.now(),
         });
+        this.groups.add(groupName);
       });
       this.checkForDuplicateNames();
       return;
@@ -492,6 +515,7 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
           group: groupName,
           addedAt: fav.addedAt || Date.now(),
         });
+        this.groups.add(groupName);
       });
       this.saveFavorites(); // Save to shared storage
       this.checkForDuplicateNames();
@@ -577,9 +601,10 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
     });
 
     this.logger.info(
-      `[storage] saveFavorites (shared) -> count=${favoritesArray.length}`,
+      `[storage] saveFavorites (shared) -> count=${favoritesArray.length} groups=${this.groups.size}`,
     );
     this.storage.update('anfavorites.favorites.v2', favoritesArray);
+    this.storage.update('anfavorites.groups', Array.from(this.groups));
   }
 
   public async validateFavorites(): Promise<void> {
