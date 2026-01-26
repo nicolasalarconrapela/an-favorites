@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.41",
+  "version": "0.8.42",
   "publisher": "anappwilos",
   "engines": {
     "vscode": "^1.86.0"
@@ -80,6 +80,16 @@
       ]
     },
     "menus": {
+      "editor/context": [
+        {
+          "command": "anfavorites.addToFavorites",
+          "group": "modification"
+        },
+        {
+          "command": "anfavorites.addToFavoritesInGroup",
+          "group": "modification"
+        }
+      ],
       "editor/title/context": [
         {
           "command": "anfavorites.addToFavorites",
