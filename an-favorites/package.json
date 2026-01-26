@@ -39,20 +39,20 @@
         "title": "Eliminar de Favoritos"
       },
       {
-        "command": "anfavorites.addCategory",
-        "title": "Nueva Categoría"
+        "command": "anfavorites.addGroup",
+        "title": "Nuevo Grupo"
       },
       {
-        "command": "anfavorites.removeCategory",
-        "title": "Eliminar Categoría"
+        "command": "anfavorites.removeGroup",
+        "title": "Eliminar Grupo"
       },
       {
-        "command": "anfavorites.renameCategory",
-        "title": "Renombrar Categoría"
+        "command": "anfavorites.renameGroup",
+        "title": "Renombrar Grupo"
       },
       {
         "command": "anfavorites.moveFavorite",
-        "title": "Mover a Categoría"
+        "title": "Mover a Grupo"
       },
       {
         "command": "anfavorites.quickOpen",
@@ -85,7 +85,7 @@
       ],
       "view/title": [
         {
-          "command": "anfavorites.addCategory",
+          "command": "anfavorites.addGroup",
           "when": "view == anfavorites.favoritesView",
           "group": "navigation"
         }
@@ -102,14 +102,14 @@
           "group": "favorites@2"
         },
         {
-          "command": "anfavorites.renameCategory",
-          "when": "view == anfavorites.favoritesView && viewItem == categoryItem",
-          "group": "category@1"
+          "command": "anfavorites.renameGroup",
+          "when": "view == anfavorites.favoritesView && viewItem == groupItem",
+          "group": "group@1"
         },
         {
-          "command": "anfavorites.removeCategory",
-          "when": "view == anfavorites.favoritesView && viewItem == categoryItem",
-          "group": "category@2"
+          "command": "anfavorites.removeGroup",
+          "when": "view == anfavorites.favoritesView && viewItem == groupItem",
+          "group": "group@2"
         }
       ]
     },

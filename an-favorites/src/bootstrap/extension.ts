@@ -5,7 +5,7 @@ import { registerWebviewCommand } from '../commands/webviewCommand';
 import { registerShowLogsCommand } from '../commands/showLogsCommand';
 import { registerAddToFavoritesCommand } from '../commands/addToFavoritesCommand';
 import { registerRemoveFromFavoritesCommand } from '../commands/removeFromFavoritesCommand';
-import { registerManageCategoriesCommands } from '../commands/manageCategoriesCommand';
+import { registerManageGroupsCommands } from '../commands/manageGroupsCommand';
 import { registerQuickOpenCommand } from '../commands/quickOpenCommand';
 import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
@@ -33,15 +33,22 @@ export function activate(context: vscode.ExtensionContext): void {
   logger.info('Registering favorites tree provider...');
 
   // Registrar el árbol de favoritos
-  const favoritesProvider = new FavoritesTreeDataProvider(context, logger, sharedStorage);
-  vscode.window.registerTreeDataProvider('anfavorites.favoritesView',favoritesProvider);
+  const favoritesProvider = new FavoritesTreeDataProvider(
+    context,
+    logger,
+    sharedStorage,
+  );
+  vscode.window.registerTreeDataProvider(
+    'anfavorites.favoritesView',
+    favoritesProvider,
+  );
 
   logger.info('Registering favorites commands...');
 
   // Registrar comandos de favoritos con logger
   registerAddToFavoritesCommand(context, favoritesProvider, logger);
   registerRemoveFromFavoritesCommand(context, favoritesProvider, logger);
-  registerManageCategoriesCommands(context, favoritesProvider, logger);
+  registerManageGroupsCommands(context, favoritesProvider, logger);
   logger.info('[activate] registering quickOpen...');
   registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
   logger.info('[activate] quickOpen registered.');
@@ -57,7 +64,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     await Promise.all([
       favoritesProvider.validateFavorites(),
-      mruService.validateFiles()
+      mruService.validateFiles(),
     ]);
 
     logger.debug(`Validated lists after file deletion: ${uri.fsPath}`);
@@ -78,7 +85,9 @@ export function activate(context: vscode.ExtensionContext): void {
       const newName = path.basename(newPath);
       const nameChanged = oldName !== newName;
 
-      logger.debug(`Updating path: ${oldPath} -> ${newPath} (name changed: ${nameChanged})`);
+      logger.debug(
+        `Updating path: ${oldPath} -> ${newPath} (name changed: ${nameChanged})`,
+      );
 
       // Always update the paths in storage
       favoritesProvider.updatePath(oldPath, newPath);
@@ -88,7 +97,9 @@ export function activate(context: vscode.ExtensionContext): void {
       // The updatePath methods already fire refresh events, but this ensures
       // that the collision detection logic runs again for all affected items
       if (nameChanged) {
-        logger.debug(`Filename changed: "${oldName}" -> "${newName}", collision detection will be recalculated`);
+        logger.debug(
+          `Filename changed: "${oldName}" -> "${newName}", collision detection will be recalculated`,
+        );
       }
     }
   });

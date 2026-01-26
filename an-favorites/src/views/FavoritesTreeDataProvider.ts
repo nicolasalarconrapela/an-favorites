@@ -4,16 +4,16 @@ import { Logger } from '../logging/logger';
 import { SharedStorageService } from '../services/sharedStorageService';
 import { detectCollisions, safeBasenameFromUri } from '../utils/collisionUtils';
 
-export class CategoryItem extends vscode.TreeItem {
+export class GroupItem extends vscode.TreeItem {
   constructor(
-    public readonly categoryName: string,
+    public readonly groupName: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
   ) {
-    super(categoryName, collapsibleState);
+    super(groupName, collapsibleState);
 
-    this.tooltip = `Categoría: ${categoryName}`;
+    this.tooltip = `Grupo: ${groupName}`;
     this.iconPath = new vscode.ThemeIcon('folder');
-    this.contextValue = 'categoryItem';
+    this.contextValue = 'groupItem';
   }
 }
 
@@ -23,7 +23,7 @@ export class FavoriteItem extends vscode.TreeItem {
 
   constructor(
     public readonly resourceUri: vscode.Uri,
-    public readonly category: string,
+    public readonly group: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
   ) {
     // ✅ IMPORTANTE:
@@ -82,32 +82,32 @@ export class FavoriteItem extends vscode.TreeItem {
 
 interface FavoriteData {
   path: string;
-  category: string;
+  group: string;
   addedAt?: number;
 }
 
 interface FavoriteMetadata {
-  category: string;
+  group: string;
   addedAt: number;
 }
 
 export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
-  CategoryItem | FavoriteItem
+  GroupItem | FavoriteItem
 > {
   private _onDidChangeTreeData: vscode.EventEmitter<
-    CategoryItem | FavoriteItem | undefined | null | void
+    GroupItem | FavoriteItem | undefined | null | void
   > = new vscode.EventEmitter<
-    CategoryItem | FavoriteItem | undefined | null | void
+    GroupItem | FavoriteItem | undefined | null | void
   >();
 
   readonly onDidChangeTreeData: vscode.Event<
-    CategoryItem | FavoriteItem | undefined | null | void
+    GroupItem | FavoriteItem | undefined | null | void
   > = this._onDidChangeTreeData.event;
 
   // Map<filePath, FavoriteMetadata>
   private favorites: Map<string, FavoriteMetadata> = new Map();
 
-  public static readonly DEFAULT_CATEGORY = 'Sin Categoría';
+  public static readonly DEFAULT_GROUP = 'Sin Grupo';
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -137,31 +137,31 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
     this._onDidChangeTreeData.fire();
   }
 
-  getTreeItem(element: CategoryItem | FavoriteItem): vscode.TreeItem {
+  getTreeItem(element: GroupItem | FavoriteItem): vscode.TreeItem {
     return element;
   }
 
   async getChildren(
-    element?: CategoryItem | FavoriteItem,
-  ): Promise<(CategoryItem | FavoriteItem)[]> {
+    element?: GroupItem | FavoriteItem,
+  ): Promise<(GroupItem | FavoriteItem)[]> {
     const t0 = Date.now();
 
     if (!element) {
-      // Root level: return categories
-      const categories: CategoryItem[] = [];
-      const categoryMap = this.getCategoryMap();
+      // Root level: return groups
+      const groups: GroupItem[] = [];
+      const groupMap = this.getGroupMap();
 
       const ws = (vscode.workspace.workspaceFolders ?? []).map(
         (f) => f.uri.fsPath,
       );
       this.logger.info(
-        `[getChildren:root] Start. favorites=${this.favorites.size} categories=${categoryMap.size}`,
+        `[getChildren:root] Start. favorites=${this.favorites.size} groups=${groupMap.size}`,
         { workspaceFolders: ws },
       );
-      // TODO: Poder individualizar las categorias por workspace
+      // TODO: Poder individualizar los grupos por workspace
       // TODO: Individualizar los archivos por workspace
-      categoryMap.forEach((filePaths, categoryName) => {
-        // Filter: Check if this category has ANY file visible in current workspace
+      groupMap.forEach((filePaths, groupName) => {
+        // Filter: Check if this group has ANY file visible in current workspace
         let hasVisibleFiles = false;
 
         for (const filePath of filePaths) {
@@ -177,34 +177,29 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
 
         this.logger.info(
           '[getChildren:root] ' +
-            `Category "${categoryName}" -> files=${filePaths.length} hasVisibleFiles=${hasVisibleFiles} isEmpty=${isEmpty} included=${included}`,
+            `Group "${groupName}" -> files=${filePaths.length} hasVisibleFiles=${hasVisibleFiles} isEmpty=${isEmpty} included=${included}`,
         );
 
         if (included) {
-          categories.push(
-            new CategoryItem(
-              categoryName,
-              vscode.TreeItemCollapsibleState.Expanded,
-            ),
+          groups.push(
+            new GroupItem(groupName, vscode.TreeItemCollapsibleState.Expanded),
           );
         }
       });
 
       this.logger.info(
-        `[getChildren:root] End. returnedCategories=${categories.length} in ${Date.now() - t0}ms`,
+        `[getChildren:root] End. returnedGroups=${groups.length} in ${Date.now() - t0}ms`,
       );
-      return Promise.resolve(categories);
+      return Promise.resolve(groups);
     }
 
-    if (element instanceof CategoryItem) {
-      // Category level: return files in this category
+    if (element instanceof GroupItem) {
+      // Group level: return files in this group
       const items: FavoriteItem[] = [];
-      this.logger.info(
-        `[getChildren:category] Start "${element.categoryName}"`,
-      );
+      this.logger.info(`[getChildren:group] Start "${element.groupName}"`);
 
       this.favorites.forEach((metadata, filePath) => {
-        if (metadata.category !== element.categoryName) return;
+        if (metadata.group !== element.groupName) return;
 
         const uri = vscode.Uri.file(filePath);
 
@@ -212,7 +207,7 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
         const wf = vscode.workspace.getWorkspaceFolder(uri);
         if (!wf) {
           this.logger.info(
-            `[getChildren:category] EXCLUDED (not in workspace): ${filePath}`,
+            `[getChildren:group] EXCLUDED (not in workspace): ${filePath}`,
           );
           return;
         }
@@ -220,15 +215,13 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
         items.push(
           new FavoriteItem(
             uri,
-            element.categoryName,
+            element.groupName,
             vscode.TreeItemCollapsibleState.None,
           ),
         );
       });
 
-      this.logger.info(
-        `[getChildren:category] Collected items=${items.length}`,
-      );
+      this.logger.info(`[getChildren:group] Collected items=${items.length}`);
 
       // ✅ Detect name collisions and set description visibility (using workspace-wide check)
       const allUris = items.map((i) => i.resourceUri);
@@ -248,7 +241,7 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
         );
 
         this.logger.info(
-          `[collisions] Found ${collisions.size} colliding basenames in "${element.categoryName}"`,
+          `[collisions] Found ${collisions.size} colliding basenames in "${element.groupName}"`,
         );
 
         for (const item of items) {
@@ -273,8 +266,8 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
       }
 
       this.logger.info(
-        '[getChildren:category] ' +
-          `End "${element.categoryName}" returnedItems=${items.length} in ${Date.now() - t0}ms`,
+        '[getChildren:group] ' +
+          `End "${element.groupName}" returnedItems=${items.length} in ${Date.now() - t0}ms`,
       );
       return Promise.resolve(items);
     }
@@ -282,35 +275,34 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
     return Promise.resolve([]);
   }
 
-  // Helper to get category -> filePaths mapping
-  private getCategoryMap(): Map<string, string[]> {
-    const categoryMap = new Map<string, string[]>();
+  // Helper to get group -> filePaths mapping
+  private getGroupMap(): Map<string, string[]> {
+    const groupMap = new Map<string, string[]>();
 
-    // Ensure default category exists
-    categoryMap.set(FavoritesTreeDataProvider.DEFAULT_CATEGORY, []);
+    // Ensure default group exists
+    groupMap.set(FavoritesTreeDataProvider.DEFAULT_GROUP, []);
 
     this.favorites.forEach((metadata, filePath) => {
-      if (!categoryMap.has(metadata.category)) {
-        categoryMap.set(metadata.category, []);
+      if (!groupMap.has(metadata.group)) {
+        groupMap.set(metadata.group, []);
       }
-      categoryMap.get(metadata.category)!.push(filePath);
+      groupMap.get(metadata.group)!.push(filePath);
     });
 
-    return categoryMap;
+    return groupMap;
   }
 
-  addFavorite(uri: vscode.Uri, category?: string): void {
-    const targetCategory =
-      category || FavoritesTreeDataProvider.DEFAULT_CATEGORY;
+  addFavorite(uri: vscode.Uri, group?: string): void {
+    const targetGroup = group || FavoritesTreeDataProvider.DEFAULT_GROUP;
     const filePath = uri.fsPath;
 
     this.logger.info(`[favorites] addFavorite -> ${filePath}`, {
-      category: targetCategory,
+      group: targetGroup,
     });
 
     // Add or update with current timestamp
     this.favorites.set(filePath, {
-      category: targetCategory,
+      group: targetGroup,
       addedAt: Date.now(),
     });
 
@@ -329,47 +321,43 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
     return this.favorites.has(uri.fsPath);
   }
 
-  getCategoryForFavorite(uri: vscode.Uri): string | undefined {
-    return this.favorites.get(uri.fsPath)?.category;
+  getGroupForFavorite(uri: vscode.Uri): string | undefined {
+    return this.favorites.get(uri.fsPath)?.group;
   }
 
-  addCategory(categoryName: string): boolean {
-    const categoryMap = this.getCategoryMap();
+  addGroup(groupName: string): boolean {
+    const groupMap = this.getGroupMap();
 
-    if (categoryMap.has(categoryName)) {
-      this.logger.warn(
-        `[categories] addCategory FAILED (exists) -> "${categoryName}"`,
-      );
+    if (groupMap.has(groupName)) {
+      this.logger.warn(`[groups] addGroup FAILED (exists) -> "${groupName}"`);
       return false;
     }
 
-    // Nota: con tu diseño actual, la categoría “real” existe si hay items;
-    // aquí solo refrescamos.
     this.logger.info(
-      `[categories] addCategory OK -> "${categoryName}" (implicit until used)`,
+      `[groups] addGroup OK -> "${groupName}" (implicit until used)`,
     );
     this.saveFavorites();
     this.refresh();
     return true;
   }
 
-  removeCategory(categoryName: string): void {
-    if (categoryName === FavoritesTreeDataProvider.DEFAULT_CATEGORY) {
+  removeGroup(groupName: string): void {
+    if (groupName === FavoritesTreeDataProvider.DEFAULT_GROUP) {
       this.logger.warn(
-        `[categories] removeCategory IGNORED (default) -> "${categoryName}"`,
+        `[groups] removeGroup IGNORED (default) -> "${groupName}"`,
       );
       return;
     }
 
     this.logger.info(
-      `[categories] removeCategory -> "${categoryName}" (move to default)`,
+      `[groups] removeGroup -> "${groupName}" (move to default)`,
     );
 
-    // Move all favorites from this category to default
+    // Move all favorites from this group to default
     this.favorites.forEach((metadata, filePath) => {
-      if (metadata.category === categoryName) {
-        metadata.category = FavoritesTreeDataProvider.DEFAULT_CATEGORY;
-        this.logger.info(`[categories] Moved favorite to default`, {
+      if (metadata.group === groupName) {
+        metadata.group = FavoritesTreeDataProvider.DEFAULT_GROUP;
+        this.logger.info(`[groups] Moved favorite to default`, {
           filePath,
         });
       }
@@ -379,35 +367,31 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
     this.refresh();
   }
 
-  renameCategory(oldName: string, newName: string): boolean {
-    if (oldName === FavoritesTreeDataProvider.DEFAULT_CATEGORY) {
-      this.logger.warn(
-        `[categories] renameCategory FAILED (default) -> "${oldName}"`,
-      );
+  renameGroup(oldName: string, newName: string): boolean {
+    if (oldName === FavoritesTreeDataProvider.DEFAULT_GROUP) {
+      this.logger.warn(`[groups] renameGroup FAILED (default) -> "${oldName}"`);
       return false;
     }
 
-    const categoryMap = this.getCategoryMap();
-    if (!categoryMap.has(oldName) || categoryMap.has(newName)) {
+    const groupMap = this.getGroupMap();
+    if (!groupMap.has(oldName) || groupMap.has(newName)) {
       this.logger.warn(
-        `[categories] renameCategory FAILED -> "${oldName}" to "${newName}"`,
+        `[groups] renameGroup FAILED -> "${oldName}" to "${newName}"`,
         {
-          oldExists: categoryMap.has(oldName),
-          newExists: categoryMap.has(newName),
+          oldExists: groupMap.has(oldName),
+          newExists: groupMap.has(newName),
         },
       );
       return false;
     }
 
-    this.logger.info(
-      `[categories] renameCategory -> "${oldName}" => "${newName}"`,
-    );
+    this.logger.info(`[groups] renameGroup -> "${oldName}" => "${newName}"`);
 
-    // Update all favorites in the old category
+    // Update all favorites in the old group
     this.favorites.forEach((metadata, filePath) => {
-      if (metadata.category === oldName) {
-        metadata.category = newName;
-        this.logger.info(`[categories] Updated favorite category`, {
+      if (metadata.group === oldName) {
+        metadata.group = newName;
+        this.logger.info(`[groups] Updated favorite group`, {
           filePath,
           newName,
         });
@@ -419,7 +403,7 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
     return true;
   }
 
-  moveFavorite(uri: vscode.Uri, newCategory: string): void {
+  moveFavorite(uri: vscode.Uri, newGroup: string): void {
     const metadata = this.favorites.get(uri.fsPath);
     if (!metadata) {
       this.logger.warn(
@@ -429,17 +413,17 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
     }
 
     this.logger.info(`[favorites] moveFavorite -> ${uri.fsPath}`, {
-      from: metadata.category,
-      to: newCategory,
+      from: metadata.group,
+      to: newGroup,
     });
-    metadata.category = newCategory;
+    metadata.group = newGroup;
 
     this.saveFavorites();
     this.refresh();
   }
 
-  getCategories(): string[] {
-    return Array.from(this.getCategoryMap().keys());
+  getGroups(): string[] {
+    return Array.from(this.getGroupMap().keys());
   }
 
   /**
@@ -480,8 +464,10 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
         `[storage] loadFavorites (shared) -> count=${sharedData.length}`,
       );
       sharedData.forEach((fav) => {
+        const groupName = fav.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
+
         this.favorites.set(fav.path, {
-          category: fav.category,
+          group: groupName,
           addedAt: fav.addedAt || Date.now(),
         });
       });
@@ -498,8 +484,9 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
         `[storage] Migrating workspace v2 -> shared. Total=${workspaceStored.length}`,
       );
       workspaceStored.forEach((fav) => {
+        const groupName = fav.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
         this.favorites.set(fav.path, {
-          category: fav.category,
+          group: groupName,
           addedAt: fav.addedAt || Date.now(),
         });
       });
@@ -523,7 +510,7 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
         const uri = vscode.Uri.file(filePath);
         if (vscode.workspace.getWorkspaceFolder(uri)) {
           this.favorites.set(filePath, {
-            category: FavoritesTreeDataProvider.DEFAULT_CATEGORY,
+            group: FavoritesTreeDataProvider.DEFAULT_GROUP,
             addedAt: now - (legacyFavorites.length - index),
           });
           importedCount++;
@@ -576,12 +563,12 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
   }
 
   private saveFavorites(): void {
-    const favoritesArray: FavoriteData[] = [];
+    const favoritesArray: any[] = [];
 
     this.favorites.forEach((metadata, filePath) => {
       favoritesArray.push({
         path: filePath,
-        category: metadata.category,
+        group: metadata.group,
         addedAt: metadata.addedAt,
       });
     });
