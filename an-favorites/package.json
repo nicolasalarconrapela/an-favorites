@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.42",
+  "version": "0.8.43",
   "publisher": "anappwilos",
   "engines": {
     "vscode": "^1.86.0"
@@ -24,43 +24,52 @@
     "commands": [
       {
         "command": "anfavorites.addToFavorites",
-        "title": "Añadir a Favoritos"
+        "title": "Añadir a Favoritos",
+        "category": "AnFavorites"
       },
       {
         "command": "anfavorites.addToFavoritesInGroup",
-        "title": "Añadir a Favoritos (Elegir Grupo)"
+        "title": "Añadir a Favoritos (Elegir Grupo)",
+        "category": "AnFavorites"
       },
       {
         "command": "anfavorites.removeFromFavorites",
         "title": "Eliminar de Favoritos",
+        "category": "AnFavorites",
         "icon": "$(trash)"
       },
       {
         "command": "anfavorites.addGroup",
-        "title": "Nuevo Grupo"
+        "title": "Nuevo Grupo",
+        "category": "AnFavorites"
       },
       {
         "command": "anfavorites.removeGroup",
         "title": "Eliminar Grupo",
+        "category": "AnFavorites",
         "icon": "$(trash)"
       },
       {
         "command": "anfavorites.renameGroup",
         "title": "Renombrar Grupo",
+        "category": "AnFavorites",
         "icon": "$(edit)"
       },
       {
         "command": "anfavorites.moveFavorite",
-        "title": "Mover a Grupo"
+        "title": "Mover a Grupo",
+        "category": "AnFavorites"
       },
       {
         "command": "anfavorites.openToSide",
         "title": "Abrir al lado",
+        "category": "AnFavorites",
         "icon": "$(split-horizontal)"
       },
       {
         "command": "anfavorites.quickOpen",
-        "title": "Buscar Archivo (Favoritos)"
+        "title": "Buscar Archivo (Favoritos)",
+        "category": "AnFavorites"
       }
     ],
     "keybindings": [
@@ -115,6 +124,11 @@
       "view/title": [
         {
           "command": "anfavorites.addGroup",
+          "when": "view == anfavorites.favoritesView",
+          "group": "navigation"
+        },
+        {
+          "command": "anfavorites.removeAllFavorites",
           "when": "view == anfavorites.favoritesView",
           "group": "navigation"
         }
