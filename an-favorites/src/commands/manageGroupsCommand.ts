@@ -135,6 +135,8 @@ export function registerManageGroupsCommands(
         const newName = await vscode.window.showInputBox({
           prompt: `Nuevo nombre para "${oldName}"`,
           value: oldName,
+          valueSelection: [0, oldName.length],
+          title: `Renombrar Grupo: ${oldName}`,
           validateInput: (value) => {
             if (!value || value.trim().length === 0) {
               return 'El nombre no puede estar vacío';

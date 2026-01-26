@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.40",
+  "version": "0.8.41",
   "publisher": "anappwilos",
   "engines": {
     "vscode": "^1.86.0"
@@ -41,11 +41,13 @@
       },
       {
         "command": "anfavorites.removeGroup",
-        "title": "Eliminar Grupo"
+        "title": "Eliminar Grupo",
+        "icon": "$(trash)"
       },
       {
         "command": "anfavorites.renameGroup",
-        "title": "Renombrar Grupo"
+        "title": "Renombrar Grupo",
+        "icon": "$(edit)"
       },
       {
         "command": "anfavorites.moveFavorite",
@@ -126,12 +128,12 @@
         {
           "command": "anfavorites.renameGroup",
           "when": "view == anfavorites.favoritesView && viewItem == groupItem",
-          "group": "group@1"
+          "group": "inline"
         },
         {
           "command": "anfavorites.removeGroup",
           "when": "view == anfavorites.favoritesView && viewItem == groupItem",
-          "group": "group@2"
+          "group": "inline"
         }
       ],
       "commandPalette": [
