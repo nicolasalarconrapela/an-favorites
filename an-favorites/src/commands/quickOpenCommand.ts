@@ -511,7 +511,7 @@ export function registerQuickOpenCommand(
 
           if (hasRecentFiles) {
             const clearRecentsItem: ActionQuickPickItem = {
-              label: '\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t  $(trash) Limpiar',
+              label: '$(trash) Limpiar todo',
               action: 'clearRecents',
             };
 
