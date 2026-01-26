@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.36",
+  "version": "0.8.37",
   "publisher": "anappwilos",
   "engines": {
     "vscode": "^1.86.0"
@@ -198,6 +198,16 @@
               "**/.history/**"
             ],
             "description": "Patrones de exclusión para búsqueda de archivos (node_modules, dist, build, caches, etc.)."
+          }
+        }
+      },
+      {
+        "title": "Quick Open",
+        "properties": {
+          "anfavorites.quickOpen.openToSide": {
+            "type": "boolean",
+            "default": true,
+            "description": "Si está activado, al abrir un archivo desde Quick Open se abrirá automáticamente en el editor lateral y se ocultará el botón 'Abrir al lado'."
           }
         }
       }

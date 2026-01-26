@@ -150,16 +150,25 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   private _fullPathLabel: string;
   private _dirPathLabel: string;
 
+  private _openToSide: boolean;
+
   constructor(params: {
     uri: vscode.Uri;
     isFavorite: boolean;
     isRecentlyOpened?: boolean;
+    openToSide?: boolean;
   }) {
-    const { uri, isFavorite, isRecentlyOpened = false } = params;
+    const {
+      uri,
+      isFavorite,
+      isRecentlyOpened = false,
+      openToSide = false,
+    } = params;
 
     this.resourceUri = uri;
     this.isFavorite = isFavorite;
     this.isRecentlyOpened = isRecentlyOpened;
+    this._openToSide = openToSide;
 
     // Label base: nombre fichero
     const baseName = safeBasenameFromUri(uri);
@@ -223,11 +232,15 @@ class FileQuickPickItem implements vscode.QuickPickItem {
           : new vscode.ThemeIcon('star-empty'),
         tooltip: this.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos',
       },
-      {
+    ];
+
+    // Solo añadir botón "Abrir al lado" si NO es el comportamiento por defecto
+    if (!this._openToSide) {
+      buttons.push({
         iconPath: new vscode.ThemeIcon('split-horizontal'),
         tooltip: 'Abrir al lado',
-      },
-    ];
+      });
+    }
 
     // Añadir botón de eliminar si es reciente
     if (this.isRecentlyOpened) {
@@ -355,6 +368,9 @@ export function registerQuickOpenCommand(
           );
           const configSearch =
             vscode.workspace.getConfiguration('anfavorites.search');
+          const openToSide = vscode.workspace
+            .getConfiguration('anfavorites.quickOpen')
+            .get<boolean>('openToSide', false);
 
           const folders = vscode.workspace.workspaceFolders ?? [];
           const hasWorkspace = folders.length > 0;
@@ -446,6 +462,7 @@ export function registerQuickOpenCommand(
                 uri,
                 isFavorite: true,
                 isRecentlyOpened: false,
+                openToSide,
               });
             },
           );
@@ -459,6 +476,7 @@ export function registerQuickOpenCommand(
                 uri,
                 isFavorite: isFav,
                 isRecentlyOpened: true,
+                openToSide,
               });
             });
 
@@ -520,6 +538,7 @@ export function registerQuickOpenCommand(
                   uri,
                   isFavorite: false,
                   isRecentlyOpened: false,
+                  openToSide,
                 });
               });
             }
@@ -762,8 +781,14 @@ export function registerQuickOpenCommand(
           }
 
           logger.info('[QuickOpen] Showing text document...');
+
+          const openToSide = vscode.workspace
+            .getConfiguration('anfavorites.quickOpen')
+            .get<boolean>('openToSide', false);
+
           await vscode.window.showTextDocument(selected.resourceUri, {
             preview: false,
+            viewColumn: openToSide ? vscode.ViewColumn.Beside : undefined,
           });
           logger.info(
             '[QuickOpen] ✓ File opened successfully, hiding QuickPick',
