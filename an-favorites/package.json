@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.38",
+  "version": "0.8.39",
   "publisher": "anappwilos",
   "engines": {
     "vscode": "^1.86.0"
@@ -25,6 +25,10 @@
       {
         "command": "anfavorites.addToFavorites",
         "title": "Añadir a Favoritos"
+      },
+      {
+        "command": "anfavorites.addToFavoritesInGroup",
+        "title": "Añadir a Favoritos (Elegir Grupo)"
       },
       {
         "command": "anfavorites.removeFromFavorites",
@@ -74,11 +78,26 @@
       ]
     },
     "menus": {
+      "editor/title/context": [
+        {
+          "command": "anfavorites.addToFavorites",
+          "group": "1_modification"
+        },
+        {
+          "command": "anfavorites.addToFavoritesInGroup",
+          "group": "1_modification"
+        }
+      ],
       "explorer/context": [
         {
           "command": "anfavorites.addToFavorites",
           "when": "!explorerResourceIsFolder",
           "group": "2_workspace@1"
+        },
+        {
+          "command": "anfavorites.addToFavoritesInGroup",
+          "when": "!explorerResourceIsFolder",
+          "group": "2_workspace@2"
         }
       ],
       "view/title": [

@@ -3,6 +3,7 @@ import * as path from 'path';
 import { createAppLogger } from '../logging/loggingModule';
 
 import { registerAddToFavoritesCommand } from '../commands/addToFavoritesCommand';
+import { registerAddToFavoritesInGroupCommand } from '../commands/addToFavoritesInGroupCommand';
 import { registerRemoveFromFavoritesCommand } from '../commands/removeFromFavoritesCommand';
 import { registerManageGroupsCommands } from '../commands/manageGroupsCommand';
 import { registerOpenToSideCommand } from '../commands/openToSideCommand';
@@ -43,7 +44,9 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // Registrar comandos de favoritos con logger
   registerAddToFavoritesCommand(context, favoritesProvider, logger);
+  registerAddToFavoritesInGroupCommand(context, favoritesProvider, logger);
   registerRemoveFromFavoritesCommand(context, favoritesProvider, logger);
+
   registerManageGroupsCommands(context, favoritesProvider, logger);
   registerOpenToSideCommand(context, logger);
   logger.info('[activate] registering quickOpen...');
