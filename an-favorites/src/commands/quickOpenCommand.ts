@@ -1138,7 +1138,18 @@ export function registerQuickOpenCommand(
           if (button.tooltip === 'Eliminar de favoritos') {
             logger.info(`[QuickOpen] Removing from favorites: ${uri.fsPath}`);
             favoritesProvider.removeFavorite(uri);
-            // Rebuild happens via event
+            item.isFavorite = false;
+            item.isPinned = false;
+            item.isIndividualPinned = false;
+            item.updateIcon();
+            const currentItems = quickPick.items;
+            const index = currentItems.indexOf(item);
+            if (index !== -1) {
+              const newItems = [...currentItems];
+              newItems[index] = item;
+              quickPick.items = newItems;
+              quickPick.activeItems = [item];
+            }
             return;
           }
 

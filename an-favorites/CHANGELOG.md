@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.62] - 2026-01-27
+
+### Changed
+- Quick Open: al eliminar un favorito durante una búsqueda, el icono se actualiza sin reconstruir la lista
+
 ## [0.8.61] - 2026-01-27
 
 ### Changed
