@@ -38,6 +38,7 @@ export class MRUService {
 
     if (stored && stored.length > 0) {
       this.mruList = stored;
+      this.removeEmptyEntries('[mru] Removed empty entries from loaded history');
       this.logger.info(`[mru] Loaded from globalState. count=${stored.length}`);
     } else {
       this.mruList = [];
@@ -45,6 +46,16 @@ export class MRUService {
     }
 
     this.checkForDuplicateNames();
+  }
+
+  private removeEmptyEntries(logMessage: string): void {
+    const originalLength = this.mruList.length;
+    this.mruList = this.mruList.filter((entry) => entry.trim() !== '');
+    if (this.mruList.length !== originalLength) {
+      const removed = originalLength - this.mruList.length;
+      this.logger.info(`${logMessage}. removed=${removed}`);
+      this.save();
+    }
   }
 
   /**
@@ -186,10 +197,20 @@ export class MRUService {
   }
 
   public updatePath(oldPath: string, newPath: string): void {
+    const normalizedPath = newPath.trim();
+    if (!normalizedPath) {
+      this.logger.warn(
+        `[mru] updatePath ignored empty destination for ${oldPath}`,
+      );
+      return;
+    }
+
     const index = this.mruList.indexOf(oldPath);
     if (index !== -1) {
-      this.logger.info(`[mru] updatePath -> ${oldPath} => ${newPath}`);
-      this.mruList[index] = newPath;
+      this.logger.info(
+        `[mru] updatePath -> ${oldPath} => ${normalizedPath}`,
+      );
+      this.mruList[index] = normalizedPath;
       this.save();
       this._onDidChangeRecentFiles.fire();
     } else {
