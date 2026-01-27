@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.55] - 2026-01-20
+
+### Changed
+- Validación de favoritos y MRU con pool de concurrencia limitado y métricas de duración/procesados
+
 ## [0.8.54] - 2026-01-19
 
 ### Changed

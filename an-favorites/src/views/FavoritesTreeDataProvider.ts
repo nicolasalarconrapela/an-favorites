@@ -3,6 +3,9 @@ import * as path from 'path';
 import { Logger } from '../logging/logger';
 import { SharedStorageService } from '../services/sharedStorageService';
 import { detectCollisions, safeBasenameFromUri } from '../utils/collisionUtils';
+import { runWithConcurrency } from '../utils/concurrency';
+
+const VALIDATION_CONCURRENCY = 12;
 
 export class GroupItem extends vscode.TreeItem {
   constructor(
@@ -860,12 +863,16 @@ export class FavoritesTreeDataProvider
   public async validateFavorites(): Promise<void> {
     const originalSize = this.favorites.size;
     const toDelete: string[] = [];
+    const t0 = Date.now();
 
     this.logger.info(
       `[validate] validateFavorites start. size=${originalSize}`,
     );
 
-    const validations = Array.from(this.favorites.keys()).map(
+    const favoritePaths = Array.from(this.favorites.keys());
+    await runWithConcurrency(
+      favoritePaths,
+      VALIDATION_CONCURRENCY,
       async (filePath) => {
         try {
           const uri = vscode.Uri.file(filePath);
@@ -876,7 +883,9 @@ export class FavoritesTreeDataProvider
       },
     );
 
-    await Promise.all(validations);
+    this.logger.info(
+      `[validate] validateFavorites done. processed=${favoritePaths.length} missing=${toDelete.length} durationMs=${Date.now() - t0}`,
+    );
 
     if (toDelete.length > 0) {
       this.logger.info(
@@ -904,17 +913,24 @@ export class FavoritesTreeDataProvider
     }
 
     const toDelete: string[] = [];
+    const t0 = Date.now();
 
-    const validations = uniquePaths.map(async (filePath) => {
-      try {
-        const uri = vscode.Uri.file(filePath);
-        await vscode.workspace.fs.stat(uri);
-      } catch {
-        toDelete.push(filePath);
-      }
-    });
+    await runWithConcurrency(
+      uniquePaths,
+      VALIDATION_CONCURRENCY,
+      async (filePath) => {
+        try {
+          const uri = vscode.Uri.file(filePath);
+          await vscode.workspace.fs.stat(uri);
+        } catch {
+          toDelete.push(filePath);
+        }
+      },
+    );
 
-    await Promise.all(validations);
+    this.logger.info(
+      `[validate] validateFavoritesForPaths done. processed=${uniquePaths.length} missing=${toDelete.length} durationMs=${Date.now() - t0}`,
+    );
 
     if (toDelete.length > 0) {
       this.logger.info(
