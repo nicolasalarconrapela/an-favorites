@@ -15,13 +15,22 @@ export function registerPinCommands(
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.pinFavorite',
-      async (item: FavoriteItem) => {
+      async (item?: FavoriteItem, selectedItems?: FavoriteItem[]) => {
         logger.info('[commands] Pin favorite triggered');
-        if (!item || !item.resourceUri) {
-          logger.warn('Pin favorite called without context item');
+        const itemsToProcess = (selectedItems || (item ? [item] : [])).filter(
+          (i) => i instanceof FavoriteItem,
+        );
+
+        if (itemsToProcess.length === 0) {
+          logger.warn('Pin favorite called without context items');
           return;
         }
-        provider.togglePin(item.resourceUri);
+
+        for (const i of itemsToProcess) {
+          if (!provider.isPinned(i.resourceUri)) {
+            provider.togglePin(i.resourceUri);
+          }
+        }
       },
     ),
   );
@@ -30,13 +39,22 @@ export function registerPinCommands(
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.unpinFavorite',
-      async (item: FavoriteItem) => {
+      async (item?: FavoriteItem, selectedItems?: FavoriteItem[]) => {
         logger.info('[commands] Unpin favorite triggered');
-        if (!item || !item.resourceUri) {
-          logger.warn('Unpin favorite called without context item');
+        const itemsToProcess = (selectedItems || (item ? [item] : [])).filter(
+          (i) => i instanceof FavoriteItem,
+        );
+
+        if (itemsToProcess.length === 0) {
+          logger.warn('Unpin favorite called without context items');
           return;
         }
-        provider.togglePin(item.resourceUri);
+
+        for (const i of itemsToProcess) {
+          if (provider.isPinned(i.resourceUri)) {
+            provider.togglePin(i.resourceUri);
+          }
+        }
       },
     ),
   );
