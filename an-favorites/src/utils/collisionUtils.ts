@@ -1,6 +1,16 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 
+const DEFAULT_INDEX_DEBOUNCE_MS = 300;
+
+let cachedIndex: Map<string, Set<string>> | null = null;
+let cachedExclusionKey: string | null = null;
+let buildPromise: Promise<Map<string, Set<string>>> | null = null;
+let rebuildTimer: NodeJS.Timeout | null = null;
+let indexWatcher: vscode.FileSystemWatcher | null = null;
+let workspaceFolderListener: vscode.Disposable | null = null;
+let lastExclusionPatterns: string[] = [];
+
 export function isWindows(): boolean {
   return process.platform === 'win32';
 }
@@ -8,6 +18,117 @@ export function isWindows(): boolean {
 export function normalizeFsPath(p: string): string {
   const n = path.normalize(p);
   return isWindows() ? n.toLowerCase() : n;
+}
+
+function exclusionKeyFromPatterns(patterns: string[]): string {
+  return [...patterns].sort().join('|');
+}
+
+function buildExclusionGlob(patterns: string[]): string | undefined {
+  return patterns.length > 0 ? `{${patterns.join(',')}}` : undefined;
+}
+
+function scheduleIndexRebuild(reason: string, logger?: any): void {
+  if (lastExclusionPatterns.length === 0) {
+    return;
+  }
+  if (rebuildTimer) {
+    clearTimeout(rebuildTimer);
+  }
+  rebuildTimer = setTimeout(() => {
+    logger?.debug?.(`[collision-index] Rebuilding due to ${reason} (debounced)`);
+    void rebuildWorkspaceIndex(lastExclusionPatterns, logger);
+  }, DEFAULT_INDEX_DEBOUNCE_MS);
+}
+
+function ensureWorkspaceIndexWatcher(logger?: any): void {
+  if (indexWatcher) {
+    return;
+  }
+
+  indexWatcher = vscode.workspace.createFileSystemWatcher('**/*');
+  indexWatcher.onDidCreate(() => {
+    scheduleIndexRebuild('create', logger);
+  });
+  indexWatcher.onDidDelete(() => {
+    scheduleIndexRebuild('delete', logger);
+  });
+  indexWatcher.onDidChange(() => {
+    scheduleIndexRebuild('change', logger);
+  });
+
+  workspaceFolderListener =
+    vscode.workspace.onDidChangeWorkspaceFolders(() => {
+      logger?.info?.(
+        '[collision-index] Workspace folders changed -> clearing index cache',
+      );
+      cachedIndex = null;
+      cachedExclusionKey = null;
+      scheduleIndexRebuild('workspace-folders', logger);
+    });
+}
+
+async function buildWorkspaceIndex(
+  exclusionPatterns: string[],
+  logger?: any,
+): Promise<Map<string, Set<string>>> {
+  const exclusionGlob = buildExclusionGlob(exclusionPatterns);
+  const files = await vscode.workspace.findFiles('**/*', exclusionGlob);
+  const index = new Map<string, Set<string>>();
+
+  for (const uri of files) {
+    const basename = safeBasenameFromUri(uri);
+    const normalized = normalizeFsPath(uri.fsPath);
+    const bucket = index.get(basename);
+    if (bucket) {
+      bucket.add(normalized);
+    } else {
+      index.set(basename, new Set([normalized]));
+    }
+  }
+
+  logger?.debug?.(
+    `[collision-index] Built index. files=${files.length} basenames=${index.size}`,
+  );
+  return index;
+}
+
+async function rebuildWorkspaceIndex(
+  exclusionPatterns: string[],
+  logger?: any,
+): Promise<Map<string, Set<string>>> {
+  const key = exclusionKeyFromPatterns(exclusionPatterns);
+  cachedExclusionKey = key;
+  buildPromise = buildWorkspaceIndex(exclusionPatterns, logger)
+    .then((index) => {
+      cachedIndex = index;
+      buildPromise = null;
+      return index;
+    })
+    .catch((error) => {
+      buildPromise = null;
+      throw error;
+    });
+  return buildPromise;
+}
+
+async function getWorkspaceIndex(
+  exclusionPatterns: string[],
+  logger?: any,
+): Promise<Map<string, Set<string>>> {
+  const key = exclusionKeyFromPatterns(exclusionPatterns);
+  lastExclusionPatterns = exclusionPatterns;
+  ensureWorkspaceIndexWatcher(logger);
+
+  if (cachedIndex && cachedExclusionKey === key) {
+    return cachedIndex;
+  }
+
+  if (buildPromise && cachedExclusionKey === key) {
+    return buildPromise;
+  }
+
+  return rebuildWorkspaceIndex(exclusionPatterns, logger);
 }
 
 /**
@@ -28,7 +149,7 @@ export function safeBasenameFromUri(uri: vscode.Uri): string {
 }
 
 /**
- * Detects name collisions for a set of file URIs using findFiles (Ripgrep).
+ * Detects name collisions for a set of file URIs using a cached workspace index.
  * Returns a Set of basenames that have collisions (appear more than once in workspace).
  * Uses configured exclusion patterns.
  */
@@ -39,6 +160,8 @@ export async function detectCollisions(
 ): Promise<Set<string>> {
   const collisions = new Set<string>();
   if (uris.length === 0) return collisions;
+
+  const index = await getWorkspaceIndex(exclusionPatterns, logger);
 
   // Group URIs by basename
   const byBasename = new Map<string, vscode.Uri[]>();
@@ -52,12 +175,6 @@ export async function detectCollisions(
     }
   }
 
-  // Generate exclusion glob
-  const exclusionGlob =
-    exclusionPatterns.length > 0
-      ? `{${exclusionPatterns.join(',')}}`
-      : undefined;
-
   for (const [basename, urisWithName] of byBasename.entries()) {
     // Si ya tenemos más de una URI con este nombre en nuestro set, es colisión automática
     if (urisWithName.length > 1) {
@@ -68,22 +185,20 @@ export async function detectCollisions(
       continue;
     }
 
-    // Buscar en todo el workspace archivos con este nombre
     try {
-      const pattern = `**/${basename}`;
-      const found = await vscode.workspace.findFiles(pattern, exclusionGlob);
-
-      logger?.debug(
-        `[collision] ${basename}: findFiles found ${found.length} file(s)`,
-        found.map((u) => u.fsPath),
-      );
-
       const target = normalizeFsPath(urisWithName[0].fsPath);
-      const uniqueOthers = new Set(
-        found.map((u) => normalizeFsPath(u.fsPath)).filter((p) => p !== target),
-      );
+      const pathsInIndex = index.get(basename);
 
-      if (uniqueOthers.size > 0) collisions.add(basename);
+      if (pathsInIndex && pathsInIndex.size > 0) {
+        logger?.debug?.(
+          `[collision] ${basename}: index entries=${pathsInIndex.size}`,
+          Array.from(pathsInIndex),
+        );
+
+        if (pathsInIndex.size > 1 || !pathsInIndex.has(target)) {
+          collisions.add(basename);
+        }
+      }
     } catch (error) {
       logger?.warn(`[collision] Error searching for ${basename}:`, error);
       // En caso de error, asumimos no hay colisión

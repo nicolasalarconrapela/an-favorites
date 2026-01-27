@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.1] - 2026-01-15
+
+### Changed
+- Cache del índice de colisiones por workspace con refresco debounced y reaccionando a eventos del filesystem
+- Reutilización del índice de colisiones en árbol de favoritos y Quick Open para evitar búsquedas repetidas
+
 ## [0.4.0] - 2026-01-15
 
 ### Added
