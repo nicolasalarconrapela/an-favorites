@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.59] - 2026-01-27
+
+### Changed
+- Quick Open: debounce de reconstrucciones por cambios externos para reducir microparpadeos al alternar favoritos
+
 ## [0.8.58] - 2026-01-27
 
 ### Changed

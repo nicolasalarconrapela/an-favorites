@@ -871,6 +871,17 @@ export function registerQuickOpenCommand(
       const debouncedSearchRebuild = debounce(async (value: string) => {
         await buildItems(value);
       }, 200);
+      const debouncedExternalRebuild = debounce(
+        async (reason: string) => {
+          logThrottled(
+            'debug',
+            'quickopen:external-rebuild',
+            `External change (${reason}), rebuilding QuickOpen items`,
+          );
+          await buildItems(quickPick.value);
+        },
+        120,
+      );
 
       disposables.push(
         quickPick.onDidChangeValue(async (value) => {
@@ -903,7 +914,7 @@ export function registerQuickOpenCommand(
             'quickopen:favorites-changed',
             'Favorites changed, rebuilding QuickOpen items',
           );
-          await buildItems(quickPick.value);
+          debouncedExternalRebuild('favorites');
         }),
       );
 
@@ -915,7 +926,7 @@ export function registerQuickOpenCommand(
             'quickopen:mru-changed',
             'MRU list changed, rebuilding QuickOpen items',
           );
-          await buildItems(quickPick.value);
+          debouncedExternalRebuild('mru');
         }),
       );
 
