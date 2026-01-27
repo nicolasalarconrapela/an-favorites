@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.54",
+  "version": "0.8.55",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "engines": {
@@ -115,7 +115,7 @@
         {
           "id": "anfavorites.favoritesView",
           "name": "Favoritos",
-          "icon": "resources/icon.svg"
+          "icon": "resources/icon_no_bg.svg"
         }
       ]
     },
