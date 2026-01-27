@@ -351,6 +351,20 @@ export function registerQuickOpenCommand(
   logger: any,
   mruService: MRUService,
 ): void {
+  const throttleIntervalMs = 2000;
+  const logThrottled = (
+    level: 'debug' | 'info' | 'warn' | 'error',
+    key: string,
+    message: string,
+    metadata?: unknown,
+  ) => {
+    if (logger?.throttle) {
+      logger.throttle(level, key, message, metadata, throttleIntervalMs);
+      return;
+    }
+    logger?.[level]?.(message, metadata);
+  };
+
   const disposable = vscode.commands.registerCommand(
     'anfavorites.quickOpen',
     async () => {
@@ -884,7 +898,11 @@ export function registerQuickOpenCommand(
       // Listen to favorites changes and rebuild items in real-time
       disposables.push(
         favoritesProvider.onDidChangeTreeData(async () => {
-          logger.debug('Favorites changed, rebuilding QuickOpen items');
+          logThrottled(
+            'debug',
+            'quickopen:favorites-changed',
+            'Favorites changed, rebuilding QuickOpen items',
+          );
           await buildItems(quickPick.value);
         }),
       );
@@ -892,7 +910,11 @@ export function registerQuickOpenCommand(
       // Listen to MRU changes and rebuild items in real-time
       disposables.push(
         mruService.onDidChangeRecentFiles(async () => {
-          logger.debug('MRU list changed, rebuilding QuickOpen items');
+          logThrottled(
+            'debug',
+            'quickopen:mru-changed',
+            'MRU list changed, rebuilding QuickOpen items',
+          );
           await buildItems(quickPick.value);
         }),
       );
@@ -905,7 +927,9 @@ export function registerQuickOpenCommand(
             e.affectsConfiguration('anfavorites.quickOpen') ||
             e.affectsConfiguration('anfavorites.search')
           ) {
-            logger.debug(
+            logThrottled(
+              'debug',
+              'quickopen:config-changed',
               'Configuration changed (quick open), rebuilding QuickOpen items',
             );
             // Rebuild items to reflect new limits
@@ -917,7 +941,9 @@ export function registerQuickOpenCommand(
 
       // ✅ Listen to file system changes (rename, delete, create) with debouncing
       const debouncedRebuild = debounce(async () => {
-        logger.debug(
+        logThrottled(
+          'debug',
+          'quickopen:fs-changed',
           'File system changed (debounced), rebuilding QuickOpen items',
         );
         // Invalidar caché para reflejar cambios del FS
@@ -927,21 +953,33 @@ export function registerQuickOpenCommand(
 
       disposables.push(
         vscode.workspace.onDidRenameFiles((event) => {
-          logger.debug(`Files renamed: ${event.files.length} file(s)`);
+          logThrottled(
+            'debug',
+            'quickopen:fs-renamed',
+            `Files renamed: ${event.files.length} file(s)`,
+          );
           debouncedRebuild();
         }),
       );
 
       disposables.push(
         vscode.workspace.onDidDeleteFiles((event) => {
-          logger.debug(`Files deleted: ${event.files.length} file(s)`);
+          logThrottled(
+            'debug',
+            'quickopen:fs-deleted',
+            `Files deleted: ${event.files.length} file(s)`,
+          );
           debouncedRebuild();
         }),
       );
 
       disposables.push(
         vscode.workspace.onDidCreateFiles((event) => {
-          logger.debug(`Files created: ${event.files.length} file(s)`);
+          logThrottled(
+            'debug',
+            'quickopen:fs-created',
+            `Files created: ${event.files.length} file(s)`,
+          );
           debouncedRebuild();
         }),
       );

@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.50",
+  "version": "0.8.52",
   "publisher": "anappwilos",
   "engines": {
     "vscode": "^1.86.0"
@@ -222,6 +222,27 @@
       ]
     },
     "configuration": [
+      {
+        "title": "Logging",
+        "properties": {
+          "anfavorites.logging.level": {
+            "type": "string",
+            "default": "info",
+            "enum": [
+              "debug",
+              "info",
+              "warn",
+              "error"
+            ],
+            "description": "Nivel mínimo de logs que se escriben en el canal y archivos."
+          },
+          "anfavorites.logging.maxRotatedFiles": {
+            "type": "number",
+            "default": 5,
+            "description": "Cantidad máxima de archivos de log rotados que se conservarán."
+          }
+        }
+      },
       {
         "title": "General",
         "properties": {

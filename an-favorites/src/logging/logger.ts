@@ -5,6 +5,13 @@ export interface Logger {
   info(message: string, metadata?: unknown): void;
   warn(message: string, metadata?: unknown): void;
   error(message: string, error?: Error | unknown): void;
+  throttle?(
+    level: LogLevel,
+    key: string,
+    message: string,
+    metadata?: unknown,
+    intervalMs?: number,
+  ): void;
   dispose?(): void;
 }
 
