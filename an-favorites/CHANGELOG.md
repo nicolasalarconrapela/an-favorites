@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.60] - 2026-01-27
+
+### Changed
+- Quick Open: los favoritos recientes ahora respetan el orden de adición para evitar que el último añadido aparezca primero
+
 ## [0.8.59] - 2026-01-27
 
 ### Changed

@@ -669,9 +669,9 @@ export class FavoritesTreeDataProvider
     const allFavorites = Array.from(this.favorites.entries())
       .map(([filePath, metadata]) => ({
         uri: vscode.Uri.file(filePath),
-        addedAt: metadata.addedAt,
+        addedAt: metadata.addedAt ?? 0,
       }))
-      .sort((a, b) => b.addedAt - a.addedAt)
+      .sort((a, b) => a.addedAt - b.addedAt)
       .slice(0, count);
 
     this.logger.info(
