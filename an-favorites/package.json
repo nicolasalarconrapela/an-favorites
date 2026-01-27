@@ -4,6 +4,7 @@
   "description": "Application for managing favorites",
   "version": "0.8.56",
   "publisher": "anappwilos",
+  "icon": "resources/icon.png",
   "engines": {
     "vscode": "^1.86.0"
   },
@@ -114,7 +115,7 @@
         {
           "id": "anfavorites.favoritesView",
           "name": "Favoritos",
-          "icon": "$(star)"
+          "icon": "resources/icon_no_bg.svg"
         }
       ]
     },
@@ -278,6 +279,23 @@
               5
             ],
             "description": "Número de archivos recientemente abiertos a mostrar en Quick Open."
+          },
+          "anfavorites.multiroot.separation": {
+            "type": "string",
+            "default": "none",
+            "enum": [
+              "none",
+              "ungrouped",
+              "groups",
+              "both"
+            ],
+            "enumDescriptions": [
+              "Ninguna separación.",
+              "Solo separar en el grupo 'Sin Grupo'.",
+              "Solo separar en los grupos creados por el usuario.",
+              "Separar en todos los grupos."
+            ],
+            "description": "Permite separar los favoritos por nombre de la carpeta del espacio de trabajo en entornos multi-root."
           }
         }
       },
