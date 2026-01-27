@@ -73,33 +73,106 @@ export function activate(context: vscode.ExtensionContext): void {
   telemetry.track('activated');
   logger.info('━━━ Extension activation completed successfully ━━━');
 
-  // Watch for file deletions to automatically clean up favorites and recent files
-  const fileWatcher = vscode.workspace.createFileSystemWatcher('**/*');
+  const watchedPaths = new Map<string, vscode.FileSystemWatcher>();
+  const pendingValidations = new Set<string>();
+  let validationTimer: NodeJS.Timeout | undefined;
+  let watcherSyncTimer: NodeJS.Timeout | undefined;
 
-  fileWatcher.onDidDelete(async (uri) => {
+  const flushValidations = async (): Promise<void> => {
+    const paths = Array.from(pendingValidations);
+    pendingValidations.clear();
+    validationTimer = undefined;
+
+    if (paths.length === 0) {
+      return;
+    }
+
     logger.throttle?.(
       'debug',
       'watcher:file-deleted',
-      `File deleted: ${uri.fsPath}`,
+      `Files deleted (batch): ${paths.length}`,
       undefined,
       2000,
-    ) ?? logger.debug(`File deleted: ${uri.fsPath}`);
+    ) ?? logger.debug(`Files deleted (batch): ${paths.length}`);
 
     await Promise.all([
-      favoritesProvider.validateFavorites(),
-      mruService.validateFiles(),
+      favoritesProvider.validateFavoritesForPaths(paths),
+      mruService.validateFilesForPaths(paths),
     ]);
+  };
 
-    logger.throttle?.(
-      'debug',
-      'watcher:file-deleted:validated',
-      `Validated lists after file deletion: ${uri.fsPath}`,
-      undefined,
-      2000,
-    ) ?? logger.debug(`Validated lists after file deletion: ${uri.fsPath}`);
-  });
+  const scheduleValidation = (fsPath: string): void => {
+    pendingValidations.add(fsPath);
+    if (validationTimer) {
+      clearTimeout(validationTimer);
+    }
+    validationTimer = setTimeout(() => {
+      void flushValidations();
+    }, 300);
+  };
 
-  context.subscriptions.push(fileWatcher);
+  const createWatcherForPath = (
+    fsPath: string,
+  ): vscode.FileSystemWatcher | null => {
+    const baseName = path.basename(fsPath);
+    if (!baseName) {
+      return null;
+    }
+
+    const pattern = new vscode.RelativePattern(path.dirname(fsPath), baseName);
+    const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+    watcher.onDidDelete((uri) => scheduleValidation(uri.fsPath));
+    return watcher;
+  };
+
+  const syncFileWatchers = (): void => {
+    const favoritePaths = favoritesProvider.getFavoritePaths();
+    const recentPaths = mruService.getRecentFiles();
+    const targetPaths = new Set([...favoritePaths, ...recentPaths]);
+
+    for (const [fsPath, watcher] of watchedPaths) {
+      if (!targetPaths.has(fsPath)) {
+        watcher.dispose();
+        watchedPaths.delete(fsPath);
+      }
+    }
+
+    for (const fsPath of targetPaths) {
+      if (watchedPaths.has(fsPath)) {
+        continue;
+      }
+
+      const watcher = createWatcherForPath(fsPath);
+      if (!watcher) {
+        continue;
+      }
+      watchedPaths.set(fsPath, watcher);
+      context.subscriptions.push(watcher);
+    }
+  };
+
+  const scheduleWatcherSync = (): void => {
+    if (watcherSyncTimer) {
+      clearTimeout(watcherSyncTimer);
+    }
+    watcherSyncTimer = setTimeout(() => {
+      watcherSyncTimer = undefined;
+      syncFileWatchers();
+    }, 200);
+  };
+
+  scheduleWatcherSync();
+
+  context.subscriptions.push(
+    favoritesProvider.onDidChangeTreeData(() => {
+      scheduleWatcherSync();
+    }),
+  );
+  context.subscriptions.push(
+    mruService.onDidChangeRecentFiles(() => {
+      scheduleWatcherSync();
+    }),
+  );
 
   // Watch for file renames/moves to update paths in favorites and recent files
   const renameListener = vscode.workspace.onDidRenameFiles(async (event) => {
@@ -140,6 +213,18 @@ export function activate(context: vscode.ExtensionContext): void {
   });
 
   context.subscriptions.push(renameListener);
+  context.subscriptions.push({
+    dispose: () => {
+      if (validationTimer) {
+        clearTimeout(validationTimer);
+      }
+      if (watcherSyncTimer) {
+        clearTimeout(watcherSyncTimer);
+      }
+      watchedPaths.forEach((watcher) => watcher.dispose());
+      watchedPaths.clear();
+    },
+  });
   context.subscriptions.push({ dispose: () => sharedStorage.dispose() });
   context.subscriptions.push({ dispose: () => logger.dispose?.() });
 }

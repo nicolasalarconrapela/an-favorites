@@ -132,6 +132,38 @@ export class MRUService {
     }
   }
 
+  public async validateFilesForPaths(filePaths: string[]): Promise<void> {
+    const uniquePaths = Array.from(
+      new Set(filePaths.filter((filePath) => this.mruList.includes(filePath))),
+    );
+
+    if (uniquePaths.length === 0) {
+      return;
+    }
+
+    const toRemove: string[] = [];
+
+    for (const fsPath of uniquePaths) {
+      try {
+        const uri = vscode.Uri.file(fsPath);
+        await vscode.workspace.fs.stat(uri);
+      } catch {
+        toRemove.push(fsPath);
+      }
+    }
+
+    if (toRemove.length > 0) {
+      this.logger.info(
+        `[validate] Removing ${toRemove.length} missing files from MRU`,
+        toRemove,
+      );
+      const toRemoveSet = new Set(toRemove);
+      this.mruList = this.mruList.filter((fsPath) => !toRemoveSet.has(fsPath));
+      this.save();
+      this._onDidChangeRecentFiles.fire();
+    }
+  }
+
   public updatePath(oldPath: string, newPath: string): void {
     const index = this.mruList.indexOf(oldPath);
     if (index !== -1) {

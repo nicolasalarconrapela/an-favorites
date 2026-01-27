@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.54] - 2026-01-19
+
+### Changed
+- Watcher acotado a rutas de favoritos y recientes con sincronización automática
+- Validación específica por archivo eliminado y debounce para ráfagas
+
 ## [0.8.53] - 2026-01-18
 
 ### Changed
