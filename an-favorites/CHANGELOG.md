@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.51] - 2026-01-16
+
+### Changed
+- Búsqueda incremental en Quick Open con límites configurables y aviso al superar el umbral de archivos
+- Límite de resultados mostrados y caché LRU por sesión para evitar crecimiento indefinido
+
 ## [0.4.1] - 2026-01-15
 
 ### Changed
