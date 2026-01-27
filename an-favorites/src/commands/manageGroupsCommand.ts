@@ -71,9 +71,19 @@ export function registerManageGroupsCommands(
         }
 
         if (groupName === FavoritesTreeDataProvider.DEFAULT_GROUP) {
-          vscode.window.showWarningMessage(
-            'No se puede eliminar el grupo por defecto',
+          const confirm = await vscode.window.showWarningMessage(
+            'Ests seguro de que quieres eliminar los favoritos del grupo por defecto? Se perdern todos los favoritos.',
+            { modal: true },
+            'Eliminar Definitivamente',
           );
+
+          if (confirm === 'Eliminar Definitivamente') {
+            logger.info(`Deleting all favorites in default group`);
+            favoritesProvider.deleteFavoritesInGroup(groupName);
+            vscode.window.showInformationMessage(
+              'Grupo por defecto vaciado correctamente',
+            );
+          }
           return;
         }
 
@@ -248,6 +258,73 @@ export function registerManageGroupsCommands(
           `Favorito movido a "${targetGroup}"`,
         );
         logger.info(`Favorite moved successfully`);
+      },
+    ),
+  );
+
+  // Comando: Limpiar grupo (mover items a default)
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'anfavorites.clearGroup',
+      async (item?: GroupItem) => {
+        if (!item || !(item instanceof GroupItem)) {
+          return;
+        }
+
+        const confirm = await vscode.window.showWarningMessage(
+          `¿Mover todos los favoritos de "${item.groupName}" a "Sin Grupo"?`,
+          { modal: true },
+          'Limpiar Grupo',
+        );
+
+        if (confirm === 'Limpiar Grupo') {
+          logger.info(`Clearing group: ${item.groupName}`);
+          favoritesProvider.clearGroupItems(item.groupName);
+          vscode.window.showInformationMessage(
+            `Grupo "${item.groupName}" vaciado`,
+          );
+        }
+      },
+    ),
+  );
+
+  // Comando: Quitar del grupo (mover a default)
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'anfavorites.removeFromGroup',
+      async (item?: FavoriteItem) => {
+        if (!item || !(item instanceof FavoriteItem)) {
+          return;
+        }
+
+        logger.info(
+          `Removing from group: ${item.resourceUri.fsPath} (group: ${item.group})`,
+        );
+        favoritesProvider.resetFavoriteGroup(item.resourceUri);
+        // No confirmation needed for single item usually, but maybe?
+        // User asked for a cross, usually instant.
+      },
+    ),
+  );
+
+  // Comando: Eliminar TODOS los favoritos
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'anfavorites.removeAllFavorites',
+      async () => {
+        const confirm = await vscode.window.showWarningMessage(
+          '¿Estás seguro de que quieres eliminar TODOS los favoritos?',
+          { modal: true },
+          'Eliminar Todo',
+        );
+
+        if (confirm === 'Eliminar Todo') {
+          logger.info('Removing ALL favorites');
+          favoritesProvider.removeAllFavorites();
+          vscode.window.showInformationMessage(
+            'Todos los favoritos eliminados',
+          );
+        }
       },
     ),
   );

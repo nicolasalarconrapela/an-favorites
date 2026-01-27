@@ -273,11 +273,18 @@ class FileQuickPickItem implements vscode.QuickPickItem {
       });
     }
 
-    // Añadir botón de eliminar si es reciente
-    if (this.isRecentlyOpened) {
+    // Añadir botón de eliminar (recientes o favoritos)
+    if (this.isRecentlyOpened || this.isFavorite) {
+      let tooltip = 'Eliminar';
+      if (this.isRecentlyOpened) {
+        tooltip = 'Eliminar de recientes';
+      } else if (this.isFavorite) {
+        tooltip = 'Eliminar de favoritos';
+      }
+
       buttons.push({
         iconPath: new vscode.ThemeIcon('close'),
-        tooltip: 'Eliminar de recientes',
+        tooltip: tooltip,
       });
     }
 
@@ -375,6 +382,14 @@ export function registerQuickOpenCommand(
           logger.warn('[QuickOpen] buildItems() aborted - already disposed');
           return;
         }
+
+        // Guardar selección actual para restaurarla después
+        // Esto evita que el foco salte incorrectamente cuando un item se mueve (ej: de Recientes a Favoritos)
+        const currentActiveUri =
+          quickPick.activeItems.length > 0 &&
+          isFileItem(quickPick.activeItems[0])
+            ? (quickPick.activeItems[0] as FileQuickPickItem).resourceUri.toString()
+            : null;
 
         // No poner busy true si estamos tecleando para evitar parpadeos,
         // a menos que sea la carga pesada inicial
@@ -476,9 +491,8 @@ export function registerQuickOpenCommand(
             allPinnedUris.map((u) => normalizeFsPath(u.fsPath)),
           );
 
-          // 2) Get recent favorites (excluding pinned)
+          // 2) Get recent favorites
           // Fetch more candidates (e.g. 100) to ensure we can fill the quota
-          // after excluding pinned items.
           const recentFavUris = favoritesProvider
             .getRecentFavorites(20)
             .filter((uri) => {
@@ -578,11 +592,6 @@ export function registerQuickOpenCommand(
 
           // Section 0: Fijados (Pinned)
           if (pinnedItems.length > 0) {
-            items.push({
-              label: 'Fijados',
-              kind: vscode.QuickPickItemKind.Separator,
-            });
-            items.push({ label: ' ', alwaysShow: false });
             items.push(...pinnedItems);
           }
 
@@ -606,7 +615,7 @@ export function registerQuickOpenCommand(
           }
 
           // Second section: Recientes
-          const hasRecentFiles = validRecentUris.length > 0;
+          const hasRecentFiles = recentItems.length > 0;
 
           items.push({
             label: hasRecentFiles ? 'Recientes' : 'No hay recientes nuevos',
@@ -709,6 +718,17 @@ export function registerQuickOpenCommand(
           }
 
           quickPick.items = items;
+
+          // Restaurar selección si es posible
+          if (currentActiveUri) {
+            const itemToSelect = items.find(
+              (i) =>
+                isFileItem(i) && i.resourceUri.toString() === currentActiveUri,
+            );
+            if (itemToSelect) {
+              quickPick.activeItems = [itemToSelect as FileQuickPickItem];
+            }
+          }
         } catch (error) {
           if (isDisposed) return;
           logger.error('Error loading files for QuickOpen', error);
@@ -959,6 +979,13 @@ export function registerQuickOpenCommand(
             return;
           }
 
+          if (button.tooltip === 'Eliminar de favoritos') {
+            logger.info(`[QuickOpen] Removing from favorites: ${uri.fsPath}`);
+            favoritesProvider.removeFavorite(uri);
+            // Rebuild happens via event
+            return;
+          }
+
           if (
             button.tooltip?.startsWith('Fijar') ||
             button.tooltip === 'Desfijar'
@@ -998,6 +1025,8 @@ export function registerQuickOpenCommand(
             } else {
               logger.debug('[QuickOpen] Adding to favorites');
               favoritesProvider.addFavorite(uri);
+              // Si se añade a favoritos, lo eliminamos de recientes para evitar duplicados inmediatos
+              mruService.remove(uri.fsPath);
               item.isFavorite = true;
             }
 

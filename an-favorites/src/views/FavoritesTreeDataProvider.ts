@@ -8,12 +8,13 @@ export class GroupItem extends vscode.TreeItem {
   constructor(
     public readonly groupName: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+    isDefault: boolean = false,
   ) {
     super(groupName, collapsibleState);
 
     this.tooltip = `Grupo: ${groupName}`;
     this.iconPath = new vscode.ThemeIcon('folder');
-    this.contextValue = 'groupItem';
+    this.contextValue = isDefault ? 'groupItem:default' : 'groupItem';
   }
 }
 
@@ -56,7 +57,11 @@ export class FavoriteItem extends vscode.TreeItem {
       ],
     };
     this.iconPath = vscode.ThemeIcon.File;
-    this.contextValue = isPinned ? 'favoriteItem:pinned' : 'favoriteItem';
+    let ctx = isPinned ? 'favoriteItem:pinned' : 'favoriteItem';
+    if (group !== FavoritesTreeDataProvider.DEFAULT_GROUP) {
+      ctx += ':grouped';
+    }
+    this.contextValue = ctx;
   }
 
   /**
@@ -192,7 +197,11 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
 
         if (included) {
           groups.push(
-            new GroupItem(groupName, vscode.TreeItemCollapsibleState.Expanded),
+            new GroupItem(
+              groupName,
+              vscode.TreeItemCollapsibleState.Expanded,
+              groupName === FavoritesTreeDataProvider.DEFAULT_GROUP,
+            ),
           );
         }
       });
@@ -338,12 +347,57 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
     this.refresh();
   }
 
+  removeAllFavorites(): void {
+    this.logger.info('[favorites] removeAllFavorites');
+    this.favorites.clear();
+    this.saveFavorites();
+    this.refresh();
+  }
+
+  clearGroupItems(groupName: string): void {
+    this.logger.info(`[favorites] clearGroupItems -> ${groupName}`);
+    this.favorites.forEach((metadata, filePath) => {
+      if (metadata.group === groupName) {
+        metadata.group = FavoritesTreeDataProvider.DEFAULT_GROUP;
+      }
+    });
+
+    this.saveFavorites();
+    this.refresh();
+  }
+
+  resetFavoriteGroup(uri: vscode.Uri): void {
+    const metadata = this.favorites.get(uri.fsPath);
+    if (!metadata) return;
+
+    this.logger.info(`[favorites] resetFavoriteGroup -> ${uri.fsPath}`);
+    metadata.group = FavoritesTreeDataProvider.DEFAULT_GROUP;
+
+    this.saveFavorites();
+    this.refresh();
+  }
+
   hasFavorite(uri: vscode.Uri): boolean {
     return this.favorites.has(uri.fsPath);
   }
 
   getGroupForFavorite(uri: vscode.Uri): string | undefined {
     return this.favorites.get(uri.fsPath)?.group;
+  }
+
+  deleteFavoritesInGroup(groupName: string): void {
+    this.logger.info(`[favorites] deleteFavoritesInGroup -> ${groupName}`);
+    const toDelete: string[] = [];
+
+    this.favorites.forEach((metadata, filePath) => {
+      if (metadata.group === groupName) {
+        toDelete.push(filePath);
+      }
+    });
+
+    toDelete.forEach((filePath) => this.favorites.delete(filePath));
+    this.saveFavorites();
+    this.refresh();
   }
 
   addGroup(groupName: string): boolean {
