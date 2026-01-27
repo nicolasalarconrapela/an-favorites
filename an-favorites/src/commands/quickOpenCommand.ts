@@ -576,6 +576,7 @@ export function registerQuickOpenCommand(
               label: 'Fijados',
               kind: vscode.QuickPickItemKind.Separator,
             });
+            items.push({ label: ' ', alwaysShow: false });
             items.push(...pinnedItems);
           }
 
@@ -585,6 +586,7 @@ export function registerQuickOpenCommand(
             label: hasFavoriteItems ? 'Favoritos' : 'Aún no hay favoritos',
             kind: vscode.QuickPickItemKind.Separator,
           });
+          items.push({ label: ' ', alwaysShow: false });
 
           if (hasFavoriteItems) {
             items.push(...recentFavItems);
