@@ -909,6 +909,15 @@ export function registerQuickOpenCommand(
       // Listen to favorites changes and rebuild items in real-time
       disposables.push(
         favoritesProvider.onDidChangeTreeData(async () => {
+          const isSearching = quickPick.value.trim().length > 0;
+          if (isSearching) {
+            logThrottled(
+              'debug',
+              'quickopen:favorites-changed',
+              'Favorites changed while searching, skipping rebuild',
+            );
+            return;
+          }
           logThrottled(
             'debug',
             'quickopen:favorites-changed',

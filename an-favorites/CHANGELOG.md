@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.61] - 2026-01-27
+
+### Changed
+- Quick Open: no reconstruye la lista de favoritos cuando se está buscando para mantener la posición actual
+
 ## [0.8.60] - 2026-01-27
 
 ### Changed
