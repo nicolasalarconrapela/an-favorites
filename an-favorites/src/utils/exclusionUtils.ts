@@ -20,11 +20,27 @@ export function isExcludedPath(
   }
 
   const normalized = normalizeForMatch(fsPath);
-  const relative = vscode.workspace.asRelativePath(fsPath, false);
   const candidates = new Set<string>([normalized]);
+  const workspaceFolders = vscode.workspace.workspaceFolders ?? [];
+
+  const relative = vscode.workspace.asRelativePath(fsPath, false);
 
   if (relative && relative !== fsPath) {
     candidates.add(normalizeForMatch(relative));
+  }
+
+  for (const folder of workspaceFolders) {
+    const folderPath = folder.uri.fsPath;
+    const normalizedFolder = normalizeForMatch(folderPath);
+    if (normalized.startsWith(`${normalizedFolder}/`)) {
+      const relativeToFolder = path.posix.relative(
+        normalizedFolder,
+        normalized,
+      );
+      if (relativeToFolder) {
+        candidates.add(relativeToFolder);
+      }
+    }
   }
 
   const options = { nocase: isWindows(), dot: true };

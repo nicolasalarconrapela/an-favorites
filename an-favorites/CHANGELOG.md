@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.58] - 2026-01-27
+
+### Changed
+- La detección de exclusiones considera rutas relativas por carpeta en workspaces multi-root
+
 ## [0.8.57] - 2026-01-27
 
 ### Changed
