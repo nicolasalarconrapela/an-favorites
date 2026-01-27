@@ -36,10 +36,15 @@ export function activate(context: vscode.ExtensionContext): void {
     logger,
     sharedStorage,
   );
-  vscode.window.registerTreeDataProvider(
-    'anfavorites.favoritesView',
-    favoritesProvider,
-  );
+
+  // ✅ Usamos createTreeView en lugar de registerTreeDataProvider para habilitar Drag & Drop
+  const treeView = vscode.window.createTreeView('anfavorites.favoritesView', {
+    treeDataProvider: favoritesProvider,
+    dragAndDropController: favoritesProvider, // Habilitar controlador D&D
+    canSelectMany: true, // Permitir selección múltiple para D&D masivo
+  });
+
+  context.subscriptions.push(treeView);
 
   logger.info('Registering favorites commands...');
 

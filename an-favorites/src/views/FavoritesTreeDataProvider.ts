@@ -102,9 +102,11 @@ interface FavoriteMetadata {
   isPinned: boolean;
 }
 
-export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
-  GroupItem | FavoriteItem
-> {
+export class FavoritesTreeDataProvider
+  implements
+    vscode.TreeDataProvider<GroupItem | FavoriteItem>,
+    vscode.TreeDragAndDropController<GroupItem | FavoriteItem>
+{
   private _onDidChangeTreeData: vscode.EventEmitter<
     GroupItem | FavoriteItem | undefined | null | void
   > = new vscode.EventEmitter<
@@ -114,6 +116,13 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
   readonly onDidChangeTreeData: vscode.Event<
     GroupItem | FavoriteItem | undefined | null | void
   > = this._onDidChangeTreeData.event;
+
+  // Drag & Drop MIME Types
+  public readonly dragMimeTypes = ['application/vnd.code.tree.favorites'];
+  public readonly dropMimeTypes = [
+    'application/vnd.code.tree.favorites',
+    'text/uri-list',
+  ];
 
   // Map<filePath, FavoriteMetadata>
   private favorites: Map<string, FavoriteMetadata> = new Map();
@@ -549,6 +558,152 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
       allFavorites.map((f) => f.uri.fsPath),
     );
     return allFavorites.map((f) => f.uri);
+  }
+
+  // --- Drag & Drop Implementation ---
+
+  handleDrag(
+    source: (GroupItem | FavoriteItem)[],
+    dataTransfer: vscode.DataTransfer,
+    token: vscode.CancellationToken,
+  ): void | Thenable<void> {
+    this.logger.info(`[dnd] handleDrag sourceItems=${source.length}`);
+
+    // Solo permitimos arrastrar FavoriteItems por ahora
+    const draggedFiles = source
+      .filter((item): item is FavoriteItem => item instanceof FavoriteItem)
+      .map((item) => item.resourceUri.fsPath);
+
+    if (draggedFiles.length > 0) {
+      dataTransfer.set(
+        'application/vnd.code.tree.favorites',
+        new vscode.DataTransferItem(JSON.stringify(draggedFiles)),
+      );
+    }
+  }
+
+  async handleDrop(
+    target: GroupItem | FavoriteItem | undefined,
+    dataTransfer: vscode.DataTransfer,
+    token: vscode.CancellationToken,
+  ): Promise<void> {
+    this.logger.info('[dnd] handleDrop initiated');
+
+    // Identificar el grupo destino
+    let targetGroupName: string;
+    if (!target) {
+      // Si se suelta en el "vacío" (root), enviamos al grupo por defecto
+      targetGroupName = FavoritesTreeDataProvider.DEFAULT_GROUP;
+    } else if (target instanceof GroupItem) {
+      targetGroupName = target.groupName;
+    } else if (target instanceof FavoriteItem) {
+      targetGroupName = target.group;
+    } else {
+      return;
+    }
+
+    this.logger.info(`[dnd] Target group: "${targetGroupName}"`);
+
+    // 1. Manejar movimiento interno (items arrastrados desde el mismo árbol)
+    const treeItem = dataTransfer.get('application/vnd.code.tree.favorites');
+    if (treeItem) {
+      try {
+        const filePaths = JSON.parse(treeItem.value) as string[];
+        this.logger.info(
+          `[dnd] Moving ${filePaths.length} internal items to "${targetGroupName}"`,
+        );
+
+        let movedCount = 0;
+        filePaths.forEach((filePath) => {
+          const metadata = this.favorites.get(filePath);
+          if (metadata && metadata.group !== targetGroupName) {
+            metadata.group = targetGroupName;
+            movedCount++;
+          }
+        });
+        this.saveFavorites();
+        this.refresh();
+
+        if (movedCount > 0) {
+          vscode.window.showInformationMessage(
+            `Se movieron ${movedCount} favoritos al grupo "${targetGroupName}"`,
+          );
+        }
+        return;
+      } catch (err) {
+        this.logger.error('[dnd] Error parsing internal drag data', err);
+        vscode.window.showErrorMessage(
+          'Error al mover favoritos internamente.',
+        );
+      }
+    }
+
+    // 2. Manejar archivos externos (desde el Explorador de Archivos de OS o VS Code)
+    const uriListItem = dataTransfer.get('text/uri-list');
+    if (uriListItem) {
+      try {
+        // text/uri-list suele ser una lista de URIs separados por newline
+        // VS Code a veces devuelve string, a veces ya procesado si usamos asString()
+        const urlListResult = await uriListItem.asString();
+        const uris = urlListResult.split('\r\n');
+
+        this.logger.info(
+          `[dnd] Adding ${uris.length} external items to "${targetGroupName}"`,
+        );
+
+        let addedCount = 0;
+        let ignoredFoldersCount = 0;
+
+        for (const uriStr of uris) {
+          if (!uriStr.trim()) continue;
+          try {
+            const uri = vscode.Uri.parse(uriStr);
+
+            // Validar si es esquemas 'file'
+            if (uri.scheme === 'file') {
+              try {
+                // Verificar que sea un archivo y NO un directorio
+                const stat = await vscode.workspace.fs.stat(uri);
+                if (stat.type === vscode.FileType.File) {
+                  this.addFavorite(uri, targetGroupName);
+                  addedCount++;
+                } else {
+                  ignoredFoldersCount++;
+                  this.logger.info(
+                    `[dnd] Ignored directory/other: ${uri.fsPath}`,
+                  );
+                }
+              } catch (statErr) {
+                // Si falla el stat, es posible que no exista o no sea accesible
+                this.logger.warn(
+                  `[dnd] Could not stat URI: ${uri.fsPath}`,
+                  statErr,
+                );
+              }
+            }
+          } catch (e) {
+            this.logger.warn(`[dnd] Invalid URI received: ${uriStr}`);
+          }
+        }
+
+        if (addedCount > 0) {
+          vscode.window.showInformationMessage(
+            `Se añadieron ${addedCount} archivos a "${targetGroupName}".`,
+          );
+        }
+
+        if (ignoredFoldersCount > 0) {
+          vscode.window.showWarningMessage(
+            `Se ignoraron ${ignoredFoldersCount} carpetas (solo se permiten archivos).`,
+          );
+        }
+
+        return;
+      } catch (err) {
+        this.logger.error('[dnd] Error processing external URIs', err);
+        vscode.window.showErrorMessage('Error al procesar archivos externos.');
+      }
+    }
   }
 
   /**
