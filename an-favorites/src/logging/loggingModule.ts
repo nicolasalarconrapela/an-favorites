@@ -57,6 +57,16 @@ interface LoggingModuleOptions extends LoggerOptions {
    * Default: 5 MB.
    */
   maxFileSizeBytes?: number;
+  /**
+   * Maximum number of rotated log files to keep per log type.
+   * Default: 5.
+   */
+  maxRotatedFiles?: number;
+  /**
+   * Buffer flush interval for async log writes (ms).
+   * Default: 200.
+   */
+  flushIntervalMs?: number;
 }
 
 export class LoggingModule implements Logger {
@@ -64,7 +74,18 @@ export class LoggingModule implements Logger {
   private readonly logFilePathTxt: string;
   private readonly logFilePathJson: string;
   private readonly maxFileSizeBytes: number;
+  private readonly maxRotatedFiles: number;
+  private readonly flushIntervalMs: number;
   private level: InternalLogLevel;
+  private readonly pendingTxtLines: string[] = [];
+  private readonly pendingJsonLines: string[] = [];
+  private flushTimer: NodeJS.Timeout | null = null;
+  private writeQueue: Promise<void> = Promise.resolve();
+  private readonly throttleBuckets = new Map<
+    string,
+    { lastLoggedAt: number; skipped: number }
+  >();
+  private readonly defaultThrottleMs = 2000;
 
   private constructor(
     channel: vscode.OutputChannel,
@@ -76,6 +97,8 @@ export class LoggingModule implements Logger {
     this.logFilePathTxt = logFilePathTxt;
     this.logFilePathJson = logFilePathJson;
     this.maxFileSizeBytes = options.maxFileSizeBytes ?? 5 * 1024 * 1024;
+    this.maxRotatedFiles = options.maxRotatedFiles ?? 5;
+    this.flushIntervalMs = options.flushIntervalMs ?? 200;
     this.level = options.level ?? 'info';
 
     this.ensureLogDirectory();
@@ -106,6 +129,46 @@ export class LoggingModule implements Logger {
 
   setLevel(level: LogLevel): void {
     this.level = level;
+  }
+
+  throttle(
+    level: LogLevel,
+    key: string,
+    message: string,
+    metadata?: unknown,
+    intervalMs = this.defaultThrottleMs,
+  ): void {
+    if (!this.shouldLog(level)) {
+      return;
+    }
+
+    const now = Date.now();
+    const bucket = this.throttleBuckets.get(key) ?? {
+      lastLoggedAt: 0,
+      skipped: 0,
+    };
+
+    if (now - bucket.lastLoggedAt < intervalMs) {
+      bucket.skipped += 1;
+      this.throttleBuckets.set(key, bucket);
+      return;
+    }
+
+    const skipped = bucket.skipped;
+    bucket.skipped = 0;
+    bucket.lastLoggedAt = now;
+    this.throttleBuckets.set(key, bucket);
+
+    if (skipped > 0) {
+      this.write(
+        level,
+        `${message} (se omitieron ${skipped} mensajes repetidos)`,
+        metadata,
+      );
+      return;
+    }
+
+    this.write(level, message, metadata);
   }
 
   debug(message: string, metadata?: unknown): void {
@@ -146,6 +209,7 @@ export class LoggingModule implements Logger {
   }
 
   dispose(): void {
+    void this.flushPending();
     this.channel.dispose();
   }
 
@@ -179,47 +243,89 @@ export class LoggingModule implements Logger {
   }
 
   private appendToFileTxt(line: string): void {
-    try {
-      this.rotateIfNeeded(this.logFilePathTxt);
-
-      // Ensure file has UTF-8 BOM if new
-      if (!fs.existsSync(this.logFilePathTxt)) {
-        fs.writeFileSync(this.logFilePathTxt, '\uFEFF', 'utf8');
-      }
-
-      fs.appendFileSync(this.logFilePathTxt, `${line}\n`, { encoding: 'utf8', flag: 'a' });
-    } catch (err) {
-      // Avoid recursive loop: don't write logging errors to the logger itself,
-      // solo informamos en el canal de salida.
-      this.channel.appendLine(`❌ [logger-error] No se pudo escribir en archivo TXT: ${String(err)}`);
-    }
+    this.pendingTxtLines.push(`${line}\n`);
+    this.scheduleFlush();
   }
 
   private appendToFileJson(entry: LogEntry): void {
+    const jsonLine = JSON.stringify(entry, null, 2);
+    this.pendingJsonLines.push(`${jsonLine}\n`);
+    this.scheduleFlush();
+  }
+
+  private scheduleFlush(): void {
+    if (this.flushTimer) {
+      return;
+    }
+
+    this.flushTimer = setTimeout(() => {
+      this.flushTimer = null;
+      void this.flushPending();
+    }, this.flushIntervalMs);
+  }
+
+  private async flushPending(): Promise<void> {
+    const txtLines = this.pendingTxtLines.splice(0);
+    const jsonLines = this.pendingJsonLines.splice(0);
+
+    if (txtLines.length === 0 && jsonLines.length === 0) {
+      return;
+    }
+
+    this.writeQueue = this.writeQueue
+      .then(async () => {
+        if (txtLines.length > 0) {
+          await this.appendBuffered(this.logFilePathTxt, txtLines.join(''));
+        }
+        if (jsonLines.length > 0) {
+          await this.appendBuffered(this.logFilePathJson, jsonLines.join(''));
+        }
+      })
+      .catch((err) => {
+        this.channel.appendLine(
+          `❌ [logger-error] Falló la cola de escritura: ${String(err)}`,
+        );
+      });
+
+    await this.writeQueue;
+  }
+
+  private async appendBuffered(filePath: string, data: string): Promise<void> {
     try {
-      this.rotateIfNeeded(this.logFilePathJson);
-
-      // Ensure file has UTF-8 BOM if new
-      if (!fs.existsSync(this.logFilePathJson)) {
-        fs.writeFileSync(this.logFilePathJson, '\uFEFF', 'utf8');
-      }
-
-      const jsonLine = JSON.stringify(entry, null, 2);
-      fs.appendFileSync(this.logFilePathJson, `${jsonLine}\n`, { encoding: 'utf8', flag: 'a' });
+      await this.rotateIfNeeded(filePath);
+      await this.ensureFileHeader(filePath);
+      await fs.promises.appendFile(filePath, data, {
+        encoding: 'utf8',
+        flag: 'a',
+      });
     } catch (err) {
-      // Avoid recursive loop: don't write logging errors to the logger itself,
-      // solo informamos en el canal de salida.
-      this.channel.appendLine(`❌ [logger-error] No se pudo escribir en archivo JSON: ${String(err)}`);
+      this.channel.appendLine(
+        `❌ [logger-error] No se pudo escribir en archivo: ${String(err)}`,
+      );
     }
   }
 
-  private rotateIfNeeded(filePath: string): void {
+  private async ensureFileHeader(filePath: string): Promise<void> {
     try {
-      if (!fs.existsSync(filePath)) {
+      await fs.promises.access(filePath, fs.constants.F_OK);
+    } catch {
+      await fs.promises.writeFile(filePath, '\uFEFF', 'utf8');
+    }
+  }
+
+  private async rotateIfNeeded(filePath: string): Promise<void> {
+    try {
+      let stats: fs.Stats | null = null;
+      try {
+        stats = await fs.promises.stat(filePath);
+      } catch {
         return;
       }
 
-      const stats = fs.statSync(filePath);
+      if (!stats) {
+        return;
+      }
+
       if (stats.size < this.maxFileSizeBytes) {
         return;
       }
@@ -227,9 +333,47 @@ export class LoggingModule implements Logger {
       const { dir, name, ext } = path.parse(filePath);
       const timestamp = this.buildTimestamp();
       const rotatedName = `${name}-${timestamp}${ext || '.log'}`;
-      fs.renameSync(filePath, path.join(dir, rotatedName));
+      await fs.promises.rename(filePath, path.join(dir, rotatedName));
+      await this.cleanupRotatedLogs(dir, name, ext || '.log');
     } catch (err) {
       this.channel.appendLine(`❌ [logger-error] No se pudo rotar el log: ${String(err)}`);
+    }
+  }
+
+  private async cleanupRotatedLogs(dir: string, baseName: string, ext: string): Promise<void> {
+    if (this.maxRotatedFiles <= 0) {
+      return;
+    }
+
+    try {
+      const files = await fs.promises.readdir(dir);
+      const rotatedFiles = files
+        .filter((file) => file.startsWith(`${baseName}-`) && file.endsWith(ext))
+        .map((file) => path.join(dir, file));
+
+      if (rotatedFiles.length <= this.maxRotatedFiles) {
+        return;
+      }
+
+      const stats = await Promise.all(
+        rotatedFiles.map(async (file) => ({
+          file,
+          stat: await fs.promises.stat(file),
+        })),
+      );
+
+      stats.sort((a, b) => a.stat.mtimeMs - b.stat.mtimeMs);
+
+      const filesToDelete = stats.slice(0, stats.length - this.maxRotatedFiles);
+      await Promise.all(
+        filesToDelete.map(async ({ file }) => {
+          await fs.promises.unlink(file);
+        }),
+      );
+    } catch (err) {
+      this.channel.appendLine(
+        `❌ [logger-error] No se pudo limpiar logs rotados: ${String(err)}`,
+      );
     }
   }
 

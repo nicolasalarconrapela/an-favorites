@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { createAppLogger } from '../logging/loggingModule';
+import { LogLevel } from '../logging/logger';
 
 import { registerAddToFavoritesCommand } from '../commands/addToFavoritesCommand';
 import { registerAddToFavoritesInGroupCommand } from '../commands/addToFavoritesInGroupCommand';
@@ -15,10 +16,19 @@ import { MRUService } from '../services/mruService';
 import { SharedStorageService } from '../services/sharedStorageService';
 
 export function activate(context: vscode.ExtensionContext): void {
+  const loggingConfig = vscode.workspace.getConfiguration('anfavorites.logging');
+  const configuredLevel = loggingConfig.get<LogLevel>('level', 'info');
+  const logLevel: LogLevel =
+    configuredLevel && ['debug', 'info', 'warn', 'error'].includes(configuredLevel)
+      ? configuredLevel
+      : 'info';
+  const maxRotatedFiles = loggingConfig.get<number>('maxRotatedFiles', 5);
+
   const logger = createAppLogger(context, {
     channelName: 'AnFavorites Logs',
-    level: 'debug',
+    level: logLevel,
     maxFileSizeBytes: 5 * 1024 * 1024,
+    maxRotatedFiles,
   });
 
   logger.info('━━━ Extension activation started ━━━');
@@ -67,21 +77,39 @@ export function activate(context: vscode.ExtensionContext): void {
   const fileWatcher = vscode.workspace.createFileSystemWatcher('**/*');
 
   fileWatcher.onDidDelete(async (uri) => {
-    logger.debug(`File deleted: ${uri.fsPath}`);
+    logger.throttle?.(
+      'debug',
+      'watcher:file-deleted',
+      `File deleted: ${uri.fsPath}`,
+      undefined,
+      2000,
+    ) ?? logger.debug(`File deleted: ${uri.fsPath}`);
 
     await Promise.all([
       favoritesProvider.validateFavorites(),
       mruService.validateFiles(),
     ]);
 
-    logger.debug(`Validated lists after file deletion: ${uri.fsPath}`);
+    logger.throttle?.(
+      'debug',
+      'watcher:file-deleted:validated',
+      `Validated lists after file deletion: ${uri.fsPath}`,
+      undefined,
+      2000,
+    ) ?? logger.debug(`Validated lists after file deletion: ${uri.fsPath}`);
   });
 
   context.subscriptions.push(fileWatcher);
 
   // Watch for file renames/moves to update paths in favorites and recent files
   const renameListener = vscode.workspace.onDidRenameFiles(async (event) => {
-    logger.debug(`Files renamed/moved: ${event.files.length} files`);
+    logger.throttle?.(
+      'debug',
+      'watcher:file-renamed',
+      `Files renamed/moved: ${event.files.length} files`,
+      undefined,
+      2000,
+    ) ?? logger.debug(`Files renamed/moved: ${event.files.length} files`);
 
     for (const file of event.files) {
       const oldPath = file.oldUri.fsPath;

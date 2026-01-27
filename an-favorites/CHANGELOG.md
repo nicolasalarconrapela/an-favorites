@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.52] - 2026-01-17
+
+### Changed
+- Nivel de logs configurable por settings y por defecto en info
+- Escritura de logs asíncrona con cola y limpieza de logs rotados
+- Throttling de logs repetitivos en Quick Open y watchers
+
 ## [0.8.51] - 2026-01-16
 
 ### Changed
