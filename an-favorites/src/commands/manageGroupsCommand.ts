@@ -13,30 +13,55 @@ export function registerManageGroupsCommands(
   // Comando: Añadir nuevo grupo
   context.subscriptions.push(
     vscode.commands.registerCommand('anfavorites.addGroup', async () => {
-      const groupName = await vscode.window.showInputBox({
-        prompt: 'Nombre del nuevo grupo',
-        placeHolder: 'Ej: Proyectos, Documentación, etc.',
+      const groupInput = await vscode.window.showInputBox({
+        prompt: 'Nombre del nuevo grupo (puedes crear varios separados por comas)',
+        placeHolder: 'Ej: Proyectos, Documentación, G2',
         validateInput: (value) => {
           if (!value || value.trim().length === 0) {
             return 'El nombre no puede estar vacío';
-          }
-          if (favoritesProvider.getGroups().includes(value.trim())) {
-            return 'Este grupo ya existe';
           }
           return null;
         },
       });
 
-      if (groupName) {
-        const trimmedName = groupName.trim();
-        logger.info(`Adding new group: ${trimmedName}`);
-        const success = favoritesProvider.addGroup(trimmedName);
-        if (success) {
-          vscode.window.showInformationMessage(`Grupo "${groupName}" creado`);
-          logger.info(`Group created successfully: ${trimmedName}`);
-        } else {
-          vscode.window.showErrorMessage('No se pudo crear el grupo');
-          logger.error(`Failed to create group: ${trimmedName}`);
+      if (groupInput) {
+        const groupNames = groupInput
+          .split(/[;,]/)
+          .map((n) => n.trim())
+          .filter((n) => n.length > 0);
+
+        if (groupNames.length === 0) return;
+
+        let createdCount = 0;
+        let existingCount = 0;
+        const lastCreatedGroupName = groupNames.length === 1 ? groupNames[0] : '';
+
+        for (const name of groupNames) {
+          logger.info(`Adding new group: ${name}`);
+          const success = favoritesProvider.addGroup(name);
+          if (success) {
+            createdCount++;
+            logger.info(`Group created successfully: ${name}`);
+          } else {
+            existingCount++;
+            logger.warn(`Group already exists or failed: ${name}`);
+          }
+        }
+
+        if (createdCount > 0) {
+          if (groupNames.length === 1) {
+            vscode.window.showInformationMessage(`Grupo "${lastCreatedGroupName}" creado`);
+          } else {
+            vscode.window.showInformationMessage(`Se han creado ${createdCount} grupos correctamente.`);
+          }
+        }
+
+        if (existingCount > 0) {
+          if (groupNames.length === 1) {
+            vscode.window.showErrorMessage('Este grupo ya existe');
+          } else {
+            vscode.window.showWarningMessage(`${existingCount} grupos ya existían y no fueron creados.`);
+          }
         }
       }
     }),
