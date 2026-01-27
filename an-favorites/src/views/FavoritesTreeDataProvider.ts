@@ -25,6 +25,7 @@ export class FavoriteItem extends vscode.TreeItem {
     public readonly resourceUri: vscode.Uri,
     public readonly group: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+    public readonly isPinned: boolean = false,
   ) {
     // ✅ IMPORTANTE:
     // NO uses `super(resourceUri, ...)` porque VS Code tiende a autogenerar
@@ -55,7 +56,7 @@ export class FavoriteItem extends vscode.TreeItem {
       ],
     };
     this.iconPath = vscode.ThemeIcon.File;
-    this.contextValue = 'favoriteItem';
+    this.contextValue = isPinned ? 'favoriteItem:pinned' : 'favoriteItem';
   }
 
   /**
@@ -87,11 +88,13 @@ interface FavoriteData {
   path: string;
   group: string;
   addedAt?: number;
+  isPinned?: boolean;
 }
 
 interface FavoriteMetadata {
   group: string;
   addedAt: number;
+  isPinned: boolean;
 }
 
 export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
@@ -224,6 +227,7 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
             uri,
             element.groupName,
             vscode.TreeItemCollapsibleState.None,
+            metadata.isPinned,
           ),
         );
       });
@@ -320,6 +324,7 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
     this.favorites.set(filePath, {
       group: targetGroup,
       addedAt: Date.now(),
+      isPinned: false,
     });
 
     this.saveFavorites();
@@ -441,6 +446,43 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
     this.refresh();
   }
 
+  togglePin(uri: vscode.Uri): void {
+    const metadata = this.favorites.get(uri.fsPath);
+    if (!metadata) return;
+
+    // Check limit before pinning
+    if (!metadata.isPinned) {
+      const currentPinnedCount = this.getPinnedFavorites().length;
+      if (currentPinnedCount >= 3) {
+        vscode.window.showWarningMessage(
+          'Solo puedes fijar hasta 3 favoritos.',
+        );
+        return;
+      }
+    }
+
+    metadata.isPinned = !metadata.isPinned;
+    this.logger.info(
+      `[favorites] togglePin -> ${uri.fsPath} = ${metadata.isPinned}`,
+    );
+    this.saveFavorites();
+    this.refresh();
+  }
+
+  isPinned(uri: vscode.Uri): boolean {
+    return this.favorites.get(uri.fsPath)?.isPinned ?? false;
+  }
+
+  getPinnedFavorites(): vscode.Uri[] {
+    const pinned: vscode.Uri[] = [];
+    this.favorites.forEach((metadata, filePath) => {
+      if (metadata.isPinned) {
+        pinned.push(vscode.Uri.file(filePath));
+      }
+    });
+    return pinned;
+  }
+
   getGroups(): string[] {
     return Array.from(this.getGroupMap().keys());
   }
@@ -494,6 +536,7 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
         this.favorites.set(fav.path, {
           group: groupName,
           addedAt: fav.addedAt || Date.now(),
+          isPinned: !!fav.isPinned,
         });
         this.groups.add(groupName);
       });
@@ -514,6 +557,7 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
         this.favorites.set(fav.path, {
           group: groupName,
           addedAt: fav.addedAt || Date.now(),
+          isPinned: !!fav.isPinned,
         });
         this.groups.add(groupName);
       });
@@ -539,6 +583,7 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
           this.favorites.set(filePath, {
             group: FavoritesTreeDataProvider.DEFAULT_GROUP,
             addedAt: now - (legacyFavorites.length - index),
+            isPinned: false,
           });
           importedCount++;
         }
@@ -597,6 +642,7 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
         path: filePath,
         group: metadata.group,
         addedAt: metadata.addedAt,
+        isPinned: metadata.isPinned,
       });
     });
 

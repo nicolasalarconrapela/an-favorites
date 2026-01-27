@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.44",
+  "version": "0.8.45",
   "publisher": "anappwilos",
   "engines": {
     "vscode": "^1.86.0"
@@ -39,6 +39,12 @@
         "icon": "$(trash)"
       },
       {
+        "command": "anfavorites.removeAllFavorites",
+        "title": "Eliminar Todo",
+        "category": "AnFavorites",
+        "icon": "$(trash)"
+      },
+      {
         "command": "anfavorites.addGroup",
         "title": "Nuevo Grupo",
         "category": "AnFavorites"
@@ -54,6 +60,18 @@
         "title": "Renombrar Grupo",
         "category": "AnFavorites",
         "icon": "$(edit)"
+      },
+      {
+        "command": "anfavorites.pinFavorite",
+        "title": "Fijar Favorito",
+        "category": "AnFavorites",
+        "icon": "$(pin)"
+      },
+      {
+        "command": "anfavorites.unpinFavorite",
+        "title": "Desfijar Favorito",
+        "category": "AnFavorites",
+        "icon": "$(pinned)"
       },
       {
         "command": "anfavorites.moveFavorite",
@@ -136,27 +154,37 @@
       "view/item/context": [
         {
           "command": "anfavorites.openToSide",
-          "when": "view == anfavorites.favoritesView && viewItem == favoriteItem",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /favoriteItem/",
           "group": "inline@1"
         },
         {
-          "command": "anfavorites.removeFromFavorites",
+          "command": "anfavorites.pinFavorite",
           "when": "view == anfavorites.favoritesView && viewItem == favoriteItem",
+          "group": "inline@0"
+        },
+        {
+          "command": "anfavorites.unpinFavorite",
+          "when": "view == anfavorites.favoritesView && viewItem == favoriteItem:pinned",
+          "group": "inline@0"
+        },
+        {
+          "command": "anfavorites.removeFromFavorites",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /favoriteItem/",
           "group": "inline@2"
         },
         {
           "command": "anfavorites.moveFavorite",
-          "when": "view == anfavorites.favoritesView && viewItem == favoriteItem",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /favoriteItem/",
           "group": "favorites@1"
         },
         {
           "command": "anfavorites.renameGroup",
-          "when": "view == anfavorites.favoritesView && viewItem == groupItem",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /groupItem/",
           "group": "inline"
         },
         {
           "command": "anfavorites.removeGroup",
-          "when": "view == anfavorites.favoritesView && viewItem == groupItem",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /groupItem/",
           "group": "inline"
         }
       ],

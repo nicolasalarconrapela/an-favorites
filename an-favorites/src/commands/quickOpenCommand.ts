@@ -145,7 +145,9 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   // Props propias
   resourceUri: vscode.Uri;
   isFavorite: boolean;
+  isPinned: boolean;
   isRecentlyOpened: boolean;
+  isIndividualPinned: boolean;
 
   private _fullPathLabel: string;
   private _dirPathLabel: string;
@@ -155,28 +157,37 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   constructor(params: {
     uri: vscode.Uri;
     isFavorite: boolean;
+    isPinned?: boolean;
     isRecentlyOpened?: boolean;
     openToSide?: boolean;
+    isIndividualPinned?: boolean;
   }) {
     const {
       uri,
       isFavorite,
+      isPinned = false,
       isRecentlyOpened = false,
       openToSide = false,
+      isIndividualPinned = false,
     } = params;
 
     this.resourceUri = uri;
     this.isFavorite = isFavorite;
+    this.isPinned = isPinned;
     this.isRecentlyOpened = isRecentlyOpened;
     this._openToSide = openToSide;
+    this.isIndividualPinned = isIndividualPinned;
 
     // Label base: nombre fichero
     const baseName = safeBasenameFromUri(uri);
 
     // Alineación visual: SIEMPRE mostramos una estrella (llena o vacía)
     // Esto crea una "columna" virtual uniforme junto al icono de archivo
-    const starIcon = isFavorite ? '$(star-full)' : '$(star-empty)';
-    this.label = `${starIcon} ${baseName}`;
+    // TODO : Revisar
+    let iconPrefix = isFavorite ? '$(star-full)' : '$(star-empty)';
+    if (isPinned) iconPrefix = '$(pin)';
+
+    this.label = `${iconPrefix} ${baseName}`;
 
     // Description/detail: RELATIVO al proyecto (workspace)
     const { rel, rootName } = workspaceRelativeLabel(uri);
@@ -216,8 +227,9 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 
     // 2. Label: Actualizamos para mostrar estrella llena o vacía
     const baseName = safeBasenameFromUri(this.resourceUri);
-    const starIcon = this.isFavorite ? '$(star-full) ' : '     ';
-    this.label = `${starIcon} ${baseName}`;
+    let iconPrefix = this.isFavorite ? '$(star-full) ' : '     ';
+    if (this.isPinned) iconPrefix = '$(pin) ';
+    this.label = `${iconPrefix} ${baseName}`;
 
     // 3. Derecha: botones interactivos
     // Orden: [Open to Side] [Toggle Favorite]
@@ -225,14 +237,33 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     // Orden: [Open to Side] [Toggle Favorite] [Remove from Recents (if applicable)]
 
     // Iniciar con los botones base
-    const buttons: vscode.QuickInputButton[] = [
-      {
-        iconPath: this.isFavorite
-          ? new vscode.ThemeIcon('star-full')
-          : new vscode.ThemeIcon('star-empty'),
-        tooltip: this.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos',
-      },
-    ];
+    const buttons: vscode.QuickInputButton[] = [];
+
+    // Botón Pin (Fijar/Desfijar) - Solo si es favorito (o se convierte en favorito al fijar)
+    // Para simplificar, permitimos fijar cualquier archivo y esto implícitamente lo añade a favoritos o lo tratamos aparte.
+    // Asumiremos que Pin => Favorite.
+    // Botón Pin (Fijar/Desfijar)
+    // Mostramos el estado del "Pin Individual".
+    // Si está pinneado po grupo, mostramos "Fijar" (para hacerlo individual) o si ya es individual "Desfijar".
+    const isPinnedState = this.isIndividualPinned;
+
+    let pinTooltip = isPinnedState ? 'Desfijar' : 'Fijar';
+
+    if (!this.isRecentlyOpened) {
+      buttons.push({
+        iconPath: isPinnedState
+          ? new vscode.ThemeIcon('pinned')
+          : new vscode.ThemeIcon('pin'),
+        tooltip: pinTooltip,
+      });
+    }
+
+    buttons.push({
+      iconPath: this.isFavorite
+        ? new vscode.ThemeIcon('star-full')
+        : new vscode.ThemeIcon('star-empty'),
+      tooltip: this.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos',
+    });
 
     // Solo añadir botón "Abrir al lado" si NO es el comportamiento por defecto
     if (!this._openToSide) {
@@ -415,13 +446,41 @@ export function registerQuickOpenCommand(
             recentUris.map((u) => normalizeFsPath(u.fsPath)),
           );
 
-          // 2) Get recent favorites (usar configuración)
+          // 1.5) Pinned items
+          const pinnedFavUris = favoritesProvider.getPinnedFavorites();
+
+          // Merge pinned items
+          const allPinnedUrisUnsafe = [...pinnedFavUris];
+
+          // Deduplicate based on normalized path
+          const uniquePinnedUris: vscode.Uri[] = [];
+          const seenPinned = new Set<string>();
+          for (const u of allPinnedUrisUnsafe) {
+            const norm = normalizeFsPath(u.fsPath);
+            if (!seenPinned.has(norm)) {
+              seenPinned.add(norm);
+              uniquePinnedUris.push(u);
+            }
+          }
+
+          // Filter to workspace
+          const allPinnedUris = uniquePinnedUris.filter((u) => {
+            return (
+              u.scheme === 'file' && !!vscode.workspace.getWorkspaceFolder(u)
+            );
+          });
+          const pinnedNormSet = new Set(
+            allPinnedUris.map((u) => normalizeFsPath(u.fsPath)),
+          );
+
+          // 2) Get recent favorites (excluding pinned)
           const recentFavUris = favoritesProvider
             .getRecentFavorites(maxRecentFavorites)
             .filter((uri) => {
               return (
                 uri.scheme === 'file' &&
-                !!vscode.workspace.getWorkspaceFolder(uri)
+                !!vscode.workspace.getWorkspaceFolder(uri) &&
+                !pinnedNormSet.has(normalizeFsPath(uri.fsPath))
               );
             });
           const recentFavNormSet = new Set(
@@ -429,38 +488,66 @@ export function registerQuickOpenCommand(
           );
 
           // ✅ VALIDACIÓN SIEMPRE ACTIVA: Validar todos los archivos que vamos a mostrar
-          const allUrisToDisplay = [...recentFavUris, ...recentUris];
+          const allUrisToDisplay = [
+            ...allPinnedUris,
+            ...recentFavUris,
+            ...recentUris,
+          ];
           const existenceMap = await validateFilesExistence(allUrisToDisplay);
 
-          // Eliminar archivos que no existen de las listas y del almacenamiento
+          // Validar Pinned
+          const validPinnedUris = allPinnedUris.filter((uri) => {
+            const exists = existenceMap.get(uri.fsPath) ?? false;
+            // if (!exists) { ... }
+            return exists;
+          });
+
+          // Validar y Eliminar Favoritos
           const validRecentFavUris = recentFavUris.filter((uri) => {
             const exists = existenceMap.get(uri.fsPath) ?? false;
             if (!exists) {
-              logger.warn(
-                `[validation] Removing non-existent favorite: ${uri.fsPath}`,
-              );
               favoritesProvider.removeFavorite(uri);
             }
             return exists;
           });
 
+          // Validar y Eliminar Recientes
           const validRecentUris = recentUris.filter((uri) => {
             const exists = existenceMap.get(uri.fsPath) ?? false;
             if (!exists) {
-              logger.warn(
-                `[validation] Removing non-existent recent file: ${uri.fsPath}`,
-              );
-              mruService.updatePath(uri.fsPath, ''); // Forzar eliminación
+              mruService.updatePath(uri.fsPath, '');
             }
-            return exists;
+            return (
+              exists &&
+              !pinnedNormSet.has(normalizeFsPath(uri.fsPath)) &&
+              !recentFavNormSet.has(normalizeFsPath(uri.fsPath))
+            );
           });
 
-          // 3) Items
+          // 3) Items construction
+
+          // Pinned Items
+          const pinnedItems: FileQuickPickItem[] = validPinnedUris.map(
+            (uri) => {
+              const isIndividual = favoritesProvider.isPinned(uri);
+
+              return new FileQuickPickItem({
+                uri,
+                isFavorite: favoritesProvider.hasFavorite(uri),
+                isPinned: true,
+                isRecentlyOpened: false,
+                openToSide,
+                isIndividualPinned: isIndividual,
+              });
+            },
+          );
+
           const recentFavItems: FileQuickPickItem[] = validRecentFavUris.map(
             (uri) => {
               return new FileQuickPickItem({
                 uri,
                 isFavorite: true,
+                isPinned: false,
                 isRecentlyOpened: false,
                 openToSide,
               });
@@ -468,13 +555,13 @@ export function registerQuickOpenCommand(
           );
 
           const recentItems: FileQuickPickItem[] = validRecentUris
-            .filter((uri) => !recentFavNormSet.has(normalizeFsPath(uri.fsPath))) // Exclude if already in recent favorites
             .slice(0, maxRecentFiles) // Limitar a la cantidad configurada
             .map((uri) => {
               const isFav = favoritesProvider.hasFavorite(uri);
               return new FileQuickPickItem({
                 uri,
                 isFavorite: isFav,
+                isPinned: false,
                 isRecentlyOpened: true,
                 openToSide,
               });
@@ -482,6 +569,15 @@ export function registerQuickOpenCommand(
 
           // 4) Combinar con separadores
           const items: QuickOpenItem[] = [];
+
+          // Section 0: Fijados (Pinned)
+          if (pinnedItems.length > 0) {
+            items.push({
+              label: 'Fijados',
+              kind: vscode.QuickPickItemKind.Separator,
+            });
+            items.push(...pinnedItems);
+          }
 
           // First section: Favoritos (Siempre visible)
           const hasFavoriteItems = recentFavItems.length > 0;
@@ -537,6 +633,7 @@ export function registerQuickOpenCommand(
                 return new FileQuickPickItem({
                   uri,
                   isFavorite: false,
+                  isPinned: false,
                   isRecentlyOpened: false,
                   openToSide,
                 });
@@ -551,7 +648,8 @@ export function registerQuickOpenCommand(
                   );
                   return (
                     !recentNormSet.has(normalizedPath) &&
-                    !recentFavNormSet.has(normalizedPath)
+                    !recentFavNormSet.has(normalizedPath) &&
+                    !pinnedNormSet.has(normalizedPath)
                   );
                 })
                 .map((item) => {
@@ -567,6 +665,7 @@ export function registerQuickOpenCommand(
 
           // ✅ DETECCIÓN DE COLISIONES con Ripgrep (findFiles)
           const allFileItems = [
+            ...pinnedItems,
             ...recentFavItems,
             ...recentItems,
             ...otherItems,
@@ -836,6 +935,34 @@ export function registerQuickOpenCommand(
             logger.info(`[QuickOpen] Removing from recents: ${uri.fsPath}`);
             mruService.remove(uri.fsPath);
             // No hide(), let the list rebuild automatically via event listener
+            return;
+          }
+
+          if (
+            button.tooltip?.startsWith('Fijar') ||
+            button.tooltip === 'Desfijar'
+          ) {
+            logger.info(`[QuickOpen] Toggling pin for: ${uri.fsPath}`);
+            favoritesProvider.togglePin(uri);
+
+            if (!favoritesProvider.hasFavorite(uri)) {
+              favoritesProvider.addFavorite(uri);
+              // defaults to unpinned, so we toggle it to true
+              favoritesProvider.togglePin(uri);
+            }
+
+            // Update UI immediately (optimistic)
+            item.isIndividualPinned = !item.isIndividualPinned;
+            // If it was only pinned by group, and we pinned it individually, isPinned remains true.
+            // If it was individually pinned, and we unpin, check if still pinned by group
+            if (!item.isIndividualPinned) {
+              item.isPinned = false;
+            } else {
+              item.isPinned = true;
+            }
+
+            item.isFavorite = true; // Implied
+            item.updateIcon();
             return;
           }
 
