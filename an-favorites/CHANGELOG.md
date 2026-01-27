@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.53] - 2026-01-18
+
+### Changed
+- Escritura transaccional con archivo temporal y rename atómico en el almacenamiento compartido
+- Control de versión por etag, merge simple por clave y emisión de onDidChange en cambios locales
+- Registro de conflictos de escritura para diagnóstico
+
 ## [0.8.52] - 2026-01-17
 
 ### Changed
