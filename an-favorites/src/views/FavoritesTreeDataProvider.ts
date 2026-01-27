@@ -3,6 +3,7 @@ import * as path from 'path';
 import { Logger } from '../logging/logger';
 import { SharedStorageService } from '../services/sharedStorageService';
 import { detectCollisions, safeBasenameFromUri } from '../utils/collisionUtils';
+import { isExcludedPath } from '../utils/exclusionUtils';
 import { runWithConcurrency } from '../utils/concurrency';
 
 const VALIDATION_CONCURRENCY = 12;
@@ -931,8 +932,14 @@ export class FavoritesTreeDataProvider
    */
   private checkForDuplicateNames(): void {
     const nameMap = new Map<string, string[]>();
+    const configSearch =
+      vscode.workspace.getConfiguration('anfavorites.search');
+    const searchExclusions = configSearch.get<string[]>('exclusions') ?? [];
 
     this.favorites.forEach((_, filePath) => {
+      if (isExcludedPath(filePath, searchExclusions)) {
+        return;
+      }
       const basename = path.basename(filePath);
       const existing = nameMap.get(basename);
       if (existing) {

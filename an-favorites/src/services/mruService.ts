@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { Logger } from '../logging/logger';
 import { runWithConcurrency } from '../utils/concurrency';
+import { isExcludedPath } from '../utils/exclusionUtils';
 
 const VALIDATION_CONCURRENCY = 12;
 
@@ -63,8 +64,14 @@ export class MRUService {
    */
   private checkForDuplicateNames(): void {
     const nameMap = new Map<string, string[]>();
+    const configSearch =
+      vscode.workspace.getConfiguration('anfavorites.search');
+    const searchExclusions = configSearch.get<string[]>('exclusions') ?? [];
 
     this.mruList.forEach((filePath) => {
+      if (isExcludedPath(filePath, searchExclusions)) {
+        return;
+      }
       const basename = path.basename(filePath);
       const existing = nameMap.get(basename);
       if (existing) {

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.57] - 2026-01-27
+
+### Changed
+- Los reportes de nombres duplicados ahora respetan los patrones de `anfavorites.search.exclusions`
+
 ## [0.8.56] - 2026-01-21
 
 ### Changed
