@@ -12,6 +12,7 @@ export class GroupItem extends vscode.TreeItem {
   ) {
     super(groupName, collapsibleState);
 
+    this.id = `group:${groupName}`;
     this.tooltip = `Grupo: ${groupName}`;
     this.iconPath = new vscode.ThemeIcon('folder');
     this.contextValue = isDefault ? 'groupItem:default' : 'groupItem';
@@ -33,6 +34,8 @@ export class FavoriteItem extends vscode.TreeItem {
     // description/path en el árbol aunque tú lo pongas undefined.
     // Forzamos label explícito:
     super(path.basename(resourceUri.fsPath), collapsibleState);
+
+    this.id = `favorite:${group}:${resourceUri.fsPath}`;
 
     // Mantener resourceUri para iconos/decorations/comportamiento de recurso
     this.resourceUri = resourceUri;
@@ -89,6 +92,21 @@ export class FavoriteItem extends vscode.TreeItem {
   }
 }
 
+export class WorkspaceItem extends vscode.TreeItem {
+  constructor(
+    public readonly name: string,
+    public readonly groupName: string,
+    public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+    public readonly workspaceFolder: vscode.WorkspaceFolder,
+  ) {
+    super(name, collapsibleState);
+    this.id = `workspace:${groupName}:${workspaceFolder.uri.toString()}`;
+    this.contextValue = 'workspaceItem';
+    this.iconPath = new vscode.ThemeIcon('root-folder');
+    this.tooltip = workspaceFolder.uri.fsPath;
+  }
+}
+
 interface FavoriteData {
   path: string;
   group: string;
@@ -104,17 +122,17 @@ interface FavoriteMetadata {
 
 export class FavoritesTreeDataProvider
   implements
-    vscode.TreeDataProvider<GroupItem | FavoriteItem>,
-    vscode.TreeDragAndDropController<GroupItem | FavoriteItem>
+    vscode.TreeDataProvider<GroupItem | FavoriteItem | WorkspaceItem>,
+    vscode.TreeDragAndDropController<GroupItem | FavoriteItem | WorkspaceItem>
 {
   private _onDidChangeTreeData: vscode.EventEmitter<
-    GroupItem | FavoriteItem | undefined | null | void
+    GroupItem | FavoriteItem | WorkspaceItem | undefined | null | void
   > = new vscode.EventEmitter<
-    GroupItem | FavoriteItem | undefined | null | void
+    GroupItem | FavoriteItem | WorkspaceItem | undefined | null | void
   >();
 
   readonly onDidChangeTreeData: vscode.Event<
-    GroupItem | FavoriteItem | undefined | null | void
+    GroupItem | FavoriteItem | WorkspaceItem | undefined | null | void
   > = this._onDidChangeTreeData.event;
 
   // Drag & Drop MIME Types
@@ -151,6 +169,19 @@ export class FavoritesTreeDataProvider
       this.refresh();
     });
 
+    // Refresh when configuration changes
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (
+        e.affectsConfiguration('anfavorites.multiroot.separation') ||
+        e.affectsConfiguration('anfavorites.search.exclusions')
+      ) {
+        this.logger.info(
+          '[config] relevant configuration changed -> refresh()',
+        );
+        this.refresh();
+      }
+    });
+
     this.logger.info(
       `[init] Provider created. favorites=${this.favorites.size}`,
     );
@@ -161,13 +192,13 @@ export class FavoritesTreeDataProvider
     this._onDidChangeTreeData.fire();
   }
 
-  getTreeItem(element: GroupItem | FavoriteItem): vscode.TreeItem {
+  getTreeItem(element: GroupItem | FavoriteItem | WorkspaceItem): vscode.TreeItem {
     return element;
   }
 
   async getChildren(
-    element?: GroupItem | FavoriteItem,
-  ): Promise<(GroupItem | FavoriteItem)[]> {
+    element?: GroupItem | FavoriteItem | WorkspaceItem,
+  ): Promise<(GroupItem | FavoriteItem | WorkspaceItem)[]> {
     const t0 = Date.now();
 
     if (!element) {
@@ -222,6 +253,57 @@ export class FavoritesTreeDataProvider
     }
 
     if (element instanceof GroupItem) {
+      // Group level: check multiroot separation
+      const config = vscode.workspace.getConfiguration('anfavorites.multiroot');
+      const separationMode = config.get<string>('separation', 'none');
+      const workspaceFolders = vscode.workspace.workspaceFolders || [];
+      const isMultiRoot = workspaceFolders.length > 1;
+
+      let shouldSeparate = false;
+      if (isMultiRoot) {
+        if (separationMode === 'both') {
+          shouldSeparate = true;
+        } else if (
+          separationMode === 'ungrouped' &&
+          element.groupName === FavoritesTreeDataProvider.DEFAULT_GROUP
+        ) {
+          shouldSeparate = true;
+        } else if (
+          separationMode === 'groups' &&
+          element.groupName !== FavoritesTreeDataProvider.DEFAULT_GROUP
+        ) {
+          shouldSeparate = true;
+        }
+      }
+
+      if (shouldSeparate) {
+        const workspaceItems: WorkspaceItem[] = [];
+        for (const wf of workspaceFolders) {
+          let hasFiles = false;
+          this.favorites.forEach((metadata, filePath) => {
+            if (metadata.group === element.groupName) {
+              const uri = vscode.Uri.file(filePath);
+              const fileWf = vscode.workspace.getWorkspaceFolder(uri);
+              if (fileWf && fileWf.uri.toString() === wf.uri.toString()) {
+                hasFiles = true;
+              }
+            }
+          });
+
+          if (hasFiles) {
+            workspaceItems.push(
+              new WorkspaceItem(
+                wf.name,
+                element.groupName,
+                vscode.TreeItemCollapsibleState.Expanded,
+                wf,
+              ),
+            );
+          }
+        }
+        return Promise.resolve(workspaceItems);
+      }
+
       // Group level: return files in this group
       const items: FavoriteItem[] = [];
       this.logger.info(`[getChildren:group] Start "${element.groupName}"`);
@@ -252,47 +334,7 @@ export class FavoritesTreeDataProvider
 
       this.logger.info(`[getChildren:group] Collected items=${items.length}`);
 
-      // ✅ Detect name collisions and set description visibility (using workspace-wide check)
-      const allUris = items.map((i) => i.resourceUri);
-
-      // Read config/state for exclusions
-      const configSearch =
-        vscode.workspace.getConfiguration('anfavorites.search');
-      const searchExclusions = configSearch.get<string[]>('exclusions', [
-        '**/node_modules/**',
-      ]);
-
-      try {
-        const collisions = await detectCollisions(
-          allUris,
-          searchExclusions,
-          this.logger,
-        );
-
-        this.logger.info(
-          `[collisions] Found ${collisions.size} colliding basenames in "${element.groupName}"`,
-        );
-
-        for (const item of items) {
-          const basename = safeBasenameFromUri(item.resourceUri);
-          if (collisions.has(basename)) {
-            // Show relative directory path
-            const rel = vscode.workspace.asRelativePath(
-              item.resourceUri,
-              false,
-            );
-            const relDir = path.dirname(rel);
-            item.setDescriptionText(relDir);
-          } else {
-            item.setShowDescription(false);
-          }
-        }
-      } catch (err) {
-        this.logger.error(
-          '[collisions] Error detecting collisions in tree view',
-          err,
-        );
-      }
+      await this._resolveCollisions(items, element.groupName);
 
       this.logger.info(
         '[getChildren:group] ' +
@@ -301,7 +343,78 @@ export class FavoritesTreeDataProvider
       return Promise.resolve(items);
     }
 
+    if (element instanceof WorkspaceItem) {
+      const items: FavoriteItem[] = [];
+      this.favorites.forEach((metadata, filePath) => {
+        if (metadata.group !== element.groupName) return;
+        const uri = vscode.Uri.file(filePath);
+        const wf = vscode.workspace.getWorkspaceFolder(uri);
+        if (
+          wf &&
+          wf.uri.toString() === element.workspaceFolder.uri.toString()
+        ) {
+          items.push(
+            new FavoriteItem(
+              uri,
+              element.groupName,
+              vscode.TreeItemCollapsibleState.None,
+              metadata.isPinned,
+            ),
+          );
+        }
+      });
+
+      await this._resolveCollisions(
+        items,
+        `${element.groupName}:${element.name}`,
+      );
+      return Promise.resolve(items);
+    }
+
     return Promise.resolve([]);
+  }
+
+  private async _resolveCollisions(
+    items: FavoriteItem[],
+    groupName: string,
+  ): Promise<void> {
+    const allUris = items.map((i) => i.resourceUri);
+
+    // Read config/state for exclusions
+    const configSearch =
+      vscode.workspace.getConfiguration('anfavorites.search');
+    const searchExclusions = configSearch.get<string[]>('exclusions', [
+      '**/node_modules/**',
+    ]);
+
+    try {
+      const collisions = await detectCollisions(
+        allUris,
+        searchExclusions,
+        this.logger,
+      );
+
+      this.logger.info(
+        `[collisions] Found ${collisions.size} colliding basenames in "${groupName}"`,
+      );
+
+      for (const item of items) {
+        const basename = safeBasenameFromUri(item.resourceUri);
+        if (collisions.has(basename)) {
+          // Show relative directory path
+          const rel = vscode.workspace.asRelativePath(item.resourceUri, false);
+          const relDir = path.dirname(rel);
+          item.setDescriptionText(relDir);
+        } else {
+          item.setShowDescription(false);
+        }
+      }
+    } catch (err) {
+      this.logger.error(
+        '[collisions] Error detecting collisions in tree view',
+        err,
+      );
+    }
   }
 
   // Helper to get group -> filePaths mapping
@@ -563,7 +676,7 @@ export class FavoritesTreeDataProvider
   // --- Drag & Drop Implementation ---
 
   handleDrag(
-    source: (GroupItem | FavoriteItem)[],
+    source: (GroupItem | FavoriteItem | WorkspaceItem)[],
     dataTransfer: vscode.DataTransfer,
     token: vscode.CancellationToken,
   ): void | Thenable<void> {
@@ -583,7 +696,7 @@ export class FavoritesTreeDataProvider
   }
 
   async handleDrop(
-    target: GroupItem | FavoriteItem | undefined,
+    target: GroupItem | FavoriteItem | WorkspaceItem | undefined,
     dataTransfer: vscode.DataTransfer,
     token: vscode.CancellationToken,
   ): Promise<void> {
@@ -598,6 +711,8 @@ export class FavoritesTreeDataProvider
       targetGroupName = target.groupName;
     } else if (target instanceof FavoriteItem) {
       targetGroupName = target.group;
+    } else if (target instanceof WorkspaceItem) {
+      targetGroupName = target.groupName;
     } else {
       return;
     }
