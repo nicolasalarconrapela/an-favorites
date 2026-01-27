@@ -523,11 +523,7 @@ export function registerQuickOpenCommand(
             if (!exists) {
               mruService.updatePath(uri.fsPath, '');
             }
-            return (
-              exists &&
-              !pinnedNormSet.has(normalizeFsPath(uri.fsPath)) &&
-              !recentFavNormSet.has(normalizeFsPath(uri.fsPath))
-            );
+            return exists;
           });
 
           // 3) Items construction

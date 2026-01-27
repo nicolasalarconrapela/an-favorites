@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.47",
+  "version": "0.8.48",
   "publisher": "anappwilos",
   "engines": {
     "vscode": "^1.86.0"
