@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { Logger } from '../logging/logger';
+import { runWithConcurrency } from '../utils/concurrency';
+
+const VALIDATION_CONCURRENCY = 12;
 
 export class MRUService {
   private static readonly STORAGE_KEY = 'anfavorites.mru.history';
@@ -108,18 +111,27 @@ export class MRUService {
   public async validateFiles(): Promise<void> {
     const originalLength = this.mruList.length;
     const validFiles: string[] = [];
+    const t0 = Date.now();
 
     this.logger.info(`[validate] validateFiles start. size=${originalLength}`);
 
-    for (const fsPath of this.mruList) {
-      try {
-        const uri = vscode.Uri.file(fsPath);
-        await vscode.workspace.fs.stat(uri);
-        validFiles.push(fsPath);
-      } catch (error) {
-        this.logger.error(`[validate] Skipping invalid file: ${fsPath}`);
-      }
-    }
+    await runWithConcurrency(
+      this.mruList,
+      VALIDATION_CONCURRENCY,
+      async (fsPath) => {
+        try {
+          const uri = vscode.Uri.file(fsPath);
+          await vscode.workspace.fs.stat(uri);
+          validFiles.push(fsPath);
+        } catch (error) {
+          this.logger.error(`[validate] Skipping invalid file: ${fsPath}`);
+        }
+      },
+    );
+
+    this.logger.info(
+      `[validate] validateFiles done. processed=${this.mruList.length} valid=${validFiles.length} durationMs=${Date.now() - t0}`,
+    );
 
     if (validFiles.length !== originalLength) {
       const removed = originalLength - validFiles.length;
@@ -142,15 +154,24 @@ export class MRUService {
     }
 
     const toRemove: string[] = [];
+    const t0 = Date.now();
 
-    for (const fsPath of uniquePaths) {
-      try {
-        const uri = vscode.Uri.file(fsPath);
-        await vscode.workspace.fs.stat(uri);
-      } catch {
-        toRemove.push(fsPath);
-      }
-    }
+    await runWithConcurrency(
+      uniquePaths,
+      VALIDATION_CONCURRENCY,
+      async (fsPath) => {
+        try {
+          const uri = vscode.Uri.file(fsPath);
+          await vscode.workspace.fs.stat(uri);
+        } catch {
+          toRemove.push(fsPath);
+        }
+      },
+    );
+
+    this.logger.info(
+      `[validate] validateFilesForPaths done. processed=${uniquePaths.length} missing=${toRemove.length} durationMs=${Date.now() - t0}`,
+    );
 
     if (toRemove.length > 0) {
       this.logger.info(
