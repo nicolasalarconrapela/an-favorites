@@ -161,6 +161,10 @@ export class FavoritesTreeDataProvider
     this._onDidChangeTreeData.fire();
   }
 
+  public getFavoritePaths(): string[] {
+    return Array.from(this.favorites.keys());
+  }
+
   getTreeItem(element: GroupItem | FavoriteItem): vscode.TreeItem {
     return element;
   }
@@ -885,6 +889,42 @@ export class FavoritesTreeDataProvider
       this.refresh();
     } else {
       this.logger.info('[validate] No missing favorites found');
+    }
+  }
+
+  public async validateFavoritesForPaths(
+    filePaths: string[],
+  ): Promise<void> {
+    const uniquePaths = Array.from(
+      new Set(filePaths.filter((filePath) => this.favorites.has(filePath))),
+    );
+
+    if (uniquePaths.length === 0) {
+      return;
+    }
+
+    const toDelete: string[] = [];
+
+    const validations = uniquePaths.map(async (filePath) => {
+      try {
+        const uri = vscode.Uri.file(filePath);
+        await vscode.workspace.fs.stat(uri);
+      } catch {
+        toDelete.push(filePath);
+      }
+    });
+
+    await Promise.all(validations);
+
+    if (toDelete.length > 0) {
+      this.logger.info(
+        `[validate] Removing missing favorites count=${toDelete.length}`,
+        toDelete,
+      );
+
+      toDelete.forEach((filePath) => this.favorites.delete(filePath));
+      this.saveFavorites();
+      this.refresh();
     }
   }
 
