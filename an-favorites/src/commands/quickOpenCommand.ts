@@ -10,6 +10,59 @@ import {
 
 type QuickOpenItem = vscode.QuickPickItem;
 
+interface SearchCacheEntry {
+  uris: vscode.Uri[];
+  exceededMaxFiles: boolean;
+}
+
+class LruCache<K, V> {
+  private readonly map = new Map<K, V>();
+  private maxEntries: number;
+
+  constructor(maxEntries: number) {
+    this.maxEntries = Math.max(1, maxEntries);
+  }
+
+  get(key: K): V | undefined {
+    const value = this.map.get(key);
+    if (!value) return undefined;
+    this.map.delete(key);
+    this.map.set(key, value);
+    return value;
+  }
+
+  set(key: K, value: V): void {
+    if (this.map.has(key)) {
+      this.map.delete(key);
+    }
+    this.map.set(key, value);
+    this.evictIfNeeded();
+  }
+
+  clear(): void {
+    this.map.clear();
+  }
+
+  setLimit(maxEntries: number): void {
+    this.maxEntries = Math.max(1, maxEntries);
+    this.evictIfNeeded();
+  }
+
+  private evictIfNeeded(): void {
+    while (this.map.size > this.maxEntries) {
+      const oldestKey = this.map.keys().next().value;
+      if (oldestKey === undefined) return;
+      this.map.delete(oldestKey);
+    }
+  }
+}
+
+function buildSearchPattern(searchValue: string): string {
+  const normalized = searchValue.trim();
+  if (!normalized) return '**/*';
+  return `**/*${normalized}*`;
+}
+
 /**
  * Type guard: separadores y QuickPickItem genéricos no tienen resourceUri.
  */
@@ -368,14 +421,14 @@ export function registerQuickOpenCommand(
 
       // Cache de archivos para no volver a buscar en disco cada vez que se actualiza la UI
       // Esto es vital para que al borrar el texto de búsqueda la respuesta sea instantánea
-      let cachedAllFileItems: FileQuickPickItem[] | null = null;
+      const searchCache = new LruCache<string, SearchCacheEntry>(30);
 
       // Function to build/rebuild items
       const buildItems = async (
-        loadAllFiles: boolean = false,
+        searchQuery: string = quickPick.value,
       ): Promise<void> => {
         logger.info(
-          `[QuickOpen] ▶ buildItems() called - loadAllFiles: ${loadAllFiles}`,
+          `[QuickOpen] ▶ buildItems() called - searchQuery: "${searchQuery}"`,
         );
 
         if (isDisposed) {
@@ -391,16 +444,15 @@ export function registerQuickOpenCommand(
             ? (quickPick.activeItems[0] as FileQuickPickItem).resourceUri.toString()
             : null;
 
-        // No poner busy true si estamos tecleando para evitar parpadeos,
-        // a menos que sea la carga pesada inicial
-        if (loadAllFiles && !cachedAllFileItems) {
-          quickPick.busy = true;
-        }
+        const normalizedSearch = searchQuery.trim();
+        const isSearching = normalizedSearch.length > 0;
 
         try {
-          const isSearching = quickPick.value.length > 0;
+          const isSearchValueCurrent = () =>
+            normalizedSearch === quickPick.value.trim();
+
           logger.info(
-            `[QuickOpen] Current search value: "${quickPick.value}" (isSearching: ${isSearching})`,
+            `[QuickOpen] Current search value: "${normalizedSearch}" (isSearching: ${isSearching})`,
           );
 
           // 0) Reload favorites from storage to ensure we have the latest data
@@ -414,6 +466,8 @@ export function registerQuickOpenCommand(
           );
           const configSearch =
             vscode.workspace.getConfiguration('anfavorites.search');
+          const configQuickOpen =
+            vscode.workspace.getConfiguration('anfavorites.quickOpen');
           const openToSide = vscode.workspace
             .getConfiguration('anfavorites.quickOpen')
             .get<boolean>('openToSide', false);
@@ -434,9 +488,17 @@ export function registerQuickOpenCommand(
           const maxRecentFavorites = configMaxItems.get<number>('favorites', 3);
           const maxPinned = configMaxItems.get<number>('pinned', 3);
           const maxRecentFiles = configMaxItems.get<number>('recentFiles', 5);
+          const maxSearchResults =
+            configQuickOpen.get<number>('maxSearchResults', 200);
+          const maxSearchFiles =
+            configQuickOpen.get<number>('maxSearchFiles', 1000);
+          const searchCacheSize =
+            configQuickOpen.get<number>('searchCacheSize', 30);
           const searchExclusions = configSearch.get<string[]>('exclusions', [
             '**/node_modules/**',
           ]);
+
+          searchCache.setLimit(searchCacheSize);
 
           logger.info(
             `[QuickOpen] Config: maxRecentFav=${maxRecentFavorites}, maxPinned=${maxPinned}, maxRecentFiles=${maxRecentFiles}, exclusions=${searchExclusions.length}`,
@@ -636,17 +698,46 @@ export function registerQuickOpenCommand(
 
           // Third section: Archivos (All other files) - Solo cargar si se solicita Y estamos buscando
           let otherItems: FileQuickPickItem[] = [];
+          let searchNoticeItem: QuickOpenItem | null = null;
 
-          if (loadAllFiles && isSearching) {
-            if (!cachedAllFileItems) {
-              const exclusionGlob = searchExclusions.length
-                ? `{${searchExclusions.join(',')}}`
-                : undefined;
-              const allUris = await vscode.workspace.findFiles(
-                '**/*',
+          if (isSearching) {
+            const exclusionGlob = searchExclusions.length
+              ? `{${searchExclusions.join(',')}}`
+              : undefined;
+            const cacheKey = normalizedSearch;
+            let cacheEntry = searchCache.get(cacheKey);
+
+            if (!cacheEntry) {
+              quickPick.busy = true;
+              const searchPattern = buildSearchPattern(cacheKey);
+              const searchLimit = Math.max(1, maxSearchFiles) + 1;
+              const foundUris = await vscode.workspace.findFiles(
+                searchPattern,
                 exclusionGlob,
+                searchLimit,
               );
-              cachedAllFileItems = allUris.map((uri) => {
+              const exceededMaxFiles = foundUris.length > maxSearchFiles;
+              cacheEntry = {
+                uris: foundUris.slice(0, maxSearchFiles),
+                exceededMaxFiles,
+              };
+              searchCache.set(cacheKey, cacheEntry);
+            }
+
+            if (cacheEntry.exceededMaxFiles) {
+              searchNoticeItem = {
+                label: `Se alcanzó el máximo de ${maxSearchFiles} archivos. Refina la búsqueda.`,
+                detail: '',
+              };
+            }
+
+            const maxDisplayResults = Math.max(
+              1,
+              Math.min(maxSearchResults, maxSearchFiles),
+            );
+
+            otherItems = cacheEntry.uris
+              .map((uri) => {
                 return new FileQuickPickItem({
                   uri,
                   isFavorite: false,
@@ -654,30 +745,24 @@ export function registerQuickOpenCommand(
                   isRecentlyOpened: false,
                   openToSide,
                 });
+              })
+              .filter((item) => {
+                const normalizedPath = normalizeFsPath(item.resourceUri.fsPath);
+                return (
+                  !recentNormSet.has(normalizedPath) &&
+                  !recentFavNormSet.has(normalizedPath) &&
+                  !pinnedNormSet.has(normalizedPath)
+                );
+              })
+              .slice(0, maxDisplayResults)
+              .map((item) => {
+                const isFav = favoritesProvider.hasFavorite(item.resourceUri);
+                if (item.isFavorite !== isFav) {
+                  item.isFavorite = isFav;
+                  item.updateIcon();
+                }
+                return item;
               });
-            }
-
-            if (cachedAllFileItems) {
-              otherItems = cachedAllFileItems
-                .filter((item) => {
-                  const normalizedPath = normalizeFsPath(
-                    item.resourceUri.fsPath,
-                  );
-                  return (
-                    !recentNormSet.has(normalizedPath) &&
-                    !recentFavNormSet.has(normalizedPath) &&
-                    !pinnedNormSet.has(normalizedPath)
-                  );
-                })
-                .map((item) => {
-                  const isFav = favoritesProvider.hasFavorite(item.resourceUri);
-                  if (item.isFavorite !== isFav) {
-                    item.isFavorite = isFav;
-                    item.updateIcon();
-                  }
-                  return item;
-                });
-            }
           }
 
           // ✅ DETECCIÓN DE COLISIONES con Ripgrep (findFiles)
@@ -709,11 +794,21 @@ export function registerQuickOpenCommand(
             const hasCollision = collisions.has(basename);
             item.setShowDescription(hasCollision);
           }
-          if (otherItems.length > 0) {
+          if (!isSearchValueCurrent()) {
+            logger.debug(
+              '[QuickOpen] Search value changed while building items, skipping update',
+            );
+            return;
+          }
+
+          if (otherItems.length > 0 || searchNoticeItem) {
             items.push({
               label: 'Archivos',
               kind: vscode.QuickPickItemKind.Separator,
             });
+            if (searchNoticeItem) {
+              items.push(searchNoticeItem);
+            }
             items.push(...otherItems);
           }
 
@@ -747,7 +842,7 @@ export function registerQuickOpenCommand(
 
       // Initial load - NO cargamos todos los archivos al inicio
       logger.info('[QuickOpen] Starting initial buildItems(false)...');
-      await buildItems(false);
+      await buildItems('');
       logger.info('[QuickOpen] ✓ Initial buildItems complete');
 
       // ✅ NOW show the QuickPick - items are ready, no risk of premature focus loss
@@ -758,8 +853,10 @@ export function registerQuickOpenCommand(
       );
 
       // Listen to user input to load all files when searching OR toggle placeholders
-      let allFilesLoaded = false;
       let previousValue = '';
+      const debouncedSearchRebuild = debounce(async (value: string) => {
+        await buildItems(value);
+      }, 200);
 
       disposables.push(
         quickPick.onDidChangeValue(async (value) => {
@@ -767,22 +864,19 @@ export function registerQuickOpenCommand(
           const isEmpty = value.length === 0;
           previousValue = value;
 
-          // 1. Carga diferida de archivos (primera búsqueda)
-          if (!isEmpty && !allFilesLoaded) {
-            logger.info(
-              '[QuickOpen] User started searching, loading ALL files...',
-            );
-            allFilesLoaded = true;
-            // Esto ocultará placeholders y cargará archivos
-            await buildItems(true);
-            logger.info('[QuickOpen] All files loaded and displayed');
-            return;
-          }
-
           // 2. Si cambia el estado (empezó a buscar O borró la búsqueda)
           // reconstruimos para mostrar/ocultar los placeholders
           if (wasEmpty !== isEmpty) {
-            await buildItems(allFilesLoaded);
+            if (isEmpty) {
+              await buildItems('');
+            } else {
+              debouncedSearchRebuild(value);
+            }
+            return;
+          }
+
+          if (!isEmpty) {
+            debouncedSearchRebuild(value);
           }
         }),
       );
@@ -791,7 +885,7 @@ export function registerQuickOpenCommand(
       disposables.push(
         favoritesProvider.onDidChangeTreeData(async () => {
           logger.debug('Favorites changed, rebuilding QuickOpen items');
-          await buildItems(allFilesLoaded);
+          await buildItems(quickPick.value);
         }),
       );
 
@@ -799,19 +893,24 @@ export function registerQuickOpenCommand(
       disposables.push(
         mruService.onDidChangeRecentFiles(async () => {
           logger.debug('MRU list changed, rebuilding QuickOpen items');
-          await buildItems(allFilesLoaded);
+          await buildItems(quickPick.value);
         }),
       );
 
       // Listen to Configuration changes
       disposables.push(
         vscode.workspace.onDidChangeConfiguration(async (e) => {
-          if (e.affectsConfiguration('anfavorites.maxItems')) {
+          if (
+            e.affectsConfiguration('anfavorites.maxItems') ||
+            e.affectsConfiguration('anfavorites.quickOpen') ||
+            e.affectsConfiguration('anfavorites.search')
+          ) {
             logger.debug(
-              'Configuration changed (anfavorites.maxItems), rebuilding QuickOpen items',
+              'Configuration changed (quick open), rebuilding QuickOpen items',
             );
             // Rebuild items to reflect new limits
-            await buildItems(allFilesLoaded);
+            searchCache.clear();
+            await buildItems(quickPick.value);
           }
         }),
       );
@@ -822,8 +921,8 @@ export function registerQuickOpenCommand(
           'File system changed (debounced), rebuilding QuickOpen items',
         );
         // Invalidar caché para reflejar cambios del FS
-        cachedAllFileItems = null;
-        await buildItems(allFilesLoaded);
+        searchCache.clear();
+        await buildItems(quickPick.value);
       }, 200);
 
       disposables.push(
@@ -868,8 +967,7 @@ export function registerQuickOpenCommand(
               '[QuickOpen] Recent files list cleared from Quick Open',
             );
             // Rebuild the picker without closing it
-            allFilesLoaded = false; // Reset to avoid loading all files again
-            await buildItems(false);
+            await buildItems('');
             return;
           }
 
@@ -908,7 +1006,7 @@ export function registerQuickOpenCommand(
             ]);
 
             // Rebuild the picker to reflect the cleanup
-            await buildItems(allFilesLoaded);
+            await buildItems(quickPick.value);
             return;
           }
 

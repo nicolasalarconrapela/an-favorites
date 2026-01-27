@@ -314,6 +314,21 @@
             "type": "boolean",
             "default": true,
             "description": "Si está activado, al abrir un archivo desde Quick Open se abrirá automáticamente en el editor lateral y se ocultará el botón 'Abrir al lado'."
+          },
+          "anfavorites.quickOpen.maxSearchResults": {
+            "type": "number",
+            "default": 200,
+            "description": "Límite máximo de resultados mostrados al buscar archivos en Quick Open."
+          },
+          "anfavorites.quickOpen.maxSearchFiles": {
+            "type": "number",
+            "default": 1000,
+            "description": "Umbral máximo de archivos que Quick Open puede recuperar por búsqueda antes de mostrar un aviso."
+          },
+          "anfavorites.quickOpen.searchCacheSize": {
+            "type": "number",
+            "default": 30,
+            "description": "Tamaño máximo del caché LRU de búsquedas en Quick Open."
           }
         }
       }
