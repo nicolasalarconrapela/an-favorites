@@ -450,18 +450,10 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
     const metadata = this.favorites.get(uri.fsPath);
     if (!metadata) return;
 
-    // Check limit before pinning
-    if (!metadata.isPinned) {
-      const currentPinnedCount = this.getPinnedFavorites().length;
-      if (currentPinnedCount >= 3) {
-        vscode.window.showWarningMessage(
-          'Solo puedes fijar hasta 3 favoritos.',
-        );
-        return;
-      }
-    }
-
     metadata.isPinned = !metadata.isPinned;
+    if (metadata.isPinned) {
+      metadata.addedAt = Date.now();
+    }
     this.logger.info(
       `[favorites] togglePin -> ${uri.fsPath} = ${metadata.isPinned}`,
     );
@@ -474,12 +466,11 @@ export class FavoritesTreeDataProvider implements vscode.TreeDataProvider<
   }
 
   getPinnedFavorites(): vscode.Uri[] {
-    const pinned: vscode.Uri[] = [];
-    this.favorites.forEach((metadata, filePath) => {
-      if (metadata.isPinned) {
-        pinned.push(vscode.Uri.file(filePath));
-      }
-    });
+    const pinned = Array.from(this.favorites.entries())
+      .filter(([_, metadata]) => metadata.isPinned)
+      .sort((a, b) => (b[1].addedAt || 0) - (a[1].addedAt || 0))
+      .map(([filePath]) => vscode.Uri.file(filePath));
+
     return pinned;
   }
 

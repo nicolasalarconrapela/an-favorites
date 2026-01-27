@@ -417,13 +417,14 @@ export function registerQuickOpenCommand(
             );
           }
           const maxRecentFavorites = configMaxItems.get<number>('favorites', 3);
-          const maxRecentFiles = configMaxItems.get<number>('recentFiles', 3);
+          const maxPinned = configMaxItems.get<number>('pinned', 3);
+          const maxRecentFiles = configMaxItems.get<number>('recentFiles', 5);
           const searchExclusions = configSearch.get<string[]>('exclusions', [
             '**/node_modules/**',
           ]);
 
           logger.info(
-            `[QuickOpen] Config: maxRecentFav=${maxRecentFavorites}, maxRecentFiles=${maxRecentFiles}, exclusions=${searchExclusions.length}`,
+            `[QuickOpen] Config: maxRecentFav=${maxRecentFavorites}, maxPinned=${maxPinned}, maxRecentFiles=${maxRecentFiles}, exclusions=${searchExclusions.length}`,
           );
 
           // 1) Recientes (MRU) — sanitize total
@@ -447,7 +448,9 @@ export function registerQuickOpenCommand(
           );
 
           // 1.5) Pinned items
-          const pinnedFavUris = favoritesProvider.getPinnedFavorites();
+          const pinnedFavUris = favoritesProvider
+            .getPinnedFavorites()
+            .slice(0, maxPinned);
 
           // Merge pinned items
           const allPinnedUrisUnsafe = [...pinnedFavUris];
@@ -474,15 +477,18 @@ export function registerQuickOpenCommand(
           );
 
           // 2) Get recent favorites (excluding pinned)
+          // Fetch more candidates (e.g. 100) to ensure we can fill the quota
+          // after excluding pinned items.
           const recentFavUris = favoritesProvider
-            .getRecentFavorites(maxRecentFavorites)
+            .getRecentFavorites(20)
             .filter((uri) => {
               return (
                 uri.scheme === 'file' &&
                 !!vscode.workspace.getWorkspaceFolder(uri) &&
                 !pinnedNormSet.has(normalizeFsPath(uri.fsPath))
               );
-            });
+            })
+            .slice(0, maxRecentFavorites);
           const recentFavNormSet = new Set(
             recentFavUris.map((u) => normalizeFsPath(u.fsPath)),
           );
@@ -544,10 +550,12 @@ export function registerQuickOpenCommand(
 
           const recentFavItems: FileQuickPickItem[] = validRecentFavUris.map(
             (uri) => {
+              const isPinned = favoritesProvider.isPinned(uri);
               return new FileQuickPickItem({
                 uri,
                 isFavorite: true,
-                isPinned: false,
+                isPinned: false, // Keep label as Star
+                isIndividualPinned: isPinned,
                 isRecentlyOpened: false,
                 openToSide,
               });
@@ -558,10 +566,12 @@ export function registerQuickOpenCommand(
             .slice(0, maxRecentFiles) // Limitar a la cantidad configurada
             .map((uri) => {
               const isFav = favoritesProvider.hasFavorite(uri);
+              const isPinned = favoritesProvider.isPinned(uri);
               return new FileQuickPickItem({
                 uri,
                 isFavorite: isFav,
-                isPinned: false,
+                isPinned: false, // Keep label as Star
+                isIndividualPinned: isPinned,
                 isRecentlyOpened: true,
                 openToSide,
               });
@@ -774,6 +784,19 @@ export function registerQuickOpenCommand(
         mruService.onDidChangeRecentFiles(async () => {
           logger.debug('MRU list changed, rebuilding QuickOpen items');
           await buildItems(allFilesLoaded);
+        }),
+      );
+
+      // Listen to Configuration changes
+      disposables.push(
+        vscode.workspace.onDidChangeConfiguration(async (e) => {
+          if (e.affectsConfiguration('anfavorites.maxItems')) {
+            logger.debug(
+              'Configuration changed (anfavorites.maxItems), rebuilding QuickOpen items',
+            );
+            // Rebuild items to reflect new limits
+            await buildItems(allFilesLoaded);
+          }
         }),
       );
 

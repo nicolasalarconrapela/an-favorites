@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.46",
+  "version": "0.8.47",
   "publisher": "anappwilos",
   "engines": {
     "vscode": "^1.86.0"
@@ -211,9 +211,19 @@
               3,
               4,
               5,
-              10
+              7
             ],
             "description": "Número de favoritos recientes a mostrar en Quick Open."
+          },
+          "anfavorites.maxItems.pinned": {
+            "type": "number",
+            "default": 3,
+            "enum": [
+              3,
+              4,
+              5
+            ],
+            "description": "Número máximo de favoritos fijados permitidos."
           },
           "anfavorites.maxItems.recentFiles": {
             "type": "number",
@@ -222,8 +232,7 @@
               2,
               3,
               4,
-              5,
-              10
+              5
             ],
             "description": "Número de archivos recientemente abiertos a mostrar en Quick Open."
           }
