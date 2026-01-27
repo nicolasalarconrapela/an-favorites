@@ -611,7 +611,7 @@ export function registerQuickOpenCommand(
           const validRecentUris = recentUris.filter((uri) => {
             const exists = existenceMap.get(uri.fsPath) ?? false;
             if (!exists) {
-              mruService.updatePath(uri.fsPath, '');
+              mruService.remove(uri.fsPath);
             }
             return exists;
           });

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.56] - 2026-01-21
+
+### Changed
+- MRU: limpieza de rutas vacías al cargar y validación de updatePath para descartar entradas vacías
+- Quick Open: eliminación directa de rutas inexistentes del MRU
+
 ## [0.8.55] - 2026-01-20
 
 ### Changed
