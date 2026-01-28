@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { Logger } from '../logging/logger';
 import { SharedStorageService } from '../services/sharedStorageService';
-import { detectCollisions, safeBasenameFromUri } from '../utils/collisionUtils';
+import { applyCollisionLabels } from '../utils/collisionUtils';
 import { isExcludedPath } from '../utils/exclusionUtils';
 import { runWithConcurrency } from '../utils/concurrency';
 
@@ -394,9 +394,6 @@ export class FavoritesTreeDataProvider
     items: FavoriteItem[],
     groupName: string,
   ): Promise<void> {
-    const allUris = items.map((i) => i.resourceUri);
-
-
     const configSearch =
       vscode.workspace.getConfiguration('anfavorites.search');
     const searchExclusions = configSearch.get<string[]>('exclusions', [
@@ -404,27 +401,20 @@ export class FavoritesTreeDataProvider
     ]);
 
     try {
-      const collisions = await detectCollisions(
-        allUris,
-        searchExclusions,
-        this.logger,
-      );
-
-      this.logger.info(
-        `[collisions] Found ${collisions.size} colliding basenames in "${groupName}"`,
-      );
-
-      for (const item of items) {
-        const basename = safeBasenameFromUri(item.resourceUri);
-        if (collisions.has(basename)) {
-
+      await applyCollisionLabels(
+        items,
+        (item) => item.resourceUri,
+        (item) => {
           const rel = vscode.workspace.asRelativePath(item.resourceUri, false);
           const relDir = path.dirname(rel);
           item.setDescriptionText(relDir);
-        } else {
+        },
+        (item) => {
           item.setShowDescription(false);
-        }
-      }
+        },
+        searchExclusions,
+        this.logger,
+      );
     } catch (err) {
       this.logger.error(
         '[collisions] Error detecting collisions in tree view',

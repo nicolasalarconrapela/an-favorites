@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.75] - 2026-01-29
+
+### Changed
+- Quick Open: reduce logs de hot path a nivel debug para evitar ruido
+- Quick Open: tipado del logger fuerte para mejorar consistencia y tests
+- Colisiones: se unifica la aplicación de etiquetas de colisión entre árbol y Quick Open
+
 ## [0.8.74] - 2026-01-29
 
 ### Fixed

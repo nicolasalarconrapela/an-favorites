@@ -222,3 +222,25 @@ export async function detectCollisions(
 
   return collisions;
 }
+
+export async function applyCollisionLabels<T>(
+  items: T[],
+  getUri: (item: T) => vscode.Uri,
+  onCollision: (item: T, basename: string) => void,
+  onNoCollision: (item: T) => void,
+  exclusionPatterns: string[],
+  logger?: any,
+): Promise<void> {
+  const uris = items.map((item) => getUri(item));
+  const collisions = await detectCollisions(uris, exclusionPatterns, logger);
+
+  for (const item of items) {
+    const uri = getUri(item);
+    const basename = safeBasenameFromUri(uri);
+    if (collisions.has(basename)) {
+      onCollision(item, basename);
+    } else {
+      onNoCollision(item);
+    }
+  }
+}

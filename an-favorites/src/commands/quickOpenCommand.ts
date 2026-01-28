@@ -2,8 +2,9 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
+import { Logger } from '../logging/logger';
 import {
-  detectCollisions,
+  applyCollisionLabels,
   normalizeFsPath,
   safeBasenameFromUri,
 } from '../utils/collisionUtils';
@@ -79,7 +80,7 @@ interface ActionQuickPickItem extends vscode.QuickPickItem {
 
 
 
-function toSafeFileUri(value: unknown, logger?: any): vscode.Uri | null {
+function toSafeFileUri(value: unknown, logger?: Logger): vscode.Uri | null {
   if (typeof value !== 'string') {
     logger?.warn?.('MRU entry is not a string', { value });
     return null;
@@ -433,7 +434,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 export function registerQuickOpenCommand(
   context: vscode.ExtensionContext,
   favoritesProvider: FavoritesTreeDataProvider,
-  logger: any,
+  logger: Logger,
   mruService: MRUService,
 ): void {
   const throttleIntervalMs = 2000;
@@ -442,7 +443,7 @@ export function registerQuickOpenCommand(
     key: string,
     message: string,
     metadata?: unknown,
-    logTarget: any = logger,
+    logTarget: Logger = logger,
   ) => {
     if (logTarget?.throttle) {
       logTarget.throttle(level, key, message, metadata, throttleIntervalMs);
@@ -545,7 +546,7 @@ export function registerQuickOpenCommand(
       const buildItems = async (
         searchQuery: string = quickPick.value,
       ): Promise<void> => {
-        log.info(
+        log.debug(
           `[QuickOpen] ▶ buildItems() called - searchQuery: "${searchQuery}"`,
         );
 
@@ -572,7 +573,7 @@ export function registerQuickOpenCommand(
           const isSearchValueCurrent = () =>
             normalizedSearch === quickPick.value.trim();
 
-          log.info(
+          log.debug(
             `[QuickOpen] Current search value: "${normalizedSearch}" (isSearching: ${isSearching})`,
           );
 
@@ -644,7 +645,7 @@ export function registerQuickOpenCommand(
 
           searchCache.setLimit(searchCacheSize);
 
-          log.info(
+          log.debug(
             `[QuickOpen] Config: maxRecentFav=${maxRecentFavorites}, maxPinned=${maxPinned}, maxRecentFiles=${maxRecentFiles}, showIcons=${showIcons}, exclusions=${searchExclusions.length}`,
           );
 
@@ -931,28 +932,22 @@ export function registerQuickOpenCommand(
             ...recentItems,
             ...otherItems,
           ];
-          const allUris = allFileItems.map((item) => item.resourceUri);
 
           log.debug(
-            `[QuickOpen] Checking collisions for ${allUris.length} items...`,
+            `[QuickOpen] Checking collisions for ${allFileItems.length} items...`,
           );
-          const collisions = await detectCollisions(
-            allUris,
+          await applyCollisionLabels(
+            allFileItems,
+            (item) => item.resourceUri,
+            (item) => {
+              item.setShowDescription(true);
+            },
+            (item) => {
+              item.setShowDescription(false);
+            },
             searchExclusions,
             logger,
           );
-          log.debug(
-            `[QuickOpen] Collisions detected: ${collisions.size}`,
-            Array.from(collisions),
-          );
-
-          if (isDisposed) return;
-
-          for (const item of allFileItems) {
-            const basename = safeBasenameFromUri(item.resourceUri);
-            const hasCollision = collisions.has(basename);
-            item.setShowDescription(hasCollision);
-          }
           if (!isSearchValueCurrent()) {
             log.debug(
               '[QuickOpen] Search value changed while building items, skipping update',
