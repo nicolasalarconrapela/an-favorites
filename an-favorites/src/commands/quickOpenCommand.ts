@@ -419,6 +419,12 @@ export function registerQuickOpenCommand(
       logger.info('🔍 [QuickOpen] COMMAND STARTED - ALT+SHIFT+F');
       logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
+      // Environment detection
+      logger.info(`[QuickOpen] Environment: ${vscode.env.appName} (${vscode.version})`);
+      logger.info(`[QuickOpen] URI Scheme: ${vscode.env.uriScheme}`);
+      logger.info(`[QuickOpen] Platform: ${process.platform}`);
+      logger.info(`[QuickOpen] Language: ${vscode.env.language}`);
+
       const quickPick = vscode.window.createQuickPick<QuickOpenItem>();
       logger.info('[QuickOpen] QuickPick instance created');
 
@@ -891,9 +897,39 @@ export function registerQuickOpenCommand(
           quickPick.items = items;
 
           if (isSearching) {
-            // ✅ En búsqueda: NO forzamos selección (evita abrir favoritos/recientes por accidente).
-            // Además, neutraliza autoselección cuando VS Code decide enfocarse en el primer item.
-            quickPick.activeItems = [];
+            // ✅ En búsqueda:
+            // Si había una selección previa (por ejemplo, después de toggle), mantenerla
+            // Si no, seleccionar el primer item de archivo para acceso rápido con Enter
+            if (currentActiveUri) {
+              const itemToRestore = items.find(
+                (i) =>
+                  isFileItem(i) &&
+                  i.resourceUri.toString() === currentActiveUri,
+              );
+              if (itemToRestore) {
+                quickPick.activeItems = [itemToRestore as FileQuickPickItem];
+              } else {
+                // Item ya no está visible, seleccionar el primero
+                const firstFileItem = items.find((i) => isFileItem(i)) as
+                  | FileQuickPickItem
+                  | undefined;
+                if (firstFileItem) {
+                  quickPick.activeItems = [firstFileItem];
+                } else {
+                  quickPick.activeItems = [];
+                }
+              }
+            } else {
+              // No había selección previa, seleccionar el primer item en búsqueda
+              const firstFileItem = items.find((i) => isFileItem(i)) as
+                | FileQuickPickItem
+                | undefined;
+              if (firstFileItem) {
+                quickPick.activeItems = [firstFileItem];
+              } else {
+                quickPick.activeItems = [];
+              }
+            }
           } else if (currentActiveUri) {
             // ✅ Fuera de búsqueda: restauramos foco anterior (UX estable)
             const itemToSelect = items.find(
@@ -901,6 +937,27 @@ export function registerQuickOpenCommand(
             );
             if (itemToSelect) {
               quickPick.activeItems = [itemToSelect as FileQuickPickItem];
+            }
+          } else {
+            // ✅ Fuera de búsqueda, sin selección previa: seleccionar el segundo item si no hay pinneds
+            const fileItems = items.filter((i) =>
+              isFileItem(i),
+            ) as FileQuickPickItem[];
+            if (fileItems.length > 0) {
+              // Si no hay pinned items, seleccionar el segundo (índice 1)
+              // Si hay pinned items, seleccionar el primero después de los pinneds
+              const hasPinned = pinnedItems.length > 0;
+              const indexToSelect = hasPinned ? 0 : 1;
+
+              // Detectar entorno: VS Code usa indexToSelect, AnGravity siempre usa 1
+              const isAnGravity = vscode.env.appName.includes('angravity') || vscode.env.uriScheme.includes('angravity');
+              const isCursor = vscode.env.appName.includes('cursor') || vscode.env.uriScheme.includes('cursor');
+
+              const forceIndexOne = isAnGravity || isCursor;
+
+              const finalIndex = forceIndexOne ? 1 : indexToSelect;
+
+              quickPick.activeItems = [fileItems[finalIndex]];
             }
           }
         } catch (error) {
@@ -933,21 +990,20 @@ export function registerQuickOpenCommand(
 
       // Listen to user input to load all files when searching OR toggle placeholders
       let previousValue = '';
-      let suppressSelectionOnce = false;
       const debouncedSearchRebuild = debounce(async (value: string) => {
         await buildItems(value);
       }, 200);
       const debouncedExternalRebuild = debounce(
         async (reason: string) => {
-          logThrottled(
-            'debug',
-            'quickopen:external-rebuild',
-            `External change (${reason}), rebuilding QuickOpen items`,
-          );
-          await buildItems(quickPick.value);
-        },
-        120,
-      );
+        logThrottled(
+          'debug',
+          'quickopen:external-rebuild',
+          `External change (${reason}), rebuilding QuickOpen items`,
+        );
+        await buildItems(quickPick.value);
+      },
+      20,
+    );
 
       disposables.push(
         quickPick.onDidChangeValue(async (value) => {
