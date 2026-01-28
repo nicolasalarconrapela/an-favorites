@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.77] - 2026-01-29
+
+### Changed
+- Quick Open: añade botón Load More cuando se supera el máximo de resultados mostrados
+
 ## [0.8.76] - 2026-01-29
 
 ### Changed

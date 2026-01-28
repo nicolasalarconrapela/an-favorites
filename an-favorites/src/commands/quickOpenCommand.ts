@@ -71,7 +71,7 @@ function isFileItem(item: vscode.QuickPickItem): item is FileQuickPickItem {
   return typeof (item as any)?.resourceUri?.fsPath === 'string';
 }
 
-type FavoritesAction = 'clearRecents';
+type FavoritesAction = 'clearRecents' | 'loadMore';
 
 interface ActionQuickPickItem extends vscode.QuickPickItem {
   action: FavoritesAction;
@@ -549,6 +549,8 @@ export function registerQuickOpenCommand(
 
       const searchCache = new LruCache<string, SearchCacheEntry>(30);
       let buildTokenSource: vscode.CancellationTokenSource | null = null;
+      let searchPage = 1;
+      let previousSearchValue = '';
 
 
       const buildItems = async (
@@ -571,6 +573,10 @@ export function registerQuickOpenCommand(
 
         const normalizedSearch = searchQuery.trim();
         const isSearching = normalizedSearch.length > 0;
+        if (normalizedSearch !== previousSearchValue) {
+          searchPage = 1;
+          previousSearchValue = normalizedSearch;
+        }
 
 
         const currentActiveUri =
@@ -908,6 +914,10 @@ export function registerQuickOpenCommand(
               1,
               Math.min(maxSearchResults, maxSearchFiles),
             );
+            const displayLimit = Math.min(
+              cacheEntry.uris.length,
+              maxDisplayResults * searchPage,
+            );
 
             otherItems = cacheEntry.uris
               .map((uri) => {
@@ -930,7 +940,7 @@ export function registerQuickOpenCommand(
                   !pinnedNormSet.has(normalizedPath)
                 );
               })
-              .slice(0, maxDisplayResults)
+              .slice(0, displayLimit)
               .map((item) => {
                 const isFav = favoritesProvider.hasFavorite(item.resourceUri);
                 if (item.isFavorite !== isFav) {
@@ -939,6 +949,13 @@ export function registerQuickOpenCommand(
                 }
                 return item;
               });
+            if (cacheEntry.uris.length > displayLimit) {
+              searchNoticeItem = {
+                label: 'Load More',
+                description: `Mostrando ${displayLimit} de ${cacheEntry.uris.length}`,
+                action: 'loadMore',
+              } as ActionQuickPickItem;
+            }
           }
 
 
@@ -1225,6 +1242,12 @@ export function registerQuickOpenCommand(
             );
 
             await buildItems('');
+            return;
+          }
+          if (actionItem.action === 'loadMore') {
+            log.info('[QuickOpen] Executing action: loadMore');
+            searchPage += 1;
+            await buildItems(quickPick.value);
             return;
           }
 
