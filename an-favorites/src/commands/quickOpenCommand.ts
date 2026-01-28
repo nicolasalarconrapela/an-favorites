@@ -259,6 +259,10 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   private _fullPathLabel: string = '';
   private _dirPathLabel: string = '';
 
+  // ✅ (FIX) Guardar el texto "base" del detail para poder ocultarlo/mostrarlo
+  // sin perderlo al poner detail = undefined
+  private _detailPathText?: string;
+
   private _openToSide: boolean;
   public showIcons: boolean;
   private pathDetailLocation: 'description' | 'detail';
@@ -311,35 +315,34 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     // Description/detail: RELATIVO al proyecto (workspace)
     const { rel, rootName } = workspaceRelativeLabel(uri);
 
-    // Modificado: Si es multiroot, mostrar el nombre del root en detail
-    // Esto aplica a favoritos y cualquier item (Recientes) para tener consistencia
-    if (rootName) {
-      if (this.pathDetailLocation === 'detail') {
-        this.detail = `\t\t ${rootName} · ${rel}`;
-        this.description = '';
-      } else {
-        this.description = `${rootName} · ${rel}`;
-        this.detail = undefined;
-      }
-    } else {
-      // Extraer directorio de la ruta relativa (sin nombre de archivo)
-      const dir = path.dirname(rel);
-      // Si dirname es '.' (archivo en raíz) o vacío, mostrar '.'
-      const cleanDir = dir === '.' || dir === '' ? '.' : dir;
+    // Extraer directorio de la ruta relativa (sin nombre de archivo)
+    const dir = path.dirname(rel);
+    const cleanDir = dir === '.' || dir === '' ? '.' : dir;
 
+    // Construir las etiquetas de ruta para uso posterior (detección de colisiones)
+    if (rootName) {
+      this._fullPathLabel =
+        cleanDir === '.' ? rootName : `[ ${rootName} ] ${cleanDir}`;
+      this._dirPathLabel = this._fullPathLabel;
+    } else {
       this._fullPathLabel = cleanDir;
       this._dirPathLabel = this._fullPathLabel;
-      this.description = this._dirPathLabel;
     }
 
-    // Ruta completa (solo directorio, sin archivo) - Used for duplicate handling later
-    // We need to ensure _fullPathLabel is set correctly even if we didn't go into the else block
-    if (rootName) {
-      const dir = path.dirname(rel);
-      const cleanDir = dir === '.' || dir === '' ? '.' : dir;
-      this._fullPathLabel =
-        cleanDir === '.' ? rootName : `${rootName} • ${cleanDir}`;
-      this._dirPathLabel = this._fullPathLabel;
+    // Aplicar pathDetailLocation
+    if (this.pathDetailLocation === 'detail') {
+      // ✅ (FIX) Guardar el texto base del path para reutilizarlo
+      this._detailPathText = rootName
+        ? cleanDir === '.'
+          ? `${rootName}`
+          : `[ ${rootName} ] ${cleanDir}`
+        : `${cleanDir}`;
+
+      this.detail = `${this._detailPathText}`;
+      this.description = '';
+    } else {
+      this.detail = '';
+      this.description = '';
     }
 
     this.updateIcon(this.showIcons);
@@ -349,16 +352,22 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   }
 
   public setShowDescription(isDuplicate: boolean): void {
-    if (this.pathDetailLocation === 'detail' && this.detail) {
-      this.description = '';
+    const shouldShowPath = this.showPathWhen === 'always' || isDuplicate;
+
+    // ✅ (FIX) Respetar showPathWhen también cuando path va en detail
+    if (this.pathDetailLocation === 'detail') {
+      if (shouldShowPath && this._detailPathText) {
+        this.detail = `${this._detailPathText}`;
+      } else {
+        this.detail = '';
+      }
+      this.description = ' ';
       return;
     }
 
-    // If showPathWhen is 'always', always show the path
-    // If 'onConflict', only show when isDuplicate is true
-    const shouldShowPath = this.showPathWhen === 'always' || isDuplicate;
-    const text = shouldShowPath ? this._fullPathLabel : '';
-    this.description = text || '';
+    // description mode
+    this.description = shouldShowPath ? this._fullPathLabel : '';
+    this.detail = undefined;
   }
 
   updateIcon(showIcons: boolean = true): void {
@@ -380,7 +389,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 
     // Botón Pin (Fijar/Desfijar) con fallback a bookmark
     const isPinnedState = this.isIndividualPinned;
-    let pinTooltip = isPinnedState ? 'Desfijar' : 'Fijar';
+    const pinTooltip = isPinnedState ? 'Desfijar' : 'Fijar';
 
     if (!this.isRecentlyOpened) {
       buttons.push({
@@ -700,6 +709,7 @@ export function registerQuickOpenCommand(
             ...recentUris,
           ];
           const existenceMap = await validateFilesExistence(allUrisToDisplay);
+          if (isDisposed) return;
 
           // Validar Pinned
           const validPinnedUris = allPinnedUris.filter((uri) => {
@@ -823,7 +833,9 @@ export function registerQuickOpenCommand(
               action: 'clearRecents',
             };
 
-            items.push(clearRecentsItem);
+            if (!isSearching) {
+              items.push(clearRecentsItem);
+            }
             items.push(...recentItems);
           } else if (!isSearching) {
             items.push({ label: '', description: '', detail: '' });
@@ -951,9 +963,6 @@ export function registerQuickOpenCommand(
           quickPick.items = items;
 
           if (isSearching) {
-            // ✅ En búsqueda:
-            // Si había una selección previa (por ejemplo, después de toggle), mantenerla
-            // Si no, seleccionar el primer item de archivo para acceso rápido con Enter
             if (currentActiveUri) {
               const itemToRestore = items.find(
                 (i) =>
@@ -963,29 +972,19 @@ export function registerQuickOpenCommand(
               if (itemToRestore) {
                 quickPick.activeItems = [itemToRestore as FileQuickPickItem];
               } else {
-                // Item ya no está visible, seleccionar el primero
                 const firstFileItem = items.find((i) => isFileItem(i)) as
                   | FileQuickPickItem
                   | undefined;
-                if (firstFileItem) {
-                  quickPick.activeItems = [firstFileItem];
-                } else {
-                  quickPick.activeItems = [];
-                }
+                quickPick.activeItems = firstFileItem ? [firstFileItem] : [];
               }
             } else {
               // No había selección previa, seleccionar el primer item en búsqueda
               const firstFileItem = items.find((i) => isFileItem(i)) as
                 | FileQuickPickItem
                 | undefined;
-              if (firstFileItem) {
-                quickPick.activeItems = [firstFileItem];
-              } else {
-                quickPick.activeItems = [];
-              }
+              quickPick.activeItems = firstFileItem ? [firstFileItem] : [];
             }
           } else if (currentActiveUri) {
-            // ✅ Fuera de búsqueda: restauramos foco anterior (UX estable)
             const itemToSelect = items.find(
               (i) =>
                 isFileItem(i) && i.resourceUri.toString() === currentActiveUri,
@@ -994,25 +993,21 @@ export function registerQuickOpenCommand(
               quickPick.activeItems = [itemToSelect as FileQuickPickItem];
             }
           } else {
-            // ✅ Fuera de búsqueda, sin selección previa: seleccionar el segundo item si no hay pinneds
             const fileItems = items.filter((i) =>
               isFileItem(i),
             ) as FileQuickPickItem[];
             if (fileItems.length > 0) {
-              // Si no hay pinned items, seleccionar el segundo (índice 1)
-              // Si hay pinned items, seleccionar el primero después de los pinneds
               const hasPinned = pinnedItems.length > 0;
               const indexToSelect = hasPinned ? 0 : 1;
 
-              // Detectar entorno: VS Code usa indexToSelect, AnGravity siempre usa 1
-              const isAnGravity =
+              const isAnGravityEnv =
                 vscode.env.appName.includes('angravity') ||
                 vscode.env.uriScheme.includes('angravity');
               const isCursor =
                 vscode.env.appName.includes('cursor') ||
                 vscode.env.uriScheme.includes('cursor');
 
-              const forceIndexOne = isAnGravity || isCursor;
+              const forceIndexOne = isAnGravityEnv || isCursor;
 
               const finalIndex = forceIndexOne ? 1 : indexToSelect;
 
@@ -1051,7 +1046,7 @@ export function registerQuickOpenCommand(
       let previousValue = '';
       const debouncedSearchRebuild = debounce(async (value: string) => {
         await buildItems(value);
-      }, 200);
+      }, 1);
       const debouncedExternalRebuild = debounce(async (reason: string) => {
         logThrottled(
           'debug',
@@ -1059,7 +1054,7 @@ export function registerQuickOpenCommand(
           `External change (${reason}), rebuilding QuickOpen items`,
         );
         await buildItems(quickPick.value);
-      }, 20);
+      }, 1);
 
       disposables.push(
         quickPick.onDidChangeValue(async (value) => {
