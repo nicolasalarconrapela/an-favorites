@@ -20,7 +20,6 @@ export class MRUService {
   ) {
     this.load();
 
-
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor && editor.document.uri.scheme === 'file') {
         this.add(editor.document.uri.fsPath);
@@ -33,13 +32,15 @@ export class MRUService {
   }
 
   private load(): void {
-    const stored = this.context.globalState.get<string[]>(
+    const stored = this.context.workspaceState.get<string[]>(
       MRUService.STORAGE_KEY,
     );
 
     if (stored && stored.length > 0) {
       this.mruList = stored;
-      this.removeEmptyEntries('[mru] Removed empty entries from loaded history');
+      this.removeEmptyEntries(
+        '[mru] Removed empty entries from loaded history',
+      );
       this.logger.info(`[mru] Loaded from globalState. count=${stored.length}`);
     } else {
       this.mruList = [];
@@ -58,9 +59,6 @@ export class MRUService {
       this.save();
     }
   }
-
-
-
 
   private checkForDuplicateNames(): void {
     const nameMap = new Map<string, string[]>();
@@ -96,16 +94,13 @@ export class MRUService {
   }
 
   private save(): void {
-    this.context.globalState.update(MRUService.STORAGE_KEY, this.mruList);
+    this.context.workspaceState.update(MRUService.STORAGE_KEY, this.mruList);
   }
 
   public add(fsPath: string): void {
-
     this.mruList = this.mruList.filter((p) => p !== fsPath);
 
-
     this.mruList.unshift(fsPath);
-
 
     if (this.mruList.length > MRUService.MAX_ENTRIES) {
       this.mruList = this.mruList.slice(0, MRUService.MAX_ENTRIES);
@@ -214,9 +209,7 @@ export class MRUService {
 
     const index = this.mruList.indexOf(oldPath);
     if (index !== -1) {
-      this.logger.info(
-        `[mru] updatePath -> ${oldPath} => ${normalizedPath}`,
-      );
+      this.logger.info(`[mru] updatePath -> ${oldPath} => ${normalizedPath}`);
       this.mruList[index] = normalizedPath;
       this.save();
       this._onDidChangeRecentFiles.fire();

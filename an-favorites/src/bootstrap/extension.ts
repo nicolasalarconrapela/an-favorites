@@ -16,10 +16,13 @@ import { MRUService } from '../services/mruService';
 import { SharedStorageService } from '../services/sharedStorageService';
 
 export function activate(context: vscode.ExtensionContext): void {
-  const loggingConfig = vscode.workspace.getConfiguration('anfavorites.logging');
+  const loggingConfig = vscode.workspace.getConfiguration(
+    'anfavorites.logging',
+  );
   const configuredLevel = loggingConfig.get<LogLevel>('level', 'info');
   const logLevel: LogLevel =
-    configuredLevel && ['debug', 'info', 'warn', 'error'].includes(configuredLevel)
+    configuredLevel &&
+    ['debug', 'info', 'warn', 'error'].includes(configuredLevel)
       ? configuredLevel
       : 'info';
   const maxRotatedFiles = loggingConfig.get<number>('maxRotatedFiles', 5);
@@ -34,19 +37,17 @@ export function activate(context: vscode.ExtensionContext): void {
   logger.info('━━━ Extension activation started ━━━');
   logger.show(true);
 
-  const sharedStorage = new SharedStorageService(logger);
+  const sharedStorage = new SharedStorageService(context, logger);
   const telemetry = new TelemetryService();
   const mruService = new MRUService(context, logger);
 
   logger.info('Registering favorites tree provider...');
-
 
   const favoritesProvider = new FavoritesTreeDataProvider(
     context,
     logger,
     sharedStorage,
   );
-
 
   const treeView = vscode.window.createTreeView('anfavorites.favoritesView', {
     treeDataProvider: favoritesProvider,
@@ -57,7 +58,6 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(treeView);
 
   logger.info('Registering favorites commands...');
-
 
   registerAddToFavoritesCommand(context, favoritesProvider, logger);
   registerAddToFavoritesInGroupCommand(context, favoritesProvider, logger);
@@ -174,7 +174,6 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   );
 
-
   const renameListener = vscode.workspace.onDidRenameFiles(async (event) => {
     logger.throttle?.(
       'debug',
@@ -188,7 +187,6 @@ export function activate(context: vscode.ExtensionContext): void {
       const oldPath = file.oldUri.fsPath;
       const newPath = file.newUri.fsPath;
 
-
       const oldName = path.basename(oldPath);
       const newName = path.basename(newPath);
       const nameChanged = oldName !== newName;
@@ -197,12 +195,8 @@ export function activate(context: vscode.ExtensionContext): void {
         `Updating path: ${oldPath} -> ${newPath} (name changed: ${nameChanged})`,
       );
 
-
       favoritesProvider.updatePath(oldPath, newPath);
       mruService.updatePath(oldPath, newPath);
-
-
-
 
       if (nameChanged) {
         logger.debug(
