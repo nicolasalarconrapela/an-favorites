@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.69] - 2026-01-28
+
+### Changed
+- Logging: soporte de contexto (scope/correlationId), sanitización y redacción de metadatos sensibles, serialización segura y lazy evaluation
+- Logging: helper de timers, opción de salida a consola y JSON de una línea para archivos
+
 ## [0.8.62] - 2026-01-27
 
 ### Changed
