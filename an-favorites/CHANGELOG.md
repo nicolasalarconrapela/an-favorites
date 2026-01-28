@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.76] - 2026-01-29
+
+### Changed
+- Quick Open: añade cancelación a búsquedas/validaciones y sube el debounce a 150ms
+- Colisiones: el índice respeta un límite máximo de archivos y soporta cancelación
+
 ## [0.8.75] - 2026-01-29
 
 ### Changed

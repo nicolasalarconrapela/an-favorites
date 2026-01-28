@@ -413,6 +413,7 @@ export class FavoritesTreeDataProvider
           item.setShowDescription(false);
         },
         searchExclusions,
+        undefined,
         this.logger,
       );
     } catch (err) {

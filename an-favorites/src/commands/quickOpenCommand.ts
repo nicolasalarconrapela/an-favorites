@@ -151,10 +151,14 @@ function debounce<T extends (...args: any[]) => any>(
 
 async function validateFilesExistence(
   uris: vscode.Uri[],
+  token?: vscode.CancellationToken,
 ): Promise<Map<string, boolean>> {
   const results = new Map<string, boolean>();
   await Promise.all(
     uris.map(async (uri) => {
+      if (token?.isCancellationRequested) {
+        return;
+      }
       if (uri.scheme !== 'file') {
         results.set(uri.fsPath, false);
         return;
@@ -520,6 +524,9 @@ export function registerQuickOpenCommand(
           return;
         }
         isDisposed = true;
+        buildTokenSource?.cancel();
+        buildTokenSource?.dispose();
+        buildTokenSource = null;
         log.info('[QuickOpen] Disposing QuickPick and listeners...');
         try {
           disposables.forEach((d) => d.dispose());
@@ -541,11 +548,16 @@ export function registerQuickOpenCommand(
 
 
       const searchCache = new LruCache<string, SearchCacheEntry>(30);
+      let buildTokenSource: vscode.CancellationTokenSource | null = null;
 
 
       const buildItems = async (
         searchQuery: string = quickPick.value,
       ): Promise<void> => {
+        buildTokenSource?.cancel();
+        buildTokenSource?.dispose();
+        buildTokenSource = new vscode.CancellationTokenSource();
+        const token = buildTokenSource.token;
         log.debug(
           `[QuickOpen] ▶ buildItems() called - searchQuery: "${searchQuery}"`,
         );
@@ -720,7 +732,10 @@ export function registerQuickOpenCommand(
             ...recentFavUris,
             ...recentUris,
           ];
-          const existenceMap = await validateFilesExistence(allUrisToDisplay);
+          const existenceMap = await validateFilesExistence(
+            allUrisToDisplay,
+            token,
+          );
           if (isDisposed) return;
 
 
@@ -872,6 +887,7 @@ export function registerQuickOpenCommand(
                 searchPattern,
                 exclusionGlob,
                 searchLimit,
+                token,
               );
               const exceededMaxFiles = foundUris.length > maxSearchFiles;
               cacheEntry = {
@@ -946,6 +962,7 @@ export function registerQuickOpenCommand(
               item.setShowDescription(false);
             },
             searchExclusions,
+            token,
             logger,
           );
           if (!isSearchValueCurrent()) {
@@ -1052,7 +1069,7 @@ export function registerQuickOpenCommand(
       let previousValue = '';
       const debouncedSearchRebuild = debounce(async (value: string) => {
         await buildItems(value);
-      }, 1);
+      }, 150);
       const debouncedExternalRebuild = debounce(async (reason: string) => {
         logThrottledWithContext(
           'debug',
@@ -1060,7 +1077,7 @@ export function registerQuickOpenCommand(
           `External change (${reason}), rebuilding QuickOpen items`,
         );
         await buildItems(quickPick.value);
-      }, 1);
+      }, 150);
 
       disposables.push(
         quickPick.onDidChangeValue(async (value) => {
