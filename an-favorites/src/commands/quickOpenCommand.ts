@@ -452,14 +452,17 @@ export function registerQuickOpenCommand(
 
         // Guardar selección actual para restaurarla después
         // Esto evita que el foco salte incorrectamente cuando un item se mueve (ej: de Recientes a Favoritos)
+        const normalizedSearch = searchQuery.trim();
+        const isSearching = normalizedSearch.length > 0;
+
+        // Guardar selección SOLO si NO estamos buscando.
+        // Durante búsqueda, restaurar selección vieja provoca saltos y "Enter" peligrosos.
         const currentActiveUri =
+          !isSearching &&
           quickPick.activeItems.length > 0 &&
           isFileItem(quickPick.activeItems[0])
             ? (quickPick.activeItems[0] as FileQuickPickItem).resourceUri.toString()
             : null;
-
-        const normalizedSearch = searchQuery.trim();
-        const isSearching = normalizedSearch.length > 0;
 
         try {
           const isSearchValueCurrent = () =>
@@ -828,11 +831,14 @@ export function registerQuickOpenCommand(
 
           quickPick.items = items;
 
-          // Restaurar selección si es posible
-          if (currentActiveUri) {
+          if (isSearching) {
+            // ✅ En búsqueda: NO forzamos selección (evita abrir favoritos/recientes por accidente).
+            // Además, neutraliza autoselección cuando VS Code decide enfocarse en el primer item.
+            quickPick.activeItems = [];
+          } else if (currentActiveUri) {
+            // ✅ Fuera de búsqueda: restauramos foco anterior (UX estable)
             const itemToSelect = items.find(
-              (i) =>
-                isFileItem(i) && i.resourceUri.toString() === currentActiveUri,
+              (i) => isFileItem(i) && i.resourceUri.toString() === currentActiveUri,
             );
             if (itemToSelect) {
               quickPick.activeItems = [itemToSelect as FileQuickPickItem];
@@ -868,6 +874,7 @@ export function registerQuickOpenCommand(
 
       // Listen to user input to load all files when searching OR toggle placeholders
       let previousValue = '';
+      let suppressSelectionOnce = false;
       const debouncedSearchRebuild = debounce(async (value: string) => {
         await buildItems(value);
       }, 200);
@@ -888,7 +895,10 @@ export function registerQuickOpenCommand(
           const wasEmpty = previousValue.length === 0;
           const isEmpty = value.length === 0;
           previousValue = value;
-
+          // if (!isEmpty) {
+          //   quickPick.activeItems = []; // evita Enter accidental sobre selección previa
+          //   debouncedSearchRebuild(value);
+          // }
           // 2. Si cambia el estado (empezó a buscar O borró la búsqueda)
           // reconstruimos para mostrar/ocultar los placeholders
           if (wasEmpty !== isEmpty) {
