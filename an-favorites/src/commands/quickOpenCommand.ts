@@ -571,7 +571,12 @@ export function registerQuickOpenCommand(
             'searchCacheSize',
             30,
           );
-          const showIcons = configQuickOpen.get<boolean>('showIcons', true);
+
+          // Detectar entorno para valores por defecto
+          const isAnGravity = vscode.env.appName.includes('AnGravity');
+          const defaultShowIcons = isAnGravity ? false : true;
+          const showIcons = configQuickOpen.get<boolean>('showIcons', defaultShowIcons);
+
           const searchExclusions = configSearch.get<string[]>('exclusions', [
             '**/node_modules/**',
           ]);
