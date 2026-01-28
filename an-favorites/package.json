@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.63",
+  "version": "0.8.66",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "engines": {
@@ -373,6 +373,19 @@
             "type": "number",
             "default": 30,
             "description": "Tamaño máximo del caché LRU de búsquedas en Quick Open."
+          },
+          "anfavorites.quickOpen.pathDetailLocation": {
+            "type": "string",
+            "default": "detail",
+            "enum": [
+              "description",
+              "detail"
+            ],
+            "enumDescriptions": [
+              "Muestra la información de la ruta seguida del nombre del archivo.",
+              "Muestra la información de la ruta debajo del nombre del archivo."
+            ],
+            "description": "Controla dónde se muestra la información detallada de la ruta del archivo (especialmente en multi-root)."
           }
         }
       }

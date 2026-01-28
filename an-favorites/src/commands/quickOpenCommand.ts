@@ -261,6 +261,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 
   private _openToSide: boolean;
   public showIcons: boolean;
+  private pathDetailLocation: 'description' | 'detail';
 
   constructor(params: {
     uri: vscode.Uri;
@@ -270,6 +271,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     openToSide?: boolean;
     isIndividualPinned?: boolean;
     showIcons?: boolean;
+    pathDetailLocation?: 'description' | 'detail';
   }) {
     const {
       uri,
@@ -279,6 +281,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
       openToSide = false,
       isIndividualPinned = false,
       showIcons = true,
+      pathDetailLocation = 'detail',
     } = params;
 
     this.resourceUri = uri;
@@ -288,6 +291,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     this._openToSide = openToSide;
     this.isIndividualPinned = isIndividualPinned;
     this.showIcons = showIcons;
+    this.pathDetailLocation = pathDetailLocation;
 
     // Label base: nombre fichero
     const baseName = safeBasenameFromUri(uri);
@@ -303,23 +307,36 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     // Description/detail: RELATIVO al proyecto (workspace)
     const { rel, rootName } = workspaceRelativeLabel(uri);
 
-    // Extraer directorio de la ruta relativa (sin nombre de archivo)
-    const dir = path.dirname(rel);
-    // Si dirname es '.' (archivo en raíz) o vacío, mostrar '.'
-    const cleanDir = dir === '.' || dir === '' ? '.' : dir;
+    // Modificado: Si es multiroot, mostrar el nombre del root en detail
+    // Esto aplica a favoritos y cualquier item (Recientes) para tener consistencia
+    if (rootName) {
+      if (this.pathDetailLocation === 'detail') {
+        this.detail = `\t\t ${rootName} · ${rel}`;
+        this.description = '';
+      } else {
+        this.description = `${rootName} · ${rel}`;
+        this.detail = undefined;
+      }
+    } else {
+      // Extraer directorio de la ruta relativa (sin nombre de archivo)
+      const dir = path.dirname(rel);
+      // Si dirname es '.' (archivo en raíz) o vacío, mostrar '.'
+      const cleanDir = dir === '.' || dir === '' ? '.' : dir;
 
-    // Ruta completa (solo directorio, sin archivo)
-    this._fullPathLabel = rootName
-      ? cleanDir === '.'
-        ? rootName
-        : `${rootName} • ${cleanDir}`
-      : cleanDir;
+      this._fullPathLabel = cleanDir;
+      this._dirPathLabel = this._fullPathLabel;
+      this.description = this._dirPathLabel;
+    }
 
-    // Ruta solo directorio (mismo que fullPath, ya que ambos muestran solo directorio)
-    this._dirPathLabel = this._fullPathLabel;
-
-    // Default to dir path
-    this.description = this._dirPathLabel;
+    // Ruta completa (solo directorio, sin archivo) - Used for duplicate handling later
+    // We need to ensure _fullPathLabel is set correctly even if we didn't go into the else block
+    if (rootName) {
+      const dir = path.dirname(rel);
+      const cleanDir = dir === '.' || dir === '' ? '.' : dir;
+      this._fullPathLabel =
+        cleanDir === '.' ? rootName : `${rootName} • ${cleanDir}`;
+      this._dirPathLabel = this._fullPathLabel;
+    }
 
     this.updateIcon(this.showIcons);
 
@@ -328,6 +345,10 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   }
 
   public setShowDescription(isDuplicate: boolean): void {
+    if (this.pathDetailLocation === 'detail' && this.detail) {
+      this.description = '';
+      return;
+    }
     const text = isDuplicate ? this._fullPathLabel : '';
     this.description = text || '';
   }
@@ -420,7 +441,9 @@ export function registerQuickOpenCommand(
       logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       // Environment detection
-      logger.info(`[QuickOpen] Environment: ${vscode.env.appName} (${vscode.version})`);
+      logger.info(
+        `[QuickOpen] Environment: ${vscode.env.appName} (${vscode.version})`,
+      );
       logger.info(`[QuickOpen] URI Scheme: ${vscode.env.uriScheme}`);
       logger.info(`[QuickOpen] Platform: ${process.platform}`);
       logger.info(`[QuickOpen] Language: ${vscode.env.language}`);
@@ -575,7 +598,13 @@ export function registerQuickOpenCommand(
           // Detectar entorno para valores por defecto
           const isAnGravity = vscode.env.appName.includes('AnGravity');
           const defaultShowIcons = isAnGravity ? false : true;
-          const showIcons = configQuickOpen.get<boolean>('showIcons', defaultShowIcons);
+          const showIcons = configQuickOpen.get<boolean>(
+            'showIcons',
+            defaultShowIcons,
+          );
+          const pathDetailLocation = configQuickOpen.get<
+            'description' | 'detail'
+          >('pathDetailLocation', 'detail');
 
           const searchExclusions = configSearch.get<string[]>('exclusions', [
             '**/node_modules/**',
@@ -700,6 +729,7 @@ export function registerQuickOpenCommand(
                 openToSide,
                 isIndividualPinned: isIndividual,
                 showIcons,
+                pathDetailLocation,
               });
             },
           );
@@ -715,6 +745,7 @@ export function registerQuickOpenCommand(
                 isRecentlyOpened: false,
                 openToSide,
                 showIcons,
+                pathDetailLocation,
               });
             },
           );
@@ -732,6 +763,7 @@ export function registerQuickOpenCommand(
                 isRecentlyOpened: true,
                 openToSide,
                 showIcons,
+                pathDetailLocation,
               });
             });
 
@@ -831,6 +863,7 @@ export function registerQuickOpenCommand(
                   isRecentlyOpened: false,
                   openToSide,
                   showIcons,
+                  pathDetailLocation,
                 });
               })
               .filter((item) => {
@@ -938,7 +971,8 @@ export function registerQuickOpenCommand(
           } else if (currentActiveUri) {
             // ✅ Fuera de búsqueda: restauramos foco anterior (UX estable)
             const itemToSelect = items.find(
-              (i) => isFileItem(i) && i.resourceUri.toString() === currentActiveUri,
+              (i) =>
+                isFileItem(i) && i.resourceUri.toString() === currentActiveUri,
             );
             if (itemToSelect) {
               quickPick.activeItems = [itemToSelect as FileQuickPickItem];
@@ -955,8 +989,12 @@ export function registerQuickOpenCommand(
               const indexToSelect = hasPinned ? 0 : 1;
 
               // Detectar entorno: VS Code usa indexToSelect, AnGravity siempre usa 1
-              const isAnGravity = vscode.env.appName.includes('angravity') || vscode.env.uriScheme.includes('angravity');
-              const isCursor = vscode.env.appName.includes('cursor') || vscode.env.uriScheme.includes('cursor');
+              const isAnGravity =
+                vscode.env.appName.includes('angravity') ||
+                vscode.env.uriScheme.includes('angravity');
+              const isCursor =
+                vscode.env.appName.includes('cursor') ||
+                vscode.env.uriScheme.includes('cursor');
 
               const forceIndexOne = isAnGravity || isCursor;
 
@@ -998,17 +1036,14 @@ export function registerQuickOpenCommand(
       const debouncedSearchRebuild = debounce(async (value: string) => {
         await buildItems(value);
       }, 200);
-      const debouncedExternalRebuild = debounce(
-        async (reason: string) => {
+      const debouncedExternalRebuild = debounce(async (reason: string) => {
         logThrottled(
           'debug',
           'quickopen:external-rebuild',
           `External change (${reason}), rebuilding QuickOpen items`,
         );
         await buildItems(quickPick.value);
-      },
-      20,
-    );
+      }, 20);
 
       disposables.push(
         quickPick.onDidChangeValue(async (value) => {
