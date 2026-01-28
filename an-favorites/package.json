@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.60",
+  "version": "0.8.61",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "engines": {
@@ -353,6 +353,11 @@
             "type": "boolean",
             "default": true,
             "description": "Si está activado, al abrir un archivo desde Quick Open se abrirá automáticamente en el editor lateral y se ocultará el botón 'Abrir al lado'."
+          },
+          "anfavorites.quickOpen.showIcons": {
+            "type": "boolean",
+            "default": true,
+            "description": "Mostrar iconos de archivo en la lista de Quick Open. Si está desactivado, solo se mostrarán las estrellas y botones."
           },
           "anfavorites.quickOpen.maxSearchResults": {
             "type": "number",

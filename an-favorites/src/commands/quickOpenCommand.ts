@@ -187,6 +187,60 @@ async function filterExistingFiles(uris: vscode.Uri[]): Promise<vscode.Uri[]> {
   return results;
 }
 
+/**
+ * Helper para crear ThemeIcon con fallback
+ * Intenta usar el icono principal, si falla usa el fallback
+ */
+function createIconWithFallback(
+  primaryIconId: string,
+  fallbackIconId: string = 'file',
+): vscode.ThemeIcon {
+  try {
+    return new vscode.ThemeIcon(primaryIconId);
+  } catch {
+    return new vscode.ThemeIcon(fallbackIconId);
+  }
+}
+
+/**
+ * Helper para crear iconos de botones con fallback
+ */
+function createButtonIcon(
+  iconId: string,
+  fallbackIconId: string = 'circle-outline',
+): vscode.ThemeIcon {
+  // Lista de iconos conocidos y confiables en VS Code
+  const knownIcons = new Set([
+    'star-full',
+    'star-empty',
+    'pin',
+    'pinned',
+    'split-horizontal',
+    'close',
+    'file',
+    'folder',
+    'symbol-file',
+    'bookmark',
+    'heart',
+    'trash',
+    'x',
+    'circle-filled',
+    'circle-outline',
+  ]);
+
+  // Si el icono está en la lista conocida, úsalo directamente
+  if (knownIcons.has(iconId)) {
+    return new vscode.ThemeIcon(iconId);
+  }
+
+  // Si no, usa el fallback
+  try {
+    return new vscode.ThemeIcon(iconId);
+  } catch {
+    return new vscode.ThemeIcon(fallbackIconId);
+  }
+}
+
 class FileQuickPickItem implements vscode.QuickPickItem {
   label: string;
   description?: string;
@@ -206,6 +260,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   private _dirPathLabel: string;
 
   private _openToSide: boolean;
+  public showIcons: boolean;
 
   constructor(params: {
     uri: vscode.Uri;
@@ -214,6 +269,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     isRecentlyOpened?: boolean;
     openToSide?: boolean;
     isIndividualPinned?: boolean;
+    showIcons?: boolean;
   }) {
     const {
       uri,
@@ -222,6 +278,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
       isRecentlyOpened = false,
       openToSide = false,
       isIndividualPinned = false,
+      showIcons = true,
     } = params;
 
     this.resourceUri = uri;
@@ -230,6 +287,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     this.isRecentlyOpened = isRecentlyOpened;
     this._openToSide = openToSide;
     this.isIndividualPinned = isIndividualPinned;
+    this.showIcons = showIcons;
 
     // Label base: nombre fichero
     const baseName = safeBasenameFromUri(uri);
@@ -263,7 +321,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     // Default to dir path
     this.description = this._dirPathLabel;
 
-    this.updateIcon();
+    this.updateIcon(this.showIcons);
 
     // Default to no-duplicate mode
     this.setShowDescription(false);
@@ -274,9 +332,13 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     this.description = text || '';
   }
 
-  updateIcon(): void {
-    // 1. Icono Izquierdo: SIEMPRE el de archivo (ThemeIcon.File) para respetar el tema de iconos del usuario
-    this.iconPath = new vscode.ThemeIcon('file');
+  updateIcon(showIcons: boolean = true): void {
+    // 1. Icono Izquierdo: usar icono de archivo con fallback (o undefined si showIcons es false)
+    if (showIcons) {
+      this.iconPath = createIconWithFallback('file', 'symbol-file');
+    } else {
+      this.iconPath = undefined;
+    }
 
     // 2. Label: Actualizamos para mostrar estrella llena o vacía
     const baseName = safeBasenameFromUri(this.resourceUri);
@@ -284,60 +346,45 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     if (this.isPinned) iconPrefix = '$(pin) ';
     this.label = `${iconPrefix} ${baseName}`;
 
-    // 3. Derecha: botones interactivos
-    // Orden: [Open to Side] [Toggle Favorite]
-    // 3. Derecha: botones interactivos
-    // Orden: [Open to Side] [Toggle Favorite] [Remove from Recents (if applicable)]
-
-    // Iniciar con los botones base
+    // 3. Derecha: botones interactivos con fallback
     const buttons: vscode.QuickInputButton[] = [];
 
-    // Botón Pin (Fijar/Desfijar) - Solo si es favorito (o se convierte en favorito al fijar)
-    // Para simplificar, permitimos fijar cualquier archivo y esto implícitamente lo añade a favoritos o lo tratamos aparte.
-    // Asumiremos que Pin => Favorite.
-    // Botón Pin (Fijar/Desfijar)
-    // Mostramos el estado del "Pin Individual".
-    // Si está pinneado po grupo, mostramos "Fijar" (para hacerlo individual) o si ya es individual "Desfijar".
+    // Botón Pin (Fijar/Desfijar) con fallback a bookmark
     const isPinnedState = this.isIndividualPinned;
-
     let pinTooltip = isPinnedState ? 'Desfijar' : 'Fijar';
 
     if (!this.isRecentlyOpened) {
       buttons.push({
-        iconPath: isPinnedState
-          ? new vscode.ThemeIcon('pinned')
-          : new vscode.ThemeIcon('pin'),
+        iconPath: createButtonIcon(
+          isPinnedState ? 'pinned' : 'pin',
+          'bookmark',
+        ),
         tooltip: pinTooltip,
       });
     }
 
+    // Botón de favoritos con fallback a heart
     buttons.push({
-      iconPath: this.isFavorite
-        ? new vscode.ThemeIcon('star-full')
-        : new vscode.ThemeIcon('star-empty'),
+      iconPath: createButtonIcon(
+        this.isFavorite ? 'star-full' : 'star-empty',
+        this.isFavorite ? 'heart' : 'circle-outline',
+      ),
       tooltip: this.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos',
     });
 
-    // Solo añadir botón "Abrir al lado" si NO es el comportamiento por defecto
+    // Botón "Abrir al lado" con fallback
     if (!this._openToSide) {
       buttons.push({
-        iconPath: new vscode.ThemeIcon('split-horizontal'),
+        iconPath: createButtonIcon('split-horizontal', 'symbol-file'),
         tooltip: 'Abrir al lado',
       });
     }
 
-    // Añadir botón de eliminar (recientes o favoritos)
-    if (this.isRecentlyOpened || this.isFavorite) {
-      let tooltip = 'Eliminar';
-      if (this.isRecentlyOpened) {
-        tooltip = 'Eliminar de recientes';
-      } else if (this.isFavorite) {
-        tooltip = 'Eliminar de favoritos';
-      }
-
+    // Botón eliminar solo para recientes con fallback
+    if (this.isRecentlyOpened) {
       buttons.push({
-        iconPath: new vscode.ThemeIcon('close'),
-        tooltip: tooltip,
+        iconPath: createButtonIcon('close', 'x'),
+        tooltip: 'Eliminar de recientes',
       });
     }
 
@@ -455,13 +502,13 @@ export function registerQuickOpenCommand(
         const normalizedSearch = searchQuery.trim();
         const isSearching = normalizedSearch.length > 0;
 
-        // Guardar selección SOLO si NO estamos buscando.
-        // Durante búsqueda, restaurar selección vieja provoca saltos y "Enter" peligrosos.
+        // Guardar selección actual (tanto en búsqueda como fuera) para mantener posición
         const currentActiveUri =
-          !isSearching &&
           quickPick.activeItems.length > 0 &&
           isFileItem(quickPick.activeItems[0])
-            ? (quickPick.activeItems[0] as FileQuickPickItem).resourceUri.toString()
+            ? (
+                quickPick.activeItems[0] as FileQuickPickItem
+              ).resourceUri.toString()
             : null;
 
         try {
@@ -483,8 +530,9 @@ export function registerQuickOpenCommand(
           );
           const configSearch =
             vscode.workspace.getConfiguration('anfavorites.search');
-          const configQuickOpen =
-            vscode.workspace.getConfiguration('anfavorites.quickOpen');
+          const configQuickOpen = vscode.workspace.getConfiguration(
+            'anfavorites.quickOpen',
+          );
           const openToSide = vscode.workspace
             .getConfiguration('anfavorites.quickOpen')
             .get<boolean>('openToSide', false);
@@ -505,12 +553,19 @@ export function registerQuickOpenCommand(
           const maxRecentFavorites = configMaxItems.get<number>('favorites', 3);
           const maxPinned = configMaxItems.get<number>('pinned', 3);
           const maxRecentFiles = configMaxItems.get<number>('recentFiles', 5);
-          const maxSearchResults =
-            configQuickOpen.get<number>('maxSearchResults', 200);
-          const maxSearchFiles =
-            configQuickOpen.get<number>('maxSearchFiles', 1000);
-          const searchCacheSize =
-            configQuickOpen.get<number>('searchCacheSize', 30);
+          const maxSearchResults = configQuickOpen.get<number>(
+            'maxSearchResults',
+            200,
+          );
+          const maxSearchFiles = configQuickOpen.get<number>(
+            'maxSearchFiles',
+            1000,
+          );
+          const searchCacheSize = configQuickOpen.get<number>(
+            'searchCacheSize',
+            30,
+          );
+          const showIcons = configQuickOpen.get<boolean>('showIcons', true);
           const searchExclusions = configSearch.get<string[]>('exclusions', [
             '**/node_modules/**',
           ]);
@@ -518,7 +573,7 @@ export function registerQuickOpenCommand(
           searchCache.setLimit(searchCacheSize);
 
           logger.info(
-            `[QuickOpen] Config: maxRecentFav=${maxRecentFavorites}, maxPinned=${maxPinned}, maxRecentFiles=${maxRecentFiles}, exclusions=${searchExclusions.length}`,
+            `[QuickOpen] Config: maxRecentFav=${maxRecentFavorites}, maxPinned=${maxPinned}, maxRecentFiles=${maxRecentFiles}, showIcons=${showIcons}, exclusions=${searchExclusions.length}`,
           );
 
           // 1) Recientes (MRU) — sanitize total
@@ -633,6 +688,7 @@ export function registerQuickOpenCommand(
                 isRecentlyOpened: false,
                 openToSide,
                 isIndividualPinned: isIndividual,
+                showIcons,
               });
             },
           );
@@ -647,6 +703,7 @@ export function registerQuickOpenCommand(
                 isIndividualPinned: isPinned,
                 isRecentlyOpened: false,
                 openToSide,
+                showIcons,
               });
             },
           );
@@ -663,6 +720,7 @@ export function registerQuickOpenCommand(
                 isIndividualPinned: isPinned,
                 isRecentlyOpened: true,
                 openToSide,
+                showIcons,
               });
             });
 
@@ -761,6 +819,7 @@ export function registerQuickOpenCommand(
                   isPinned: false,
                   isRecentlyOpened: false,
                   openToSide,
+                  showIcons,
                 });
               })
               .filter((item) => {
@@ -776,7 +835,7 @@ export function registerQuickOpenCommand(
                 const isFav = favoritesProvider.hasFavorite(item.resourceUri);
                 if (item.isFavorite !== isFav) {
                   item.isFavorite = isFav;
-                  item.updateIcon();
+                  item.updateIcon(showIcons);
                 }
                 return item;
               });
@@ -1151,7 +1210,7 @@ export function registerQuickOpenCommand(
             item.isFavorite = false;
             item.isPinned = false;
             item.isIndividualPinned = false;
-            item.updateIcon();
+            item.updateIcon(item.showIcons);
             const currentItems = quickPick.items;
             const index = currentItems.indexOf(item);
             if (index !== -1) {
@@ -1187,7 +1246,7 @@ export function registerQuickOpenCommand(
             }
 
             item.isFavorite = true; // Implied
-            item.updateIcon();
+            item.updateIcon(item.showIcons);
             return;
           }
 
@@ -1207,7 +1266,7 @@ export function registerQuickOpenCommand(
               item.isFavorite = true;
             }
 
-            item.updateIcon();
+            item.updateIcon(item.showIcons);
             logger.debug('[QuickOpen] Favorite toggled successfully');
 
             // The list will be automatically rebuilt by the onDidChangeTreeData listener
