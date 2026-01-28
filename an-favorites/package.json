@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.66",
+  "version": "0.8.67",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "engines": {
@@ -386,6 +386,19 @@
               "Muestra la información de la ruta debajo del nombre del archivo."
             ],
             "description": "Controla dónde se muestra la información detallada de la ruta del archivo (especialmente en multi-root)."
+          },
+          "anfavorites.quickOpen.showPathWhen": {
+            "type": "string",
+            "default": "onConflict",
+            "enum": [
+              "always",
+              "onConflict"
+            ],
+            "enumDescriptions": [
+              "Siempre muestra la ruta del archivo.",
+              "Solo muestra la ruta cuando hay archivos con el mismo nombre."
+            ],
+            "description": "Controla cuándo se muestra la ruta del archivo en Quick Open."
           }
         }
       }

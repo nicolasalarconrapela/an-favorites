@@ -256,12 +256,13 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   isRecentlyOpened: boolean;
   isIndividualPinned: boolean;
 
-  private _fullPathLabel: string;
-  private _dirPathLabel: string;
+  private _fullPathLabel: string = '';
+  private _dirPathLabel: string = '';
 
   private _openToSide: boolean;
   public showIcons: boolean;
   private pathDetailLocation: 'description' | 'detail';
+  private showPathWhen: 'always' | 'onConflict';
 
   constructor(params: {
     uri: vscode.Uri;
@@ -272,6 +273,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     isIndividualPinned?: boolean;
     showIcons?: boolean;
     pathDetailLocation?: 'description' | 'detail';
+    showPathWhen?: 'always' | 'onConflict';
   }) {
     const {
       uri,
@@ -282,6 +284,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
       isIndividualPinned = false,
       showIcons = true,
       pathDetailLocation = 'detail',
+      showPathWhen = 'onConflict',
     } = params;
 
     this.resourceUri = uri;
@@ -292,6 +295,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     this.isIndividualPinned = isIndividualPinned;
     this.showIcons = showIcons;
     this.pathDetailLocation = pathDetailLocation;
+    this.showPathWhen = showPathWhen;
 
     // Label base: nombre fichero
     const baseName = safeBasenameFromUri(uri);
@@ -349,7 +353,11 @@ class FileQuickPickItem implements vscode.QuickPickItem {
       this.description = '';
       return;
     }
-    const text = isDuplicate ? this._fullPathLabel : '';
+
+    // If showPathWhen is 'always', always show the path
+    // If 'onConflict', only show when isDuplicate is true
+    const shouldShowPath = this.showPathWhen === 'always' || isDuplicate;
+    const text = shouldShowPath ? this._fullPathLabel : '';
     this.description = text || '';
   }
 
@@ -605,6 +613,10 @@ export function registerQuickOpenCommand(
           const pathDetailLocation = configQuickOpen.get<
             'description' | 'detail'
           >('pathDetailLocation', 'detail');
+          const showPathWhen = configQuickOpen.get<'always' | 'onConflict'>(
+            'showPathWhen',
+            'onConflict',
+          );
 
           const searchExclusions = configSearch.get<string[]>('exclusions', [
             '**/node_modules/**',
@@ -730,6 +742,7 @@ export function registerQuickOpenCommand(
                 isIndividualPinned: isIndividual,
                 showIcons,
                 pathDetailLocation,
+                showPathWhen,
               });
             },
           );
@@ -746,6 +759,7 @@ export function registerQuickOpenCommand(
                 openToSide,
                 showIcons,
                 pathDetailLocation,
+                showPathWhen,
               });
             },
           );
@@ -764,6 +778,7 @@ export function registerQuickOpenCommand(
                 openToSide,
                 showIcons,
                 pathDetailLocation,
+                showPathWhen,
               });
             });
 
@@ -864,6 +879,7 @@ export function registerQuickOpenCommand(
                   openToSide,
                   showIcons,
                   pathDetailLocation,
+                  showPathWhen,
                 });
               })
               .filter((item) => {
