@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.71] - 2026-01-28
+
+### Changed
+- Logging: Quick Open ahora usa correlationId por sesión y reduce ruido en logs de entorno/validaciones
+- Logging: TreeDataProvider baja a debug logs de refresh/getChildren para producción
+
 ## [0.8.70] - 2026-01-28
 
 ### Changed

@@ -192,7 +192,7 @@ export class FavoritesTreeDataProvider
   }
 
   refresh(): void {
-    this.logger.info('[tree] refresh() fired');
+    this.logger.debug('[tree] refresh() fired');
     this._onDidChangeTreeData.fire();
   }
 
@@ -217,7 +217,7 @@ export class FavoritesTreeDataProvider
       const ws = (vscode.workspace.workspaceFolders ?? []).map(
         (f) => f.uri.fsPath,
       );
-      this.logger.info(
+      this.logger.debug(
         `[getChildren:root] Start. favorites=${this.favorites.size} groups=${groupMap.size}`,
         { workspaceFolders: ws },
       );
@@ -238,7 +238,7 @@ export class FavoritesTreeDataProvider
         const isEmpty = filePaths.length === 0;
         const included = hasVisibleFiles || isEmpty;
 
-        this.logger.info(
+        this.logger.debug(
           '[getChildren:root] ' +
             `Group "${groupName}" -> files=${filePaths.length} hasVisibleFiles=${hasVisibleFiles} isEmpty=${isEmpty} included=${included}`,
         );
@@ -254,7 +254,7 @@ export class FavoritesTreeDataProvider
         }
       });
 
-      this.logger.info(
+      this.logger.debug(
         `[getChildren:root] End. returnedGroups=${groups.length} in ${Date.now() - t0}ms`,
       );
       return Promise.resolve(groups);
@@ -314,7 +314,7 @@ export class FavoritesTreeDataProvider
 
 
       const items: FavoriteItem[] = [];
-      this.logger.info(`[getChildren:group] Start "${element.groupName}"`);
+      this.logger.debug(`[getChildren:group] Start "${element.groupName}"`);
 
       this.favorites.forEach((metadata, filePath) => {
         if (metadata.group !== element.groupName) return;
@@ -324,7 +324,7 @@ export class FavoritesTreeDataProvider
 
         const wf = vscode.workspace.getWorkspaceFolder(uri);
         if (!wf) {
-          this.logger.info(
+          this.logger.debug(
             `[getChildren:group] EXCLUDED (not in workspace): ${filePath}`,
           );
           return;
@@ -340,11 +340,11 @@ export class FavoritesTreeDataProvider
         );
       });
 
-      this.logger.info(`[getChildren:group] Collected items=${items.length}`);
+      this.logger.debug(`[getChildren:group] Collected items=${items.length}`);
 
       await this._resolveCollisions(items, element.groupName);
 
-      this.logger.info(
+      this.logger.debug(
         '[getChildren:group] ' +
           `End "${element.groupName}" returnedItems=${items.length} in ${Date.now() - t0}ms`,
       );

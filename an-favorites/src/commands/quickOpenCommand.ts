@@ -442,31 +442,42 @@ export function registerQuickOpenCommand(
     key: string,
     message: string,
     metadata?: unknown,
+    logTarget: any = logger,
   ) => {
-    if (logger?.throttle) {
-      logger.throttle(level, key, message, metadata, throttleIntervalMs);
+    if (logTarget?.throttle) {
+      logTarget.throttle(level, key, message, metadata, throttleIntervalMs);
       return;
     }
-    logger?.[level]?.(message, metadata);
+    logTarget?.[level]?.(message, metadata);
   };
 
   const disposable = vscode.commands.registerCommand(
     'anfavorites.quickOpen',
     async () => {
-      logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      logger.info('🔍 [QuickOpen] COMMAND STARTED - ALT+SHIFT+F');
-      logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      const sessionId = `quickopen-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+      const log = logger?.withContext
+        ? logger.withContext({ scope: 'QuickOpen', correlationId: sessionId })
+        : logger;
+      const logThrottledWithContext = (
+        level: 'debug' | 'info' | 'warn' | 'error',
+        key: string,
+        message: string,
+        metadata?: unknown,
+      ) => logThrottled(level, key, message, metadata, log);
+      log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      log.info('🔍 [QuickOpen] COMMAND STARTED - ALT+SHIFT+F');
+      log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
 
-      logger.info(
+      log.debug(
         `[QuickOpen] Environment: ${vscode.env.appName} (${vscode.version})`,
       );
-      logger.info(`[QuickOpen] URI Scheme: ${vscode.env.uriScheme}`);
-      logger.info(`[QuickOpen] Platform: ${process.platform}`);
-      logger.info(`[QuickOpen] Language: ${vscode.env.language}`);
+      log.debug(`[QuickOpen] URI Scheme: ${vscode.env.uriScheme}`);
+      log.debug(`[QuickOpen] Platform: ${process.platform}`);
+      log.debug(`[QuickOpen] Language: ${vscode.env.language}`);
 
       const quickPick = vscode.window.createQuickPick<QuickOpenItem>();
-      logger.info('[QuickOpen] QuickPick instance created');
+      log.debug('[QuickOpen] QuickPick instance created');
 
       quickPick.placeholder = 'Buscar archivos por nombre';
       quickPick.matchOnDescription = true;
@@ -476,55 +487,55 @@ export function registerQuickOpenCommand(
 
 
       quickPick.ignoreFocusOut = true;
-      logger.info('[QuickOpen] ignoreFocusOut set to true (hardcoded)');
+      log.debug('[QuickOpen] ignoreFocusOut set to true (hardcoded)');
 
 
 
-      logger.info(
+      log.debug(
         '[QuickOpen] Preparing QuickPick (not showing yet to avoid focus loss)...',
       );
 
       try {
-        logger.info('[QuickOpen] Validating favorites...');
+        log.debug('[QuickOpen] Validating favorites...');
         await favoritesProvider.validateFavorites();
-        logger.info('[QuickOpen] Favorites validated successfully');
+        log.debug('[QuickOpen] Favorites validated successfully');
 
-        logger.info('[QuickOpen] Validating MRU files...');
+        log.debug('[QuickOpen] Validating MRU files...');
         await mruService.validateFiles();
-        logger.info('[QuickOpen] MRU files validated successfully');
+        log.debug('[QuickOpen] MRU files validated successfully');
       } catch (error) {
-        logger.error('[QuickOpen] ❌ ERROR during validation:', error);
+        log.error('[QuickOpen] ❌ ERROR during validation:', error);
 
       }
 
-      logger.info('[QuickOpen] Validation phase complete');
+      log.debug('[QuickOpen] Validation phase complete');
 
       const disposables: vscode.Disposable[] = [];
       let isDisposed = false;
 
       const safeDispose = () => {
         if (isDisposed) {
-          logger.debug('[QuickOpen] safeDispose() called but already disposed');
+          log.debug('[QuickOpen] safeDispose() called but already disposed');
           return;
         }
         isDisposed = true;
-        logger.info('[QuickOpen] Disposing QuickPick and listeners...');
+        log.info('[QuickOpen] Disposing QuickPick and listeners...');
         try {
           disposables.forEach((d) => d.dispose());
-          logger.info(`[QuickOpen] Disposed ${disposables.length} listeners`);
+          log.info(`[QuickOpen] Disposed ${disposables.length} listeners`);
         } finally {
           quickPick.dispose();
-          logger.info('[QuickOpen] QuickPick disposed');
+          log.info('[QuickOpen] QuickPick disposed');
         }
       };
 
       disposables.push(
         quickPick.onDidHide(() => {
-          logger.info('[QuickOpen] onDidHide triggered');
+          log.info('[QuickOpen] onDidHide triggered');
           safeDispose();
         }),
       );
-      logger.info('[QuickOpen] onDidHide listener registered');
+      log.info('[QuickOpen] onDidHide listener registered');
 
 
 
@@ -534,12 +545,12 @@ export function registerQuickOpenCommand(
       const buildItems = async (
         searchQuery: string = quickPick.value,
       ): Promise<void> => {
-        logger.info(
+        log.info(
           `[QuickOpen] ▶ buildItems() called - searchQuery: "${searchQuery}"`,
         );
 
         if (isDisposed) {
-          logger.warn('[QuickOpen] buildItems() aborted - already disposed');
+          log.warn('[QuickOpen] buildItems() aborted - already disposed');
           return;
         }
 
@@ -561,14 +572,14 @@ export function registerQuickOpenCommand(
           const isSearchValueCurrent = () =>
             normalizedSearch === quickPick.value.trim();
 
-          logger.info(
+          log.info(
             `[QuickOpen] Current search value: "${normalizedSearch}" (isSearching: ${isSearching})`,
           );
 
 
-          logger.debug('[QuickOpen] Reloading favorites from storage...');
+          log.debug('[QuickOpen] Reloading favorites from storage...');
           favoritesProvider.reloadFavorites();
-          logger.debug('[QuickOpen] Favorites reloaded');
+          log.debug('[QuickOpen] Favorites reloaded');
 
 
           const configMaxItems = vscode.workspace.getConfiguration(
@@ -586,12 +597,12 @@ export function registerQuickOpenCommand(
           const folders = vscode.workspace.workspaceFolders ?? [];
           const hasWorkspace = folders.length > 0;
 
-          logger.debug(
+          log.debug(
             `[QuickOpen] Workspace state: hasWorkspace=${hasWorkspace}, folders=${folders.length}`,
           );
           if (folders.length > 0) {
             folders.forEach((f, i) =>
-              logger.debug(
+              log.debug(
                 `[QuickOpen] Folder[${i}]: name=${f.name}, uri=${f.uri.toString()}`,
               ),
             );
@@ -633,15 +644,15 @@ export function registerQuickOpenCommand(
 
           searchCache.setLimit(searchCacheSize);
 
-          logger.info(
+          log.info(
             `[QuickOpen] Config: maxRecentFav=${maxRecentFavorites}, maxPinned=${maxPinned}, maxRecentFiles=${maxRecentFiles}, showIcons=${showIcons}, exclusions=${searchExclusions.length}`,
           );
 
 
-          logger.debug('[QuickOpen] Fetching recent files from MRU...');
+          log.debug('[QuickOpen] Fetching recent files from MRU...');
           const rawRecent: unknown[] =
             (mruService.getRecentFiles?.() as any) ?? [];
-          logger.debug(`[QuickOpen] Raw MRU entries: ${rawRecent.length}`);
+          log.debug(`[QuickOpen] Raw MRU entries: ${rawRecent.length}`);
           const recentUrisUnsafe = rawRecent
             .map((v) => toSafeFileUri(v, logger))
             .filter((u): u is vscode.Uri => !!u);
@@ -922,7 +933,7 @@ export function registerQuickOpenCommand(
           ];
           const allUris = allFileItems.map((item) => item.resourceUri);
 
-          logger.debug(
+          log.debug(
             `[QuickOpen] Checking collisions for ${allUris.length} items...`,
           );
           const collisions = await detectCollisions(
@@ -930,7 +941,7 @@ export function registerQuickOpenCommand(
             searchExclusions,
             logger,
           );
-          logger.debug(
+          log.debug(
             `[QuickOpen] Collisions detected: ${collisions.size}`,
             Array.from(collisions),
           );
@@ -943,7 +954,7 @@ export function registerQuickOpenCommand(
             item.setShowDescription(hasCollision);
           }
           if (!isSearchValueCurrent()) {
-            logger.debug(
+            log.debug(
               '[QuickOpen] Search value changed while building items, skipping update',
             );
             return;
@@ -1016,7 +1027,7 @@ export function registerQuickOpenCommand(
           }
         } catch (error) {
           if (isDisposed) return;
-          logger.error('Error loading files for QuickOpen', error);
+          log.error('Error loading files for QuickOpen', error);
           quickPick.items = [
             {
               label: 'Error cargando archivos (ver logs)',
@@ -1031,14 +1042,14 @@ export function registerQuickOpenCommand(
       };
 
 
-      logger.info('[QuickOpen] Starting initial buildItems(false)...');
+      log.info('[QuickOpen] Starting initial buildItems(false)...');
       await buildItems('');
-      logger.info('[QuickOpen] ✓ Initial buildItems complete');
+      log.info('[QuickOpen] ✓ Initial buildItems complete');
 
 
-      logger.info('[QuickOpen] Showing QuickPick UI NOW (items ready)...');
+      log.info('[QuickOpen] Showing QuickPick UI NOW (items ready)...');
       quickPick.show();
-      logger.info(
+      log.info(
         '[QuickOpen] ✓ QuickPick visible and ready for user interaction',
       );
 
@@ -1048,7 +1059,7 @@ export function registerQuickOpenCommand(
         await buildItems(value);
       }, 1);
       const debouncedExternalRebuild = debounce(async (reason: string) => {
-        logThrottled(
+        logThrottledWithContext(
           'debug',
           'quickopen:external-rebuild',
           `External change (${reason}), rebuilding QuickOpen items`,
@@ -1087,14 +1098,14 @@ export function registerQuickOpenCommand(
         favoritesProvider.onDidChangeTreeData(async () => {
           const isSearching = quickPick.value.trim().length > 0;
           if (isSearching) {
-            logThrottled(
+            logThrottledWithContext(
               'debug',
               'quickopen:favorites-changed',
               'Favorites changed while searching, skipping rebuild',
             );
             return;
           }
-          logThrottled(
+          logThrottledWithContext(
             'debug',
             'quickopen:favorites-changed',
             'Favorites changed, rebuilding QuickOpen items',
@@ -1106,7 +1117,7 @@ export function registerQuickOpenCommand(
 
       disposables.push(
         mruService.onDidChangeRecentFiles(async () => {
-          logThrottled(
+          logThrottledWithContext(
             'debug',
             'quickopen:mru-changed',
             'MRU list changed, rebuilding QuickOpen items',
@@ -1123,7 +1134,7 @@ export function registerQuickOpenCommand(
             e.affectsConfiguration('anfavorites.quickOpen') ||
             e.affectsConfiguration('anfavorites.search')
           ) {
-            logThrottled(
+            logThrottledWithContext(
               'debug',
               'quickopen:config-changed',
               'Configuration changed (quick open), rebuilding QuickOpen items',
@@ -1137,7 +1148,7 @@ export function registerQuickOpenCommand(
 
 
       const debouncedRebuild = debounce(async () => {
-        logThrottled(
+        logThrottledWithContext(
           'debug',
           'quickopen:fs-changed',
           'File system changed (debounced), rebuilding QuickOpen items',
@@ -1149,7 +1160,7 @@ export function registerQuickOpenCommand(
 
       disposables.push(
         vscode.workspace.onDidRenameFiles((event) => {
-          logThrottled(
+          logThrottledWithContext(
             'debug',
             'quickopen:fs-renamed',
             `Files renamed: ${event.files.length} file(s)`,
@@ -1160,7 +1171,7 @@ export function registerQuickOpenCommand(
 
       disposables.push(
         vscode.workspace.onDidDeleteFiles((event) => {
-          logThrottled(
+          logThrottledWithContext(
             'debug',
             'quickopen:fs-deleted',
             `Files deleted: ${event.files.length} file(s)`,
@@ -1171,7 +1182,7 @@ export function registerQuickOpenCommand(
 
       disposables.push(
         vscode.workspace.onDidCreateFiles((event) => {
-          logThrottled(
+          logThrottledWithContext(
             'debug',
             'quickopen:fs-created',
             `Files created: ${event.files.length} file(s)`,
@@ -1183,21 +1194,21 @@ export function registerQuickOpenCommand(
 
       disposables.push(
         quickPick.onDidAccept(async () => {
-          logger.info('[QuickOpen] onDidAccept triggered');
+          log.info('[QuickOpen] onDidAccept triggered');
           const selected = quickPick.selectedItems[0];
           if (!selected) {
-            logger.warn('[QuickOpen] No item selected');
+            log.warn('[QuickOpen] No item selected');
             return;
           }
-          logger.info(
+          log.info(
             `[QuickOpen] Selected item: ${(selected as any).label || '(no label)'}`,
           );
 
           const actionItem = selected as unknown as ActionQuickPickItem;
           if (actionItem.action === 'clearRecents') {
-            logger.info('[QuickOpen] Executing action: clearRecents');
+            log.info('[QuickOpen] Executing action: clearRecents');
             mruService.clear();
-            logger.info(
+            log.info(
               '[QuickOpen] Recent files list cleared from Quick Open',
             );
 
@@ -1207,23 +1218,23 @@ export function registerQuickOpenCommand(
 
 
           if (!isFileItem(selected)) {
-            logger.debug(
+            log.debug(
               '[QuickOpen] Selected item is not a file item (separator or action)',
             );
             return;
           }
 
-          logger.info(
+          log.info(
             `[QuickOpen] Opening file: ${selected.resourceUri.fsPath}`,
           );
 
 
           try {
             await vscode.workspace.fs.stat(selected.resourceUri);
-            logger.debug('[QuickOpen] File exists, proceeding to open');
+            log.debug('[QuickOpen] File exists, proceeding to open');
           } catch (error) {
 
-            logger.warn(
+            log.warn(
               `[QuickOpen] ❌ File no longer exists: ${selected.resourceUri.fsPath}`,
             );
             vscode.window.showErrorMessage(
@@ -1231,7 +1242,7 @@ export function registerQuickOpenCommand(
             );
 
 
-            logger.info(
+            log.info(
               '[QuickOpen] Cleaning up favorites and MRU after missing file detection',
             );
             await Promise.all([
@@ -1247,12 +1258,12 @@ export function registerQuickOpenCommand(
 
           try {
             mruService.add(selected.resourceUri.fsPath);
-            logger.debug('[QuickOpen] File added to MRU');
+            log.debug('[QuickOpen] File added to MRU');
           } catch (e) {
-            logger.warn('[QuickOpen] Failed to add MRU item', e);
+            log.warn('[QuickOpen] Failed to add MRU item', e);
           }
 
-          logger.info('[QuickOpen] Showing text document...');
+          log.info('[QuickOpen] Showing text document...');
 
           const openToSide = vscode.workspace
             .getConfiguration('anfavorites.quickOpen')
@@ -1262,7 +1273,7 @@ export function registerQuickOpenCommand(
             preview: false,
             viewColumn: openToSide ? vscode.ViewColumn.Beside : undefined,
           });
-          logger.info(
+          log.info(
             '[QuickOpen] ✓ File opened successfully, hiding QuickPick',
           );
           quickPick.hide();
@@ -1272,10 +1283,10 @@ export function registerQuickOpenCommand(
 
       disposables.push(
         quickPick.onDidTriggerItemButton(async (e) => {
-          logger.debug('[QuickOpen] onDidTriggerItemButton triggered');
+          log.debug('[QuickOpen] onDidTriggerItemButton triggered');
           const item = e.item;
           if (!isFileItem(item)) {
-            logger.debug('[QuickOpen] Button triggered on non-file item');
+            log.debug('[QuickOpen] Button triggered on non-file item');
             return;
           }
 
@@ -1287,7 +1298,7 @@ export function registerQuickOpenCommand(
           const uri = item.resourceUri;
 
           if (button.tooltip === 'Abrir al lado') {
-            logger.info(`[QuickOpen] Opening to side: ${uri.fsPath}`);
+            log.info(`[QuickOpen] Opening to side: ${uri.fsPath}`);
             try {
 
               mruService.add(uri.fsPath);
@@ -1299,20 +1310,20 @@ export function registerQuickOpenCommand(
 
               quickPick.hide();
             } catch (err) {
-              logger.error(`[QuickOpen] Error opening to side`, err);
+              log.error(`[QuickOpen] Error opening to side`, err);
             }
             return;
           }
 
           if (button.tooltip === 'Eliminar de recientes') {
-            logger.info(`[QuickOpen] Removing from recents: ${uri.fsPath}`);
+            log.info(`[QuickOpen] Removing from recents: ${uri.fsPath}`);
             mruService.remove(uri.fsPath);
 
             return;
           }
 
           if (button.tooltip === 'Eliminar de favoritos') {
-            logger.info(`[QuickOpen] Removing from favorites: ${uri.fsPath}`);
+            log.info(`[QuickOpen] Removing from favorites: ${uri.fsPath}`);
             favoritesProvider.removeFavorite(uri);
             item.isFavorite = false;
             item.isPinned = false;
@@ -1333,7 +1344,7 @@ export function registerQuickOpenCommand(
             button.tooltip?.startsWith('Fijar') ||
             button.tooltip === 'Desfijar'
           ) {
-            logger.info(`[QuickOpen] Toggling pin for: ${uri.fsPath}`);
+            log.info(`[QuickOpen] Toggling pin for: ${uri.fsPath}`);
             favoritesProvider.togglePin(uri);
 
             if (!favoritesProvider.hasFavorite(uri)) {
@@ -1358,15 +1369,15 @@ export function registerQuickOpenCommand(
           }
 
 
-          logger.info(`[QuickOpen] Toggling favorite for: ${uri.fsPath}`);
+          log.info(`[QuickOpen] Toggling favorite for: ${uri.fsPath}`);
 
           try {
             if (item.isFavorite) {
-              logger.debug('[QuickOpen] Removing from favorites');
+              log.debug('[QuickOpen] Removing from favorites');
               favoritesProvider.removeFavorite(uri);
               item.isFavorite = false;
             } else {
-              logger.debug('[QuickOpen] Adding to favorites');
+              log.debug('[QuickOpen] Adding to favorites');
               favoritesProvider.addFavorite(uri);
 
               mruService.remove(uri.fsPath);
@@ -1374,7 +1385,7 @@ export function registerQuickOpenCommand(
             }
 
             item.updateIcon(item.showIcons);
-            logger.debug('[QuickOpen] Favorite toggled successfully');
+            log.debug('[QuickOpen] Favorite toggled successfully');
 
 
 
@@ -1387,7 +1398,7 @@ export function registerQuickOpenCommand(
               quickPick.activeItems = [item];
             }
           } catch (error) {
-            logger.error('[QuickOpen] ❌ Error toggling favorite', error);
+            log.error('[QuickOpen] ❌ Error toggling favorite', error);
           }
         }),
       );
