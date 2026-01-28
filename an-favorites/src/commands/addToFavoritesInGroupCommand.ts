@@ -14,7 +14,7 @@ export function registerAddToFavoritesInGroupCommand(
           uri: uri?.fsPath,
         });
 
-        // Si no se proporciona URI, usar el archivo activo
+
         const targetUri = uri || vscode.window.activeTextEditor?.document.uri;
 
         if (!targetUri) {
@@ -25,7 +25,7 @@ export function registerAddToFavoritesInGroupCommand(
 
         logger.debug(`Target URI: ${targetUri.fsPath}`);
 
-        // Verificar si es un archivo (no una carpeta)
+
         try {
           const stat = await vscode.workspace.fs.stat(targetUri);
           if (stat.type === vscode.FileType.Directory) {
@@ -49,22 +49,22 @@ export function registerAddToFavoritesInGroupCommand(
           return;
         }
 
-        // Obtener grupos existentes
+
         const groups = favoritesProvider.getGroups();
         if (groups.length === 0) {
-          // Fallback si no hay grupos (aunque siempre debería estar el Default)
+
           favoritesProvider.addFavorite(targetUri);
           return;
         }
 
-        // Mostrar QuickPick para elegir grupo
+
         const selectedGroup = await vscode.window.showQuickPick(groups, {
           placeHolder: 'Selecciona el grupo donde añadir el favorito',
           title: 'Añadir a Grupo de Favoritos',
         });
 
         if (!selectedGroup) {
-          // Usuario canceló
+
           return;
         }
 

@@ -33,24 +33,24 @@ export class FavoriteItem extends vscode.TreeItem {
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
     public readonly isPinned: boolean = false,
   ) {
-    // ✅ IMPORTANTE:
-    // NO uses `super(resourceUri, ...)` porque VS Code tiende a autogenerar
-    // description/path en el árbol aunque tú lo pongas undefined.
-    // Forzamos label explícito:
+
+
+
+
     super(path.basename(resourceUri.fsPath), collapsibleState);
 
     this.id = `favorite:${group}:${resourceUri.fsPath}`;
 
-    // Mantener resourceUri para iconos/decorations/comportamiento de recurso
+
     this.resourceUri = resourceUri;
 
     this._fullPath = resourceUri.fsPath;
     this._dirPath = path.dirname(resourceUri.fsPath);
 
-    // Tooltip siempre con path completo
+
     this.tooltip = this._fullPath;
 
-    // Por defecto: ocultar description
+
     this.description = undefined;
 
     this.command = {
@@ -71,18 +71,18 @@ export class FavoriteItem extends vscode.TreeItem {
     this.contextValue = ctx;
   }
 
-  /**
-   * Muestra descripción solo si hay colisión.
-   * Por defecto usa el directorio absoluto. Si quieres uno relativo,
-   * usa setDescriptionText(...) desde el provider.
-   */
+
+
+
+
+
   public setShowDescription(isDuplicate: boolean): void {
     this.description = isDuplicate ? this._dirPath : undefined;
   }
 
-  /**
-   * Set directo de description (útil para poner path relativo)
-   */
+
+
+
   public setDescriptionText(text?: string): void {
     this.description = text;
   }
@@ -139,16 +139,16 @@ export class FavoritesTreeDataProvider
     GroupItem | FavoriteItem | WorkspaceItem | undefined | null | void
   > = this._onDidChangeTreeData.event;
 
-  // Drag & Drop MIME Types
+
   public readonly dragMimeTypes = ['application/vnd.code.tree.favorites'];
   public readonly dropMimeTypes = [
     'application/vnd.code.tree.favorites',
     'text/uri-list',
   ];
 
-  // Map<filePath, FavoriteMetadata>
+
   private favorites: Map<string, FavoriteMetadata> = new Map();
-  // Set<groupName>
+
   private groups: Set<string> = new Set([
     FavoritesTreeDataProvider.DEFAULT_GROUP,
   ]);
@@ -167,13 +167,13 @@ export class FavoritesTreeDataProvider
       this.refresh();
     });
 
-    // Refresh when workspace folders change (Multi-root support)
+
     vscode.workspace.onDidChangeWorkspaceFolders(() => {
       this.logger.info('[workspace] Workspace folders changed -> refresh()');
       this.refresh();
     });
 
-    // Refresh when configuration changes
+
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (
         e.affectsConfiguration('anfavorites.multiroot.separation') ||
@@ -210,7 +210,7 @@ export class FavoritesTreeDataProvider
     const t0 = Date.now();
 
     if (!element) {
-      // Root level: return groups
+
       const groups: GroupItem[] = [];
       const groupMap = this.getGroupMap();
 
@@ -221,10 +221,10 @@ export class FavoritesTreeDataProvider
         `[getChildren:root] Start. favorites=${this.favorites.size} groups=${groupMap.size}`,
         { workspaceFolders: ws },
       );
-      // TODO: Poder individualizar los grupos por workspace
-      // TODO: Individualizar los archivos por workspace
+
+
       groupMap.forEach((filePaths, groupName) => {
-        // Filter: Check if this group has ANY file visible in current workspace
+
         let hasVisibleFiles = false;
 
         for (const filePath of filePaths) {
@@ -261,7 +261,7 @@ export class FavoritesTreeDataProvider
     }
 
     if (element instanceof GroupItem) {
-      // Group level: check multiroot separation
+
       const config = vscode.workspace.getConfiguration('anfavorites.multiroot');
       const separationMode = config.get<string>('separation', 'none');
       const workspaceFolders = vscode.workspace.workspaceFolders || [];
@@ -312,7 +312,7 @@ export class FavoritesTreeDataProvider
         return Promise.resolve(workspaceItems);
       }
 
-      // Group level: return files in this group
+
       const items: FavoriteItem[] = [];
       this.logger.info(`[getChildren:group] Start "${element.groupName}"`);
 
@@ -321,7 +321,7 @@ export class FavoritesTreeDataProvider
 
         const uri = vscode.Uri.file(filePath);
 
-        // Filter: Only show files belonging to current workspace(s)
+
         const wf = vscode.workspace.getWorkspaceFolder(uri);
         if (!wf) {
           this.logger.info(
@@ -388,7 +388,7 @@ export class FavoritesTreeDataProvider
   ): Promise<void> {
     const allUris = items.map((i) => i.resourceUri);
 
-    // Read config/state for exclusions
+
     const configSearch =
       vscode.workspace.getConfiguration('anfavorites.search');
     const searchExclusions = configSearch.get<string[]>('exclusions', [
@@ -409,7 +409,7 @@ export class FavoritesTreeDataProvider
       for (const item of items) {
         const basename = safeBasenameFromUri(item.resourceUri);
         if (collisions.has(basename)) {
-          // Show relative directory path
+
           const rel = vscode.workspace.asRelativePath(item.resourceUri, false);
           const relDir = path.dirname(rel);
           item.setDescriptionText(relDir);
@@ -425,23 +425,23 @@ export class FavoritesTreeDataProvider
     }
   }
 
-  // Helper to get group -> filePaths mapping
+
   private getGroupMap(): Map<string, string[]> {
     const groupMap = new Map<string, string[]>();
 
-    // 1. Initialize with explicit groups
+
     this.groups.forEach((g) => groupMap.set(g, []));
 
-    // Ensure default group exists
+
     if (!groupMap.has(FavoritesTreeDataProvider.DEFAULT_GROUP)) {
       groupMap.set(FavoritesTreeDataProvider.DEFAULT_GROUP, []);
       this.groups.add(FavoritesTreeDataProvider.DEFAULT_GROUP);
     }
 
-    // 2. Populate with favorites
+
     this.favorites.forEach((metadata, filePath) => {
       if (!groupMap.has(metadata.group)) {
-        // Auto-recover missing group
+
         this.groups.add(metadata.group);
         groupMap.set(metadata.group, []);
       }
@@ -459,7 +459,7 @@ export class FavoritesTreeDataProvider
       group: targetGroup,
     });
 
-    // Add or update with current timestamp
+
     this.favorites.set(filePath, {
       group: targetGroup,
       addedAt: Date.now(),
@@ -557,7 +557,7 @@ export class FavoritesTreeDataProvider
       `[groups] removeGroup -> "${groupName}" (move to default)`,
     );
 
-    // Move all favorites from this group to default
+
     this.favorites.forEach((metadata, filePath) => {
       if (metadata.group === groupName) {
         metadata.group = FavoritesTreeDataProvider.DEFAULT_GROUP;
@@ -592,7 +592,7 @@ export class FavoritesTreeDataProvider
 
     this.logger.info(`[groups] renameGroup -> "${oldName}" => "${newName}"`);
 
-    // Update all favorites in the old group
+
     this.favorites.forEach((metadata, filePath) => {
       if (metadata.group === oldName) {
         metadata.group = newName;
@@ -662,9 +662,9 @@ export class FavoritesTreeDataProvider
     return Array.from(this.getGroupMap().keys());
   }
 
-  /**
-   * Get the N most recently added favorites
-   */
+
+
+
   getRecentFavorites(count: number = 5): vscode.Uri[] {
     const allFavorites = Array.from(this.favorites.entries())
       .map(([filePath, metadata]) => ({
@@ -681,7 +681,7 @@ export class FavoritesTreeDataProvider
     return allFavorites.map((f) => f.uri);
   }
 
-  // --- Drag & Drop Implementation ---
+
 
   handleDrag(
     source: (GroupItem | FavoriteItem | WorkspaceItem)[],
@@ -690,7 +690,7 @@ export class FavoritesTreeDataProvider
   ): void | Thenable<void> {
     this.logger.info(`[dnd] handleDrag sourceItems=${source.length}`);
 
-    // Solo permitimos arrastrar FavoriteItems por ahora
+
     const draggedFiles = source
       .filter((item): item is FavoriteItem => item instanceof FavoriteItem)
       .map((item) => item.resourceUri.fsPath);
@@ -710,10 +710,10 @@ export class FavoritesTreeDataProvider
   ): Promise<void> {
     this.logger.info('[dnd] handleDrop initiated');
 
-    // Identificar el grupo destino
+
     let targetGroupName: string;
     if (!target) {
-      // Si se suelta en el "vacío" (root), enviamos al grupo por defecto
+
       targetGroupName = FavoritesTreeDataProvider.DEFAULT_GROUP;
     } else if (target instanceof GroupItem) {
       targetGroupName = target.groupName;
@@ -727,7 +727,7 @@ export class FavoritesTreeDataProvider
 
     this.logger.info(`[dnd] Target group: "${targetGroupName}"`);
 
-    // 1. Manejar movimiento interno (items arrastrados desde el mismo árbol)
+
     const treeItem = dataTransfer.get('application/vnd.code.tree.favorites');
     if (treeItem) {
       try {
@@ -761,12 +761,12 @@ export class FavoritesTreeDataProvider
       }
     }
 
-    // 2. Manejar archivos externos (desde el Explorador de Archivos de OS o VS Code)
+
     const uriListItem = dataTransfer.get('text/uri-list');
     if (uriListItem) {
       try {
-        // text/uri-list suele ser una lista de URIs separados por newline
-        // VS Code a veces devuelve string, a veces ya procesado si usamos asString()
+
+
         const urlListResult = await uriListItem.asString();
         const uris = urlListResult.split('\r\n');
 
@@ -782,10 +782,10 @@ export class FavoritesTreeDataProvider
           try {
             const uri = vscode.Uri.parse(uriStr);
 
-            // Validar si es esquemas 'file'
+
             if (uri.scheme === 'file') {
               try {
-                // Verificar que sea un archivo y NO un directorio
+
                 const stat = await vscode.workspace.fs.stat(uri);
                 if (stat.type === vscode.FileType.File) {
                   this.addFavorite(uri, targetGroupName);
@@ -797,7 +797,7 @@ export class FavoritesTreeDataProvider
                   );
                 }
               } catch (statErr) {
-                // Si falla el stat, es posible que no exista o no sea accesible
+
                 this.logger.warn(
                   `[dnd] Could not stat URI: ${uri.fsPath}`,
                   statErr,
@@ -829,9 +829,9 @@ export class FavoritesTreeDataProvider
     }
   }
 
-  /**
-   * Reload favorites from storage
-   */
+
+
+
   reloadFavorites(): void {
     this.logger.info('[storage] reloadFavorites()');
     this.favorites.clear();
@@ -839,7 +839,7 @@ export class FavoritesTreeDataProvider
   }
 
   private loadFavorites(): void {
-    // 1) Try shared storage first
+
     const sharedData = this.storage.get<FavoriteData[]>(
       'anfavorites.favorites.v2',
     );
@@ -867,7 +867,7 @@ export class FavoritesTreeDataProvider
       return;
     }
 
-    // 2) Migration from WORKSPACE v2 -> SHARED
+
     const workspaceStored = this.context.workspaceState.get<FavoriteData[]>(
       'anfavorites.favorites.v2',
     );
@@ -884,12 +884,12 @@ export class FavoritesTreeDataProvider
         });
         this.groups.add(groupName);
       });
-      this.saveFavorites(); // Save to shared storage
+      this.saveFavorites();
       this.checkForDuplicateNames();
       return;
     }
 
-    // 3) Migration from v1 (legacy global) -> SHARED
+
     const legacyFavorites = this.context.globalState.get<string[]>(
       'anfavorites.favorites',
     );
@@ -927,9 +927,9 @@ export class FavoritesTreeDataProvider
     this.checkForDuplicateNames();
   }
 
-  /**
-   * Verifica y reporta nombres duplicados después de cargar favoritos
-   */
+
+
+
   private checkForDuplicateNames(): void {
     const nameMap = new Map<string, string[]>();
     const configSearch =

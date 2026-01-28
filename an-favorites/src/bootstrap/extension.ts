@@ -40,25 +40,25 @@ export function activate(context: vscode.ExtensionContext): void {
 
   logger.info('Registering favorites tree provider...');
 
-  // Registrar el árbol de favoritos
+
   const favoritesProvider = new FavoritesTreeDataProvider(
     context,
     logger,
     sharedStorage,
   );
 
-  // ✅ Usamos createTreeView en lugar de registerTreeDataProvider para habilitar Drag & Drop
+
   const treeView = vscode.window.createTreeView('anfavorites.favoritesView', {
     treeDataProvider: favoritesProvider,
-    dragAndDropController: favoritesProvider, // Habilitar controlador D&D
-    canSelectMany: true, // Permitir selección múltiple para D&D masivo
+    dragAndDropController: favoritesProvider,
+    canSelectMany: true,
   });
 
   context.subscriptions.push(treeView);
 
   logger.info('Registering favorites commands...');
 
-  // Registrar comandos de favoritos con logger
+
   registerAddToFavoritesCommand(context, favoritesProvider, logger);
   registerAddToFavoritesInGroupCommand(context, favoritesProvider, logger);
   registerRemoveFromFavoritesCommand(context, favoritesProvider, logger);
@@ -174,7 +174,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   );
 
-  // Watch for file renames/moves to update paths in favorites and recent files
+
   const renameListener = vscode.workspace.onDidRenameFiles(async (event) => {
     logger.throttle?.(
       'debug',
@@ -188,7 +188,7 @@ export function activate(context: vscode.ExtensionContext): void {
       const oldPath = file.oldUri.fsPath;
       const newPath = file.newUri.fsPath;
 
-      // Check if the filename actually changed (not just moved)
+
       const oldName = path.basename(oldPath);
       const newName = path.basename(newPath);
       const nameChanged = oldName !== newName;
@@ -197,13 +197,13 @@ export function activate(context: vscode.ExtensionContext): void {
         `Updating path: ${oldPath} -> ${newPath} (name changed: ${nameChanged})`,
       );
 
-      // Always update the paths in storage
+
       favoritesProvider.updatePath(oldPath, newPath);
       mruService.updatePath(oldPath, newPath);
 
-      // If the name changed, we need to recalculate collision detection
-      // The updatePath methods already fire refresh events, but this ensures
-      // that the collision detection logic runs again for all affected items
+
+
+
       if (nameChanged) {
         logger.debug(
           `Filename changed: "${oldName}" -> "${newName}", collision detection will be recalculated`,

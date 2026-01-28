@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.70] - 2026-01-28
+
+### Changed
+- Código TypeScript: limpieza de comentarios innecesarios
+
 ## [0.8.69] - 2026-01-28
 
 ### Changed

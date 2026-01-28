@@ -10,7 +10,7 @@ export function registerManageGroupsCommands(
   favoritesProvider: FavoritesTreeDataProvider,
   logger: any,
 ): void {
-  // Comando: Añadir nuevo grupo
+
   context.subscriptions.push(
     vscode.commands.registerCommand('anfavorites.addGroup', async () => {
       const groupInput = await vscode.window.showInputBox({
@@ -67,7 +67,7 @@ export function registerManageGroupsCommands(
     }),
   );
 
-  // Comando: Eliminar grupo
+
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.removeGroup',
@@ -83,7 +83,7 @@ export function registerManageGroupsCommands(
         }
 
         if (groupsToProcess.length === 0) {
-          // Show picker if no group provided
+
           const groups = favoritesProvider
             .getGroups()
             .filter((grp) => grp !== FavoritesTreeDataProvider.DEFAULT_GROUP);
@@ -102,8 +102,8 @@ export function registerManageGroupsCommands(
           }
         }
 
-        // Filtrar grupo por defecto (no debería poder seleccionarse para borrar como grupo,
-        // pero por seguridad lo filtramos)
+
+
         groupsToProcess = groupsToProcess.filter(
           (g) => g !== FavoritesTreeDataProvider.DEFAULT_GROUP,
         );
@@ -134,7 +134,7 @@ export function registerManageGroupsCommands(
     ),
   );
 
-  // Comando: Renombrar grupo
+
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.renameGroup',
@@ -144,7 +144,7 @@ export function registerManageGroupsCommands(
         if (item && item instanceof GroupItem) {
           oldName = item.groupName;
         } else {
-          // Show picker if no group provided
+
           const groups = favoritesProvider
             .getGroups()
             .filter((grp) => grp !== FavoritesTreeDataProvider.DEFAULT_GROUP);
@@ -215,7 +215,7 @@ export function registerManageGroupsCommands(
     ),
   );
 
-  // Comando: Mover favorito a otro grupo
+
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.moveFavorite',
@@ -230,9 +230,9 @@ export function registerManageGroupsCommands(
         }
 
         const groups = favoritesProvider.getGroups();
-        // Si hay varios, no mostramos el grupo actual "específico" en el filtrado si son de grupos distintos,
-        // pero para simplificar, permitimos moverlos todos a cualquier grupo que no sea el del primero?
-        // Mejor: mostrar todos los grupos y ya está.
+
+
+
         const items: vscode.QuickPickItem[] = groups.map((grp) => ({
           label: grp,
           description:
@@ -241,7 +241,7 @@ export function registerManageGroupsCommands(
               : undefined,
         }));
 
-        // Añadir opción para crear nuevo grupo
+
         items.push({
           label: '$(add) Nuevo Grupo...',
           description: 'Crear un nuevo grupo',
@@ -302,7 +302,7 @@ export function registerManageGroupsCommands(
     ),
   );
 
-  // Comando: Limpiar grupo (mover items a default)
+
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.clearGroup',
@@ -328,7 +328,7 @@ export function registerManageGroupsCommands(
     ),
   );
 
-  // Comando: Quitar del grupo (mover a default)
+
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.removeFromGroup',
@@ -357,7 +357,7 @@ export function registerManageGroupsCommands(
     ),
   );
 
-  // Comando: Eliminar TODOS los favoritos
+
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.removeAllFavorites',

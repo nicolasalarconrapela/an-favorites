@@ -5,10 +5,10 @@ import * as os from 'os';
 import * as crypto from 'crypto';
 import { Logger } from '../logging/logger';
 
-/**
- * Servicio que gestiona un almacenamiento persistente compartido entre instancias (VS Code / AnGravity).
- * Utiliza un archivo JSON en el directorio home del usuario (~/.an-favorites/storage.json).
- */
+
+
+
+
 export class SharedStorageService {
   private static readonly DIR_NAME = '.an-favorites';
   private static readonly FILE_NAME = 'storage.json';
@@ -20,7 +20,7 @@ export class SharedStorageService {
   private lastLoadedData: Record<string, any> = {};
   private conflictCount = 0;
 
-  // Emisor de eventos para notificar cambios externos
+
   private _onDidChange = new vscode.EventEmitter<string | undefined>();
   public readonly onDidChange = this._onDidChange.event;
 
@@ -84,7 +84,7 @@ export class SharedStorageService {
       let fsWait: NodeJS.Timeout | null = null;
       this.watcher = fs.watch(this.storagePath, (eventType) => {
         if (eventType === 'change') {
-          // Debounce simple para evitar lecturas múltiples rápidas
+
           if (fsWait) return;
           fsWait = setTimeout(() => {
             fsWait = null;
@@ -92,7 +92,7 @@ export class SharedStorageService {
               '[SharedStorage] Cambio detectado en disco, recargando...',
             );
             this.load();
-            // Notificar que TODO ha cambiado (undefined key implica refresh general)
+
             this._onDidChange.fire(undefined);
           }, 100);
         }
@@ -105,20 +105,20 @@ export class SharedStorageService {
     }
   }
 
-  /**
-   * Obtiene un valor del almacenamiento compartido.
-   * @param key Clave a recuperar
-   * @param defaultValue Valor por defecto si no existe
-   */
+
+
+
+
+
   public get<T>(key: string, defaultValue?: T): T | undefined {
     return this.data[key] !== undefined ? this.data[key] : defaultValue;
   }
 
-  /**
-   * Guarda un valor en el almacenamiento compartido y lo persiste a disco.
-   * @param key Clave a guardar
-   * @param value Valor a guardar
-   */
+
+
+
+
+
   public update(key: string, value: any): void {
     this.data[key] = value;
     const saved = this.save({ changedKey: key });

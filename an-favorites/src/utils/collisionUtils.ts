@@ -131,9 +131,9 @@ async function getWorkspaceIndex(
   return rebuildWorkspaceIndex(exclusionPatterns, logger);
 }
 
-/**
- * Basename a prueba de bombas: evita crashear si uri.fsPath es undefined.
- */
+
+
+
 export function safeBasenameFromUri(uri: vscode.Uri): string {
   const fsPath = (uri as any)?.fsPath;
   if (typeof fsPath === 'string' && fsPath.length > 0) {
@@ -148,11 +148,11 @@ export function safeBasenameFromUri(uri: vscode.Uri): string {
   return '(sin nombre)';
 }
 
-/**
- * Detects name collisions for a set of file URIs using a cached workspace index.
- * Returns a Set of basenames that have collisions (appear more than once in workspace).
- * Uses configured exclusion patterns.
- */
+
+
+
+
+
 export async function detectCollisions(
   uris: vscode.Uri[],
   exclusionPatterns: string[],
@@ -163,7 +163,7 @@ export async function detectCollisions(
 
   const index = await getWorkspaceIndex(exclusionPatterns, logger);
 
-  // Group URIs by basename
+
   const byBasename = new Map<string, vscode.Uri[]>();
   for (const uri of uris) {
     const basename = safeBasenameFromUri(uri);
@@ -176,7 +176,7 @@ export async function detectCollisions(
   }
 
   for (const [basename, urisWithName] of byBasename.entries()) {
-    // Si ya tenemos más de una URI con este nombre en nuestro set, es colisión automática
+
     if (urisWithName.length > 1) {
       logger?.debug(
         `[collision] ${basename}: múltiples en display list (${urisWithName.length})`,
@@ -201,7 +201,7 @@ export async function detectCollisions(
       }
     } catch (error) {
       logger?.warn(`[collision] Error searching for ${basename}:`, error);
-      // En caso de error, asumimos no hay colisión
+
     }
   }
 

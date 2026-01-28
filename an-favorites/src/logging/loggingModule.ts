@@ -38,36 +38,36 @@ interface LogEntry {
 }
 
 interface LoggingModuleOptions extends LoggerOptions {
-  /**
-   * Sets the minimum log level to be written.
-   * Default: info.
-   */
+
+
+
+
   level?: LogLevel;
-  /**
-   * Name of the output channel in VS Code.
-   * This name will appear in the VS Code Output panel.
-   * Default: "AnFavorites Logs".
-   */
+
+
+
+
+
   channelName?: string;
-  /**
-   * Base name of the log file (without extension).
-   * Default: extension.
-   */
+
+
+
+
   logFileName?: string;
-  /**
-   * Maximum file size before rotation (bytes).
-   * Default: 5 MB.
-   */
+
+
+
+
   maxFileSizeBytes?: number;
-  /**
-   * Maximum number of rotated log files to keep per log type.
-   * Default: 5.
-   */
+
+
+
+
   maxRotatedFiles?: number;
-  /**
-   * Buffer flush interval for async log writes (ms).
-   * Default: 200.
-   */
+
+
+
+
   flushIntervalMs?: number;
 }
 
@@ -138,7 +138,7 @@ export class LoggingModule implements Logger {
     const channelName = options.channelName ?? 'AnFavorites Logs';
     const channel = vscode.window.createOutputChannel(channelName);
 
-    // Escribir BOM UTF-8 al inicio del canal para asegurar encoding correcto
+
     channel.append('\uFEFF');
 
     const baseLogDir = path.join(context.logUri.fsPath, 'anfavorites');
@@ -148,7 +148,7 @@ export class LoggingModule implements Logger {
 
     const logger = new LoggingModule(channel, logFilePathTxt, logFilePathJson, options);
 
-    // Startup message with UTF-8 encoding (this ensures content before showing)
+
     logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     logger.info('📋 Canal de logs AnFavorites iniciado');
     logger.info(`📁 Archivos de log: ${logFilePathTxt} | ${logFilePathJson}`);
@@ -246,17 +246,17 @@ export class LoggingModule implements Logger {
     };
   }
 
-  /**
-   * Shows the log channel in the VS Code Output panel.
-   * @param preserveFocus If true, does not remove focus from the current editor.
-   */
+
+
+
+
   show(preserveFocus?: boolean): void {
     this.channel.show(preserveFocus);
   }
 
-  /**
-   * Gets the name of the log channel.
-   */
+
+
+
   getChannelName(): string {
     return this.channel.name;
   }

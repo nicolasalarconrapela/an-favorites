@@ -12,7 +12,7 @@ export function registerAddToFavoritesCommand(
       try {
         logger.debug('addToFavorites command triggered', { uri: uri?.fsPath });
 
-        // Si no se proporciona URI, usar el archivo activo
+
         const targetUri = uri || vscode.window.activeTextEditor?.document.uri;
 
         if (!targetUri) {
@@ -23,7 +23,7 @@ export function registerAddToFavoritesCommand(
 
         logger.debug(`Target URI: ${targetUri.fsPath}`);
 
-        // Verificar si es un archivo (no una carpeta)
+
         try {
           const stat = await vscode.workspace.fs.stat(targetUri);
           if (stat.type === vscode.FileType.Directory) {
@@ -47,7 +47,7 @@ export function registerAddToFavoritesCommand(
           return;
         }
 
-        // Por defecto, añadir a "Sin Grupo" (DEFAULT_GROUP)
+
         const groupName = FavoritesTreeDataProvider.DEFAULT_GROUP;
 
         logger.info(
