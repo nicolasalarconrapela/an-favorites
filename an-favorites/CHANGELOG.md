@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.8.74] - 2026-01-29
+
+### Fixed
+- Lifecycle: el índice de colisiones puede reactivarse correctamente tras un deactivate
+
+## [0.8.73] - 2026-01-29
+
+### Fixed
+- Lifecycle: se liberan listeners internos de MRU y TreeDataProvider para evitar fugas en recarga
+- Lifecycle: se añade limpieza del índice global de colisiones y sus watchers en deactivate
+
 ## [0.8.71] - 2026-01-28
 
 ### Changed

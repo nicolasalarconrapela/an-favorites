@@ -68,6 +68,21 @@ function ensureWorkspaceIndexWatcher(logger?: any): void {
     });
 }
 
+export function disposeCollisionIndex(): void {
+  if (rebuildTimer) {
+    clearTimeout(rebuildTimer);
+    rebuildTimer = null;
+  }
+  indexWatcher?.dispose();
+  indexWatcher = null;
+  workspaceFolderListener?.dispose();
+  workspaceFolderListener = null;
+  cachedIndex = null;
+  cachedExclusionKey = null;
+  buildPromise = null;
+  lastExclusionPatterns = [];
+}
+
 async function buildWorkspaceIndex(
   exclusionPatterns: string[],
   logger?: any,

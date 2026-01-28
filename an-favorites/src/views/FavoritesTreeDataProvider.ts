@@ -127,8 +127,10 @@ interface FavoriteMetadata {
 export class FavoritesTreeDataProvider
   implements
     vscode.TreeDataProvider<GroupItem | FavoriteItem | WorkspaceItem>,
-    vscode.TreeDragAndDropController<GroupItem | FavoriteItem | WorkspaceItem>
+    vscode.TreeDragAndDropController<GroupItem | FavoriteItem | WorkspaceItem>,
+    vscode.Disposable
 {
+  private readonly disposables: vscode.Disposable[] = [];
   private _onDidChangeTreeData: vscode.EventEmitter<
     GroupItem | FavoriteItem | WorkspaceItem | undefined | null | void
   > = new vscode.EventEmitter<
@@ -161,30 +163,36 @@ export class FavoritesTreeDataProvider
     private storage: SharedStorageService,
   ) {
     this.loadFavorites();
-    this.storage.onDidChange(() => {
-      this.logger.info('[storage] External change detected -> reloading');
-      this.reloadFavorites();
-      this.refresh();
-    });
-
-
-    vscode.workspace.onDidChangeWorkspaceFolders(() => {
-      this.logger.info('[workspace] Workspace folders changed -> refresh()');
-      this.refresh();
-    });
-
-
-    vscode.workspace.onDidChangeConfiguration((e) => {
-      if (
-        e.affectsConfiguration('anfavorites.multiroot.separation') ||
-        e.affectsConfiguration('anfavorites.search.exclusions')
-      ) {
-        this.logger.info(
-          '[config] relevant configuration changed -> refresh()',
-        );
+    this.disposables.push(
+      this.storage.onDidChange(() => {
+        this.logger.info('[storage] External change detected -> reloading');
+        this.reloadFavorites();
         this.refresh();
-      }
-    });
+      }),
+    );
+
+
+    this.disposables.push(
+      vscode.workspace.onDidChangeWorkspaceFolders(() => {
+        this.logger.info('[workspace] Workspace folders changed -> refresh()');
+        this.refresh();
+      }),
+    );
+
+
+    this.disposables.push(
+      vscode.workspace.onDidChangeConfiguration((e) => {
+        if (
+          e.affectsConfiguration('anfavorites.multiroot.separation') ||
+          e.affectsConfiguration('anfavorites.search.exclusions')
+        ) {
+          this.logger.info(
+            '[config] relevant configuration changed -> refresh()',
+          );
+          this.refresh();
+        }
+      }),
+    );
 
     this.logger.info(
       `[init] Provider created. favorites=${this.favorites.size}`,
@@ -1084,5 +1092,11 @@ export class FavoritesTreeDataProvider
 
     this.saveFavorites();
     this.refresh();
+  }
+
+  public dispose(): void {
+    this.disposables.forEach((disposable) => disposable.dispose());
+    this.disposables.length = 0;
+    this._onDidChangeTreeData.dispose();
   }
 }
