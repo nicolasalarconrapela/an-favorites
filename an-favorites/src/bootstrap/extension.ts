@@ -87,6 +87,43 @@ export function activate(context: vscode.ExtensionContext): void {
   );
   context.subscriptions.push(lineFavoritesDecoration);
 
+  const updateLineFavoriteContext = (
+    editor: vscode.TextEditor | undefined,
+  ): void => {
+    if (!editor || editor.document.uri.scheme !== 'file') {
+      void vscode.commands.executeCommand(
+        'setContext',
+        'anfavorites.lineFavoriteExists',
+        false,
+      );
+      return;
+    }
+
+    const line = editor.selection.active.line + 1;
+    const exists = favoritesProvider.hasLineFavorite(
+      editor.document.uri,
+      line,
+    );
+    void vscode.commands.executeCommand(
+      'setContext',
+      'anfavorites.lineFavoriteExists',
+      exists,
+    );
+  };
+
+  updateLineFavoriteContext(vscode.window.activeTextEditor);
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      updateLineFavoriteContext(editor);
+    }),
+    vscode.window.onDidChangeTextEditorSelection((event) => {
+      updateLineFavoriteContext(event.textEditor);
+    }),
+    favoritesProvider.onDidChangeTreeData(() => {
+      updateLineFavoriteContext(vscode.window.activeTextEditor);
+    }),
+  );
+
   telemetry.track('activated');
   logger.info('━━━ Extension activation completed successfully ━━━');
 

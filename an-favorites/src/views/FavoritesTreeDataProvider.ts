@@ -113,6 +113,7 @@ interface LineFavoriteData {
   path: string;
   line: number;
   addedAt?: number;
+  isPinned?: boolean;
 }
 
 export class FavoritesTreeDataProvider
@@ -139,7 +140,10 @@ export class FavoritesTreeDataProvider
   ];
 
   private favorites: Map<string, FavoriteMetadata> = new Map();
-  private lineFavorites: Map<string, Map<number, number>> = new Map();
+  private lineFavorites: Map<
+    string,
+    Map<number, { addedAt: number; isPinned: boolean }>
+  > = new Map();
 
   private groups: Set<string> = new Set([
     FavoritesTreeDataProvider.DEFAULT_GROUP,
@@ -909,7 +913,10 @@ export class FavoritesTreeDataProvider
         return;
       }
       const lineMap = this.lineFavorites.get(entry.path) ?? new Map();
-      lineMap.set(entry.line, entry.addedAt ?? Date.now());
+      lineMap.set(entry.line, {
+        addedAt: entry.addedAt ?? Date.now(),
+        isPinned: !!entry.isPinned,
+      });
       this.lineFavorites.set(entry.path, lineMap);
     });
 
@@ -974,8 +981,13 @@ export class FavoritesTreeDataProvider
     const serialized: LineFavoriteData[] = [];
 
     this.lineFavorites.forEach((lineMap, filePath) => {
-      lineMap.forEach((addedAt, line) => {
-        serialized.push({ path: filePath, line, addedAt });
+      lineMap.forEach((metadata, line) => {
+        serialized.push({
+          path: filePath,
+          line,
+          addedAt: metadata.addedAt,
+          isPinned: metadata.isPinned,
+        });
       });
     });
 
@@ -1004,8 +1016,8 @@ export class FavoritesTreeDataProvider
       return false;
     }
 
-    const lineMap = existing ?? new Map<number, number>();
-    lineMap.set(line, Date.now());
+    const lineMap = existing ?? new Map();
+    lineMap.set(line, { addedAt: Date.now(), isPinned: false });
     this.lineFavorites.set(filePath, lineMap);
 
     this.saveLineFavorites();
@@ -1022,12 +1034,47 @@ export class FavoritesTreeDataProvider
   public getAllLineFavorites(): LineFavoriteData[] {
     const result: LineFavoriteData[] = [];
     this.lineFavorites.forEach((lineMap, filePath) => {
-      lineMap.forEach((addedAt, line) => {
-        result.push({ path: filePath, line, addedAt });
+      lineMap.forEach((metadata, line) => {
+        result.push({
+          path: filePath,
+          line,
+          addedAt: metadata.addedAt,
+          isPinned: metadata.isPinned,
+        });
       });
     });
 
-    return result.sort((a, b) => (b.addedAt ?? 0) - (a.addedAt ?? 0));
+    return result.sort((a, b) => {
+      const pinnedDiff = Number(!!b.isPinned) - Number(!!a.isPinned);
+      if (pinnedDiff !== 0) return pinnedDiff;
+      return (b.addedAt ?? 0) - (a.addedAt ?? 0);
+    });
+  }
+
+  public hasLineFavorite(uri: vscode.Uri, line: number): boolean {
+    return this.lineFavorites.get(uri.fsPath)?.has(line) ?? false;
+  }
+
+  public isLineFavoritePinned(uri: vscode.Uri, line: number): boolean {
+    return this.lineFavorites.get(uri.fsPath)?.get(line)?.isPinned ?? false;
+  }
+
+  public toggleLineFavoritePin(uri: vscode.Uri, line: number): void {
+    const entries = this.lineFavorites.get(uri.fsPath);
+    if (!entries) {
+      return;
+    }
+    const metadata = entries.get(line);
+    if (!metadata) {
+      return;
+    }
+
+    metadata.isPinned = !metadata.isPinned;
+    if (metadata.isPinned) {
+      metadata.addedAt = Date.now();
+    }
+    this.saveLineFavorites();
+    this.refresh();
   }
 
   public removeLineFavorite(uri: vscode.Uri, line: number): void {

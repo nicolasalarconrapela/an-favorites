@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.92] - 2026-02-01
+
+### Changed
+- Quick Open permite fijar y desfijar líneas guardadas como favoritos.
+- Menús contextuales actualizan la acción según si la línea ya está en favoritos.
+
 ## [0.8.91] - 2026-02-01
 
 ### Changed

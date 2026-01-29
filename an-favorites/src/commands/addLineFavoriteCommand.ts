@@ -7,7 +7,7 @@ export function registerAddLineFavoriteCommand(
   favoritesProvider: FavoritesTreeDataProvider,
   logger: Logger,
 ): void {
-  const disposable = vscode.commands.registerTextEditorCommand(
+  const addDisposable = vscode.commands.registerTextEditorCommand(
     'anfavorites.addLineFavorite',
     (editor) => {
       const uri = editor.document.uri;
@@ -30,9 +30,41 @@ export function registerAddLineFavoriteCommand(
           ? `Línea ${line} guardada en favoritos.`
           : `Línea ${line} eliminada de favoritos.`,
       );
+      vscode.commands.executeCommand(
+        'setContext',
+        'anfavorites.lineFavoriteExists',
+        favoritesProvider.hasLineFavorite(uri, line),
+      );
     },
   );
 
-  context.subscriptions.push(disposable);
+  const removeDisposable = vscode.commands.registerTextEditorCommand(
+    'anfavorites.removeLineFavorite',
+    (editor) => {
+      const uri = editor.document.uri;
+      if (uri.scheme !== 'file') {
+        vscode.window.showWarningMessage(
+          'Solo se pueden guardar líneas de archivos locales.',
+        );
+        return;
+      }
+
+      const line = editor.selection.active.line + 1;
+      favoritesProvider.removeLineFavorite(uri, line);
+      logger.info(
+        `[lineFavorites] Removed line ${line} -> ${uri.fsPath}`,
+      );
+      vscode.window.showInformationMessage(
+        `Línea ${line} eliminada de favoritos.`,
+      );
+      vscode.commands.executeCommand(
+        'setContext',
+        'anfavorites.lineFavoriteExists',
+        false,
+      );
+    },
+  );
+
+  context.subscriptions.push(addDisposable, removeDisposable);
   logger.info('[lineFavorites] addLineFavorite command registered');
 }

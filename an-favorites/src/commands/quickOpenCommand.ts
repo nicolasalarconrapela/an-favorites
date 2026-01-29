@@ -198,14 +198,15 @@ function buildPinnedItems(
 }
 
 function buildLineFavoriteItems(
-  entries: Array<{ uri: vscode.Uri; line: number }>,
+  entries: Array<{ uri: vscode.Uri; line: number; isPinned: boolean }>,
   config: QuickOpenConfig,
 ): LineQuickPickItem[] {
   return entries.map(
-    ({ uri, line }) =>
+    ({ uri, line, isPinned }) =>
       new LineQuickPickItem({
         uri,
         line,
+        isPinned,
         showIcons: config.showIcons,
         pathDetailLocation: config.pathDetailLocation,
         showPathWhen: config.showPathWhen,
@@ -621,18 +622,20 @@ class LineQuickPickItem implements vscode.QuickPickItem {
 
   resourceUri: vscode.Uri;
   line: number;
+  isPinned: boolean;
 
   private _fullPathLabel: string = '';
   private _dirPathLabel: string = '';
   private _detailPathText?: string;
 
-  private showIcons: boolean;
+  public showIcons: boolean;
   private pathDetailLocation: 'description' | 'detail';
   private showPathWhen: 'always' | 'onConflict';
 
   constructor(params: {
     uri: vscode.Uri;
     line: number;
+    isPinned?: boolean;
     showIcons?: boolean;
     pathDetailLocation?: 'description' | 'detail';
     showPathWhen?: 'always' | 'onConflict';
@@ -640,6 +643,7 @@ class LineQuickPickItem implements vscode.QuickPickItem {
     const {
       uri,
       line,
+      isPinned = false,
       showIcons = true,
       pathDetailLocation = 'detail',
       showPathWhen = 'onConflict',
@@ -647,13 +651,12 @@ class LineQuickPickItem implements vscode.QuickPickItem {
 
     this.resourceUri = uri;
     this.line = line;
+    this.isPinned = isPinned;
     this.showIcons = showIcons;
     this.pathDetailLocation = pathDetailLocation;
     this.showPathWhen = showPathWhen;
 
-    const baseName = safeBasenameFromUri(uri);
-    const iconPrefix = '$(star-full)';
-    this.label = `${iconPrefix} ${baseName}:${line}`;
+    this.updateIcon(this.showIcons);
 
     const { rel, rootName } = workspaceRelativeLabel(uri);
 
@@ -683,7 +686,6 @@ class LineQuickPickItem implements vscode.QuickPickItem {
       this.description = '';
     }
 
-    this.updateIcon(this.showIcons);
     this.setShowDescription(false);
   }
 
@@ -710,6 +712,18 @@ class LineQuickPickItem implements vscode.QuickPickItem {
     } else {
       this.iconPath = undefined;
     }
+
+    const baseName = safeBasenameFromUri(this.resourceUri);
+    const iconPrefix = this.isPinned ? '$(pin)' : '$(star-full)';
+    this.label = `${iconPrefix} ${baseName}:${this.line}`;
+
+    const pinTooltip = this.isPinned ? 'Desfijar' : 'Fijar';
+    this.buttons = [
+      {
+        iconPath: createButtonIcon(this.isPinned ? 'pinned' : 'pin', 'bookmark'),
+        tooltip: pinTooltip,
+      },
+    ];
   }
 }
 
@@ -958,6 +972,7 @@ export function registerQuickOpenCommand(
             .map((entry) => ({
               uri: vscode.Uri.file(entry.path),
               line: entry.line,
+              isPinned: !!entry.isPinned,
             }))
             .filter((entry) => {
               return (
@@ -1050,7 +1065,15 @@ export function registerQuickOpenCommand(
           items.push({ label: ' ', alwaysShow: false });
 
           if (hasFavoriteItems) {
-            items.push(...combinedFavoriteItems);
+            const sortedFavorites = [...combinedFavoriteItems].sort((a, b) => {
+              const pinnedA = isLineFavoriteItem(a) ? a.isPinned : false;
+              const pinnedB = isLineFavoriteItem(b) ? b.isPinned : false;
+              if (pinnedA !== pinnedB) {
+                return pinnedA ? -1 : 1;
+              }
+              return 0;
+            });
+            items.push(...sortedFavorites);
           } else if (!isSearching) {
             items.push({
               label:
@@ -1461,7 +1484,30 @@ export function registerQuickOpenCommand(
           log.debug('[QuickOpen] onDidTriggerItemButton triggered');
           const item = e.item;
           if (!isFileItem(item)) {
-            log.debug('[QuickOpen] Button triggered on non-file item');
+            if (isLineFavoriteItem(item)) {
+              const button = e.button;
+              if (
+                button.tooltip?.startsWith('Fijar') ||
+                button.tooltip === 'Desfijar'
+              ) {
+                favoritesProvider.toggleLineFavoritePin(
+                  item.resourceUri,
+                  item.line,
+                );
+                item.isPinned = !item.isPinned;
+                item.updateIcon(item.showIcons);
+                const currentItems = quickPick.items;
+                const index = currentItems.indexOf(item);
+                if (index !== -1) {
+                  const newItems = [...currentItems];
+                  newItems[index] = item;
+                  quickPick.items = newItems;
+                  quickPick.activeItems = [item];
+                }
+              }
+            } else {
+              log.debug('[QuickOpen] Button triggered on non-file item');
+            }
             return;
           }
 

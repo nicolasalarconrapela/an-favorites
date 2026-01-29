@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.91",
+  "version": "0.8.92",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "engines": {
@@ -36,6 +36,11 @@
       {
         "command": "anfavorites.addLineFavorite",
         "title": "Guardar Línea en Favoritos",
+        "category": "AnFavorites"
+      },
+      {
+        "command": "anfavorites.removeLineFavorite",
+        "title": "Quitar Línea de Favoritos",
         "category": "AnFavorites"
       },
       {
@@ -137,14 +142,24 @@
         {
           "command": "anfavorites.addLineFavorite",
           "group": "modification",
-          "when": "editorTextFocus"
+          "when": "editorTextFocus && !anfavorites.lineFavoriteExists"
+        },
+        {
+          "command": "anfavorites.removeLineFavorite",
+          "group": "modification",
+          "when": "editorTextFocus && anfavorites.lineFavoriteExists"
         }
       ],
       "editor/lineNumber/context": [
         {
           "command": "anfavorites.addLineFavorite",
           "group": "modification",
-          "when": "editorTextFocus"
+          "when": "editorTextFocus && !anfavorites.lineFavoriteExists"
+        },
+        {
+          "command": "anfavorites.removeLineFavorite",
+          "group": "modification",
+          "when": "editorTextFocus && anfavorites.lineFavoriteExists"
         }
       ],
       "editor/title/context": [
