@@ -4,6 +4,15 @@ import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
 import { Logger } from '../logging/logger';
 import {
+  ActionQuickPickItem,
+  FavoritesAction,
+  LruCache,
+  QuickOpenConfig,
+  SearchCacheEntry,
+  buildSearchPattern,
+  getQuickOpenConfig,
+} from './quickOpen/quickOpenHelpers';
+import {
   applyCollisionLabels,
   normalizeFsPath,
   safeBasenameFromUri,
@@ -11,88 +20,12 @@ import {
 
 type QuickOpenItem = vscode.QuickPickItem;
 
-interface SearchCacheEntry {
-  uris: vscode.Uri[];
-  exceededMaxFiles: boolean;
-}
-
-interface QuickOpenConfig {
-  maxRecentFavorites: number;
-  maxPinned: number;
-  maxRecentFiles: number;
-  maxSearchResults: number;
-  maxSearchFiles: number;
-  searchCacheSize: number;
-  openToSide: boolean;
-  showIcons: boolean;
-  pathDetailLocation: 'description' | 'detail';
-  showPathWhen: 'always' | 'onConflict';
-  searchExclusions: string[];
-}
-
-class LruCache<K, V> {
-  private readonly map = new Map<K, V>();
-  private maxEntries: number;
-
-  constructor(maxEntries: number) {
-    this.maxEntries = Math.max(1, maxEntries);
-  }
-
-  get(key: K): V | undefined {
-    const value = this.map.get(key);
-    if (!value) return undefined;
-    this.map.delete(key);
-    this.map.set(key, value);
-    return value;
-  }
-
-  set(key: K, value: V): void {
-    if (this.map.has(key)) {
-      this.map.delete(key);
-    }
-    this.map.set(key, value);
-    this.evictIfNeeded();
-  }
-
-  clear(): void {
-    this.map.clear();
-  }
-
-  setLimit(maxEntries: number): void {
-    this.maxEntries = Math.max(1, maxEntries);
-    this.evictIfNeeded();
-  }
-
-  private evictIfNeeded(): void {
-    while (this.map.size > this.maxEntries) {
-      const oldestKey = this.map.keys().next().value;
-      if (oldestKey === undefined) return;
-      this.map.delete(oldestKey);
-    }
-  }
-}
-
-function buildSearchPattern(searchValue: string): string {
-  const normalized = searchValue.trim();
-  if (!normalized) return '**/*';
-  return `**/*${normalized}*`;
-}
-
 
 
 
 function isFileItem(item: vscode.QuickPickItem): item is FileQuickPickItem {
   return typeof (item as any)?.resourceUri?.fsPath === 'string';
 }
-
-type FavoritesAction = 'clearRecents' | 'loadMore';
-
-interface ActionQuickPickItem extends vscode.QuickPickItem {
-  action: FavoritesAction;
-}
-
-
-
 
 function toSafeFileUri(value: unknown, logger?: Logger): vscode.Uri | null {
   if (typeof value !== 'string') {
@@ -157,55 +90,6 @@ function debounce<T extends (...args: any[]) => any>(
     timeoutId = setTimeout(() => {
       func(...args);
     }, waitMs);
-  };
-}
-
-function getQuickOpenConfig(): QuickOpenConfig {
-  const configMaxItems = vscode.workspace.getConfiguration(
-    'anfavorites.maxItems',
-  );
-  const configSearch = vscode.workspace.getConfiguration('anfavorites.search');
-  const configQuickOpen =
-    vscode.workspace.getConfiguration('anfavorites.quickOpen');
-  const openToSide = configQuickOpen.get<boolean>('openToSide', false);
-
-  const maxRecentFavorites = configMaxItems.get<number>('favorites', 3);
-  const maxPinned = configMaxItems.get<number>('pinned', 3);
-  const maxRecentFiles = configMaxItems.get<number>('recentFiles', 5);
-  const maxSearchResults = configQuickOpen.get<number>(
-    'maxSearchResults',
-    200,
-  );
-  const maxSearchFiles = configQuickOpen.get<number>('maxSearchFiles', 1000);
-  const searchCacheSize = configQuickOpen.get<number>('searchCacheSize', 30);
-
-  const isAnGravity = vscode.env.appName.includes('AnGravity');
-  const defaultShowIcons = isAnGravity ? false : true;
-  const showIcons = configQuickOpen.get<boolean>('showIcons', defaultShowIcons);
-  const pathDetailLocation = configQuickOpen.get<'description' | 'detail'>(
-    'pathDetailLocation',
-    'detail',
-  );
-  const showPathWhen = configQuickOpen.get<'always' | 'onConflict'>(
-    'showPathWhen',
-    'onConflict',
-  );
-  const searchExclusions = configSearch.get<string[]>('exclusions', [
-    '**/node_modules/**',
-  ]);
-
-  return {
-    maxRecentFavorites,
-    maxPinned,
-    maxRecentFiles,
-    maxSearchResults,
-    maxSearchFiles,
-    searchCacheSize,
-    openToSide,
-    showIcons,
-    pathDetailLocation,
-    showPathWhen,
-    searchExclusions,
   };
 }
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.80] - 2026-01-29
+
+### Changed
+- Quick Open: extrae helpers y tipos puros a un módulo dedicado
+
 ## [0.8.79] - 2026-01-29
 
 ### Changed
