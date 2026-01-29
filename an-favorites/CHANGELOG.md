@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.78] - 2026-01-29
+
+### Fixed
+- Quick Open: corrige la paginación para mostrar aviso de límite y botón Load More a la vez
+
 ## [0.8.77] - 2026-01-29
 
 ### Changed

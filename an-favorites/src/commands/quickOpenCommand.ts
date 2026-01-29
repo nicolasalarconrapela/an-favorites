@@ -877,6 +877,7 @@ export function registerQuickOpenCommand(
 
           let otherItems: FileQuickPickItem[] = [];
           let searchNoticeItem: QuickOpenItem | null = null;
+          let loadMoreItem: ActionQuickPickItem | null = null;
 
           if (isSearching) {
             const exclusionGlob = searchExclusions.length
@@ -950,11 +951,11 @@ export function registerQuickOpenCommand(
                 return item;
               });
             if (cacheEntry.uris.length > displayLimit) {
-              searchNoticeItem = {
+              loadMoreItem = {
                 label: 'Load More',
                 description: `Mostrando ${displayLimit} de ${cacheEntry.uris.length}`,
                 action: 'loadMore',
-              } as ActionQuickPickItem;
+              };
             }
           }
 
@@ -989,13 +990,16 @@ export function registerQuickOpenCommand(
             return;
           }
 
-          if (otherItems.length > 0 || searchNoticeItem) {
+          if (otherItems.length > 0 || searchNoticeItem || loadMoreItem) {
             items.push({
               label: 'Archivos',
               kind: vscode.QuickPickItemKind.Separator,
             });
             if (searchNoticeItem) {
               items.push(searchNoticeItem);
+            }
+            if (loadMoreItem) {
+              items.push(loadMoreItem);
             }
             items.push(...otherItems);
           }
