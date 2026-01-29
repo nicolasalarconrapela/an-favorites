@@ -37,7 +37,9 @@ function scheduleIndexRebuild(reason: string, logger?: any): void {
     clearTimeout(rebuildTimer);
   }
   rebuildTimer = setTimeout(() => {
-    logger?.debug?.(`[collision-index] Rebuilding due to ${reason} (debounced)`);
+    logger?.debug?.(
+      `[collision-index] Rebuilding due to ${reason} (debounced)`,
+    );
     void rebuildWorkspaceIndex(lastExclusionPatterns, logger);
   }, DEFAULT_INDEX_DEBOUNCE_MS);
 }
@@ -58,15 +60,14 @@ function ensureWorkspaceIndexWatcher(logger?: any): void {
     scheduleIndexRebuild('change', logger);
   });
 
-  workspaceFolderListener =
-    vscode.workspace.onDidChangeWorkspaceFolders(() => {
-      logger?.info?.(
-        '[collision-index] Workspace folders changed -> clearing index cache',
-      );
-      cachedIndex = null;
-      cachedExclusionKey = null;
-      scheduleIndexRebuild('workspace-folders', logger);
-    });
+  workspaceFolderListener = vscode.workspace.onDidChangeWorkspaceFolders(() => {
+    logger?.info?.(
+      '[collision-index] Workspace folders changed -> clearing index cache',
+    );
+    cachedIndex = null;
+    cachedExclusionKey = null;
+    scheduleIndexRebuild('workspace-folders', logger);
+  });
 }
 
 export function disposeCollisionIndex(): void {
@@ -158,9 +159,6 @@ async function getWorkspaceIndex(
   return rebuildWorkspaceIndex(exclusionPatterns, token, logger);
 }
 
-
-
-
 export function safeBasenameFromUri(uri: vscode.Uri): string {
   const fsPath = (uri as any)?.fsPath;
   if (typeof fsPath === 'string' && fsPath.length > 0) {
@@ -175,11 +173,6 @@ export function safeBasenameFromUri(uri: vscode.Uri): string {
   return '(sin nombre)';
 }
 
-
-
-
-
-
 export async function detectCollisions(
   uris: vscode.Uri[],
   exclusionPatterns: string[],
@@ -190,7 +183,6 @@ export async function detectCollisions(
   if (uris.length === 0) return collisions;
 
   const index = await getWorkspaceIndex(exclusionPatterns, token, logger);
-
 
   const byBasename = new Map<string, vscode.Uri[]>();
   for (const uri of uris) {
@@ -232,7 +224,6 @@ export async function detectCollisions(
       }
     } catch (error) {
       logger?.warn(`[collision] Error searching for ${basename}:`, error);
-
     }
   }
 

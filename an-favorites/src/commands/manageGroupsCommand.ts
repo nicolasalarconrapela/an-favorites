@@ -10,11 +10,11 @@ export function registerManageGroupsCommands(
   favoritesProvider: FavoritesTreeDataProvider,
   logger: any,
 ): void {
-
   context.subscriptions.push(
     vscode.commands.registerCommand('anfavorites.addGroup', async () => {
       const groupInput = await vscode.window.showInputBox({
-        prompt: 'Nombre del nuevo grupo (puedes crear varios separados por comas)',
+        prompt:
+          'Nombre del nuevo grupo (puedes crear varios separados por comas)',
         placeHolder: 'Ej: Proyectos, Documentación, G2',
         validateInput: (value) => {
           if (!value || value.trim().length === 0) {
@@ -34,7 +34,8 @@ export function registerManageGroupsCommands(
 
         let createdCount = 0;
         let existingCount = 0;
-        const lastCreatedGroupName = groupNames.length === 1 ? groupNames[0] : '';
+        const lastCreatedGroupName =
+          groupNames.length === 1 ? groupNames[0] : '';
 
         for (const name of groupNames) {
           logger.info(`Adding new group: ${name}`);
@@ -50,9 +51,13 @@ export function registerManageGroupsCommands(
 
         if (createdCount > 0) {
           if (groupNames.length === 1) {
-            vscode.window.showInformationMessage(`Grupo "${lastCreatedGroupName}" creado`);
+            vscode.window.showInformationMessage(
+              `Grupo "${lastCreatedGroupName}" creado`,
+            );
           } else {
-            vscode.window.showInformationMessage(`Se han creado ${createdCount} grupos correctamente.`);
+            vscode.window.showInformationMessage(
+              `Se han creado ${createdCount} grupos correctamente.`,
+            );
           }
         }
 
@@ -60,18 +65,22 @@ export function registerManageGroupsCommands(
           if (groupNames.length === 1) {
             vscode.window.showErrorMessage('Este grupo ya existe');
           } else {
-            vscode.window.showWarningMessage(`${existingCount} grupos ya existían y no fueron creados.`);
+            vscode.window.showWarningMessage(
+              `${existingCount} grupos ya existían y no fueron creados.`,
+            );
           }
         }
       }
     }),
   );
 
-
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.removeGroup',
-      async (item?: GroupItem, selectedItems?: (GroupItem | FavoriteItem)[]) => {
+      async (
+        item?: GroupItem,
+        selectedItems?: (GroupItem | FavoriteItem)[],
+      ) => {
         let groupsToProcess: string[] = [];
 
         if (selectedItems && selectedItems.length > 0) {
@@ -83,7 +92,6 @@ export function registerManageGroupsCommands(
         }
 
         if (groupsToProcess.length === 0) {
-
           const groups = favoritesProvider
             .getGroups()
             .filter((grp) => grp !== FavoritesTreeDataProvider.DEFAULT_GROUP);
@@ -101,8 +109,6 @@ export function registerManageGroupsCommands(
             return;
           }
         }
-
-
 
         groupsToProcess = groupsToProcess.filter(
           (g) => g !== FavoritesTreeDataProvider.DEFAULT_GROUP,
@@ -134,7 +140,6 @@ export function registerManageGroupsCommands(
     ),
   );
 
-
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.renameGroup',
@@ -144,7 +149,6 @@ export function registerManageGroupsCommands(
         if (item && item instanceof GroupItem) {
           oldName = item.groupName;
         } else {
-
           const groups = favoritesProvider
             .getGroups()
             .filter((grp) => grp !== FavoritesTreeDataProvider.DEFAULT_GROUP);
@@ -215,7 +219,6 @@ export function registerManageGroupsCommands(
     ),
   );
 
-
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.moveFavorite',
@@ -231,8 +234,6 @@ export function registerManageGroupsCommands(
 
         const groups = favoritesProvider.getGroups();
 
-
-
         const items: vscode.QuickPickItem[] = groups.map((grp) => ({
           label: grp,
           description:
@@ -240,7 +241,6 @@ export function registerManageGroupsCommands(
               ? 'Grupo por defecto'
               : undefined,
         }));
-
 
         items.push({
           label: '$(add) Nuevo Grupo...',
@@ -302,7 +302,6 @@ export function registerManageGroupsCommands(
     ),
   );
 
-
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.clearGroup',
@@ -327,7 +326,6 @@ export function registerManageGroupsCommands(
       },
     ),
   );
-
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
@@ -356,7 +354,6 @@ export function registerManageGroupsCommands(
       },
     ),
   );
-
 
   context.subscriptions.push(
     vscode.commands.registerCommand(

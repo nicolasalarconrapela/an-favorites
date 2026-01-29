@@ -2,7 +2,14 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { LogContext, LogLevel, LogMessage, LogMetadata, Logger, LoggerOptions } from './logger';
+import {
+  LogContext,
+  LogLevel,
+  LogMessage,
+  LogMetadata,
+  Logger,
+  LoggerOptions,
+} from './logger';
 
 type InternalLogLevel = LogLevel | 'off';
 
@@ -38,35 +45,15 @@ interface LogEntry {
 }
 
 interface LoggingModuleOptions extends LoggerOptions {
-
-
-
-
   level?: LogLevel;
-
-
-
-
 
   channelName?: string;
 
-
-
-
   logFileName?: string;
-
-
-
 
   maxFileSizeBytes?: number;
 
-
-
-
   maxRotatedFiles?: number;
-
-
-
 
   flushIntervalMs?: number;
 }
@@ -134,10 +121,12 @@ export class LoggingModule implements Logger {
     this.ensureLogDirectory();
   }
 
-  static create(context: vscode.ExtensionContext, options: LoggingModuleOptions = {}): LoggingModule {
+  static create(
+    context: vscode.ExtensionContext,
+    options: LoggingModuleOptions = {},
+  ): LoggingModule {
     const channelName = options.channelName ?? 'AnFavorites Logs';
     const channel = vscode.window.createOutputChannel(channelName);
-
 
     channel.append('\uFEFF');
 
@@ -146,8 +135,12 @@ export class LoggingModule implements Logger {
     const logFilePathTxt = path.join(baseLogDir, `${logFileNameBase}.txt`);
     const logFilePathJson = path.join(baseLogDir, `${logFileNameBase}.json`);
 
-    const logger = new LoggingModule(channel, logFilePathTxt, logFilePathJson, options);
-
+    const logger = new LoggingModule(
+      channel,
+      logFilePathTxt,
+      logFilePathJson,
+      options,
+    );
 
     logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     logger.info('📋 Canal de logs AnFavorites iniciado');
@@ -223,12 +216,20 @@ export class LoggingModule implements Logger {
     return new ContextualLogger(this, context);
   }
 
-  startTimer(level: LogLevel, message: LogMessage, metadata?: LogMetadata): () => void {
+  startTimer(
+    level: LogLevel,
+    message: LogMessage,
+    metadata?: LogMetadata,
+  ): () => void {
     const start = Date.now();
     return () => {
       const durationMs = Date.now() - start;
       const resolvedMetadata = this.resolveMetadata(metadata);
-      if (resolvedMetadata && typeof resolvedMetadata === 'object' && !(resolvedMetadata instanceof Error)) {
+      if (
+        resolvedMetadata &&
+        typeof resolvedMetadata === 'object' &&
+        !(resolvedMetadata instanceof Error)
+      ) {
         this.write(level, message, {
           ...resolvedMetadata,
           durationMs,
@@ -246,16 +247,9 @@ export class LoggingModule implements Logger {
     };
   }
 
-
-
-
-
   show(preserveFocus?: boolean): void {
     this.channel.show(preserveFocus);
   }
-
-
-
 
   getChannelName(): string {
     return this.channel.name;
@@ -270,7 +264,11 @@ export class LoggingModule implements Logger {
     this.channel.dispose();
   }
 
-  private write(level: LogLevel, message: LogMessage, metadata?: LogMetadata): void {
+  private write(
+    level: LogLevel,
+    message: LogMessage,
+    metadata?: LogMetadata,
+  ): void {
     if (!this.shouldLog(level)) {
       return;
     }
@@ -291,7 +289,9 @@ export class LoggingModule implements Logger {
 
     const contextSuffix = this.formatContext(contextMetadata.context);
     const serializedMetadata =
-      safeMetadata !== undefined ? ` ${this.serializeMetadata(safeMetadata)}` : '';
+      safeMetadata !== undefined
+        ? ` ${this.serializeMetadata(safeMetadata)}`
+        : '';
     const line = `[${timestamp}] [${level}]${contextSuffix} ${resolvedMessage}${serializedMetadata}`;
 
     this.appendToChannel(level, line);
@@ -313,7 +313,6 @@ export class LoggingModule implements Logger {
         console.log(formattedLine);
       }
     }
-
   }
 
   private appendToFileTxt(line: string): void {
@@ -410,11 +409,17 @@ export class LoggingModule implements Logger {
       await fs.promises.rename(filePath, path.join(dir, rotatedName));
       await this.cleanupRotatedLogs(dir, name, ext || '.log');
     } catch (err) {
-      this.channel.appendLine(`❌ [logger-error] No se pudo rotar el log: ${String(err)}`);
+      this.channel.appendLine(
+        `❌ [logger-error] No se pudo rotar el log: ${String(err)}`,
+      );
     }
   }
 
-  private async cleanupRotatedLogs(dir: string, baseName: string, ext: string): Promise<void> {
+  private async cleanupRotatedLogs(
+    dir: string,
+    baseName: string,
+    ext: string,
+  ): Promise<void> {
     if (this.maxRotatedFiles <= 0) {
       return;
     }
@@ -498,14 +503,21 @@ export class LoggingModule implements Logger {
   }
 
   private extractContext(metadata: unknown): ContextMetadata {
-    if (!metadata || typeof metadata !== 'object' || metadata instanceof Error) {
+    if (
+      !metadata ||
+      typeof metadata !== 'object' ||
+      metadata instanceof Error
+    ) {
       return { metadata };
     }
 
     const candidate = metadata as Record<string, unknown>;
-    const scope = typeof candidate.scope === 'string' ? candidate.scope : undefined;
+    const scope =
+      typeof candidate.scope === 'string' ? candidate.scope : undefined;
     const correlationId =
-      typeof candidate.correlationId === 'string' ? candidate.correlationId : undefined;
+      typeof candidate.correlationId === 'string'
+        ? candidate.correlationId
+        : undefined;
 
     if (!scope && !correlationId) {
       return { metadata };
@@ -561,7 +573,9 @@ export class LoggingModule implements Logger {
     }
 
     const sanitized: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(metadata as Record<string, unknown>)) {
+    for (const [key, value] of Object.entries(
+      metadata as Record<string, unknown>,
+    )) {
       if (this.redactKeys.includes(key.toLowerCase())) {
         sanitized[key] = '[redacted]';
         continue;
@@ -654,14 +668,24 @@ class ContextualLogger implements Logger {
     metadata?: LogMetadata,
     intervalMs?: number,
   ): void {
-    this.base.throttle?.(level, key, message, this.mergeMetadata(metadata), intervalMs);
+    this.base.throttle?.(
+      level,
+      key,
+      message,
+      this.mergeMetadata(metadata),
+      intervalMs,
+    );
   }
 
   withContext(context: LogContext): Logger {
     return new ContextualLogger(this.base, { ...this.context, ...context });
   }
 
-  startTimer(level: LogLevel, message: LogMessage, metadata?: LogMetadata): () => void {
+  startTimer(
+    level: LogLevel,
+    message: LogMessage,
+    metadata?: LogMetadata,
+  ): () => void {
     return this.base.startTimer(level, message, this.mergeMetadata(metadata));
   }
 
@@ -671,13 +695,20 @@ class ContextualLogger implements Logger {
 
   private mergeMetadata(metadata?: LogMetadata): LogMetadata {
     const resolved = typeof metadata === 'function' ? metadata() : metadata;
-    if (resolved && typeof resolved === 'object' && !(resolved instanceof Error)) {
+    if (
+      resolved &&
+      typeof resolved === 'object' &&
+      !(resolved instanceof Error)
+    ) {
       return { ...resolved, ...this.context };
     }
     return { ...this.context, metadata: resolved };
   }
 }
 
-export function createAppLogger(context: vscode.ExtensionContext, options?: LoggingModuleOptions): LoggingModule {
+export function createAppLogger(
+  context: vscode.ExtensionContext,
+  options?: LoggingModuleOptions,
+): LoggingModule {
   return LoggingModule.create(context, options);
 }

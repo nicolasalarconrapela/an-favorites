@@ -14,7 +14,6 @@ export function registerAddToFavoritesInGroupCommand(
           uri: uri?.fsPath,
         });
 
-
         const targetUri = uri || vscode.window.activeTextEditor?.document.uri;
 
         if (!targetUri) {
@@ -24,7 +23,6 @@ export function registerAddToFavoritesInGroupCommand(
         }
 
         logger.debug(`Target URI: ${targetUri.fsPath}`);
-
 
         try {
           const stat = await vscode.workspace.fs.stat(targetUri);
@@ -49,14 +47,11 @@ export function registerAddToFavoritesInGroupCommand(
           return;
         }
 
-
         const groups = favoritesProvider.getGroups();
         if (groups.length === 0) {
-
           favoritesProvider.addFavorite(targetUri);
           return;
         }
-
 
         const selectedGroup = await vscode.window.showQuickPick(groups, {
           placeHolder: 'Selecciona el grupo donde añadir el favorito',
@@ -64,7 +59,6 @@ export function registerAddToFavoritesInGroupCommand(
         });
 
         if (!selectedGroup) {
-
           return;
         }
 

@@ -11,7 +11,6 @@ export function registerPinCommands(
   provider: FavoritesTreeDataProvider,
   logger: Logger,
 ): void {
-
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.pinFavorite',
@@ -34,7 +33,6 @@ export function registerPinCommands(
       },
     ),
   );
-
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
