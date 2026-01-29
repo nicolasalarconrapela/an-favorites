@@ -505,7 +505,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 
     const baseName = safeBasenameFromUri(uri);
 
-    let iconPrefix = isFavorite ? '$(bookmark)' : '     ';
+    let iconPrefix = isFavorite ? '$(star-full)' : '$(star-empty)';
     if (isPinned) iconPrefix = '$(pin)';
 
     this.label = `${iconPrefix} ${baseName}`;
@@ -568,7 +568,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     }
 
     const baseName = safeBasenameFromUri(this.resourceUri);
-    let iconPrefix = this.isFavorite ? '$(bookmark) ' : '     ';
+    let iconPrefix = this.isFavorite ? '$(star-full) ' : '     ';
     if (this.isPinned) iconPrefix = '$(pin) ';
     this.label = `${iconPrefix} ${baseName}`;
 
@@ -589,8 +589,8 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 
     buttons.push({
       iconPath: createButtonIcon(
-        this.isFavorite ? 'bookmark-slash' : 'bookmark',
-        this.isFavorite ? 'close' : 'circle-outline',
+        this.isFavorite ? 'star-full' : 'star-empty',
+        this.isFavorite ? 'heart' : 'circle-outline',
       ),
       tooltip: this.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos',
     });

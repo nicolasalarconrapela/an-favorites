@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.98] - 2026-02-01
+
+### Changed
+- Quick Open usa bookmark solo para favoritos por línea; archivos mantienen estrellas.
+
 ## [0.8.97] - 2026-02-01
 
 ### Changed
