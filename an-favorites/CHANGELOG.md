@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.86] - 2026-01-30
+
+### Added
+- Storage: aplica cambios en caliente al activar/desactivar la sincronización compartida
+
 ## [0.8.85] - 2026-01-30
 
 ### Added

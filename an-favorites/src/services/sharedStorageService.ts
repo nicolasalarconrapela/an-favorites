@@ -18,56 +18,21 @@ export class SharedStorageService {
   private useSharedFile = false;
   private fileWatcher: fs.FSWatcher | null = null;
   private lastWriteTime = 0;
+  private configListener: vscode.Disposable | null = null;
 
   constructor(
     private context: vscode.ExtensionContext,
     private logger: Logger,
   ) {
-    const config = vscode.workspace.getConfiguration('anfavorites.storage');
-    const configExplicit = this.getExplicitSharedSetting(config);
-    this.sharedFilePath = this.resolveSharedFilePath();
-    const sharedEnabled =
-      this.sharedFilePath && this.readSharedSetting() === true;
-    if (configExplicit === true) {
-      this.useSharedFile = true;
-    } else if (configExplicit === false) {
-      this.useSharedFile = false;
-    } else {
-      this.useSharedFile = sharedEnabled;
-    }
-
-    if (this.useSharedFile) {
-      if (this.sharedFilePath) {
-        this.ensureStorageFile();
-        this.writeSharedSetting(true);
-        this.startFileWatcher();
-        this.logger.info('[SharedStorage] Usando almacenamiento compartido.', {
-          filePath: this.sharedFilePath,
-          source: configExplicit === true ? 'config' : 'shared-file',
-        });
-      } else {
-        this.useSharedFile = false;
-        this.logger.warn(
-          '[SharedStorage] No se pudo resolver ruta para compartir entre IDEs; usando WorkspaceState.',
+    this.applyConfig(false);
+    this.configListener = vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration(SharedStorageService.SHARED_SETTING_KEY)) {
+        this.logger.info(
+          '[SharedStorage] Configuración cambiada: reevaluando almacenamiento.',
         );
+        this.applyConfig(true);
       }
-    }
-
-    if (!this.useSharedFile && configExplicit === false) {
-      if (this.sharedFilePath) {
-        this.ensureStorageFile();
-        this.writeSharedSetting(false);
-      }
-      this.logger.info(
-        '[SharedStorage] Compartir entre IDEs desactivado por configuración.',
-      );
-    }
-
-    if (!this.useSharedFile) {
-      this.logger.info(
-        '[SharedStorage] Inicializado con WorkspaceState (Memoria por Root).',
-      );
-    }
+    });
   }
 
   public get<T>(key: string, defaultValue?: T): T | undefined {
@@ -112,6 +77,59 @@ export class SharedStorageService {
     this._onDidChange.dispose();
     this.fileWatcher?.close();
     this.fileWatcher = null;
+    this.configListener?.dispose();
+    this.configListener = null;
+  }
+
+  private applyConfig(forceReload: boolean): void {
+    const config = vscode.workspace.getConfiguration('anfavorites.storage');
+    const configExplicit = this.getExplicitSharedSetting(config);
+    this.sharedFilePath = this.resolveSharedFilePath();
+    const sharedEnabled =
+      this.sharedFilePath && this.readSharedSetting() === true;
+    const nextUseShared =
+      configExplicit === true
+        ? true
+        : configExplicit === false
+          ? false
+          : sharedEnabled;
+
+    if (nextUseShared) {
+      if (this.sharedFilePath) {
+        this.ensureStorageFile();
+        this.writeSharedSetting(true);
+        if (!this.fileWatcher) {
+          this.startFileWatcher();
+        }
+        this.useSharedFile = true;
+        this.logger.info('[SharedStorage] Usando almacenamiento compartido.', {
+          filePath: this.sharedFilePath,
+          source: configExplicit === true ? 'config' : 'shared-file',
+        });
+      } else {
+        this.useSharedFile = false;
+        this.logger.warn(
+          '[SharedStorage] No se pudo resolver ruta para compartir entre IDEs; usando WorkspaceState.',
+        );
+      }
+    } else {
+      if (this.sharedFilePath) {
+        this.ensureStorageFile();
+        this.writeSharedSetting(false);
+      }
+      if (this.fileWatcher) {
+        this.fileWatcher.close();
+        this.fileWatcher = null;
+      }
+      this.useSharedFile = false;
+      this.logger.info(
+        '[SharedStorage] Compartir entre IDEs desactivado; usando WorkspaceState.',
+      );
+    }
+
+    if (forceReload) {
+      this._onDidChange.fire(undefined);
+    }
   }
 
   private resolveSharedFilePath(): string | null {
