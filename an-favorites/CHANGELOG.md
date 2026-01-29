@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.89] - 2026-02-01
+
+### Changed
+- Quick Open integra las líneas guardadas dentro del flujo de favoritos.
+
 ## [0.8.88] - 2026-02-01
 
 ### Changed

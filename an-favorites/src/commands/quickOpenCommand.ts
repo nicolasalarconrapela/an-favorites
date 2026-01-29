@@ -1015,13 +1015,13 @@ export function registerQuickOpenCommand(
             return exists;
           });
 
-          const lineFavoriteItems = buildLineFavoriteItems(
-            validLineFavorites,
-            config,
-          );
           const recentFavItems = buildRecentFavoriteItems(
             validRecentFavUris,
             favoritesProvider,
+            config,
+          );
+          const lineFavoriteItems = buildLineFavoriteItems(
+            validLineFavorites,
             config,
           );
           const recentItems = buildRecentItems(
@@ -1030,33 +1030,18 @@ export function registerQuickOpenCommand(
             config,
           );
 
+          const combinedFavoriteItems = [
+            ...lineFavoriteItems,
+            ...recentFavItems,
+          ];
 
           const items: QuickOpenItem[] = [];
-
-          if (lineFavoriteItems.length > 0) {
-            items.push({
-              label: 'Líneas guardadas',
-              kind: vscode.QuickPickItemKind.Separator,
-            });
-            items.push(...lineFavoriteItems);
-          } else if (!isSearching) {
-            items.push({
-              label: 'No hay líneas guardadas',
-              kind: vscode.QuickPickItemKind.Separator,
-            });
-            items.push({
-              label:
-                'Usa el menú contextual del editor para guardar una línea específica.',
-              description: '',
-              detail: '',
-            });
-          }
 
           if (pinnedItems.length > 0) {
             items.push(...pinnedItems);
           }
 
-          const hasFavoriteItems = recentFavItems.length > 0;
+          const hasFavoriteItems = combinedFavoriteItems.length > 0;
           items.push({
             label: hasFavoriteItems ? 'Favoritos' : 'Aún no hay favoritos',
             kind: vscode.QuickPickItemKind.Separator,
@@ -1064,7 +1049,7 @@ export function registerQuickOpenCommand(
           items.push({ label: ' ', alwaysShow: false });
 
           if (hasFavoriteItems) {
-            items.push(...recentFavItems);
+            items.push(...combinedFavoriteItems);
           } else if (!isSearching) {
             items.push({
               label:
@@ -1122,7 +1107,7 @@ export function registerQuickOpenCommand(
           const allFileItems = [
             ...lineFavoriteItems,
             ...pinnedItems,
-            ...recentFavItems,
+            ...combinedFavoriteItems,
             ...recentItems,
             ...otherItems,
           ] as Array<FileQuickPickItem | LineQuickPickItem>;
