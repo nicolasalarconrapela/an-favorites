@@ -652,7 +652,8 @@ class LineQuickPickItem implements vscode.QuickPickItem {
     this.showPathWhen = showPathWhen;
 
     const baseName = safeBasenameFromUri(uri);
-    this.label = `${baseName}:${line}`;
+    const iconPrefix = '$(star-full)';
+    this.label = `${iconPrefix} ${baseName}:${line}`;
 
     const { rel, rootName } = workspaceRelativeLabel(uri);
 

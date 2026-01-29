@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.91] - 2026-02-01
+
+### Changed
+- Quick Open muestra las líneas guardadas como favoritos con formato nombre:línea.
+
 ## [0.8.90] - 2026-02-01
 
 ### Changed
