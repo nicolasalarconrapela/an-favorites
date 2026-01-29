@@ -3,7 +3,6 @@ import * as path from 'path';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
 import { Logger } from '../logging/logger';
-import { LineFavoritesService } from '../services/lineFavoritesService';
 import {
   QuickOpenConfig,
   QuickOpenConfigService,
@@ -718,7 +717,6 @@ export function registerQuickOpenCommand(
   favoritesProvider: FavoritesTreeDataProvider,
   logger: Logger,
   mruService: MRUService,
-  lineFavoritesService: LineFavoritesService,
 ): void {
   const throttleIntervalMs = 2000;
   const configService: QuickOpenConfigService =
@@ -784,7 +782,7 @@ export function registerQuickOpenCommand(
         log.debug('[QuickOpen] Favorites validated successfully');
 
         log.debug('[QuickOpen] Validating line favorites...');
-        await lineFavoritesService.validateLineFavorites();
+        await favoritesProvider.validateLineFavorites();
         log.debug('[QuickOpen] Line favorites validated successfully');
 
         log.debug('[QuickOpen] Validating MRU files...');
@@ -871,7 +869,7 @@ export function registerQuickOpenCommand(
 
           log.debug('[QuickOpen] Reloading favorites from storage...');
           favoritesProvider.reloadFavorites();
-          lineFavoritesService.reload(false);
+          favoritesProvider.reloadLineFavorites();
           log.debug('[QuickOpen] Favorites reloaded');
 
 
@@ -954,8 +952,8 @@ export function registerQuickOpenCommand(
             recentFavUris.map((u) => normalizeFsPath(u.fsPath)),
           );
 
-          const lineFavoritesEntries = lineFavoritesService
-            .getAllFavorites()
+          const lineFavoritesEntries = favoritesProvider
+            .getAllLineFavorites()
             .map((entry) => ({
               uri: vscode.Uri.file(entry.path),
               line: entry.line,
@@ -1012,10 +1010,7 @@ export function registerQuickOpenCommand(
           const validLineFavorites = lineFavoritesEntries.filter((entry) => {
             const exists = existenceMap.get(entry.uri.fsPath) ?? false;
             if (!exists) {
-              lineFavoritesService.removeLineFavorite(
-                entry.uri,
-                entry.line,
-              );
+              favoritesProvider.removeLineFavorite(entry.uri, entry.line);
             }
             return exists;
           });
@@ -1296,26 +1291,6 @@ export function registerQuickOpenCommand(
             'Favorites changed, rebuilding QuickOpen items',
           );
           debouncedExternalRebuild('favorites');
-        }),
-      );
-
-      disposables.push(
-        lineFavoritesService.onDidChange(async () => {
-          const isSearching = quickPick.value.trim().length > 0;
-          if (isSearching) {
-            logThrottledWithContext(
-              'debug',
-              'quickopen:line-favorites-changed',
-              'Line favorites changed while searching, skipping rebuild',
-            );
-            return;
-          }
-          logThrottledWithContext(
-            'debug',
-            'quickopen:line-favorites-changed',
-            'Line favorites changed, rebuilding QuickOpen items',
-          );
-          debouncedExternalRebuild('line-favorites');
         }),
       );
 

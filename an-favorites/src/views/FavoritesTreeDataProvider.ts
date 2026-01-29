@@ -109,6 +109,12 @@ interface FavoriteMetadata {
   isPinned: boolean;
 }
 
+interface LineFavoriteData {
+  path: string;
+  line: number;
+  addedAt?: number;
+}
+
 export class FavoritesTreeDataProvider
   implements
     vscode.TreeDataProvider<GroupItem | FavoriteItem | WorkspaceItem>,
@@ -133,12 +139,14 @@ export class FavoritesTreeDataProvider
   ];
 
   private favorites: Map<string, FavoriteMetadata> = new Map();
+  private lineFavorites: Map<string, Map<number, number>> = new Map();
 
   private groups: Set<string> = new Set([
     FavoritesTreeDataProvider.DEFAULT_GROUP,
   ]);
 
   public static readonly DEFAULT_GROUP = 'Sin Grupo';
+  private static readonly LINE_FAVORITES_KEY = 'anfavorites.lineFavorites.v1';
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -146,10 +154,12 @@ export class FavoritesTreeDataProvider
     private storage: SharedStorageService,
   ) {
     this.loadFavorites();
+    this.loadLineFavorites();
     this.disposables.push(
       this.storage.onDidChange(() => {
         this.logger.info('[storage] External change detected -> reloading');
         this.reloadFavorites();
+        this.reloadLineFavorites();
         this.refresh();
       }),
     );
@@ -189,6 +199,10 @@ export class FavoritesTreeDataProvider
 
   public getFavoritePaths(): string[] {
     return Array.from(this.favorites.keys());
+  }
+
+  public getLineFavoritePaths(): string[] {
+    return Array.from(this.lineFavorites.keys());
   }
 
   getTreeItem(element: GroupItem | FavoriteItem): vscode.TreeItem {
@@ -788,6 +802,12 @@ export class FavoritesTreeDataProvider
     this.loadFavorites();
   }
 
+  reloadLineFavorites(): void {
+    this.logger.info('[storage] reloadLineFavorites()');
+    this.lineFavorites.clear();
+    this.loadLineFavorites();
+  }
+
   private loadFavorites(): void {
     const sharedData = this.storage.get<FavoriteData[]>(
       'anfavorites.favorites.v2',
@@ -874,6 +894,30 @@ export class FavoritesTreeDataProvider
     this.checkForDuplicateNames();
   }
 
+  private loadLineFavorites(): void {
+    const stored = this.storage.get<LineFavoriteData[]>(
+      FavoritesTreeDataProvider.LINE_FAVORITES_KEY,
+    );
+
+    if (!stored || stored.length === 0) {
+      this.logger.info('[lineFavorites] No stored line favorites found');
+      return;
+    }
+
+    stored.forEach((entry) => {
+      if (!entry.path || !entry.line || entry.line < 1) {
+        return;
+      }
+      const lineMap = this.lineFavorites.get(entry.path) ?? new Map();
+      lineMap.set(entry.line, entry.addedAt ?? Date.now());
+      this.lineFavorites.set(entry.path, lineMap);
+    });
+
+    this.logger.info(
+      `[lineFavorites] Loaded line favorites. entries=${stored.length}`,
+    );
+  }
+
   private checkForDuplicateNames(): void {
     const nameMap = new Map<string, string[]>();
     const configSearch =
@@ -924,6 +968,136 @@ export class FavoritesTreeDataProvider
     );
     this.storage.update('anfavorites.favorites.v2', favoritesArray);
     this.storage.update('anfavorites.groups', Array.from(this.groups));
+  }
+
+  private saveLineFavorites(): void {
+    const serialized: LineFavoriteData[] = [];
+
+    this.lineFavorites.forEach((lineMap, filePath) => {
+      lineMap.forEach((addedAt, line) => {
+        serialized.push({ path: filePath, line, addedAt });
+      });
+    });
+
+    this.storage.update(
+      FavoritesTreeDataProvider.LINE_FAVORITES_KEY,
+      serialized,
+    );
+  }
+
+  public toggleLineFavorite(uri: vscode.Uri, line: number): boolean {
+    if (line < 1) {
+      this.logger.warn('[lineFavorites] Ignoring invalid line', { line });
+      return false;
+    }
+
+    const filePath = uri.fsPath;
+    const existing = this.lineFavorites.get(filePath);
+
+    if (existing?.has(line)) {
+      existing.delete(line);
+      if (existing.size === 0) {
+        this.lineFavorites.delete(filePath);
+      }
+      this.saveLineFavorites();
+      this.refresh();
+      return false;
+    }
+
+    const lineMap = existing ?? new Map<number, number>();
+    lineMap.set(line, Date.now());
+    this.lineFavorites.set(filePath, lineMap);
+
+    this.saveLineFavorites();
+    this.refresh();
+    return true;
+  }
+
+  public getLineFavorites(uri: vscode.Uri): number[] {
+    const entries = this.lineFavorites.get(uri.fsPath);
+    if (!entries) return [];
+    return Array.from(entries.keys()).sort((a, b) => a - b);
+  }
+
+  public getAllLineFavorites(): LineFavoriteData[] {
+    const result: LineFavoriteData[] = [];
+    this.lineFavorites.forEach((lineMap, filePath) => {
+      lineMap.forEach((addedAt, line) => {
+        result.push({ path: filePath, line, addedAt });
+      });
+    });
+
+    return result.sort((a, b) => (b.addedAt ?? 0) - (a.addedAt ?? 0));
+  }
+
+  public removeLineFavorite(uri: vscode.Uri, line: number): void {
+    const filePath = uri.fsPath;
+    const entries = this.lineFavorites.get(filePath);
+    if (!entries || !entries.has(line)) {
+      return;
+    }
+
+    entries.delete(line);
+    if (entries.size === 0) {
+      this.lineFavorites.delete(filePath);
+    }
+
+    this.saveLineFavorites();
+    this.refresh();
+  }
+
+  public updateLineFavoritePath(oldPath: string, newPath: string): void {
+    const entries = this.lineFavorites.get(oldPath);
+    if (!entries) {
+      return;
+    }
+
+    this.lineFavorites.delete(oldPath);
+    this.lineFavorites.set(newPath, entries);
+    this.saveLineFavorites();
+    this.refresh();
+  }
+
+  public async validateLineFavorites(): Promise<void> {
+    await this.validateLineFavoritesForPaths(this.getLineFavoritePaths());
+  }
+
+  public async validateLineFavoritesForPaths(
+    filePaths: string[],
+  ): Promise<void> {
+    const uniquePaths = Array.from(
+      new Set(filePaths.filter((filePath) => this.lineFavorites.has(filePath))),
+    );
+
+    if (uniquePaths.length === 0) {
+      return;
+    }
+
+    const toDelete: string[] = [];
+    const t0 = Date.now();
+
+    await runWithConcurrency(
+      uniquePaths,
+      VALIDATION_CONCURRENCY,
+      async (filePath) => {
+        try {
+          const uri = vscode.Uri.file(filePath);
+          await vscode.workspace.fs.stat(uri);
+        } catch {
+          toDelete.push(filePath);
+        }
+      },
+    );
+
+    this.logger.info(
+      `[lineFavorites] validateLineFavoritesForPaths done. processed=${uniquePaths.length} missing=${toDelete.length} durationMs=${Date.now() - t0}`,
+    );
+
+    if (toDelete.length > 0) {
+      toDelete.forEach((filePath) => this.lineFavorites.delete(filePath));
+      this.saveLineFavorites();
+      this.refresh();
+    }
   }
 
   public async validateFavorites(): Promise<void> {

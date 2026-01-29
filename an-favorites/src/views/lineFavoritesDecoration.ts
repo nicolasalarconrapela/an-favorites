@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { LineFavoritesService } from '../services/lineFavoritesService';
 import { Logger } from '../logging/logger';
+import { FavoritesTreeDataProvider } from './FavoritesTreeDataProvider';
 
 export class LineFavoritesDecoration implements vscode.Disposable {
   private readonly decorationType: vscode.TextEditorDecorationType;
@@ -8,7 +8,7 @@ export class LineFavoritesDecoration implements vscode.Disposable {
 
   constructor(
     context: vscode.ExtensionContext,
-    private lineFavoritesService: LineFavoritesService,
+    private favoritesProvider: FavoritesTreeDataProvider,
     private logger: Logger,
   ) {
     const gutterIconPath = vscode.Uri.joinPath(
@@ -47,7 +47,7 @@ export class LineFavoritesDecoration implements vscode.Disposable {
     );
 
     this.disposables.push(
-      this.lineFavoritesService.onDidChange(() => {
+      this.favoritesProvider.onDidChangeTreeData(() => {
         vscode.window.visibleTextEditors.forEach((editor) =>
           this.updateEditor(editor),
         );
@@ -69,7 +69,7 @@ export class LineFavoritesDecoration implements vscode.Disposable {
       return;
     }
 
-    const lines = this.lineFavoritesService.getLineFavorites(
+    const lines = this.favoritesProvider.getLineFavorites(
       editor.document.uri,
     );
 

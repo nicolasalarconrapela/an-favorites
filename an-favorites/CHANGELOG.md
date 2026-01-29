@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.88] - 2026-02-01
+
+### Changed
+- Favoritos por línea integrados en la lógica principal de favoritos y su almacenamiento compartido.
+- Actualización de Quick Open y decoraciones para usar el proveedor de favoritos existente.
+
 ## [0.8.87] - 2026-02-01
 
 ### Added

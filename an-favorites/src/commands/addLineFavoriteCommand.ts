@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
-import { LineFavoritesService } from '../services/lineFavoritesService';
 import { Logger } from '../logging/logger';
+import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 
 export function registerAddLineFavoriteCommand(
   context: vscode.ExtensionContext,
-  lineFavoritesService: LineFavoritesService,
+  favoritesProvider: FavoritesTreeDataProvider,
   logger: Logger,
 ): void {
   const disposable = vscode.commands.registerTextEditorCommand(
@@ -19,7 +19,7 @@ export function registerAddLineFavoriteCommand(
       }
 
       const line = editor.selection.active.line + 1;
-      const added = lineFavoritesService.toggleLineFavorite(uri, line);
+      const added = favoritesProvider.toggleLineFavorite(uri, line);
 
       logger.info(
         `[lineFavorites] ${added ? 'Added' : 'Removed'} line ${line} -> ${uri.fsPath}`,
