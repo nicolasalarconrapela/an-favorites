@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.97] - 2026-02-01
+
+### Changed
+- Quick Open usa iconos de bookmark para favoritos y botón de eliminar.
+
 ## [0.8.96] - 2026-02-01
 
 ### Changed

@@ -426,6 +426,7 @@ function createButtonIcon(
     'folder',
     'symbol-file',
     'bookmark',
+    'bookmark-slash',
     'heart',
     'trash',
     'x',
@@ -504,7 +505,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 
     const baseName = safeBasenameFromUri(uri);
 
-    let iconPrefix = isFavorite ? '$(star-full)' : '$(star-empty)';
+    let iconPrefix = isFavorite ? '$(bookmark)' : '     ';
     if (isPinned) iconPrefix = '$(pin)';
 
     this.label = `${iconPrefix} ${baseName}`;
@@ -567,7 +568,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     }
 
     const baseName = safeBasenameFromUri(this.resourceUri);
-    let iconPrefix = this.isFavorite ? '$(star-full) ' : '     ';
+    let iconPrefix = this.isFavorite ? '$(bookmark) ' : '     ';
     if (this.isPinned) iconPrefix = '$(pin) ';
     this.label = `${iconPrefix} ${baseName}`;
 
@@ -588,8 +589,8 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 
     buttons.push({
       iconPath: createButtonIcon(
-        this.isFavorite ? 'star-full' : 'star-empty',
-        this.isFavorite ? 'heart' : 'circle-outline',
+        this.isFavorite ? 'bookmark-slash' : 'bookmark',
+        this.isFavorite ? 'close' : 'circle-outline',
       ),
       tooltip: this.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos',
     });
@@ -715,7 +716,7 @@ class LineQuickPickItem implements vscode.QuickPickItem {
     }
 
     const baseName = safeBasenameFromUri(this.resourceUri);
-    const iconPrefix = this.isPinned ? '$(pin)' : '$(star-full)';
+    const iconPrefix = this.isPinned ? '$(pin)' : '$(bookmark)';
     this.label = `${iconPrefix} ${baseName}:${this.line}`;
 
     const pinTooltip = this.isPinned ? 'Desfijar' : 'Fijar';
@@ -725,7 +726,7 @@ class LineQuickPickItem implements vscode.QuickPickItem {
         tooltip: pinTooltip,
       },
       {
-        iconPath: createButtonIcon('close', 'x'),
+        iconPath: createButtonIcon('bookmark-slash', 'close'),
         tooltip: 'Eliminar de favoritos',
       },
     ];
