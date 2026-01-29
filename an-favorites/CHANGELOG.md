@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.84] - 2026-01-30
+
+### Added
+- Storage: sincroniza el setting de compartir favoritos entre IDEs dentro del workspace
+
 ## [0.8.83] - 2026-01-30
 
 ### Added

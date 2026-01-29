@@ -10,6 +10,8 @@ import { Logger } from '../logging/logger';
  * del workspace para que distintos clientes vean los mismos datos.
  */
 export class SharedStorageService {
+  private static readonly SHARED_SETTING_KEY =
+    'anfavorites.storage.shareAcrossIdes';
   private _onDidChange = new vscode.EventEmitter<string | undefined>();
   public readonly onDidChange = this._onDidChange.event;
   private sharedFilePath: string | null = null;
@@ -22,15 +24,22 @@ export class SharedStorageService {
     private logger: Logger,
   ) {
     const config = vscode.workspace.getConfiguration('anfavorites.storage');
-    this.useSharedFile = config.get<boolean>('shareAcrossIdes', false);
+    const configEnabled = config.get<boolean>('shareAcrossIdes', false);
+    this.sharedFilePath = this.resolveSharedFilePath();
+    const sharedEnabled =
+      this.sharedFilePath && this.readSharedSetting() === true;
+    this.useSharedFile = configEnabled || sharedEnabled;
 
     if (this.useSharedFile) {
-      this.sharedFilePath = this.resolveSharedFilePath();
       if (this.sharedFilePath) {
         this.ensureStorageFile();
+        if (configEnabled) {
+          this.writeSharedSetting(true);
+        }
         this.startFileWatcher();
         this.logger.info('[SharedStorage] Usando almacenamiento compartido.', {
           filePath: this.sharedFilePath,
+          source: configEnabled ? 'config' : 'shared-file',
         });
       } else {
         this.useSharedFile = false;
@@ -177,6 +186,32 @@ export class SharedStorageService {
     }
 
     return {};
+  }
+
+  private readSharedSetting(): boolean | undefined {
+    const data = this.readSharedData();
+    const settings = data?.settings;
+    if (settings && typeof settings === 'object') {
+      const value = (settings as Record<string, unknown>)[
+        SharedStorageService.SHARED_SETTING_KEY
+      ];
+      if (typeof value === 'boolean') {
+        return value;
+      }
+    }
+    return undefined;
+  }
+
+  private writeSharedSetting(value: boolean): void {
+    const data = this.readSharedData();
+    const settings = data.settings;
+    const nextSettings =
+      settings && typeof settings === 'object'
+        ? (settings as Record<string, unknown>)
+        : {};
+    nextSettings[SharedStorageService.SHARED_SETTING_KEY] = value;
+    data.settings = nextSettings;
+    this.writeSharedData(data);
   }
 
   private writeSharedData(data: Record<string, unknown>): void {
