@@ -154,12 +154,14 @@ export class FavoritesTreeDataProvider
       }),
     );
 
+
     this.disposables.push(
       vscode.workspace.onDidChangeWorkspaceFolders(() => {
         this.logger.info('[workspace] Workspace folders changed -> refresh()');
         this.refresh();
       }),
     );
+
 
     this.disposables.push(
       vscode.workspace.onDidChangeConfiguration((e) => {
