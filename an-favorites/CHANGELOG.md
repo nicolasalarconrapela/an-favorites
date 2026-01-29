@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.0] - 2026-02-01
+
+### Changed
+- Las líneas favoritas en el árbol ahora incluyen abrir al lado como los favoritos de archivo.
+
 ## [0.8.99] - 2026-02-01
 
 ### Changed

@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.99",
+  "version": "0.9.0",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "engines": {
@@ -113,6 +113,12 @@
         "icon": "$(split-horizontal)"
       },
       {
+        "command": "anfavorites.openLineToSide",
+        "title": "Abrir línea al lado",
+        "category": "AnFavorites",
+        "icon": "$(split-horizontal)"
+      },
+      {
         "command": "anfavorites.quickOpen",
         "title": "Buscar Archivo (Favoritos)",
         "category": "AnFavorites"
@@ -217,6 +223,11 @@
         {
           "command": "anfavorites.openToSide",
           "when": "view == anfavorites.favoritesView && viewItem =~ /favoriteItem/",
+          "group": "inline@1"
+        },
+        {
+          "command": "anfavorites.openLineToSide",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /^lineFavoriteItem(:pinned)?$/",
           "group": "inline@1"
         },
         {

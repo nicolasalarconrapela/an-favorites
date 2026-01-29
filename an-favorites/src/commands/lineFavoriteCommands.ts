@@ -46,6 +46,33 @@ export function registerLineFavoriteCommands(
     },
   );
 
-  context.subscriptions.push(removeDisposable, pinDisposable, unpinDisposable);
+  const openToSideDisposable = vscode.commands.registerCommand(
+    'anfavorites.openLineToSide',
+    async (item?: LineFavoriteItem) => {
+      if (!item) {
+        logger.warn('[lineFavorites] openLineToSide without item');
+        return;
+      }
+      try {
+        const lineIndex = Math.max(0, item.line - 1);
+        const range = new vscode.Range(lineIndex, 0, lineIndex, 0);
+        await vscode.window.showTextDocument(item.resourceUri, {
+          viewColumn: vscode.ViewColumn.Beside,
+          preview: false,
+          selection: range,
+        });
+      } catch (error) {
+        logger.error('[lineFavorites] Error opening line to side', error);
+        vscode.window.showErrorMessage(`Error al abrir línea: ${error}`);
+      }
+    },
+  );
+
+  context.subscriptions.push(
+    removeDisposable,
+    pinDisposable,
+    unpinDisposable,
+    openToSideDisposable,
+  );
   logger.info('[lineFavorites] line favorite commands registered');
 }
