@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.95] - 2026-02-01
+
+### Changed
+- Quick Open muestra líneas fijadas dentro de la sección de pinneds.
+
 ## [0.8.94] - 2026-02-01
 
 ### Changed

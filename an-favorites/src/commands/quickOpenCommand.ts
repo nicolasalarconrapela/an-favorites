@@ -1032,13 +1032,24 @@ export function registerQuickOpenCommand(
             return exists;
           });
 
+          const pinnedLineFavorites = validLineFavorites.filter(
+            (entry) => entry.isPinned,
+          );
+          const unpinnedLineFavorites = validLineFavorites.filter(
+            (entry) => !entry.isPinned,
+          );
+
+          const pinnedLineItems = buildLineFavoriteItems(
+            pinnedLineFavorites,
+            config,
+          );
           const recentFavItems = buildRecentFavoriteItems(
             validRecentFavUris,
             favoritesProvider,
             config,
           );
           const lineFavoriteItems = buildLineFavoriteItems(
-            validLineFavorites,
+            unpinnedLineFavorites,
             config,
           );
           const recentItems = buildRecentItems(
@@ -1054,8 +1065,9 @@ export function registerQuickOpenCommand(
 
           const items: QuickOpenItem[] = [];
 
-          if (pinnedItems.length > 0) {
-            items.push(...pinnedItems);
+          const combinedPinnedItems = [...pinnedItems, ...pinnedLineItems];
+          if (combinedPinnedItems.length > 0) {
+            items.push(...combinedPinnedItems);
           }
 
           const hasFavoriteItems = combinedFavoriteItems.length > 0;
@@ -1131,7 +1143,7 @@ export function registerQuickOpenCommand(
 
           const allFileItems = [
             ...lineFavoriteItems,
-            ...pinnedItems,
+            ...combinedPinnedItems,
             ...combinedFavoriteItems,
             ...recentItems,
             ...otherItems,
