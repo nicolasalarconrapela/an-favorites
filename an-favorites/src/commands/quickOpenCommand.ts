@@ -724,6 +724,10 @@ class LineQuickPickItem implements vscode.QuickPickItem {
         iconPath: createButtonIcon(this.isPinned ? 'pinned' : 'pin', 'bookmark'),
         tooltip: pinTooltip,
       },
+      {
+        iconPath: createButtonIcon('close', 'x'),
+        tooltip: 'Eliminar de favoritos',
+      },
     ];
   }
 }
@@ -1499,6 +1503,19 @@ export function registerQuickOpenCommand(
           if (!isFileItem(item)) {
             if (isLineFavoriteItem(item)) {
               const button = e.button;
+              if (button.tooltip === 'Eliminar de favoritos') {
+                favoritesProvider.removeLineFavorite(
+                  item.resourceUri,
+                  item.line,
+                );
+                const currentItems = quickPick.items;
+                const newItems = currentItems.filter((i) => i !== item);
+                quickPick.items = newItems;
+                quickPick.activeItems = newItems.filter((i) =>
+                  isLineFavoriteItem(i),
+                );
+                return;
+              }
               if (
                 button.tooltip?.startsWith('Fijar') ||
                 button.tooltip === 'Desfijar'

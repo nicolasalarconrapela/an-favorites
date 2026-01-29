@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.96] - 2026-02-01
+
+### Changed
+- Quick Open permite eliminar líneas guardadas desde el listado de favoritos.
+
 ## [0.8.95] - 2026-02-01
 
 ### Changed
