@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.82",
+  "version": "0.8.83",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "engines": {
@@ -296,6 +296,16 @@
               "Separar en todos los grupos."
             ],
             "description": "Permite separar los favoritos por nombre de la carpeta del espacio de trabajo en entornos multi-root."
+          }
+        }
+      },
+      {
+        "title": "Storage",
+        "properties": {
+          "anfavorites.storage.shareAcrossIdes": {
+            "type": "boolean",
+            "default": false,
+            "description": "Comparte favoritos entre IDEs cuando el workspace es el mismo (root o multi-root). Guarda un archivo dentro del workspace o junto al .code-workspace."
           }
         }
       },

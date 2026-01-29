@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.83] - 2026-01-30
+
+### Added
+- Storage: nuevo setting para compartir favoritos entre IDEs cuando el workspace coincide
+
 ## [0.8.82] - 2026-01-29
 
 ### Changed
