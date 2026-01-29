@@ -166,6 +166,7 @@ interface FavoriteMetadata {
 interface LineFavoriteData {
   path: string;
   line: number;
+  group: string;
   addedAt?: number;
   isPinned?: boolean;
 }
@@ -200,7 +201,7 @@ export class FavoritesTreeDataProvider
   private favorites: Map<string, FavoriteMetadata> = new Map();
   private lineFavorites: Map<
     string,
-    Map<number, { addedAt: number; isPinned: boolean }>
+    Map<number, { addedAt: number; isPinned: boolean; group: string }>
   > = new Map();
 
   private groups: Set<string> = new Set([
@@ -403,18 +404,19 @@ export class FavoritesTreeDataProvider
         );
       });
 
-      if (element.groupName === FavoritesTreeDataProvider.DEFAULT_GROUP) {
-        this.lineFavorites.forEach((lineMap, filePath) => {
-          const uri = vscode.Uri.file(filePath);
-          const wf = vscode.workspace.getWorkspaceFolder(uri);
-          if (!wf) {
+      this.lineFavorites.forEach((lineMap, filePath) => {
+        const uri = vscode.Uri.file(filePath);
+        const wf = vscode.workspace.getWorkspaceFolder(uri);
+        if (!wf) {
+          return;
+        }
+        lineMap.forEach((metadata, line) => {
+          if (metadata.group !== element.groupName) {
             return;
           }
-          lineMap.forEach((metadata, line) => {
-            items.push(new LineFavoriteItem(uri, line, metadata.isPinned));
-          });
+          items.push(new LineFavoriteItem(uri, line, metadata.isPinned));
         });
-      }
+      });
 
       this.logger.debug(`[getChildren:group] Collected items=${items.length}`);
 
@@ -448,20 +450,21 @@ export class FavoritesTreeDataProvider
         }
       });
 
-      if (element.groupName === FavoritesTreeDataProvider.DEFAULT_GROUP) {
-        this.lineFavorites.forEach((lineMap, filePath) => {
-          const uri = vscode.Uri.file(filePath);
-          const wf = vscode.workspace.getWorkspaceFolder(uri);
-          if (
-            wf &&
-            wf.uri.toString() === element.workspaceFolder.uri.toString()
-          ) {
-            lineMap.forEach((metadata, line) => {
-              items.push(new LineFavoriteItem(uri, line, metadata.isPinned));
-            });
-          }
-        });
-      }
+      this.lineFavorites.forEach((lineMap, filePath) => {
+        const uri = vscode.Uri.file(filePath);
+        const wf = vscode.workspace.getWorkspaceFolder(uri);
+        if (
+          wf &&
+          wf.uri.toString() === element.workspaceFolder.uri.toString()
+        ) {
+          lineMap.forEach((metadata, line) => {
+            if (metadata.group !== element.groupName) {
+              return;
+            }
+            items.push(new LineFavoriteItem(uri, line, metadata.isPinned));
+          });
+        }
+      });
 
       await this._resolveCollisions(
         items,
@@ -1001,11 +1004,14 @@ export class FavoritesTreeDataProvider
         return;
       }
       const lineMap = this.lineFavorites.get(entry.path) ?? new Map();
+      const groupName = entry.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
       lineMap.set(entry.line, {
         addedAt: entry.addedAt ?? Date.now(),
         isPinned: !!entry.isPinned,
+        group: groupName,
       });
       this.lineFavorites.set(entry.path, lineMap);
+      this.groups.add(groupName);
     });
 
     this.logger.info(
@@ -1073,6 +1079,7 @@ export class FavoritesTreeDataProvider
         serialized.push({
           path: filePath,
           line,
+          group: metadata.group,
           addedAt: metadata.addedAt,
           isPinned: metadata.isPinned,
         });
@@ -1105,7 +1112,11 @@ export class FavoritesTreeDataProvider
     }
 
     const lineMap = existing ?? new Map();
-    lineMap.set(line, { addedAt: Date.now(), isPinned: false });
+    lineMap.set(line, {
+      addedAt: Date.now(),
+      isPinned: false,
+      group: FavoritesTreeDataProvider.DEFAULT_GROUP,
+    });
     this.lineFavorites.set(filePath, lineMap);
 
     this.saveLineFavorites();
@@ -1126,6 +1137,7 @@ export class FavoritesTreeDataProvider
         result.push({
           path: filePath,
           line,
+          group: metadata.group,
           addedAt: metadata.addedAt,
           isPinned: metadata.isPinned,
         });
@@ -1147,6 +1159,13 @@ export class FavoritesTreeDataProvider
     return this.lineFavorites.get(uri.fsPath)?.get(line)?.isPinned ?? false;
   }
 
+  public getLineFavoriteGroup(
+    uri: vscode.Uri,
+    line: number,
+  ): string | undefined {
+    return this.lineFavorites.get(uri.fsPath)?.get(line)?.group;
+  }
+
   public toggleLineFavoritePin(uri: vscode.Uri, line: number): void {
     const entries = this.lineFavorites.get(uri.fsPath);
     if (!entries) {
@@ -1161,6 +1180,25 @@ export class FavoritesTreeDataProvider
     if (metadata.isPinned) {
       metadata.addedAt = Date.now();
     }
+    this.saveLineFavorites();
+    this.refresh();
+  }
+
+  public moveLineFavorite(
+    uri: vscode.Uri,
+    line: number,
+    newGroup: string,
+  ): void {
+    const entries = this.lineFavorites.get(uri.fsPath);
+    if (!entries) {
+      return;
+    }
+    const metadata = entries.get(line);
+    if (!metadata) {
+      return;
+    }
+    metadata.group = newGroup;
+    this.groups.add(newGroup);
     this.saveLineFavorites();
     this.refresh();
   }

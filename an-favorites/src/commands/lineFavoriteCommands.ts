@@ -68,11 +68,37 @@ export function registerLineFavoriteCommands(
     },
   );
 
+  const moveDisposable = vscode.commands.registerCommand(
+    'anfavorites.moveLineFavorite',
+    async (item?: LineFavoriteItem) => {
+      if (!item) {
+        logger.warn('[lineFavorites] moveLineFavorite without item');
+        return;
+      }
+      const groups = favoritesProvider.getGroups();
+      if (groups.length === 0) {
+        vscode.window.showInformationMessage('No hay grupos disponibles.');
+        return;
+      }
+      const currentGroup =
+        favoritesProvider.getLineFavoriteGroup(item.resourceUri, item.line) ??
+        FavoritesTreeDataProvider.DEFAULT_GROUP;
+      const selection = await vscode.window.showQuickPick(groups, {
+        placeHolder: `Mover línea a grupo (actual: ${currentGroup})`,
+      });
+      if (!selection) {
+        return;
+      }
+      favoritesProvider.moveLineFavorite(item.resourceUri, item.line, selection);
+    },
+  );
+
   context.subscriptions.push(
     removeDisposable,
     pinDisposable,
     unpinDisposable,
     openToSideDisposable,
+    moveDisposable,
   );
   logger.info('[lineFavorites] line favorite commands registered');
 }

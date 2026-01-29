@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "engines": {
@@ -117,6 +117,11 @@
         "title": "Abrir línea al lado",
         "category": "AnFavorites",
         "icon": "$(split-horizontal)"
+      },
+      {
+        "command": "anfavorites.moveLineFavorite",
+        "title": "Mover Línea a Grupo",
+        "category": "AnFavorites"
       },
       {
         "command": "anfavorites.quickOpen",
@@ -259,6 +264,11 @@
           "command": "anfavorites.removeLineFavoriteItem",
           "when": "view == anfavorites.favoritesView && viewItem =~ /^lineFavoriteItem(:pinned)?$/",
           "group": "inline@2"
+        },
+        {
+          "command": "anfavorites.moveLineFavorite",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /^lineFavoriteItem(:pinned)?$/",
+          "group": "favorites@1"
         },
         {
           "command": "anfavorites.moveFavorite",

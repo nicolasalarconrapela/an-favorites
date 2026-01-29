@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.1] - 2026-02-01
+
+### Changed
+- Líneas favoritas permiten mover a grupo desde el árbol, igual que archivos.
+
 ## [0.9.0] - 2026-02-01
 
 ### Changed
