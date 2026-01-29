@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.93] - 2026-02-01
+
+### Changed
+- Quick Open muestra el botón de fijar en líneas favoritas.
+- Menú contextual de gutter reevalúa la línea activa al cambiar el rango visible.
+
 ## [0.8.92] - 2026-02-01
 
 ### Changed

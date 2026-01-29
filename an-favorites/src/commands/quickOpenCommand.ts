@@ -617,6 +617,7 @@ class LineQuickPickItem implements vscode.QuickPickItem {
   description?: string;
   detail?: string;
   iconPath?: vscode.ThemeIcon;
+  buttons?: vscode.QuickInputButton[];
   kind?: vscode.QuickPickItemKind;
   readonly itemType = 'lineFavorite';
 

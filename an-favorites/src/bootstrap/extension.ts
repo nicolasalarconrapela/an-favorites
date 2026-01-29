@@ -119,6 +119,9 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.window.onDidChangeTextEditorSelection((event) => {
       updateLineFavoriteContext(event.textEditor);
     }),
+    vscode.window.onDidChangeTextEditorVisibleRanges((event) => {
+      updateLineFavoriteContext(event.textEditor);
+    }),
     favoritesProvider.onDidChangeTreeData(() => {
       updateLineFavoriteContext(vscode.window.activeTextEditor);
     }),
