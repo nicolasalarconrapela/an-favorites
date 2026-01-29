@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.82] - 2026-01-29
+
+### Changed
+- Quick Open: introduce servicio de búsqueda con adaptador VS Code para mejorar testabilidad
+
 ## [0.8.81] - 2026-01-29
 
 ### Changed

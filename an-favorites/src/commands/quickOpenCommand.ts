@@ -11,12 +11,14 @@ import {
   buildSearchPattern,
   QuickOpenConfigService,
 } from './quickOpen/quickOpenHelpers';
+import { QuickOpenSearchService } from './quickOpen/quickOpenSearchService';
 import {
   applyCollisionLabels,
   normalizeFsPath,
   safeBasenameFromUri,
 } from '../utils/collisionUtils';
 import { VscodeQuickOpenConfigService } from '../adapters/vscodeQuickOpenConfigService';
+import { VscodeQuickOpenSearchService } from '../adapters/vscodeQuickOpenSearchService';
 
 type QuickOpenItem = vscode.QuickPickItem;
 
@@ -166,6 +168,7 @@ async function buildSearchItems(params: {
   recentFavNormSet: Set<string>;
   pinnedNormSet: Set<string>;
   searchPage: number;
+  searchService: QuickOpenSearchService;
   token: vscode.CancellationToken;
 }): Promise<{
   items: FileQuickPickItem[];
@@ -181,6 +184,7 @@ async function buildSearchItems(params: {
     recentFavNormSet,
     pinnedNormSet,
     searchPage,
+    searchService,
     token,
   } = params;
   const exclusionGlob = config.searchExclusions.length
@@ -194,7 +198,7 @@ async function buildSearchItems(params: {
   if (!cacheEntry) {
     const searchPattern = buildSearchPattern(cacheKey);
     const searchLimit = Math.max(1, config.maxSearchFiles) + 1;
-    const foundUris = await vscode.workspace.findFiles(
+    const foundUris = await searchService.findFiles(
       searchPattern,
       exclusionGlob,
       searchLimit,
@@ -568,6 +572,8 @@ export function registerQuickOpenCommand(
   const throttleIntervalMs = 2000;
   const configService: QuickOpenConfigService =
     new VscodeQuickOpenConfigService();
+  const searchService: QuickOpenSearchService =
+    new VscodeQuickOpenSearchService();
   const logThrottled = (
     level: 'debug' | 'info' | 'warn' | 'error',
     key: string,
@@ -934,6 +940,7 @@ export function registerQuickOpenCommand(
               recentFavNormSet,
               pinnedNormSet,
               searchPage,
+              searchService,
               token,
             });
             otherItems = searchResult.items;
