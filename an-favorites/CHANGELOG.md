@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.90] - 2026-02-01
+
+### Changed
+- Permite añadir o quitar favoritos por línea desde el menú contextual del gutter.
+
 ## [0.8.89] - 2026-02-01
 
 ### Changed
