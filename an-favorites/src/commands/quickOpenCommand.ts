@@ -2,8 +2,9 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
+import { Logger } from '../logging/logger';
 import {
-  detectCollisions,
+  applyCollisionLabels,
   normalizeFsPath,
   safeBasenameFromUri,
 } from '../utils/collisionUtils';
@@ -13,6 +14,20 @@ type QuickOpenItem = vscode.QuickPickItem;
 interface SearchCacheEntry {
   uris: vscode.Uri[];
   exceededMaxFiles: boolean;
+}
+
+interface QuickOpenConfig {
+  maxRecentFavorites: number;
+  maxPinned: number;
+  maxRecentFiles: number;
+  maxSearchResults: number;
+  maxSearchFiles: number;
+  searchCacheSize: number;
+  openToSide: boolean;
+  showIcons: boolean;
+  pathDetailLocation: 'description' | 'detail';
+  showPathWhen: 'always' | 'onConflict';
+  searchExclusions: string[];
 }
 
 class LruCache<K, V> {
@@ -70,7 +85,7 @@ function isFileItem(item: vscode.QuickPickItem): item is FileQuickPickItem {
   return typeof (item as any)?.resourceUri?.fsPath === 'string';
 }
 
-type FavoritesAction = 'clearRecents';
+type FavoritesAction = 'clearRecents' | 'loadMore';
 
 interface ActionQuickPickItem extends vscode.QuickPickItem {
   action: FavoritesAction;
@@ -79,7 +94,7 @@ interface ActionQuickPickItem extends vscode.QuickPickItem {
 
 
 
-function toSafeFileUri(value: unknown, logger?: any): vscode.Uri | null {
+function toSafeFileUri(value: unknown, logger?: Logger): vscode.Uri | null {
   if (typeof value !== 'string') {
     logger?.warn?.('MRU entry is not a string', { value });
     return null;
@@ -145,15 +160,245 @@ function debounce<T extends (...args: any[]) => any>(
   };
 }
 
+function getQuickOpenConfig(): QuickOpenConfig {
+  const configMaxItems = vscode.workspace.getConfiguration(
+    'anfavorites.maxItems',
+  );
+  const configSearch = vscode.workspace.getConfiguration('anfavorites.search');
+  const configQuickOpen =
+    vscode.workspace.getConfiguration('anfavorites.quickOpen');
+  const openToSide = configQuickOpen.get<boolean>('openToSide', false);
+
+  const maxRecentFavorites = configMaxItems.get<number>('favorites', 3);
+  const maxPinned = configMaxItems.get<number>('pinned', 3);
+  const maxRecentFiles = configMaxItems.get<number>('recentFiles', 5);
+  const maxSearchResults = configQuickOpen.get<number>(
+    'maxSearchResults',
+    200,
+  );
+  const maxSearchFiles = configQuickOpen.get<number>('maxSearchFiles', 1000);
+  const searchCacheSize = configQuickOpen.get<number>('searchCacheSize', 30);
+
+  const isAnGravity = vscode.env.appName.includes('AnGravity');
+  const defaultShowIcons = isAnGravity ? false : true;
+  const showIcons = configQuickOpen.get<boolean>('showIcons', defaultShowIcons);
+  const pathDetailLocation = configQuickOpen.get<'description' | 'detail'>(
+    'pathDetailLocation',
+    'detail',
+  );
+  const showPathWhen = configQuickOpen.get<'always' | 'onConflict'>(
+    'showPathWhen',
+    'onConflict',
+  );
+  const searchExclusions = configSearch.get<string[]>('exclusions', [
+    '**/node_modules/**',
+  ]);
+
+  return {
+    maxRecentFavorites,
+    maxPinned,
+    maxRecentFiles,
+    maxSearchResults,
+    maxSearchFiles,
+    searchCacheSize,
+    openToSide,
+    showIcons,
+    pathDetailLocation,
+    showPathWhen,
+    searchExclusions,
+  };
+}
+
+function buildPinnedItems(
+  uris: vscode.Uri[],
+  favoritesProvider: FavoritesTreeDataProvider,
+  config: QuickOpenConfig,
+): FileQuickPickItem[] {
+  return uris.map((uri) => {
+    const isIndividual = favoritesProvider.isPinned(uri);
+    return new FileQuickPickItem({
+      uri,
+      isFavorite: favoritesProvider.hasFavorite(uri),
+      isPinned: true,
+      isRecentlyOpened: false,
+      openToSide: config.openToSide,
+      isIndividualPinned: isIndividual,
+      showIcons: config.showIcons,
+      pathDetailLocation: config.pathDetailLocation,
+      showPathWhen: config.showPathWhen,
+    });
+  });
+}
+
+function buildRecentFavoriteItems(
+  uris: vscode.Uri[],
+  favoritesProvider: FavoritesTreeDataProvider,
+  config: QuickOpenConfig,
+): FileQuickPickItem[] {
+  return uris.map((uri) => {
+    const isPinned = favoritesProvider.isPinned(uri);
+    return new FileQuickPickItem({
+      uri,
+      isFavorite: true,
+      isPinned: false,
+      isIndividualPinned: isPinned,
+      isRecentlyOpened: false,
+      openToSide: config.openToSide,
+      showIcons: config.showIcons,
+      pathDetailLocation: config.pathDetailLocation,
+      showPathWhen: config.showPathWhen,
+    });
+  });
+}
+
+function buildRecentItems(
+  uris: vscode.Uri[],
+  favoritesProvider: FavoritesTreeDataProvider,
+  config: QuickOpenConfig,
+): FileQuickPickItem[] {
+  return uris.map((uri) => {
+    const isFav = favoritesProvider.hasFavorite(uri);
+    const isPinned = favoritesProvider.isPinned(uri);
+    return new FileQuickPickItem({
+      uri,
+      isFavorite: isFav,
+      isPinned: false,
+      isIndividualPinned: isPinned,
+      isRecentlyOpened: true,
+      openToSide: config.openToSide,
+      showIcons: config.showIcons,
+      pathDetailLocation: config.pathDetailLocation,
+      showPathWhen: config.showPathWhen,
+    });
+  });
+}
+
+async function buildSearchItems(params: {
+  normalizedSearch: string;
+  searchCache: LruCache<string, SearchCacheEntry>;
+  config: QuickOpenConfig;
+  favoritesProvider: FavoritesTreeDataProvider;
+  recentNormSet: Set<string>;
+  recentFavNormSet: Set<string>;
+  pinnedNormSet: Set<string>;
+  searchPage: number;
+  token: vscode.CancellationToken;
+}): Promise<{
+  items: FileQuickPickItem[];
+  noticeItem: QuickOpenItem | null;
+  loadMoreItem: ActionQuickPickItem | null;
+}> {
+  const {
+    normalizedSearch,
+    searchCache,
+    config,
+    favoritesProvider,
+    recentNormSet,
+    recentFavNormSet,
+    pinnedNormSet,
+    searchPage,
+    token,
+  } = params;
+  const exclusionGlob = config.searchExclusions.length
+    ? `{${config.searchExclusions.join(',')}}`
+    : undefined;
+  const cacheKey = normalizedSearch;
+  let cacheEntry = searchCache.get(cacheKey);
+  let noticeItem: QuickOpenItem | null = null;
+  let loadMoreItem: ActionQuickPickItem | null = null;
+
+  if (!cacheEntry) {
+    const searchPattern = buildSearchPattern(cacheKey);
+    const searchLimit = Math.max(1, config.maxSearchFiles) + 1;
+    const foundUris = await vscode.workspace.findFiles(
+      searchPattern,
+      exclusionGlob,
+      searchLimit,
+      token,
+    );
+    const exceededMaxFiles = foundUris.length > config.maxSearchFiles;
+    cacheEntry = {
+      uris: foundUris.slice(0, config.maxSearchFiles),
+      exceededMaxFiles,
+    };
+    searchCache.set(cacheKey, cacheEntry);
+  }
+
+  if (cacheEntry.exceededMaxFiles) {
+    noticeItem = {
+      label: `Se alcanzó el máximo de ${config.maxSearchFiles} archivos. Refina la búsqueda.`,
+      detail: '',
+    };
+  }
+
+  const maxDisplayResults = Math.max(
+    1,
+    Math.min(config.maxSearchResults, config.maxSearchFiles),
+  );
+  const displayLimit = Math.min(
+    cacheEntry.uris.length,
+    maxDisplayResults * searchPage,
+  );
+
+  const items = cacheEntry.uris
+    .map((uri) => {
+      return new FileQuickPickItem({
+        uri,
+        isFavorite: false,
+        isPinned: false,
+        isRecentlyOpened: false,
+        openToSide: config.openToSide,
+        showIcons: config.showIcons,
+        pathDetailLocation: config.pathDetailLocation,
+        showPathWhen: config.showPathWhen,
+      });
+    })
+    .filter((item) => {
+      const normalizedPath = normalizeFsPath(item.resourceUri.fsPath);
+      return (
+        !recentNormSet.has(normalizedPath) &&
+        !recentFavNormSet.has(normalizedPath) &&
+        !pinnedNormSet.has(normalizedPath)
+      );
+    })
+    .slice(0, displayLimit)
+    .map((item) => {
+      const isFav = favoritesProvider.hasFavorite(item.resourceUri);
+      if (item.isFavorite !== isFav) {
+        item.isFavorite = isFav;
+        item.updateIcon(config.showIcons);
+      }
+      return item;
+    });
+
+  if (cacheEntry.uris.length > displayLimit) {
+    loadMoreItem = {
+      label: 'Load More',
+      description: `Mostrando ${displayLimit} de ${cacheEntry.uris.length}`,
+      action: 'loadMore',
+    };
+  }
+
+  return {
+    items,
+    noticeItem,
+    loadMoreItem,
+  };
+}
+
 
 
 
 async function validateFilesExistence(
   uris: vscode.Uri[],
+  token?: vscode.CancellationToken,
 ): Promise<Map<string, boolean>> {
   const results = new Map<string, boolean>();
   await Promise.all(
     uris.map(async (uri) => {
+      if (token?.isCancellationRequested) {
+        return;
+      }
       if (uri.scheme !== 'file') {
         results.set(uri.fsPath, false);
         return;
@@ -433,7 +678,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 export function registerQuickOpenCommand(
   context: vscode.ExtensionContext,
   favoritesProvider: FavoritesTreeDataProvider,
-  logger: any,
+  logger: Logger,
   mruService: MRUService,
 ): void {
   const throttleIntervalMs = 2000;
@@ -442,7 +687,7 @@ export function registerQuickOpenCommand(
     key: string,
     message: string,
     metadata?: unknown,
-    logTarget: any = logger,
+    logTarget: Logger = logger,
   ) => {
     if (logTarget?.throttle) {
       logTarget.throttle(level, key, message, metadata, throttleIntervalMs);
@@ -519,6 +764,9 @@ export function registerQuickOpenCommand(
           return;
         }
         isDisposed = true;
+        buildTokenSource?.cancel();
+        buildTokenSource?.dispose();
+        buildTokenSource = null;
         log.info('[QuickOpen] Disposing QuickPick and listeners...');
         try {
           disposables.forEach((d) => d.dispose());
@@ -540,12 +788,19 @@ export function registerQuickOpenCommand(
 
 
       const searchCache = new LruCache<string, SearchCacheEntry>(30);
+      let buildTokenSource: vscode.CancellationTokenSource | null = null;
+      let searchPage = 1;
+      let previousSearchValue = '';
 
 
       const buildItems = async (
         searchQuery: string = quickPick.value,
       ): Promise<void> => {
-        log.info(
+        buildTokenSource?.cancel();
+        buildTokenSource?.dispose();
+        buildTokenSource = new vscode.CancellationTokenSource();
+        const token = buildTokenSource.token;
+        log.debug(
           `[QuickOpen] ▶ buildItems() called - searchQuery: "${searchQuery}"`,
         );
 
@@ -558,6 +813,10 @@ export function registerQuickOpenCommand(
 
         const normalizedSearch = searchQuery.trim();
         const isSearching = normalizedSearch.length > 0;
+        if (normalizedSearch !== previousSearchValue) {
+          searchPage = 1;
+          previousSearchValue = normalizedSearch;
+        }
 
 
         const currentActiveUri =
@@ -572,7 +831,7 @@ export function registerQuickOpenCommand(
           const isSearchValueCurrent = () =>
             normalizedSearch === quickPick.value.trim();
 
-          log.info(
+          log.debug(
             `[QuickOpen] Current search value: "${normalizedSearch}" (isSearching: ${isSearching})`,
           );
 
@@ -582,17 +841,7 @@ export function registerQuickOpenCommand(
           log.debug('[QuickOpen] Favorites reloaded');
 
 
-          const configMaxItems = vscode.workspace.getConfiguration(
-            'anfavorites.maxItems',
-          );
-          const configSearch =
-            vscode.workspace.getConfiguration('anfavorites.search');
-          const configQuickOpen = vscode.workspace.getConfiguration(
-            'anfavorites.quickOpen',
-          );
-          const openToSide = vscode.workspace
-            .getConfiguration('anfavorites.quickOpen')
-            .get<boolean>('openToSide', false);
+          const config = getQuickOpenConfig();
 
           const folders = vscode.workspace.workspaceFolders ?? [];
           const hasWorkspace = folders.length > 0;
@@ -607,45 +856,10 @@ export function registerQuickOpenCommand(
               ),
             );
           }
-          const maxRecentFavorites = configMaxItems.get<number>('favorites', 3);
-          const maxPinned = configMaxItems.get<number>('pinned', 3);
-          const maxRecentFiles = configMaxItems.get<number>('recentFiles', 5);
-          const maxSearchResults = configQuickOpen.get<number>(
-            'maxSearchResults',
-            200,
-          );
-          const maxSearchFiles = configQuickOpen.get<number>(
-            'maxSearchFiles',
-            1000,
-          );
-          const searchCacheSize = configQuickOpen.get<number>(
-            'searchCacheSize',
-            30,
-          );
+          searchCache.setLimit(config.searchCacheSize);
 
-
-          const isAnGravity = vscode.env.appName.includes('AnGravity');
-          const defaultShowIcons = isAnGravity ? false : true;
-          const showIcons = configQuickOpen.get<boolean>(
-            'showIcons',
-            defaultShowIcons,
-          );
-          const pathDetailLocation = configQuickOpen.get<
-            'description' | 'detail'
-          >('pathDetailLocation', 'detail');
-          const showPathWhen = configQuickOpen.get<'always' | 'onConflict'>(
-            'showPathWhen',
-            'onConflict',
-          );
-
-          const searchExclusions = configSearch.get<string[]>('exclusions', [
-            '**/node_modules/**',
-          ]);
-
-          searchCache.setLimit(searchCacheSize);
-
-          log.info(
-            `[QuickOpen] Config: maxRecentFav=${maxRecentFavorites}, maxPinned=${maxPinned}, maxRecentFiles=${maxRecentFiles}, showIcons=${showIcons}, exclusions=${searchExclusions.length}`,
+          log.debug(
+            `[QuickOpen] Config: maxRecentFav=${config.maxRecentFavorites}, maxPinned=${config.maxPinned}, maxRecentFiles=${config.maxRecentFiles}, showIcons=${config.showIcons}, exclusions=${config.searchExclusions.length}`,
           );
 
 
@@ -671,7 +885,7 @@ export function registerQuickOpenCommand(
 
           const pinnedFavUris = favoritesProvider
             .getPinnedFavorites()
-            .slice(0, maxPinned);
+            .slice(0, config.maxPinned);
 
 
           const allPinnedUrisUnsafe = [...pinnedFavUris];
@@ -708,7 +922,7 @@ export function registerQuickOpenCommand(
                 !pinnedNormSet.has(normalizeFsPath(uri.fsPath))
               );
             })
-            .slice(0, maxRecentFavorites);
+            .slice(0, config.maxRecentFavorites);
           const recentFavNormSet = new Set(
             recentFavUris.map((u) => normalizeFsPath(u.fsPath)),
           );
@@ -719,7 +933,10 @@ export function registerQuickOpenCommand(
             ...recentFavUris,
             ...recentUris,
           ];
-          const existenceMap = await validateFilesExistence(allUrisToDisplay);
+          const existenceMap = await validateFilesExistence(
+            allUrisToDisplay,
+            token,
+          );
           if (isDisposed) return;
 
 
@@ -750,58 +967,21 @@ export function registerQuickOpenCommand(
 
 
 
-          const pinnedItems: FileQuickPickItem[] = validPinnedUris.map(
-            (uri) => {
-              const isIndividual = favoritesProvider.isPinned(uri);
-
-              return new FileQuickPickItem({
-                uri,
-                isFavorite: favoritesProvider.hasFavorite(uri),
-                isPinned: true,
-                isRecentlyOpened: false,
-                openToSide,
-                isIndividualPinned: isIndividual,
-                showIcons,
-                pathDetailLocation,
-                showPathWhen,
-              });
-            },
+          const pinnedItems = buildPinnedItems(
+            validPinnedUris,
+            favoritesProvider,
+            config,
           );
-
-          const recentFavItems: FileQuickPickItem[] = validRecentFavUris.map(
-            (uri) => {
-              const isPinned = favoritesProvider.isPinned(uri);
-              return new FileQuickPickItem({
-                uri,
-                isFavorite: true,
-                isPinned: false,
-                isIndividualPinned: isPinned,
-                isRecentlyOpened: false,
-                openToSide,
-                showIcons,
-                pathDetailLocation,
-                showPathWhen,
-              });
-            },
+          const recentFavItems = buildRecentFavoriteItems(
+            validRecentFavUris,
+            favoritesProvider,
+            config,
           );
-
-          const recentItems: FileQuickPickItem[] = validRecentUris
-            .slice(0, maxRecentFiles)
-            .map((uri) => {
-              const isFav = favoritesProvider.hasFavorite(uri);
-              const isPinned = favoritesProvider.isPinned(uri);
-              return new FileQuickPickItem({
-                uri,
-                isFavorite: isFav,
-                isPinned: false,
-                isIndividualPinned: isPinned,
-                isRecentlyOpened: true,
-                openToSide,
-                showIcons,
-                pathDetailLocation,
-                showPathWhen,
-              });
-            });
+          const recentItems = buildRecentItems(
+            validRecentUris.slice(0, config.maxRecentFiles),
+            favoritesProvider,
+            config,
+          );
 
 
           const items: QuickOpenItem[] = [];
@@ -855,73 +1035,24 @@ export function registerQuickOpenCommand(
 
           let otherItems: FileQuickPickItem[] = [];
           let searchNoticeItem: QuickOpenItem | null = null;
+          let loadMoreItem: ActionQuickPickItem | null = null;
 
           if (isSearching) {
-            const exclusionGlob = searchExclusions.length
-              ? `{${searchExclusions.join(',')}}`
-              : undefined;
-            const cacheKey = normalizedSearch;
-            let cacheEntry = searchCache.get(cacheKey);
-
-            if (!cacheEntry) {
-              quickPick.busy = true;
-              const searchPattern = buildSearchPattern(cacheKey);
-              const searchLimit = Math.max(1, maxSearchFiles) + 1;
-              const foundUris = await vscode.workspace.findFiles(
-                searchPattern,
-                exclusionGlob,
-                searchLimit,
-              );
-              const exceededMaxFiles = foundUris.length > maxSearchFiles;
-              cacheEntry = {
-                uris: foundUris.slice(0, maxSearchFiles),
-                exceededMaxFiles,
-              };
-              searchCache.set(cacheKey, cacheEntry);
-            }
-
-            if (cacheEntry.exceededMaxFiles) {
-              searchNoticeItem = {
-                label: `Se alcanzó el máximo de ${maxSearchFiles} archivos. Refina la búsqueda.`,
-                detail: '',
-              };
-            }
-
-            const maxDisplayResults = Math.max(
-              1,
-              Math.min(maxSearchResults, maxSearchFiles),
-            );
-
-            otherItems = cacheEntry.uris
-              .map((uri) => {
-                return new FileQuickPickItem({
-                  uri,
-                  isFavorite: false,
-                  isPinned: false,
-                  isRecentlyOpened: false,
-                  openToSide,
-                  showIcons,
-                  pathDetailLocation,
-                  showPathWhen,
-                });
-              })
-              .filter((item) => {
-                const normalizedPath = normalizeFsPath(item.resourceUri.fsPath);
-                return (
-                  !recentNormSet.has(normalizedPath) &&
-                  !recentFavNormSet.has(normalizedPath) &&
-                  !pinnedNormSet.has(normalizedPath)
-                );
-              })
-              .slice(0, maxDisplayResults)
-              .map((item) => {
-                const isFav = favoritesProvider.hasFavorite(item.resourceUri);
-                if (item.isFavorite !== isFav) {
-                  item.isFavorite = isFav;
-                  item.updateIcon(showIcons);
-                }
-                return item;
-              });
+            quickPick.busy = true;
+            const searchResult = await buildSearchItems({
+              normalizedSearch,
+              searchCache,
+              config,
+              favoritesProvider,
+              recentNormSet,
+              recentFavNormSet,
+              pinnedNormSet,
+              searchPage,
+              token,
+            });
+            otherItems = searchResult.items;
+            searchNoticeItem = searchResult.noticeItem;
+            loadMoreItem = searchResult.loadMoreItem;
           }
 
 
@@ -931,28 +1062,23 @@ export function registerQuickOpenCommand(
             ...recentItems,
             ...otherItems,
           ];
-          const allUris = allFileItems.map((item) => item.resourceUri);
 
           log.debug(
-            `[QuickOpen] Checking collisions for ${allUris.length} items...`,
+            `[QuickOpen] Checking collisions for ${allFileItems.length} items...`,
           );
-          const collisions = await detectCollisions(
-            allUris,
-            searchExclusions,
+          await applyCollisionLabels(
+            allFileItems,
+            (item) => item.resourceUri,
+            (item) => {
+              item.setShowDescription(true);
+            },
+            (item) => {
+              item.setShowDescription(false);
+            },
+            config.searchExclusions,
+            token,
             logger,
           );
-          log.debug(
-            `[QuickOpen] Collisions detected: ${collisions.size}`,
-            Array.from(collisions),
-          );
-
-          if (isDisposed) return;
-
-          for (const item of allFileItems) {
-            const basename = safeBasenameFromUri(item.resourceUri);
-            const hasCollision = collisions.has(basename);
-            item.setShowDescription(hasCollision);
-          }
           if (!isSearchValueCurrent()) {
             log.debug(
               '[QuickOpen] Search value changed while building items, skipping update',
@@ -960,13 +1086,16 @@ export function registerQuickOpenCommand(
             return;
           }
 
-          if (otherItems.length > 0 || searchNoticeItem) {
+          if (otherItems.length > 0 || searchNoticeItem || loadMoreItem) {
             items.push({
               label: 'Archivos',
               kind: vscode.QuickPickItemKind.Separator,
             });
             if (searchNoticeItem) {
               items.push(searchNoticeItem);
+            }
+            if (loadMoreItem) {
+              items.push(loadMoreItem);
             }
             items.push(...otherItems);
           }
@@ -1057,7 +1186,7 @@ export function registerQuickOpenCommand(
       let previousValue = '';
       const debouncedSearchRebuild = debounce(async (value: string) => {
         await buildItems(value);
-      }, 1);
+      }, 150);
       const debouncedExternalRebuild = debounce(async (reason: string) => {
         logThrottledWithContext(
           'debug',
@@ -1065,7 +1194,7 @@ export function registerQuickOpenCommand(
           `External change (${reason}), rebuilding QuickOpen items`,
         );
         await buildItems(quickPick.value);
-      }, 1);
+      }, 150);
 
       disposables.push(
         quickPick.onDidChangeValue(async (value) => {
@@ -1213,6 +1342,12 @@ export function registerQuickOpenCommand(
             );
 
             await buildItems('');
+            return;
+          }
+          if (actionItem.action === 'loadMore') {
+            log.info('[QuickOpen] Executing action: loadMore');
+            searchPage += 1;
+            await buildItems(quickPick.value);
             return;
           }
 

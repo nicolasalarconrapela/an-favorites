@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { Logger } from '../logging/logger';
 import { SharedStorageService } from '../services/sharedStorageService';
-import { detectCollisions, safeBasenameFromUri } from '../utils/collisionUtils';
+import { applyCollisionLabels } from '../utils/collisionUtils';
 import { isExcludedPath } from '../utils/exclusionUtils';
 import { runWithConcurrency } from '../utils/concurrency';
 
@@ -127,8 +127,10 @@ interface FavoriteMetadata {
 export class FavoritesTreeDataProvider
   implements
     vscode.TreeDataProvider<GroupItem | FavoriteItem | WorkspaceItem>,
-    vscode.TreeDragAndDropController<GroupItem | FavoriteItem | WorkspaceItem>
+    vscode.TreeDragAndDropController<GroupItem | FavoriteItem | WorkspaceItem>,
+    vscode.Disposable
 {
+  private readonly disposables: vscode.Disposable[] = [];
   private _onDidChangeTreeData: vscode.EventEmitter<
     GroupItem | FavoriteItem | WorkspaceItem | undefined | null | void
   > = new vscode.EventEmitter<
@@ -161,30 +163,36 @@ export class FavoritesTreeDataProvider
     private storage: SharedStorageService,
   ) {
     this.loadFavorites();
-    this.storage.onDidChange(() => {
-      this.logger.info('[storage] External change detected -> reloading');
-      this.reloadFavorites();
-      this.refresh();
-    });
-
-
-    vscode.workspace.onDidChangeWorkspaceFolders(() => {
-      this.logger.info('[workspace] Workspace folders changed -> refresh()');
-      this.refresh();
-    });
-
-
-    vscode.workspace.onDidChangeConfiguration((e) => {
-      if (
-        e.affectsConfiguration('anfavorites.multiroot.separation') ||
-        e.affectsConfiguration('anfavorites.search.exclusions')
-      ) {
-        this.logger.info(
-          '[config] relevant configuration changed -> refresh()',
-        );
+    this.disposables.push(
+      this.storage.onDidChange(() => {
+        this.logger.info('[storage] External change detected -> reloading');
+        this.reloadFavorites();
         this.refresh();
-      }
-    });
+      }),
+    );
+
+
+    this.disposables.push(
+      vscode.workspace.onDidChangeWorkspaceFolders(() => {
+        this.logger.info('[workspace] Workspace folders changed -> refresh()');
+        this.refresh();
+      }),
+    );
+
+
+    this.disposables.push(
+      vscode.workspace.onDidChangeConfiguration((e) => {
+        if (
+          e.affectsConfiguration('anfavorites.multiroot.separation') ||
+          e.affectsConfiguration('anfavorites.search.exclusions')
+        ) {
+          this.logger.info(
+            '[config] relevant configuration changed -> refresh()',
+          );
+          this.refresh();
+        }
+      }),
+    );
 
     this.logger.info(
       `[init] Provider created. favorites=${this.favorites.size}`,
@@ -386,9 +394,6 @@ export class FavoritesTreeDataProvider
     items: FavoriteItem[],
     groupName: string,
   ): Promise<void> {
-    const allUris = items.map((i) => i.resourceUri);
-
-
     const configSearch =
       vscode.workspace.getConfiguration('anfavorites.search');
     const searchExclusions = configSearch.get<string[]>('exclusions', [
@@ -396,27 +401,21 @@ export class FavoritesTreeDataProvider
     ]);
 
     try {
-      const collisions = await detectCollisions(
-        allUris,
-        searchExclusions,
-        this.logger,
-      );
-
-      this.logger.info(
-        `[collisions] Found ${collisions.size} colliding basenames in "${groupName}"`,
-      );
-
-      for (const item of items) {
-        const basename = safeBasenameFromUri(item.resourceUri);
-        if (collisions.has(basename)) {
-
+      await applyCollisionLabels(
+        items,
+        (item) => item.resourceUri,
+        (item) => {
           const rel = vscode.workspace.asRelativePath(item.resourceUri, false);
           const relDir = path.dirname(rel);
           item.setDescriptionText(relDir);
-        } else {
+        },
+        (item) => {
           item.setShowDescription(false);
-        }
-      }
+        },
+        searchExclusions,
+        undefined,
+        this.logger,
+      );
     } catch (err) {
       this.logger.error(
         '[collisions] Error detecting collisions in tree view',
@@ -1084,5 +1083,11 @@ export class FavoritesTreeDataProvider
 
     this.saveFavorites();
     this.refresh();
+  }
+
+  public dispose(): void {
+    this.disposables.forEach((disposable) => disposable.dispose());
+    this.disposables.length = 0;
+    this._onDidChangeTreeData.dispose();
   }
 }

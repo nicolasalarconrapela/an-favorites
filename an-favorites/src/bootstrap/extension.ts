@@ -14,6 +14,7 @@ import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
 import { SharedStorageService } from '../services/sharedStorageService';
+import { disposeCollisionIndex } from '../utils/collisionUtils';
 
 export function activate(context: vscode.ExtensionContext): void {
   const loggingConfig = vscode.workspace.getConfiguration(
@@ -48,6 +49,7 @@ export function activate(context: vscode.ExtensionContext): void {
     logger,
     sharedStorage,
   );
+  context.subscriptions.push(favoritesProvider);
 
   const treeView = vscode.window.createTreeView('anfavorites.favoritesView', {
     treeDataProvider: favoritesProvider,
@@ -220,6 +222,8 @@ export function activate(context: vscode.ExtensionContext): void {
     },
   });
   context.subscriptions.push({ dispose: () => sharedStorage.dispose() });
+  context.subscriptions.push({ dispose: () => mruService.dispose() });
+  context.subscriptions.push({ dispose: () => disposeCollisionIndex() });
   context.subscriptions.push({ dispose: () => logger.dispose?.() });
 }
 

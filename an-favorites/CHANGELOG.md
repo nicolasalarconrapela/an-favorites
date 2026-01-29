@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.8.79] - 2026-01-29
+
+### Changed
+- Quick Open: refactor de la construcción de items y configuración para separar responsabilidades
+
+## [0.8.78] - 2026-01-29
+
+### Fixed
+- Quick Open: corrige la paginación para mostrar aviso de límite y botón Load More a la vez
+
+## [0.8.77] - 2026-01-29
+
+### Changed
+- Quick Open: añade botón Load More cuando se supera el máximo de resultados mostrados
+
+## [0.8.76] - 2026-01-29
+
+### Changed
+- Quick Open: añade cancelación a búsquedas/validaciones y sube el debounce a 150ms
+- Colisiones: el índice respeta un límite máximo de archivos y soporta cancelación
+
+## [0.8.75] - 2026-01-29
+
+### Changed
+- Quick Open: reduce logs de hot path a nivel debug para evitar ruido
+- Quick Open: tipado del logger fuerte para mejorar consistencia y tests
+- Colisiones: se unifica la aplicación de etiquetas de colisión entre árbol y Quick Open
+
+## [0.8.74] - 2026-01-29
+
+### Fixed
+- Lifecycle: el índice de colisiones puede reactivarse correctamente tras un deactivate
+
+## [0.8.73] - 2026-01-29
+
+### Fixed
+- Lifecycle: se liberan listeners internos de MRU y TreeDataProvider para evitar fugas en recarga
+- Lifecycle: se añade limpieza del índice global de colisiones y sus watchers en deactivate
+
 ## [0.8.71] - 2026-01-28
 
 ### Changed
