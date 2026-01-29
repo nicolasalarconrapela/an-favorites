@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.94] - 2026-02-01
+
+### Changed
+- El árbol de favoritos muestra líneas guardadas como nombre:línea.
+
 ## [0.8.93] - 2026-02-01
 
 ### Changed

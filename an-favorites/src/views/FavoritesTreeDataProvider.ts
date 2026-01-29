@@ -81,6 +81,59 @@ export class FavoriteItem extends vscode.TreeItem {
   }
 }
 
+export class LineFavoriteItem extends vscode.TreeItem {
+  private _fullPath: string;
+  private _dirPath: string;
+
+  constructor(
+    public readonly resourceUri: vscode.Uri,
+    public readonly line: number,
+  ) {
+    super(
+      `${path.basename(resourceUri.fsPath)}:${line}`,
+      vscode.TreeItemCollapsibleState.None,
+    );
+
+    this.id = `favorite-line:${resourceUri.fsPath}:${line}`;
+    this.resourceUri = resourceUri;
+    this._fullPath = resourceUri.fsPath;
+    this._dirPath = path.dirname(resourceUri.fsPath);
+    this.tooltip = `${this._fullPath}:${line}`;
+    this.description = undefined;
+    this.iconPath = new vscode.ThemeIcon('bookmark');
+    this.contextValue = 'lineFavoriteItem';
+
+    const lineIndex = Math.max(0, line - 1);
+    const range = new vscode.Range(lineIndex, 0, lineIndex, 0);
+    this.command = {
+      command: 'vscode.open',
+      title: 'Abrir Archivo',
+      arguments: [
+        resourceUri,
+        {
+          preview: false,
+          selection: range,
+        },
+      ],
+    };
+  }
+
+  public setShowDescription(isDuplicate: boolean): void {
+    this.description = isDuplicate ? this._dirPath : undefined;
+  }
+
+  public setDescriptionText(text?: string): void {
+    this.description = text;
+  }
+
+  public get fullPath(): string {
+    return this._fullPath;
+  }
+
+  public get dirPath(): string {
+    return this._dirPath;
+  }
+}
 export class WorkspaceItem extends vscode.TreeItem {
   constructor(
     public readonly name: string,
@@ -118,19 +171,23 @@ interface LineFavoriteData {
 
 export class FavoritesTreeDataProvider
   implements
-    vscode.TreeDataProvider<GroupItem | FavoriteItem | WorkspaceItem>,
-    vscode.TreeDragAndDropController<GroupItem | FavoriteItem | WorkspaceItem>,
+    vscode.TreeDataProvider<
+      GroupItem | FavoriteItem | WorkspaceItem | LineFavoriteItem
+    >,
+    vscode.TreeDragAndDropController<
+      GroupItem | FavoriteItem | WorkspaceItem | LineFavoriteItem
+    >,
     vscode.Disposable
 {
   private readonly disposables: vscode.Disposable[] = [];
   private _onDidChangeTreeData: vscode.EventEmitter<
-    GroupItem | FavoriteItem | WorkspaceItem | undefined | null | void
+    GroupItem | FavoriteItem | WorkspaceItem | LineFavoriteItem | undefined | null | void
   > = new vscode.EventEmitter<
-    GroupItem | FavoriteItem | WorkspaceItem | undefined | null | void
+    GroupItem | FavoriteItem | WorkspaceItem | LineFavoriteItem | undefined | null | void
   >();
 
   readonly onDidChangeTreeData: vscode.Event<
-    GroupItem | FavoriteItem | WorkspaceItem | undefined | null | void
+    GroupItem | FavoriteItem | WorkspaceItem | LineFavoriteItem | undefined | null | void
   > = this._onDidChangeTreeData.event;
 
   public readonly dragMimeTypes = ['application/vnd.code.tree.favorites'];
@@ -209,13 +266,15 @@ export class FavoritesTreeDataProvider
     return Array.from(this.lineFavorites.keys());
   }
 
-  getTreeItem(element: GroupItem | FavoriteItem): vscode.TreeItem {
+  getTreeItem(
+    element: GroupItem | FavoriteItem | WorkspaceItem | LineFavoriteItem,
+  ): vscode.TreeItem {
     return element;
   }
 
   async getChildren(
-    element?: GroupItem | FavoriteItem | WorkspaceItem,
-  ): Promise<(GroupItem | FavoriteItem | WorkspaceItem)[]> {
+    element?: GroupItem | FavoriteItem | WorkspaceItem | LineFavoriteItem,
+  ): Promise<(GroupItem | FavoriteItem | WorkspaceItem | LineFavoriteItem)[]> {
     const t0 = Date.now();
 
     if (!element) {
@@ -317,7 +376,7 @@ export class FavoritesTreeDataProvider
         return Promise.resolve(workspaceItems);
       }
 
-      const items: FavoriteItem[] = [];
+      const items: (FavoriteItem | LineFavoriteItem)[] = [];
       this.logger.debug(`[getChildren:group] Start "${element.groupName}"`);
 
       this.favorites.forEach((metadata, filePath) => {
@@ -343,6 +402,19 @@ export class FavoritesTreeDataProvider
         );
       });
 
+      if (element.groupName === FavoritesTreeDataProvider.DEFAULT_GROUP) {
+        this.lineFavorites.forEach((lineMap, filePath) => {
+          const uri = vscode.Uri.file(filePath);
+          const wf = vscode.workspace.getWorkspaceFolder(uri);
+          if (!wf) {
+            return;
+          }
+          lineMap.forEach((_, line) => {
+            items.push(new LineFavoriteItem(uri, line));
+          });
+        });
+      }
+
       this.logger.debug(`[getChildren:group] Collected items=${items.length}`);
 
       await this._resolveCollisions(items, element.groupName);
@@ -355,7 +427,7 @@ export class FavoritesTreeDataProvider
     }
 
     if (element instanceof WorkspaceItem) {
-      const items: FavoriteItem[] = [];
+      const items: (FavoriteItem | LineFavoriteItem)[] = [];
       this.favorites.forEach((metadata, filePath) => {
         if (metadata.group !== element.groupName) return;
         const uri = vscode.Uri.file(filePath);
@@ -375,6 +447,21 @@ export class FavoritesTreeDataProvider
         }
       });
 
+      if (element.groupName === FavoritesTreeDataProvider.DEFAULT_GROUP) {
+        this.lineFavorites.forEach((lineMap, filePath) => {
+          const uri = vscode.Uri.file(filePath);
+          const wf = vscode.workspace.getWorkspaceFolder(uri);
+          if (
+            wf &&
+            wf.uri.toString() === element.workspaceFolder.uri.toString()
+          ) {
+            lineMap.forEach((_, line) => {
+              items.push(new LineFavoriteItem(uri, line));
+            });
+          }
+        });
+      }
+
       await this._resolveCollisions(
         items,
         `${element.groupName}:${element.name}`,
@@ -386,7 +473,7 @@ export class FavoritesTreeDataProvider
   }
 
   private async _resolveCollisions(
-    items: FavoriteItem[],
+    items: (FavoriteItem | LineFavoriteItem)[],
     groupName: string,
   ): Promise<void> {
     const configSearch =
