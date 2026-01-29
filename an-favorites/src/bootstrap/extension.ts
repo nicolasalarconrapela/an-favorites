@@ -10,11 +10,14 @@ import { registerManageGroupsCommands } from '../commands/manageGroupsCommand';
 import { registerPinCommands } from '../commands/pinCommands';
 import { registerOpenToSideCommand } from '../commands/openToSideCommand';
 import { registerQuickOpenCommand } from '../commands/quickOpenCommand';
+import { registerAddLineFavoriteCommand } from '../commands/addLineFavoriteCommand';
 import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
 import { SharedStorageService } from '../services/sharedStorageService';
 import { disposeCollisionIndex } from '../utils/collisionUtils';
+import { LineFavoritesService } from '../services/lineFavoritesService';
+import { LineFavoritesDecoration } from '../views/lineFavoritesDecoration';
 
 export function activate(context: vscode.ExtensionContext): void {
   const loggingConfig = vscode.workspace.getConfiguration(
@@ -41,6 +44,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const sharedStorage = new SharedStorageService(context, logger);
   const telemetry = new TelemetryService();
   const mruService = new MRUService(context, logger);
+  const lineFavoritesService = new LineFavoritesService(sharedStorage, logger);
 
   logger.info('Registering favorites tree provider...');
 
@@ -68,9 +72,23 @@ export function activate(context: vscode.ExtensionContext): void {
   registerManageGroupsCommands(context, favoritesProvider, logger);
   registerPinCommands(context, favoritesProvider, logger);
   registerOpenToSideCommand(context, logger);
+  registerAddLineFavoriteCommand(context, lineFavoritesService, logger);
   logger.info('[activate] registering quickOpen...');
-  registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
+  registerQuickOpenCommand(
+    context,
+    favoritesProvider,
+    logger,
+    mruService,
+    lineFavoritesService,
+  );
   logger.info('[activate] quickOpen registered.');
+
+  const lineFavoritesDecoration = new LineFavoritesDecoration(
+    context,
+    lineFavoritesService,
+    logger,
+  );
+  context.subscriptions.push(lineFavoritesDecoration);
 
   telemetry.track('activated');
   logger.info('━━━ Extension activation completed successfully ━━━');
@@ -100,6 +118,7 @@ export function activate(context: vscode.ExtensionContext): void {
     await Promise.all([
       favoritesProvider.validateFavoritesForPaths(paths),
       mruService.validateFilesForPaths(paths),
+      lineFavoritesService.validateLineFavoritesForPaths(paths),
     ]);
   };
 
@@ -130,7 +149,12 @@ export function activate(context: vscode.ExtensionContext): void {
   const syncFileWatchers = (): void => {
     const favoritePaths = favoritesProvider.getFavoritePaths();
     const recentPaths = mruService.getRecentFiles();
-    const targetPaths = new Set([...favoritePaths, ...recentPaths]);
+    const lineFavoritePaths = lineFavoritesService.getFavoritePaths();
+    const targetPaths = new Set([
+      ...favoritePaths,
+      ...recentPaths,
+      ...lineFavoritePaths,
+    ]);
 
     for (const [fsPath, watcher] of watchedPaths) {
       if (!targetPaths.has(fsPath)) {
@@ -199,6 +223,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
       favoritesProvider.updatePath(oldPath, newPath);
       mruService.updatePath(oldPath, newPath);
+      lineFavoritesService.updatePath(oldPath, newPath);
 
       if (nameChanged) {
         logger.debug(
@@ -223,6 +248,7 @@ export function activate(context: vscode.ExtensionContext): void {
   });
   context.subscriptions.push({ dispose: () => sharedStorage.dispose() });
   context.subscriptions.push({ dispose: () => mruService.dispose() });
+  context.subscriptions.push({ dispose: () => lineFavoritesService.dispose() });
   context.subscriptions.push({ dispose: () => disposeCollisionIndex() });
   context.subscriptions.push({ dispose: () => logger.dispose?.() });
 }

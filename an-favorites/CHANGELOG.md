@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.87] - 2026-02-01
+
+### Added
+- Guardado de líneas específicas desde el menú contextual del editor.
+- Visualización de líneas guardadas en Quick Open con formato nombre.ext:línea.
+- Icono en el gutter para líneas guardadas y apertura directa en la línea marcada.
+
 ## [0.8.86] - 2026-01-30
 
 ### Added

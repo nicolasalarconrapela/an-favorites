@@ -3,6 +3,7 @@ import * as path from 'path';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
 import { Logger } from '../logging/logger';
+import { LineFavoritesService } from '../services/lineFavoritesService';
 import {
   QuickOpenConfig,
   QuickOpenConfigService,
@@ -72,7 +73,19 @@ function buildSearchPattern(searchValue: string): string {
 }
 
 function isFileItem(item: vscode.QuickPickItem): item is FileQuickPickItem {
-  return typeof (item as any)?.resourceUri?.fsPath === 'string';
+  return (item as any)?.itemType === 'file';
+}
+
+function isLineFavoriteItem(
+  item: vscode.QuickPickItem,
+): item is LineQuickPickItem {
+  return (item as any)?.itemType === 'lineFavorite';
+}
+
+function isFileLikeItem(
+  item: vscode.QuickPickItem,
+): item is FileQuickPickItem | LineQuickPickItem {
+  return isFileItem(item) || isLineFavoriteItem(item);
 }
 
 type FavoritesAction = 'clearRecents' | 'loadMore';
@@ -124,6 +137,31 @@ function workspaceRelativeLabel(uri: vscode.Uri): {
   return { rel };
 }
 
+function getQuickPickItemKey(item: QuickOpenItem): string | null {
+  if (isLineFavoriteItem(item)) {
+    return `${item.resourceUri.toString()}:${item.line}`;
+  }
+  if (isFileItem(item)) {
+    return item.resourceUri.toString();
+  }
+  return null;
+}
+
+async function openFileAtLine(
+  uri: vscode.Uri,
+  line: number,
+  viewColumn?: vscode.ViewColumn,
+): Promise<void> {
+  const targetLine = Math.max(1, line) - 1;
+  const editor = await vscode.window.showTextDocument(uri, {
+    preview: false,
+    viewColumn,
+  });
+  const position = new vscode.Position(targetLine, 0);
+  editor.selection = new vscode.Selection(position, position);
+  editor.revealRange(new vscode.Range(position, position));
+}
+
 function debounce<T extends (...args: any[]) => any>(
   func: T,
   waitMs: number,
@@ -158,6 +196,22 @@ function buildPinnedItems(
       showPathWhen: config.showPathWhen,
     });
   });
+}
+
+function buildLineFavoriteItems(
+  entries: Array<{ uri: vscode.Uri; line: number }>,
+  config: QuickOpenConfig,
+): LineQuickPickItem[] {
+  return entries.map(
+    ({ uri, line }) =>
+      new LineQuickPickItem({
+        uri,
+        line,
+        showIcons: config.showIcons,
+        pathDetailLocation: config.pathDetailLocation,
+        showPathWhen: config.showPathWhen,
+      }),
+  );
 }
 
 function buildRecentFavoriteItems(
@@ -397,6 +451,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   buttons?: vscode.QuickInputButton[];
   iconPath?: vscode.ThemeIcon;
   kind?: vscode.QuickPickItemKind;
+  readonly itemType = 'file';
 
   resourceUri: vscode.Uri;
   isFavorite: boolean;
@@ -557,11 +612,113 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   }
 }
 
+class LineQuickPickItem implements vscode.QuickPickItem {
+  label: string;
+  description?: string;
+  detail?: string;
+  iconPath?: vscode.ThemeIcon;
+  kind?: vscode.QuickPickItemKind;
+  readonly itemType = 'lineFavorite';
+
+  resourceUri: vscode.Uri;
+  line: number;
+
+  private _fullPathLabel: string = '';
+  private _dirPathLabel: string = '';
+  private _detailPathText?: string;
+
+  private showIcons: boolean;
+  private pathDetailLocation: 'description' | 'detail';
+  private showPathWhen: 'always' | 'onConflict';
+
+  constructor(params: {
+    uri: vscode.Uri;
+    line: number;
+    showIcons?: boolean;
+    pathDetailLocation?: 'description' | 'detail';
+    showPathWhen?: 'always' | 'onConflict';
+  }) {
+    const {
+      uri,
+      line,
+      showIcons = true,
+      pathDetailLocation = 'detail',
+      showPathWhen = 'onConflict',
+    } = params;
+
+    this.resourceUri = uri;
+    this.line = line;
+    this.showIcons = showIcons;
+    this.pathDetailLocation = pathDetailLocation;
+    this.showPathWhen = showPathWhen;
+
+    const baseName = safeBasenameFromUri(uri);
+    this.label = `${baseName}:${line}`;
+
+    const { rel, rootName } = workspaceRelativeLabel(uri);
+
+    const dir = path.dirname(rel);
+    const cleanDir = dir === '.' || dir === '' ? '.' : dir;
+
+    if (rootName) {
+      this._fullPathLabel =
+        cleanDir === '.' ? rootName : `[ ${rootName} ] ${cleanDir}`;
+      this._dirPathLabel = this._fullPathLabel;
+    } else {
+      this._fullPathLabel = cleanDir;
+      this._dirPathLabel = this._fullPathLabel;
+    }
+
+    if (this.pathDetailLocation === 'detail') {
+      this._detailPathText = rootName
+        ? cleanDir === '.'
+          ? `${rootName}`
+          : `[ ${rootName} ] ${cleanDir}`
+        : `${cleanDir}`;
+
+      this.detail = `${this._detailPathText}`;
+      this.description = '';
+    } else {
+      this.detail = '';
+      this.description = '';
+    }
+
+    this.updateIcon(this.showIcons);
+    this.setShowDescription(false);
+  }
+
+  public setShowDescription(isDuplicate: boolean): void {
+    const shouldShowPath = this.showPathWhen === 'always' || isDuplicate;
+
+    if (this.pathDetailLocation === 'detail') {
+      if (shouldShowPath && this._detailPathText) {
+        this.detail = `${this._detailPathText}`;
+      } else {
+        this.detail = '';
+      }
+      this.description = ' ';
+      return;
+    }
+
+    this.description = shouldShowPath ? this._fullPathLabel : '';
+    this.detail = undefined;
+  }
+
+  updateIcon(showIcons: boolean = true): void {
+    if (showIcons) {
+      this.iconPath = createIconWithFallback('bookmark', 'symbol-file');
+    } else {
+      this.iconPath = undefined;
+    }
+  }
+}
+
 export function registerQuickOpenCommand(
   context: vscode.ExtensionContext,
   favoritesProvider: FavoritesTreeDataProvider,
   logger: Logger,
   mruService: MRUService,
+  lineFavoritesService: LineFavoritesService,
 ): void {
   const throttleIntervalMs = 2000;
   const configService: QuickOpenConfigService =
@@ -625,6 +782,10 @@ export function registerQuickOpenCommand(
         log.debug('[QuickOpen] Validating favorites...');
         await favoritesProvider.validateFavorites();
         log.debug('[QuickOpen] Favorites validated successfully');
+
+        log.debug('[QuickOpen] Validating line favorites...');
+        await lineFavoritesService.validateLineFavorites();
+        log.debug('[QuickOpen] Line favorites validated successfully');
 
         log.debug('[QuickOpen] Validating MRU files...');
         await mruService.validateFiles();
@@ -695,13 +856,10 @@ export function registerQuickOpenCommand(
         }
 
 
-        const currentActiveUri =
-          quickPick.activeItems.length > 0 &&
-          isFileItem(quickPick.activeItems[0])
-            ? (
-                quickPick.activeItems[0] as FileQuickPickItem
-              ).resourceUri.toString()
-            : null;
+      const currentActiveItem = quickPick.activeItems[0];
+      const currentActiveKey = currentActiveItem
+        ? getQuickPickItemKey(currentActiveItem)
+        : null;
 
         try {
           const isSearchValueCurrent = () =>
@@ -713,6 +871,7 @@ export function registerQuickOpenCommand(
 
           log.debug('[QuickOpen] Reloading favorites from storage...');
           favoritesProvider.reloadFavorites();
+          lineFavoritesService.reload(false);
           log.debug('[QuickOpen] Favorites reloaded');
 
 
@@ -795,10 +954,24 @@ export function registerQuickOpenCommand(
             recentFavUris.map((u) => normalizeFsPath(u.fsPath)),
           );
 
+          const lineFavoritesEntries = lineFavoritesService
+            .getAllFavorites()
+            .map((entry) => ({
+              uri: vscode.Uri.file(entry.path),
+              line: entry.line,
+            }))
+            .filter((entry) => {
+              return (
+                entry.uri.scheme === 'file' &&
+                !!vscode.workspace.getWorkspaceFolder(entry.uri)
+              );
+            });
+
           const allUrisToDisplay = [
             ...allPinnedUris,
             ...recentFavUris,
             ...recentUris,
+            ...lineFavoritesEntries.map((entry) => entry.uri),
           ];
           const existenceMap = await validateFilesExistence(
             allUrisToDisplay,
@@ -836,6 +1009,21 @@ export function registerQuickOpenCommand(
             favoritesProvider,
             config,
           );
+          const validLineFavorites = lineFavoritesEntries.filter((entry) => {
+            const exists = existenceMap.get(entry.uri.fsPath) ?? false;
+            if (!exists) {
+              lineFavoritesService.removeLineFavorite(
+                entry.uri,
+                entry.line,
+              );
+            }
+            return exists;
+          });
+
+          const lineFavoriteItems = buildLineFavoriteItems(
+            validLineFavorites,
+            config,
+          );
           const recentFavItems = buildRecentFavoriteItems(
             validRecentFavUris,
             favoritesProvider,
@@ -849,6 +1037,25 @@ export function registerQuickOpenCommand(
 
 
           const items: QuickOpenItem[] = [];
+
+          if (lineFavoriteItems.length > 0) {
+            items.push({
+              label: 'Líneas guardadas',
+              kind: vscode.QuickPickItemKind.Separator,
+            });
+            items.push(...lineFavoriteItems);
+          } else if (!isSearching) {
+            items.push({
+              label: 'No hay líneas guardadas',
+              kind: vscode.QuickPickItemKind.Separator,
+            });
+            items.push({
+              label:
+                'Usa el menú contextual del editor para guardar una línea específica.',
+              description: '',
+              detail: '',
+            });
+          }
 
           if (pinnedItems.length > 0) {
             items.push(...pinnedItems);
@@ -918,11 +1125,12 @@ export function registerQuickOpenCommand(
 
 
           const allFileItems = [
+            ...lineFavoriteItems,
             ...pinnedItems,
             ...recentFavItems,
             ...recentItems,
             ...otherItems,
-          ];
+          ] as Array<FileQuickPickItem | LineQuickPickItem>;
 
           log.debug(
             `[QuickOpen] Checking collisions for ${allFileItems.length} items...`,
@@ -966,36 +1174,33 @@ export function registerQuickOpenCommand(
           if (isSearching) {
             if (currentActiveUri) {
               const itemToRestore = items.find(
-                (i) =>
-                  isFileItem(i) &&
-                  i.resourceUri.toString() === currentActiveUri,
+                (i) => getQuickPickItemKey(i) === currentActiveKey,
               );
               if (itemToRestore) {
-                quickPick.activeItems = [itemToRestore as FileQuickPickItem];
+                quickPick.activeItems = [itemToRestore as any];
               } else {
-                const firstFileItem = items.find((i) => isFileItem(i)) as
-                  | FileQuickPickItem
-                  | undefined;
+                const firstFileItem = items.find((i) =>
+                  isFileLikeItem(i),
+                ) as FileQuickPickItem | LineQuickPickItem | undefined;
                 quickPick.activeItems = firstFileItem ? [firstFileItem] : [];
               }
             } else {
-              const firstFileItem = items.find((i) => isFileItem(i)) as
-                | FileQuickPickItem
-                | undefined;
+              const firstFileItem = items.find((i) =>
+                isFileLikeItem(i),
+              ) as FileQuickPickItem | LineQuickPickItem | undefined;
               quickPick.activeItems = firstFileItem ? [firstFileItem] : [];
             }
-          } else if (currentActiveUri) {
+          } else if (currentActiveKey) {
             const itemToSelect = items.find(
-              (i) =>
-                isFileItem(i) && i.resourceUri.toString() === currentActiveUri,
+              (i) => getQuickPickItemKey(i) === currentActiveKey,
             );
             if (itemToSelect) {
-              quickPick.activeItems = [itemToSelect as FileQuickPickItem];
+              quickPick.activeItems = [itemToSelect as any];
             }
           } else {
-            const fileItems = items.filter((i) =>
-              isFileItem(i),
-            ) as FileQuickPickItem[];
+            const fileItems = items.filter((i) => isFileLikeItem(i)) as Array<
+              FileQuickPickItem | LineQuickPickItem
+            >;
             if (fileItems.length > 0) {
               const hasPinned = pinnedItems.length > 0;
               const indexToSelect = hasPinned ? 0 : 1;
@@ -1091,6 +1296,26 @@ export function registerQuickOpenCommand(
             'Favorites changed, rebuilding QuickOpen items',
           );
           debouncedExternalRebuild('favorites');
+        }),
+      );
+
+      disposables.push(
+        lineFavoritesService.onDidChange(async () => {
+          const isSearching = quickPick.value.trim().length > 0;
+          if (isSearching) {
+            logThrottledWithContext(
+              'debug',
+              'quickopen:line-favorites-changed',
+              'Line favorites changed while searching, skipping rebuild',
+            );
+            return;
+          }
+          logThrottledWithContext(
+            'debug',
+            'quickopen:line-favorites-changed',
+            'Line favorites changed, rebuilding QuickOpen items',
+          );
+          debouncedExternalRebuild('line-favorites');
         }),
       );
 
@@ -1196,6 +1421,25 @@ export function registerQuickOpenCommand(
             return;
           }
 
+
+          if (isLineFavoriteItem(selected)) {
+            log.info(
+              `[QuickOpen] Opening line favorite: ${selected.resourceUri.fsPath}:${selected.line}`,
+            );
+
+            const openToSide = vscode.workspace
+              .getConfiguration('anfavorites.quickOpen')
+              .get<boolean>('openToSide', false);
+
+            await openFileAtLine(
+              selected.resourceUri,
+              selected.line,
+              openToSide ? vscode.ViewColumn.Beside : undefined,
+            );
+            mruService.add(selected.resourceUri.fsPath);
+            quickPick.hide();
+            return;
+          }
 
           if (!isFileItem(selected)) {
             log.debug(
