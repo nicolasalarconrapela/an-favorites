@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.81] - 2026-01-29
+
+### Changed
+- Quick Open: introduce servicio de configuración con adaptador VS Code
+
 ## [0.8.80] - 2026-01-29
 
 ### Changed

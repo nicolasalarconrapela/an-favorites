@@ -19,6 +19,10 @@ export interface QuickOpenConfig {
   searchExclusions: string[];
 }
 
+export interface QuickOpenConfigService {
+  getConfig(): QuickOpenConfig;
+}
+
 export type FavoritesAction = 'clearRecents' | 'loadMore';
 
 export interface ActionQuickPickItem extends vscode.QuickPickItem {
@@ -71,53 +75,4 @@ export function buildSearchPattern(searchValue: string): string {
   const normalized = searchValue.trim();
   if (!normalized) return '**/*';
   return `**/*${normalized}*`;
-}
-
-export function getQuickOpenConfig(): QuickOpenConfig {
-  const configMaxItems = vscode.workspace.getConfiguration(
-    'anfavorites.maxItems',
-  );
-  const configSearch = vscode.workspace.getConfiguration('anfavorites.search');
-  const configQuickOpen =
-    vscode.workspace.getConfiguration('anfavorites.quickOpen');
-  const openToSide = configQuickOpen.get<boolean>('openToSide', false);
-
-  const maxRecentFavorites = configMaxItems.get<number>('favorites', 3);
-  const maxPinned = configMaxItems.get<number>('pinned', 3);
-  const maxRecentFiles = configMaxItems.get<number>('recentFiles', 5);
-  const maxSearchResults = configQuickOpen.get<number>(
-    'maxSearchResults',
-    200,
-  );
-  const maxSearchFiles = configQuickOpen.get<number>('maxSearchFiles', 1000);
-  const searchCacheSize = configQuickOpen.get<number>('searchCacheSize', 30);
-
-  const isAnGravity = vscode.env.appName.includes('AnGravity');
-  const defaultShowIcons = isAnGravity ? false : true;
-  const showIcons = configQuickOpen.get<boolean>('showIcons', defaultShowIcons);
-  const pathDetailLocation = configQuickOpen.get<'description' | 'detail'>(
-    'pathDetailLocation',
-    'detail',
-  );
-  const showPathWhen = configQuickOpen.get<'always' | 'onConflict'>(
-    'showPathWhen',
-    'onConflict',
-  );
-  const searchExclusions = configSearch.get<string[]>('exclusions', [
-    '**/node_modules/**',
-  ]);
-
-  return {
-    maxRecentFavorites,
-    maxPinned,
-    maxRecentFiles,
-    maxSearchResults,
-    maxSearchFiles,
-    searchCacheSize,
-    openToSide,
-    showIcons,
-    pathDetailLocation,
-    showPathWhen,
-    searchExclusions,
-  };
 }

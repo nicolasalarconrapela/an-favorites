@@ -5,18 +5,18 @@ import { MRUService } from '../services/mruService';
 import { Logger } from '../logging/logger';
 import {
   ActionQuickPickItem,
-  FavoritesAction,
   LruCache,
   QuickOpenConfig,
   SearchCacheEntry,
   buildSearchPattern,
-  getQuickOpenConfig,
+  QuickOpenConfigService,
 } from './quickOpen/quickOpenHelpers';
 import {
   applyCollisionLabels,
   normalizeFsPath,
   safeBasenameFromUri,
 } from '../utils/collisionUtils';
+import { VscodeQuickOpenConfigService } from '../adapters/vscodeQuickOpenConfigService';
 
 type QuickOpenItem = vscode.QuickPickItem;
 
@@ -566,6 +566,8 @@ export function registerQuickOpenCommand(
   mruService: MRUService,
 ): void {
   const throttleIntervalMs = 2000;
+  const configService: QuickOpenConfigService =
+    new VscodeQuickOpenConfigService();
   const logThrottled = (
     level: 'debug' | 'info' | 'warn' | 'error',
     key: string,
@@ -725,7 +727,7 @@ export function registerQuickOpenCommand(
           log.debug('[QuickOpen] Favorites reloaded');
 
 
-          const config = getQuickOpenConfig();
+          const config = configService.getConfig();
 
           const folders = vscode.workspace.workspaceFolders ?? [];
           const hasWorkspace = folders.length > 0;
