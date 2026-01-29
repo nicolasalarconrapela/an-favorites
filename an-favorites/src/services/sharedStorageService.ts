@@ -24,22 +24,26 @@ export class SharedStorageService {
     private logger: Logger,
   ) {
     const config = vscode.workspace.getConfiguration('anfavorites.storage');
-    const configEnabled = config.get<boolean>('shareAcrossIdes', false);
+    const configExplicit = this.getExplicitSharedSetting(config);
     this.sharedFilePath = this.resolveSharedFilePath();
     const sharedEnabled =
       this.sharedFilePath && this.readSharedSetting() === true;
-    this.useSharedFile = configEnabled || sharedEnabled;
+    if (configExplicit === true) {
+      this.useSharedFile = true;
+    } else if (configExplicit === false) {
+      this.useSharedFile = false;
+    } else {
+      this.useSharedFile = sharedEnabled;
+    }
 
     if (this.useSharedFile) {
       if (this.sharedFilePath) {
         this.ensureStorageFile();
-        if (configEnabled) {
-          this.writeSharedSetting(true);
-        }
+        this.writeSharedSetting(true);
         this.startFileWatcher();
         this.logger.info('[SharedStorage] Usando almacenamiento compartido.', {
           filePath: this.sharedFilePath,
-          source: configEnabled ? 'config' : 'shared-file',
+          source: configExplicit === true ? 'config' : 'shared-file',
         });
       } else {
         this.useSharedFile = false;
@@ -47,6 +51,16 @@ export class SharedStorageService {
           '[SharedStorage] No se pudo resolver ruta para compartir entre IDEs; usando WorkspaceState.',
         );
       }
+    }
+
+    if (!this.useSharedFile && configExplicit === false) {
+      if (this.sharedFilePath) {
+        this.ensureStorageFile();
+        this.writeSharedSetting(false);
+      }
+      this.logger.info(
+        '[SharedStorage] Compartir entre IDEs desactivado por configuración.',
+      );
     }
 
     if (!this.useSharedFile) {
@@ -199,6 +213,29 @@ export class SharedStorageService {
         return value;
       }
     }
+    return undefined;
+  }
+
+  private getExplicitSharedSetting(
+    config: vscode.WorkspaceConfiguration,
+  ): boolean | undefined {
+    const inspected = config.inspect<boolean>('shareAcrossIdes');
+    if (!inspected) {
+      return undefined;
+    }
+
+    if (inspected.workspaceFolderValue !== undefined) {
+      return inspected.workspaceFolderValue;
+    }
+
+    if (inspected.workspaceValue !== undefined) {
+      return inspected.workspaceValue;
+    }
+
+    if (inspected.globalValue !== undefined) {
+      return inspected.globalValue;
+    }
+
     return undefined;
   }
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.85] - 2026-01-30
+
+### Added
+- Storage: desactiva la sincronización compartida cuando el setting se desmarca
+
 ## [0.8.84] - 2026-01-30
 
 ### Added
