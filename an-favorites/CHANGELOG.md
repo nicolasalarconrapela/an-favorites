@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.99] - 2026-02-01
+
+### Changed
+- El árbol de favoritos permite fijar y eliminar líneas favoritas igual que archivos.
+
 ## [0.8.98] - 2026-02-01
 
 ### Changed

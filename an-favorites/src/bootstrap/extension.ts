@@ -11,6 +11,7 @@ import { registerPinCommands } from '../commands/pinCommands';
 import { registerOpenToSideCommand } from '../commands/openToSideCommand';
 import { registerQuickOpenCommand } from '../commands/quickOpenCommand';
 import { registerAddLineFavoriteCommand } from '../commands/addLineFavoriteCommand';
+import { registerLineFavoriteCommands } from '../commands/lineFavoriteCommands';
 import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
@@ -71,6 +72,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerPinCommands(context, favoritesProvider, logger);
   registerOpenToSideCommand(context, logger);
   registerAddLineFavoriteCommand(context, favoritesProvider, logger);
+  registerLineFavoriteCommands(context, favoritesProvider, logger);
   logger.info('[activate] registering quickOpen...');
   registerQuickOpenCommand(
     context,

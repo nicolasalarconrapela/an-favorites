@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.98",
+  "version": "0.8.99",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "engines": {
@@ -42,6 +42,23 @@
         "command": "anfavorites.removeLineFavorite",
         "title": "Quitar Línea de Favoritos",
         "category": "AnFavorites"
+      },
+      {
+        "command": "anfavorites.removeLineFavoriteItem",
+        "title": "Quitar Línea de Favoritos",
+        "category": "AnFavorites"
+      },
+      {
+        "command": "anfavorites.pinLineFavorite",
+        "title": "Fijar Línea Favorita",
+        "category": "AnFavorites",
+        "icon": "$(pin)"
+      },
+      {
+        "command": "anfavorites.unpinLineFavorite",
+        "title": "Desfijar Línea Favorita",
+        "category": "AnFavorites",
+        "icon": "$(pinned)"
       },
       {
         "command": "anfavorites.removeFromFavorites",
@@ -213,8 +230,23 @@
           "group": "inline@0"
         },
         {
+          "command": "anfavorites.pinLineFavorite",
+          "when": "view == anfavorites.favoritesView && viewItem == lineFavoriteItem",
+          "group": "inline@0"
+        },
+        {
+          "command": "anfavorites.unpinLineFavorite",
+          "when": "view == anfavorites.favoritesView && viewItem == lineFavoriteItem:pinned",
+          "group": "inline@0"
+        },
+        {
           "command": "anfavorites.removeFromFavorites",
           "when": "view == anfavorites.favoritesView && viewItem =~ /^favoriteItem(:pinned)?$/",
+          "group": "inline@2"
+        },
+        {
+          "command": "anfavorites.removeLineFavoriteItem",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /^lineFavoriteItem(:pinned)?$/",
           "group": "inline@2"
         },
         {

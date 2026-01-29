@@ -88,6 +88,7 @@ export class LineFavoriteItem extends vscode.TreeItem {
   constructor(
     public readonly resourceUri: vscode.Uri,
     public readonly line: number,
+    public readonly isPinned: boolean,
   ) {
     super(
       `${path.basename(resourceUri.fsPath)}:${line}`,
@@ -100,8 +101,8 @@ export class LineFavoriteItem extends vscode.TreeItem {
     this._dirPath = path.dirname(resourceUri.fsPath);
     this.tooltip = `${this._fullPath}:${line}`;
     this.description = undefined;
-    this.iconPath = new vscode.ThemeIcon('bookmark');
-    this.contextValue = 'lineFavoriteItem';
+    this.iconPath = new vscode.ThemeIcon(isPinned ? 'pin' : 'bookmark');
+    this.contextValue = isPinned ? 'lineFavoriteItem:pinned' : 'lineFavoriteItem';
 
     const lineIndex = Math.max(0, line - 1);
     const range = new vscode.Range(lineIndex, 0, lineIndex, 0);
@@ -409,8 +410,8 @@ export class FavoritesTreeDataProvider
           if (!wf) {
             return;
           }
-          lineMap.forEach((_, line) => {
-            items.push(new LineFavoriteItem(uri, line));
+          lineMap.forEach((metadata, line) => {
+            items.push(new LineFavoriteItem(uri, line, metadata.isPinned));
           });
         });
       }
@@ -455,8 +456,8 @@ export class FavoritesTreeDataProvider
             wf &&
             wf.uri.toString() === element.workspaceFolder.uri.toString()
           ) {
-            lineMap.forEach((_, line) => {
-              items.push(new LineFavoriteItem(uri, line));
+            lineMap.forEach((metadata, line) => {
+              items.push(new LineFavoriteItem(uri, line, metadata.isPinned));
             });
           }
         });
