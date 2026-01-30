@@ -19,17 +19,21 @@ export function registerAddLineFavoriteCommand(
       }
 
       const line = editor.selection.active.line + 1;
-      const added = favoritesProvider.toggleLineFavorite(uri, line);
+      const added = favoritesProvider.addLineFavorite(uri, line);
 
       logger.info(
-        `[lineFavorites] ${added ? 'Added' : 'Removed'} line ${line} -> ${uri.fsPath}`,
+        `[lineFavorites] ${added ? 'Added' : 'Skipped'} line ${line} -> ${uri.fsPath}`,
       );
 
-      vscode.window.showInformationMessage(
-        added
-          ? `Línea ${line} guardada en favoritos.`
-          : `Línea ${line} eliminada de favoritos.`,
-      );
+      if (added) {
+        vscode.window.showInformationMessage(
+          `Línea ${line} guardada en favoritos.`,
+        );
+      } else {
+        vscode.window.showInformationMessage(
+          `La línea ${line} ya estaba en favoritos.`,
+        );
+      }
       vscode.commands.executeCommand(
         'setContext',
         'anfavorites.lineFavoriteExists',
@@ -50,13 +54,19 @@ export function registerAddLineFavoriteCommand(
       }
 
       const line = editor.selection.active.line + 1;
-      favoritesProvider.removeLineFavorite(uri, line);
-      logger.info(
-        `[lineFavorites] Removed line ${line} -> ${uri.fsPath}`,
-      );
-      vscode.window.showInformationMessage(
-        `Línea ${line} eliminada de favoritos.`,
-      );
+      if (favoritesProvider.hasLineFavorite(uri, line)) {
+        favoritesProvider.removeLineFavorite(uri, line);
+        logger.info(
+          `[lineFavorites] Removed line ${line} -> ${uri.fsPath}`,
+        );
+        vscode.window.showInformationMessage(
+          `Línea ${line} eliminada de favoritos.`,
+        );
+      } else {
+        vscode.window.showInformationMessage(
+          `La línea ${line} no está en favoritos.`,
+        );
+      }
       vscode.commands.executeCommand(
         'setContext',
         'anfavorites.lineFavoriteExists',

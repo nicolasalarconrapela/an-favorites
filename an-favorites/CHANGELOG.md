@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.2] - 2026-02-01
+
+### Changed
+- addLineFavorite/removeLineFavorite ya no son toggles y respetan el estado actual.
+- Quick Open reordena correctamente líneas al fijar/desfijar y conserva el foco.
+- Context key de línea favorita está debounced para evitar exceso de eventos.
+
 ## [0.9.1] - 2026-02-01
 
 ### Changed

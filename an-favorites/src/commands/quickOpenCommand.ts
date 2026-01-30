@@ -846,6 +846,7 @@ export function registerQuickOpenCommand(
       log.info('[QuickOpen] onDidHide listener registered');
 
       const searchCache = new LruCache<string, SearchCacheEntry>(30);
+      let pendingActiveKey: string | null = null;
       let buildTokenSource: vscode.CancellationTokenSource | null = null;
       let searchPage = 1;
       let previousSearchValue = '';
@@ -1241,6 +1242,18 @@ export function registerQuickOpenCommand(
               quickPick.activeItems = [fileItems[finalIndex]];
             }
           }
+
+          if (pendingActiveKey) {
+            const pendingItem = items.find(
+              (i) => getQuickPickItemKey(i) === pendingActiveKey,
+            );
+            if (pendingItem) {
+              quickPick.activeItems = [pendingItem as any];
+            } else {
+              quickPick.activeItems = [];
+            }
+            pendingActiveKey = null;
+          }
         } catch (error) {
           if (isDisposed) return;
           log.error('Error loading files for QuickOpen', error);
@@ -1505,16 +1518,22 @@ export function registerQuickOpenCommand(
             if (isLineFavoriteItem(item)) {
               const button = e.button;
               if (button.tooltip === 'Eliminar de favoritos') {
+                const currentItems = quickPick.items;
+                const currentIndex = currentItems.indexOf(item);
+                const nextItem =
+                  currentIndex !== -1
+                    ? currentItems[currentIndex + 1] ||
+                      currentItems[currentIndex - 1] ||
+                      null
+                    : null;
+                pendingActiveKey = nextItem
+                  ? getQuickPickItemKey(nextItem)
+                  : null;
                 favoritesProvider.removeLineFavorite(
                   item.resourceUri,
                   item.line,
                 );
-                const currentItems = quickPick.items;
-                const newItems = currentItems.filter((i) => i !== item);
-                quickPick.items = newItems;
-                quickPick.activeItems = newItems.filter((i) =>
-                  isLineFavoriteItem(i),
-                );
+                await buildItems(quickPick.value);
                 return;
               }
               if (
@@ -1525,16 +1544,8 @@ export function registerQuickOpenCommand(
                   item.resourceUri,
                   item.line,
                 );
-                item.isPinned = !item.isPinned;
-                item.updateIcon(item.showIcons);
-                const currentItems = quickPick.items;
-                const index = currentItems.indexOf(item);
-                if (index !== -1) {
-                  const newItems = [...currentItems];
-                  newItems[index] = item;
-                  quickPick.items = newItems;
-                  quickPick.activeItems = [item];
-                }
+                pendingActiveKey = getQuickPickItemKey(item);
+                await buildItems(quickPick.value);
               }
             } else {
               log.debug('[QuickOpen] Button triggered on non-file item');

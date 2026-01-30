@@ -528,6 +528,15 @@ export class FavoritesTreeDataProvider
       groupMap.get(metadata.group)!.push(filePath);
     });
 
+    this.lineFavorites.forEach((lineMap) => {
+      lineMap.forEach((metadata) => {
+        if (!groupMap.has(metadata.group)) {
+          this.groups.add(metadata.group);
+          groupMap.set(metadata.group, []);
+        }
+      });
+    });
+
     return groupMap;
   }
 
@@ -547,6 +556,30 @@ export class FavoritesTreeDataProvider
 
     this.saveFavorites();
     this.refresh();
+  }
+
+  addLineFavorite(uri: vscode.Uri, line: number): boolean {
+    if (line < 1) {
+      this.logger.warn('[lineFavorites] Ignoring invalid line', { line });
+      return false;
+    }
+
+    if (this.hasLineFavorite(uri, line)) {
+      return false;
+    }
+
+    const filePath = uri.fsPath;
+    const lineMap = this.lineFavorites.get(filePath) ?? new Map();
+    lineMap.set(line, {
+      addedAt: Date.now(),
+      isPinned: false,
+      group: FavoritesTreeDataProvider.DEFAULT_GROUP,
+    });
+    this.lineFavorites.set(filePath, lineMap);
+
+    this.saveLineFavorites();
+    this.refresh();
+    return true;
   }
 
   removeFavorite(uri: vscode.Uri): void {

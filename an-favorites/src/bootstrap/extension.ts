@@ -89,28 +89,42 @@ export function activate(context: vscode.ExtensionContext): void {
   );
   context.subscriptions.push(lineFavoritesDecoration);
 
+  let contextTimer: NodeJS.Timeout | undefined;
+  let lastContextValue: boolean | null = null;
+
   const updateLineFavoriteContext = (
     editor: vscode.TextEditor | undefined,
   ): void => {
-    if (!editor || editor.document.uri.scheme !== 'file') {
-      void vscode.commands.executeCommand(
-        'setContext',
-        'anfavorites.lineFavoriteExists',
-        false,
-      );
-      return;
+    if (contextTimer) {
+      clearTimeout(contextTimer);
     }
+    contextTimer = setTimeout(() => {
+      if (!editor || editor.document.uri.scheme !== 'file') {
+        if (lastContextValue !== false) {
+          lastContextValue = false;
+          void vscode.commands.executeCommand(
+            'setContext',
+            'anfavorites.lineFavoriteExists',
+            false,
+          );
+        }
+        return;
+      }
 
-    const line = editor.selection.active.line + 1;
-    const exists = favoritesProvider.hasLineFavorite(
-      editor.document.uri,
-      line,
-    );
-    void vscode.commands.executeCommand(
-      'setContext',
-      'anfavorites.lineFavoriteExists',
-      exists,
-    );
+      const line = editor.selection.active.line + 1;
+      const exists = favoritesProvider.hasLineFavorite(
+        editor.document.uri,
+        line,
+      );
+      if (lastContextValue !== exists) {
+        lastContextValue = exists;
+        void vscode.commands.executeCommand(
+          'setContext',
+          'anfavorites.lineFavoriteExists',
+          exists,
+        );
+      }
+    }, 120);
   };
 
   updateLineFavoriteContext(vscode.window.activeTextEditor);
@@ -119,9 +133,6 @@ export function activate(context: vscode.ExtensionContext): void {
       updateLineFavoriteContext(editor);
     }),
     vscode.window.onDidChangeTextEditorSelection((event) => {
-      updateLineFavoriteContext(event.textEditor);
-    }),
-    vscode.window.onDidChangeTextEditorVisibleRanges((event) => {
       updateLineFavoriteContext(event.textEditor);
     }),
     favoritesProvider.onDidChangeTreeData(() => {
