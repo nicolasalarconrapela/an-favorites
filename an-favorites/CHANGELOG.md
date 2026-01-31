@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.3] - 2026-02-01
+
+### Changed
+- Evita errores al arrastrar favoritos con payload vacío o inválido.
+
 ## [0.9.2] - 2026-02-01
 
 ### Changed

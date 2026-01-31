@@ -832,7 +832,19 @@ export class FavoritesTreeDataProvider
     const treeItem = dataTransfer.get('application/vnd.code.tree.favorites');
     if (treeItem) {
       try {
-        const filePaths = JSON.parse(treeItem.value) as string[];
+        const rawValue = treeItem.value;
+        if (typeof rawValue !== 'string' || rawValue.trim() === '') {
+          this.logger.warn('[dnd] Empty internal drag payload, ignoring');
+          return;
+        }
+        const parsed = JSON.parse(rawValue);
+        if (!Array.isArray(parsed)) {
+          this.logger.warn('[dnd] Invalid internal drag payload, ignoring', {
+            payloadType: typeof parsed,
+          });
+          return;
+        }
+        const filePaths = parsed as string[];
         this.logger.info(
           `[dnd] Moving ${filePaths.length} internal items to "${targetGroupName}"`,
         );
