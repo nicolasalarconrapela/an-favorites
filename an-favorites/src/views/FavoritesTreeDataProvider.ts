@@ -88,6 +88,7 @@ export class LineFavoriteItem extends vscode.TreeItem {
   constructor(
     public readonly resourceUri: vscode.Uri,
     public readonly line: number,
+    public readonly group: string,
     public readonly isPinned: boolean,
   ) {
     super(
@@ -414,7 +415,14 @@ export class FavoritesTreeDataProvider
           if (metadata.group !== element.groupName) {
             return;
           }
-          items.push(new LineFavoriteItem(uri, line, metadata.isPinned));
+          items.push(
+            new LineFavoriteItem(
+              uri,
+              line,
+              metadata.group,
+              metadata.isPinned,
+            ),
+          );
         });
       });
 
@@ -461,7 +469,14 @@ export class FavoritesTreeDataProvider
             if (metadata.group !== element.groupName) {
               return;
             }
-            items.push(new LineFavoriteItem(uri, line, metadata.isPinned));
+            items.push(
+              new LineFavoriteItem(
+                uri,
+                line,
+                metadata.group,
+                metadata.isPinned,
+              ),
+            );
           });
         }
       });
@@ -791,26 +806,38 @@ export class FavoritesTreeDataProvider
   }
 
   handleDrag(
-    source: (GroupItem | FavoriteItem | WorkspaceItem)[],
+    source: (GroupItem | FavoriteItem | WorkspaceItem | LineFavoriteItem)[],
     dataTransfer: vscode.DataTransfer,
     token: vscode.CancellationToken,
   ): void | Thenable<void> {
     this.logger.info(`[dnd] handleDrag sourceItems=${source.length}`);
 
-    const draggedFiles = source
-      .filter((item): item is FavoriteItem => item instanceof FavoriteItem)
-      .map((item) => item.resourceUri.fsPath);
+    const draggedItems = source.flatMap((item) => {
+      if (item instanceof FavoriteItem) {
+        return [{ type: 'favorite', path: item.resourceUri.fsPath }];
+      }
+      if (item instanceof LineFavoriteItem) {
+        return [
+          {
+            type: 'line',
+            path: item.resourceUri.fsPath,
+            line: item.line,
+          },
+        ];
+      }
+      return [];
+    });
 
-    if (draggedFiles.length > 0) {
+    if (draggedItems.length > 0) {
       dataTransfer.set(
         'application/vnd.code.tree.favorites',
-        new vscode.DataTransferItem(JSON.stringify(draggedFiles)),
+        new vscode.DataTransferItem(JSON.stringify(draggedItems)),
       );
     }
   }
 
   async handleDrop(
-    target: GroupItem | FavoriteItem | WorkspaceItem | undefined,
+    target: GroupItem | FavoriteItem | WorkspaceItem | LineFavoriteItem | undefined,
     dataTransfer: vscode.DataTransfer,
     token: vscode.CancellationToken,
   ): Promise<void> {
@@ -825,6 +852,8 @@ export class FavoritesTreeDataProvider
       targetGroupName = target.group;
     } else if (target instanceof WorkspaceItem) {
       targetGroupName = target.groupName;
+    } else if (target instanceof LineFavoriteItem) {
+      targetGroupName = target.group;
     } else {
       return;
     }
@@ -846,25 +875,73 @@ export class FavoritesTreeDataProvider
           });
           return;
         }
-        const filePaths = parsed as string[];
-        this.logger.info(
-          `[dnd] Moving ${filePaths.length} internal items to "${targetGroupName}"`,
-        );
+        let movedFavorites = 0;
+        let movedLineFavorites = 0;
 
-        let movedCount = 0;
-        filePaths.forEach((filePath) => {
-          const metadata = this.favorites.get(filePath);
-          if (metadata && metadata.group !== targetGroupName) {
-            metadata.group = targetGroupName;
-            movedCount++;
-          }
-        });
-        this.saveFavorites();
-        this.refresh();
+        if (parsed.every((item) => typeof item === 'string')) {
+          const filePaths = parsed as string[];
+          this.logger.info(
+            `[dnd] Moving ${filePaths.length} internal items to "${targetGroupName}"`,
+          );
 
-        if (movedCount > 0) {
+          filePaths.forEach((filePath) => {
+            const metadata = this.favorites.get(filePath);
+            if (metadata && metadata.group !== targetGroupName) {
+              metadata.group = targetGroupName;
+              movedFavorites++;
+            }
+          });
+        } else {
+          const entries = parsed as Array<
+            | { type: 'favorite'; path: string }
+            | { type: 'line'; path: string; line: number }
+          >;
+
+          this.logger.info(
+            `[dnd] Moving ${entries.length} internal items to "${targetGroupName}"`,
+          );
+
+          entries.forEach((entry) => {
+            if (entry.type === 'favorite') {
+              const metadata = this.favorites.get(entry.path);
+              if (metadata && metadata.group !== targetGroupName) {
+                metadata.group = targetGroupName;
+                movedFavorites++;
+              }
+              return;
+            }
+
+            const lineEntries = this.lineFavorites.get(entry.path);
+            const metadata = lineEntries?.get(entry.line);
+            if (metadata && metadata.group !== targetGroupName) {
+              metadata.group = targetGroupName;
+              movedLineFavorites++;
+            }
+          });
+        }
+
+        if (movedFavorites > 0) {
+          this.saveFavorites();
+        }
+        if (movedLineFavorites > 0) {
+          this.groups.add(targetGroupName);
+          this.saveLineFavorites();
+        }
+        if (movedFavorites > 0 || movedLineFavorites > 0) {
+          this.refresh();
+        }
+
+        if (movedFavorites > 0 && movedLineFavorites > 0) {
           vscode.window.showInformationMessage(
-            `Se movieron ${movedCount} favoritos al grupo "${targetGroupName}"`,
+            `Se movieron ${movedFavorites} favoritos y ${movedLineFavorites} líneas favoritas al grupo "${targetGroupName}"`,
+          );
+        } else if (movedFavorites > 0) {
+          vscode.window.showInformationMessage(
+            `Se movieron ${movedFavorites} favoritos al grupo "${targetGroupName}"`,
+          );
+        } else if (movedLineFavorites > 0) {
+          vscode.window.showInformationMessage(
+            `Se movieron ${movedLineFavorites} líneas favoritas al grupo "${targetGroupName}"`,
           );
         }
         return;

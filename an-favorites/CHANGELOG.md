@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.5] - 2026-02-01
+
+### Changed
+- El drag and drop también permite mover líneas favoritas entre grupos.
+
 ## [0.9.4] - 2026-02-01
 
 ### Changed
