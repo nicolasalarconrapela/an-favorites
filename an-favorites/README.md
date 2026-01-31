@@ -4,13 +4,29 @@ Application for managing favorites
 
 ## Commands
 
-- `anfavorites.hello`: shows a message.
-- `anfavorites.openWebview`: opens a webview.
-- `anfavorites.showLogs`: shows the log channel.
+You can access the main commands from the Command Palette or context menus:
+
+- `anfavorites.addToFavorites`: add a file to favorites.
+- `anfavorites.addToFavoritesInGroup`: add a file to a selected group.
+- `anfavorites.addLineFavorite`: save the current line as a favorite.
+- `anfavorites.addLineFavoriteInGroup`: save the current line in a selected group.
+- `anfavorites.removeLineFavorite`: remove the current line favorite.
+- `anfavorites.quickOpen`: open the Favorites quick search.
+- `anfavorites.addGroup`: create a new group.
+- `anfavorites.renameGroup`: rename a group.
+- `anfavorites.removeGroup`: delete a group.
+
+For the complete list, check the `contributes.commands` section in `package.json`.
 
 ## Configuration
 
-- `anfavorites.enableGreeting`: enable/disable greeting message.
+Some commonly used settings:
+
+- `anfavorites.logging.level`: minimum log level.
+- `anfavorites.logging.maxRotatedFiles`: number of rotated log files.
+- `anfavorites.maxItems.favorites`: recent favorites shown in Quick Open.
+- `anfavorites.quickOpen.openToSide`: open items to the side from Quick Open.
+- `anfavorites.storage.shareAcrossIdes`: share favorites across IDEs in the same workspace.
 
 ## Quick Start
 

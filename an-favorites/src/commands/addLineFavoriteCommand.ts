@@ -42,6 +42,65 @@ export function registerAddLineFavoriteCommand(
     },
   );
 
+  const addInGroupDisposable = vscode.commands.registerTextEditorCommand(
+    'anfavorites.addLineFavoriteInGroup',
+    async (editor) => {
+      const uri = editor.document.uri;
+      if (uri.scheme !== 'file') {
+        vscode.window.showWarningMessage(
+          'Solo se pueden guardar líneas de archivos locales.',
+        );
+        return;
+      }
+
+      const line = editor.selection.active.line + 1;
+      if (favoritesProvider.hasLineFavorite(uri, line)) {
+        vscode.window.showInformationMessage(
+          `La línea ${line} ya estaba en favoritos.`,
+        );
+        return;
+      }
+
+      const groups = favoritesProvider.getGroups();
+      if (groups.length === 0) {
+        vscode.window.showInformationMessage('No hay grupos disponibles.');
+        return;
+      }
+
+      const selectedGroup = await vscode.window.showQuickPick(groups, {
+        placeHolder: 'Selecciona un grupo para la línea favorita',
+      });
+      if (!selectedGroup) {
+        return;
+      }
+
+      const added = favoritesProvider.addLineFavorite(
+        uri,
+        line,
+        selectedGroup,
+      );
+
+      logger.info(
+        `[lineFavorites] ${added ? 'Added' : 'Skipped'} line ${line} -> ${uri.fsPath}`,
+      );
+
+      if (added) {
+        vscode.window.showInformationMessage(
+          `Línea ${line} guardada en favoritos (${selectedGroup}).`,
+        );
+      } else {
+        vscode.window.showInformationMessage(
+          `La línea ${line} ya estaba en favoritos.`,
+        );
+      }
+      vscode.commands.executeCommand(
+        'setContext',
+        'anfavorites.lineFavoriteExists',
+        favoritesProvider.hasLineFavorite(uri, line),
+      );
+    },
+  );
+
   const removeDisposable = vscode.commands.registerTextEditorCommand(
     'anfavorites.removeLineFavorite',
     (editor) => {
@@ -75,6 +134,10 @@ export function registerAddLineFavoriteCommand(
     },
   );
 
-  context.subscriptions.push(addDisposable, removeDisposable);
+  context.subscriptions.push(
+    addDisposable,
+    addInGroupDisposable,
+    removeDisposable,
+  );
   logger.info('[lineFavorites] addLineFavorite command registered');
 }

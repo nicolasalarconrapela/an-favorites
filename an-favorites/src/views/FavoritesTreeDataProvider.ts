@@ -558,7 +558,7 @@ export class FavoritesTreeDataProvider
     this.refresh();
   }
 
-  addLineFavorite(uri: vscode.Uri, line: number): boolean {
+  addLineFavorite(uri: vscode.Uri, line: number, group?: string): boolean {
     if (line < 1) {
       this.logger.warn('[lineFavorites] Ignoring invalid line', { line });
       return false;
@@ -570,12 +570,14 @@ export class FavoritesTreeDataProvider
 
     const filePath = uri.fsPath;
     const lineMap = this.lineFavorites.get(filePath) ?? new Map();
+    const targetGroup = group || FavoritesTreeDataProvider.DEFAULT_GROUP;
     lineMap.set(line, {
       addedAt: Date.now(),
       isPinned: false,
-      group: FavoritesTreeDataProvider.DEFAULT_GROUP,
+      group: targetGroup,
     });
     this.lineFavorites.set(filePath, lineMap);
+    this.groups.add(targetGroup);
 
     this.saveLineFavorites();
     this.refresh();

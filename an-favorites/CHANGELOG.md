@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.4] - 2026-02-01
+
+### Changed
+- Se permite guardar líneas favoritas directamente en un grupo.
+
 ## [0.9.3] - 2026-02-01
 
 ### Changed
