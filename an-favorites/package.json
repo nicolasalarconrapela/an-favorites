@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.9.9",
+  "version": "0.9.10",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "engines": {
@@ -198,6 +198,11 @@
           "when": "editorTextFocus"
         },
         {
+          "command": "anfavorites.addLineFavoriteFromPosition",
+          "group": "modification",
+          "when": "editorTextFocus"
+        },
+        {
           "command": "anfavorites.removeLineFavorite",
           "group": "modification",
           "when": "editorTextFocus && anfavorites.lineFavoriteExists"
@@ -216,6 +221,11 @@
         },
         {
           "command": "anfavorites.addLineFavoriteAtPosition",
+          "group": "modification",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "anfavorites.addLineFavoriteFromPosition",
           "group": "modification",
           "when": "editorTextFocus"
         },

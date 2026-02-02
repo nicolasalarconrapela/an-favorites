@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.10] - 2026-02-01
+
+### Changed
+- El comando archivo:línea ahora aparece en los menús contextuales del editor.
+
 ## [0.9.9] - 2026-02-01
 
 ### Added
