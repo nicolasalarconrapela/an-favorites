@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "engines": {
@@ -46,6 +46,11 @@
       {
         "command": "anfavorites.addLineFavoriteAtPosition",
         "title": "Guardar Línea en Favoritos (Posición Actual)",
+        "category": "AnFavorites"
+      },
+      {
+        "command": "anfavorites.addLineFavoriteFromPosition",
+        "title": "Guardar Línea en Favoritos (Archivo:línea)",
         "category": "AnFavorites"
       },
       {

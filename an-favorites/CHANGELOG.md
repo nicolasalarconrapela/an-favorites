@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.9] - 2026-02-01
+
+### Added
+- Nuevo comando para guardar favoritos por formato archivo:línea:columna.
+
 ## [0.9.8] - 2026-02-01
 
 ### Changed
