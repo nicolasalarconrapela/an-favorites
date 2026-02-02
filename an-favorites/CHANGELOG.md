@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.6] - 2026-02-01
+
+### Fixed
+- Quick Open ya no falla al restaurar la selección activa durante búsquedas.
+
 ## [0.9.5] - 2026-02-01
 
 ### Changed

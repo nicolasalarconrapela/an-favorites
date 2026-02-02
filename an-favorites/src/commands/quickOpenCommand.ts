@@ -875,11 +875,10 @@ export function registerQuickOpenCommand(
           previousSearchValue = normalizedSearch;
         }
 
-
-      const currentActiveItem = quickPick.activeItems[0];
-      const currentActiveKey = currentActiveItem
-        ? getQuickPickItemKey(currentActiveItem)
-        : null;
+        const currentActiveItem = quickPick.activeItems[0];
+        const currentActiveKey = currentActiveItem
+          ? getQuickPickItemKey(currentActiveItem)
+          : null;
 
         try {
           const isSearchValueCurrent = () =>
@@ -1195,7 +1194,7 @@ export function registerQuickOpenCommand(
           quickPick.items = items;
 
           if (isSearching) {
-            if (currentActiveUri) {
+            if (currentActiveKey) {
               const itemToRestore = items.find(
                 (i) => getQuickPickItemKey(i) === currentActiveKey,
               );
