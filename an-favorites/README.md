@@ -10,7 +10,7 @@ You can access the main commands from the Command Palette or context menus:
 - `anfavorites.addToFavoritesInGroup`: add a file to a selected group.
 - `anfavorites.addLineFavorite`: save the current line as a favorite.
 - `anfavorites.addLineFavoriteInGroup`: save the current line in a selected group.
-- `anfavorites.addLineFavoriteAtPosition`: save a line by entering a position.
+- `anfavorites.addLineFavoriteAtPosition`: save the current cursor line.
 - `anfavorites.removeLineFavorite`: remove the current line favorite.
 - `anfavorites.quickOpen`: open the Favorites quick search.
 - `anfavorites.addGroup`: create a new group.

@@ -103,7 +103,7 @@ export function registerAddLineFavoriteCommand(
 
   const addAtPositionDisposable = vscode.commands.registerTextEditorCommand(
     'anfavorites.addLineFavoriteAtPosition',
-    async (editor) => {
+    async (editor, _edit, args) => {
       const uri = editor.document.uri;
       if (uri.scheme !== 'file') {
         vscode.window.showWarningMessage(
@@ -113,28 +113,22 @@ export function registerAddLineFavoriteCommand(
       }
 
       const maxLine = editor.document.lineCount;
-      const input = await vscode.window.showInputBox({
-        title: 'Guardar línea en favoritos',
-        placeHolder: `Ingresa un número de línea (1-${maxLine})`,
-        validateInput: (value) => {
-          const trimmed = value.trim();
-          if (trimmed.length === 0) {
-            return 'Ingresa un número de línea.';
-          }
-          const parsed = Number.parseInt(trimmed, 10);
-          if (!Number.isFinite(parsed) || parsed < 1 || parsed > maxLine) {
-            return `La línea debe estar entre 1 y ${maxLine}.`;
-          }
-          return null;
-        },
-      });
-      if (!input) {
-        return;
+      const argsLine =
+        typeof args?.line === 'number'
+          ? args.line
+          : typeof args?.lineNumber === 'number'
+            ? args.lineNumber
+            : undefined;
+      let line = argsLine;
+
+      if (!line) {
+        line = editor.selection.active.line + 1;
       }
 
-      const line = Number.parseInt(input.trim(), 10);
-      if (!Number.isFinite(line)) {
-        vscode.window.showWarningMessage('Número de línea inválido.');
+      if (line < 1 || line > maxLine) {
+        vscode.window.showWarningMessage(
+          `La línea debe estar entre 1 y ${maxLine}.`,
+        );
         return;
       }
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.8] - 2026-02-01
+
+### Changed
+- El comando de posición ahora guarda directamente la línea activa del editor.
+
 ## [0.9.7] - 2026-02-01
 
 ### Added
