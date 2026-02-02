@@ -101,6 +101,72 @@ export function registerAddLineFavoriteCommand(
     },
   );
 
+  const addAtPositionDisposable = vscode.commands.registerTextEditorCommand(
+    'anfavorites.addLineFavoriteAtPosition',
+    async (editor) => {
+      const uri = editor.document.uri;
+      if (uri.scheme !== 'file') {
+        vscode.window.showWarningMessage(
+          'Solo se pueden guardar líneas de archivos locales.',
+        );
+        return;
+      }
+
+      const maxLine = editor.document.lineCount;
+      const input = await vscode.window.showInputBox({
+        title: 'Guardar línea en favoritos',
+        placeHolder: `Ingresa un número de línea (1-${maxLine})`,
+        validateInput: (value) => {
+          const trimmed = value.trim();
+          if (trimmed.length === 0) {
+            return 'Ingresa un número de línea.';
+          }
+          const parsed = Number.parseInt(trimmed, 10);
+          if (!Number.isFinite(parsed) || parsed < 1 || parsed > maxLine) {
+            return `La línea debe estar entre 1 y ${maxLine}.`;
+          }
+          return null;
+        },
+      });
+      if (!input) {
+        return;
+      }
+
+      const line = Number.parseInt(input.trim(), 10);
+      if (!Number.isFinite(line)) {
+        vscode.window.showWarningMessage('Número de línea inválido.');
+        return;
+      }
+
+      if (favoritesProvider.hasLineFavorite(uri, line)) {
+        vscode.window.showInformationMessage(
+          `La línea ${line} ya estaba en favoritos.`,
+        );
+        return;
+      }
+
+      const added = favoritesProvider.addLineFavorite(uri, line);
+      logger.info(
+        `[lineFavorites] ${added ? 'Added' : 'Skipped'} line ${line} -> ${uri.fsPath}`,
+      );
+
+      if (added) {
+        vscode.window.showInformationMessage(
+          `Línea ${line} guardada en favoritos.`,
+        );
+      } else {
+        vscode.window.showInformationMessage(
+          `La línea ${line} ya estaba en favoritos.`,
+        );
+      }
+      vscode.commands.executeCommand(
+        'setContext',
+        'anfavorites.lineFavoriteExists',
+        favoritesProvider.hasLineFavorite(uri, line),
+      );
+    },
+  );
+
   const removeDisposable = vscode.commands.registerTextEditorCommand(
     'anfavorites.removeLineFavorite',
     (editor) => {
@@ -137,6 +203,7 @@ export function registerAddLineFavoriteCommand(
   context.subscriptions.push(
     addDisposable,
     addInGroupDisposable,
+    addAtPositionDisposable,
     removeDisposable,
   );
   logger.info('[lineFavorites] addLineFavorite command registered');

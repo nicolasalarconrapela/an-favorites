@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.7] - 2026-02-01
+
+### Added
+- Nuevo comando para guardar una línea indicando la posición manualmente.
+
 ## [0.9.6] - 2026-02-01
 
 ### Fixed
