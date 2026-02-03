@@ -17,9 +17,13 @@ export function registerLineFavoriteCommands(
         logger.warn('[lineFavorites] removeLineFavoriteItem without item');
         return;
       }
-      favoritesProvider.removeLineFavorite(item.resourceUri, item.line);
+      favoritesProvider.removeLineFavoriteAtPosition(
+        item.resourceUri,
+        item.line,
+        item.column,
+      );
       logger.info(
-        `[lineFavorites] Removed line ${item.line} -> ${item.resourceUri.fsPath}`,
+        `[lineFavorites] Removed line ${item.line}:${item.column} -> ${item.resourceUri.fsPath}`,
       );
     },
   );
@@ -31,7 +35,11 @@ export function registerLineFavoriteCommands(
         logger.warn('[lineFavorites] pinLineFavorite without item');
         return;
       }
-      favoritesProvider.toggleLineFavoritePin(item.resourceUri, item.line);
+      favoritesProvider.toggleLineFavoritePinAtPosition(
+        item.resourceUri,
+        item.line,
+        item.column,
+      );
     },
   );
 
@@ -42,7 +50,11 @@ export function registerLineFavoriteCommands(
         logger.warn('[lineFavorites] unpinLineFavorite without item');
         return;
       }
-      favoritesProvider.toggleLineFavoritePin(item.resourceUri, item.line);
+      favoritesProvider.toggleLineFavoritePinAtPosition(
+        item.resourceUri,
+        item.line,
+        item.column,
+      );
     },
   );
 
@@ -55,7 +67,13 @@ export function registerLineFavoriteCommands(
       }
       try {
         const lineIndex = Math.max(0, item.line - 1);
-        const range = new vscode.Range(lineIndex, 0, lineIndex, 0);
+        const columnIndex = Math.max(0, item.column - 1);
+        const range = new vscode.Range(
+          lineIndex,
+          columnIndex,
+          lineIndex,
+          columnIndex,
+        );
         await vscode.window.showTextDocument(item.resourceUri, {
           viewColumn: vscode.ViewColumn.Beside,
           preview: false,
@@ -81,7 +99,11 @@ export function registerLineFavoriteCommands(
         return;
       }
       const currentGroup =
-        favoritesProvider.getLineFavoriteGroup(item.resourceUri, item.line) ??
+        favoritesProvider.getLineFavoriteGroupAtPosition(
+          item.resourceUri,
+          item.line,
+          item.column,
+        ) ??
         FavoritesTreeDataProvider.DEFAULT_GROUP;
       const selection = await vscode.window.showQuickPick(groups, {
         placeHolder: `Mover línea a grupo (actual: ${currentGroup})`,
@@ -89,7 +111,12 @@ export function registerLineFavoriteCommands(
       if (!selection) {
         return;
       }
-      favoritesProvider.moveLineFavorite(item.resourceUri, item.line, selection);
+      favoritesProvider.moveLineFavoriteAtPosition(
+        item.resourceUri,
+        item.line,
+        item.column,
+        selection,
+      );
     },
   );
 

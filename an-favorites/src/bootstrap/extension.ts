@@ -90,7 +90,8 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(lineFavoritesDecoration);
 
   let contextTimer: NodeJS.Timeout | undefined;
-  let lastContextValue: boolean | null = null;
+  let lastContextAtCursor: boolean | null = null;
+  let lastContextOnLine: boolean | null = null;
 
   const updateLineFavoriteContext = (
     editor: vscode.TextEditor | undefined,
@@ -100,11 +101,19 @@ export function activate(context: vscode.ExtensionContext): void {
     }
     contextTimer = setTimeout(() => {
       if (!editor || editor.document.uri.scheme !== 'file') {
-        if (lastContextValue !== false) {
-          lastContextValue = false;
+        if (lastContextAtCursor !== false) {
+          lastContextAtCursor = false;
           void vscode.commands.executeCommand(
             'setContext',
-            'anfavorites.lineFavoriteExists',
+            'anfavorites.lineFavoriteExistsAtCursor',
+            false,
+          );
+        }
+        if (lastContextOnLine !== false) {
+          lastContextOnLine = false;
+          void vscode.commands.executeCommand(
+            'setContext',
+            'anfavorites.lineFavoriteExistsOnLine',
             false,
           );
         }
@@ -112,19 +121,34 @@ export function activate(context: vscode.ExtensionContext): void {
       }
 
       const line = editor.selection.active.line + 1;
-      const exists = favoritesProvider.hasLineFavorite(
+      const column = editor.selection.active.character + 1;
+      const existsAtCursor = favoritesProvider.hasLineFavoriteAtPosition(
+        editor.document.uri,
+        line,
+        column,
+      );
+      const existsOnLine = favoritesProvider.hasLineFavoriteOnLine(
         editor.document.uri,
         line,
       );
-      if (lastContextValue !== exists) {
-        lastContextValue = exists;
+
+      if (lastContextAtCursor !== existsAtCursor) {
+        lastContextAtCursor = existsAtCursor;
         void vscode.commands.executeCommand(
           'setContext',
-          'anfavorites.lineFavoriteExists',
-          exists,
+          'anfavorites.lineFavoriteExistsAtCursor',
+          existsAtCursor,
         );
       }
-    }, 120);
+      if (lastContextOnLine !== existsOnLine) {
+        lastContextOnLine = existsOnLine;
+        void vscode.commands.executeCommand(
+          'setContext',
+          'anfavorites.lineFavoriteExistsOnLine',
+          existsOnLine,
+        );
+      }
+    }, 150);
   };
 
   updateLineFavoriteContext(vscode.window.activeTextEditor);

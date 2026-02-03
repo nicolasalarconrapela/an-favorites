@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.9.10",
+  "version": "0.9.11",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "engines": {
@@ -185,12 +185,12 @@
         {
           "command": "anfavorites.addLineFavorite",
           "group": "modification",
-          "when": "editorTextFocus && !anfavorites.lineFavoriteExists"
+          "when": "editorTextFocus && !anfavorites.lineFavoriteExistsAtCursor"
         },
         {
           "command": "anfavorites.addLineFavoriteInGroup",
           "group": "modification",
-          "when": "editorTextFocus && !anfavorites.lineFavoriteExists"
+          "when": "editorTextFocus && !anfavorites.lineFavoriteExistsAtCursor"
         },
         {
           "command": "anfavorites.addLineFavoriteAtPosition",
@@ -205,19 +205,19 @@
         {
           "command": "anfavorites.removeLineFavorite",
           "group": "modification",
-          "when": "editorTextFocus && anfavorites.lineFavoriteExists"
+          "when": "editorTextFocus && anfavorites.lineFavoriteExistsAtCursor"
         }
       ],
       "editor/lineNumber/context": [
         {
           "command": "anfavorites.addLineFavorite",
           "group": "modification",
-          "when": "editorTextFocus && !anfavorites.lineFavoriteExists"
+          "when": "editorTextFocus && !anfavorites.lineFavoriteExistsAtCursor"
         },
         {
           "command": "anfavorites.addLineFavoriteInGroup",
           "group": "modification",
-          "when": "editorTextFocus && !anfavorites.lineFavoriteExists"
+          "when": "editorTextFocus && !anfavorites.lineFavoriteExistsAtCursor"
         },
         {
           "command": "anfavorites.addLineFavoriteAtPosition",
@@ -232,7 +232,7 @@
         {
           "command": "anfavorites.removeLineFavorite",
           "group": "modification",
-          "when": "editorTextFocus && anfavorites.lineFavoriteExists"
+          "when": "editorTextFocus && anfavorites.lineFavoriteExistsAtCursor"
         }
       ],
       "editor/title/context": [

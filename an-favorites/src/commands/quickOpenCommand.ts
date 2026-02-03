@@ -138,7 +138,7 @@ function workspaceRelativeLabel(uri: vscode.Uri): {
 
 function getQuickPickItemKey(item: QuickOpenItem): string | null {
   if (isLineFavoriteItem(item)) {
-    return `${item.resourceUri.toString()}:${item.line}`;
+    return `${item.resourceUri.toString()}:${item.line}:${item.column}`;
   }
   if (isFileItem(item)) {
     return item.resourceUri.toString();
@@ -146,17 +146,19 @@ function getQuickPickItemKey(item: QuickOpenItem): string | null {
   return null;
 }
 
-async function openFileAtLine(
+async function openFileAtPosition(
   uri: vscode.Uri,
   line: number,
+  column: number,
   viewColumn?: vscode.ViewColumn,
 ): Promise<void> {
   const targetLine = Math.max(1, line) - 1;
+  const targetColumn = Math.max(1, column) - 1;
   const editor = await vscode.window.showTextDocument(uri, {
     preview: false,
     viewColumn,
   });
-  const position = new vscode.Position(targetLine, 0);
+  const position = new vscode.Position(targetLine, targetColumn);
   editor.selection = new vscode.Selection(position, position);
   editor.revealRange(new vscode.Range(position, position));
 }
@@ -198,14 +200,20 @@ function buildPinnedItems(
 }
 
 function buildLineFavoriteItems(
-  entries: Array<{ uri: vscode.Uri; line: number; isPinned: boolean }>,
+  entries: Array<{
+    uri: vscode.Uri;
+    line: number;
+    column: number;
+    isPinned: boolean;
+  }>,
   config: QuickOpenConfig,
 ): LineQuickPickItem[] {
   return entries.map(
-    ({ uri, line, isPinned }) =>
+    ({ uri, line, column, isPinned }) =>
       new LineQuickPickItem({
         uri,
         line,
+        column,
         isPinned,
         showIcons: config.showIcons,
         pathDetailLocation: config.pathDetailLocation,
@@ -624,6 +632,7 @@ class LineQuickPickItem implements vscode.QuickPickItem {
 
   resourceUri: vscode.Uri;
   line: number;
+  column: number;
   isPinned: boolean;
 
   private _fullPathLabel: string = '';
@@ -637,6 +646,7 @@ class LineQuickPickItem implements vscode.QuickPickItem {
   constructor(params: {
     uri: vscode.Uri;
     line: number;
+    column: number;
     isPinned?: boolean;
     showIcons?: boolean;
     pathDetailLocation?: 'description' | 'detail';
@@ -645,6 +655,7 @@ class LineQuickPickItem implements vscode.QuickPickItem {
     const {
       uri,
       line,
+      column,
       isPinned = false,
       showIcons = true,
       pathDetailLocation = 'detail',
@@ -653,6 +664,7 @@ class LineQuickPickItem implements vscode.QuickPickItem {
 
     this.resourceUri = uri;
     this.line = line;
+    this.column = column;
     this.isPinned = isPinned;
     this.showIcons = showIcons;
     this.pathDetailLocation = pathDetailLocation;
@@ -717,7 +729,7 @@ class LineQuickPickItem implements vscode.QuickPickItem {
 
     const baseName = safeBasenameFromUri(this.resourceUri);
     const iconPrefix = this.isPinned ? '$(pin)' : '$(bookmark)';
-    this.label = `${iconPrefix} ${baseName}:${this.line}`;
+    this.label = `${iconPrefix} ${baseName}:${this.line}:${this.column}`;
 
     const pinTooltip = this.isPinned ? 'Desfijar' : 'Fijar';
     this.buttons = [
@@ -978,6 +990,7 @@ export function registerQuickOpenCommand(
             .map((entry) => ({
               uri: vscode.Uri.file(entry.path),
               line: entry.line,
+              column: entry.column,
               isPinned: !!entry.isPinned,
             }))
             .filter((entry) => {
@@ -1032,7 +1045,11 @@ export function registerQuickOpenCommand(
           const validLineFavorites = lineFavoritesEntries.filter((entry) => {
             const exists = existenceMap.get(entry.uri.fsPath) ?? false;
             if (!exists) {
-              favoritesProvider.removeLineFavorite(entry.uri, entry.line);
+              favoritesProvider.removeLineFavoriteAtPosition(
+                entry.uri,
+                entry.line,
+                entry.column,
+              );
             }
             return exists;
           });
@@ -1438,16 +1455,17 @@ export function registerQuickOpenCommand(
 
           if (isLineFavoriteItem(selected)) {
             log.info(
-              `[QuickOpen] Opening line favorite: ${selected.resourceUri.fsPath}:${selected.line}`,
+              `[QuickOpen] Opening line favorite: ${selected.resourceUri.fsPath}:${selected.line}:${selected.column}`,
             );
 
             const openToSide = vscode.workspace
               .getConfiguration('anfavorites.quickOpen')
               .get<boolean>('openToSide', false);
 
-            await openFileAtLine(
+            await openFileAtPosition(
               selected.resourceUri,
               selected.line,
+              selected.column,
               openToSide ? vscode.ViewColumn.Beside : undefined,
             );
             mruService.add(selected.resourceUri.fsPath);
@@ -1528,9 +1546,10 @@ export function registerQuickOpenCommand(
                 pendingActiveKey = nextItem
                   ? getQuickPickItemKey(nextItem)
                   : null;
-                favoritesProvider.removeLineFavorite(
+                favoritesProvider.removeLineFavoriteAtPosition(
                   item.resourceUri,
                   item.line,
+                  item.column,
                 );
                 await buildItems(quickPick.value);
                 return;
@@ -1539,9 +1558,10 @@ export function registerQuickOpenCommand(
                 button.tooltip?.startsWith('Fijar') ||
                 button.tooltip === 'Desfijar'
               ) {
-                favoritesProvider.toggleLineFavoritePin(
+                favoritesProvider.toggleLineFavoritePinAtPosition(
                   item.resourceUri,
                   item.line,
+                  item.column,
                 );
                 pendingActiveKey = getQuickPickItemKey(item);
                 await buildItems(quickPick.value);

@@ -20,25 +20,35 @@ export function registerAddLineFavoriteCommand(
       }
 
       const line = editor.selection.active.line + 1;
-      const added = favoritesProvider.addLineFavorite(uri, line);
+      const column = editor.selection.active.character + 1;
+      const added = favoritesProvider.addLineFavoriteAtPosition(
+        uri,
+        line,
+        column,
+      );
 
       logger.info(
-        `[lineFavorites] ${added ? 'Added' : 'Skipped'} line ${line} -> ${uri.fsPath}`,
+        `[lineFavorites] ${added ? 'Added' : 'Skipped'} line ${line}:${column} -> ${uri.fsPath}`,
       );
 
       if (added) {
         vscode.window.showInformationMessage(
-          `Línea ${line} guardada en favoritos.`,
+          `Posición ${line}:${column} guardada en favoritos.`,
         );
       } else {
         vscode.window.showInformationMessage(
-          `La línea ${line} ya estaba en favoritos.`,
+          `La posición ${line}:${column} ya estaba en favoritos.`,
         );
       }
       vscode.commands.executeCommand(
         'setContext',
-        'anfavorites.lineFavoriteExists',
-        favoritesProvider.hasLineFavorite(uri, line),
+        'anfavorites.lineFavoriteExistsAtCursor',
+        favoritesProvider.hasLineFavoriteAtPosition(uri, line, column),
+      );
+      vscode.commands.executeCommand(
+        'setContext',
+        'anfavorites.lineFavoriteExistsOnLine',
+        favoritesProvider.hasLineFavoriteOnLine(uri, line),
       );
     },
   );
@@ -55,9 +65,10 @@ export function registerAddLineFavoriteCommand(
       }
 
       const line = editor.selection.active.line + 1;
-      if (favoritesProvider.hasLineFavorite(uri, line)) {
+      const column = editor.selection.active.character + 1;
+      if (favoritesProvider.hasLineFavoriteAtPosition(uri, line, column)) {
         vscode.window.showInformationMessage(
-          `La línea ${line} ya estaba en favoritos.`,
+          `La posición ${line}:${column} ya estaba en favoritos.`,
         );
         return;
       }
@@ -75,29 +86,35 @@ export function registerAddLineFavoriteCommand(
         return;
       }
 
-      const added = favoritesProvider.addLineFavorite(
+      const added = favoritesProvider.addLineFavoriteAtPosition(
         uri,
         line,
+        column,
         selectedGroup,
       );
 
       logger.info(
-        `[lineFavorites] ${added ? 'Added' : 'Skipped'} line ${line} -> ${uri.fsPath}`,
+        `[lineFavorites] ${added ? 'Added' : 'Skipped'} line ${line}:${column} -> ${uri.fsPath}`,
       );
 
       if (added) {
         vscode.window.showInformationMessage(
-          `Línea ${line} guardada en favoritos (${selectedGroup}).`,
+          `Posición ${line}:${column} guardada en favoritos (${selectedGroup}).`,
         );
       } else {
         vscode.window.showInformationMessage(
-          `La línea ${line} ya estaba en favoritos.`,
+          `La posición ${line}:${column} ya estaba en favoritos.`,
         );
       }
       vscode.commands.executeCommand(
         'setContext',
-        'anfavorites.lineFavoriteExists',
-        favoritesProvider.hasLineFavorite(uri, line),
+        'anfavorites.lineFavoriteExistsAtCursor',
+        favoritesProvider.hasLineFavoriteAtPosition(uri, line, column),
+      );
+      vscode.commands.executeCommand(
+        'setContext',
+        'anfavorites.lineFavoriteExistsOnLine',
+        favoritesProvider.hasLineFavoriteOnLine(uri, line),
       );
     },
   );
@@ -122,8 +139,18 @@ export function registerAddLineFavoriteCommand(
             : undefined;
       let line = argsLine;
 
+      let column =
+        typeof args?.column === 'number'
+          ? args.column
+          : typeof args?.columnNumber === 'number'
+            ? args.columnNumber
+            : undefined;
+
       if (!line) {
         line = editor.selection.active.line + 1;
+      }
+      if (!column) {
+        column = editor.selection.active.character + 1;
       }
 
       if (line < 1 || line > maxLine) {
@@ -132,32 +159,47 @@ export function registerAddLineFavoriteCommand(
         );
         return;
       }
-
-      if (favoritesProvider.hasLineFavorite(uri, line)) {
-        vscode.window.showInformationMessage(
-          `La línea ${line} ya estaba en favoritos.`,
+      if (column < 1) {
+        vscode.window.showWarningMessage(
+          'La columna debe ser un número mayor o igual a 1.',
         );
         return;
       }
 
-      const added = favoritesProvider.addLineFavorite(uri, line);
+      if (favoritesProvider.hasLineFavoriteAtPosition(uri, line, column)) {
+        vscode.window.showInformationMessage(
+          `La posición ${line}:${column} ya estaba en favoritos.`,
+        );
+        return;
+      }
+
+      const added = favoritesProvider.addLineFavoriteAtPosition(
+        uri,
+        line,
+        column,
+      );
       logger.info(
-        `[lineFavorites] ${added ? 'Added' : 'Skipped'} line ${line} -> ${uri.fsPath}`,
+        `[lineFavorites] ${added ? 'Added' : 'Skipped'} line ${line}:${column} -> ${uri.fsPath}`,
       );
 
       if (added) {
         vscode.window.showInformationMessage(
-          `Línea ${line} guardada en favoritos.`,
+          `Posición ${line}:${column} guardada en favoritos.`,
         );
       } else {
         vscode.window.showInformationMessage(
-          `La línea ${line} ya estaba en favoritos.`,
+          `La posición ${line}:${column} ya estaba en favoritos.`,
         );
       }
       vscode.commands.executeCommand(
         'setContext',
-        'anfavorites.lineFavoriteExists',
-        favoritesProvider.hasLineFavorite(uri, line),
+        'anfavorites.lineFavoriteExistsAtCursor',
+        favoritesProvider.hasLineFavoriteAtPosition(uri, line, column),
+      );
+      vscode.commands.executeCommand(
+        'setContext',
+        'anfavorites.lineFavoriteExistsOnLine',
+        favoritesProvider.hasLineFavoriteOnLine(uri, line),
       );
     },
   );
@@ -206,8 +248,13 @@ export function registerAddLineFavoriteCommand(
       }
 
       const line = Number.parseInt(match[1], 10);
+      const column = match[2] ? Number.parseInt(match[2], 10) : 1;
       if (!Number.isFinite(line) || line < 1) {
         vscode.window.showWarningMessage('Número de línea inválido.');
+        return;
+      }
+      if (!Number.isFinite(column) || column < 1) {
+        vscode.window.showWarningMessage('Número de columna inválido.');
         return;
       }
 
@@ -253,18 +300,22 @@ export function registerAddLineFavoriteCommand(
           return;
         }
 
-        const added = favoritesProvider.addLineFavorite(targetUri, line);
+        const added = favoritesProvider.addLineFavoriteAtPosition(
+          targetUri,
+          line,
+          column,
+        );
         logger.info(
-          `[lineFavorites] ${added ? 'Added' : 'Skipped'} line ${line} -> ${targetUri.fsPath}`,
+          `[lineFavorites] ${added ? 'Added' : 'Skipped'} line ${line}:${column} -> ${targetUri.fsPath}`,
         );
 
         if (added) {
           vscode.window.showInformationMessage(
-            `Línea ${line} guardada en favoritos (${targetUri.fsPath}).`,
+            `Posición ${line}:${column} guardada en favoritos (${targetUri.fsPath}).`,
           );
         } else {
           vscode.window.showInformationMessage(
-            `La línea ${line} ya estaba en favoritos.`,
+            `La posición ${line}:${column} ya estaba en favoritos.`,
           );
         }
       } catch (error) {
@@ -288,23 +339,33 @@ export function registerAddLineFavoriteCommand(
       }
 
       const line = editor.selection.active.line + 1;
-      if (favoritesProvider.hasLineFavorite(uri, line)) {
-        favoritesProvider.removeLineFavorite(uri, line);
+      const column = editor.selection.active.character + 1;
+      const removed = favoritesProvider.removeLineFavoriteAtPosition(
+        uri,
+        line,
+        column,
+      );
+      if (removed) {
         logger.info(
-          `[lineFavorites] Removed line ${line} -> ${uri.fsPath}`,
+          `[lineFavorites] Removed line ${line}:${column} -> ${uri.fsPath}`,
         );
         vscode.window.showInformationMessage(
-          `Línea ${line} eliminada de favoritos.`,
+          `Posición ${line}:${column} eliminada de favoritos.`,
         );
       } else {
         vscode.window.showInformationMessage(
-          `La línea ${line} no está en favoritos.`,
+          `La posición ${line}:${column} no está en favoritos.`,
         );
       }
       vscode.commands.executeCommand(
         'setContext',
-        'anfavorites.lineFavoriteExists',
+        'anfavorites.lineFavoriteExistsAtCursor',
         false,
+      );
+      vscode.commands.executeCommand(
+        'setContext',
+        'anfavorites.lineFavoriteExistsOnLine',
+        favoritesProvider.hasLineFavoriteOnLine(uri, line),
       );
     },
   );

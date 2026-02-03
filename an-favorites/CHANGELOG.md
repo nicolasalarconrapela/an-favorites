@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.11] - 2026-02-01
+
+### Added
+- Favoritos por posición exacta (línea y columna) con migración automática.
+
+### Changed
+- Menús y context keys ahora distinguen posición exacta en el cursor.
+
 ## [0.9.10] - 2026-02-01
 
 ### Changed

@@ -69,7 +69,7 @@ export class LineFavoritesDecoration implements vscode.Disposable {
       return;
     }
 
-    const lines = this.favoritesProvider.getLineFavorites(
+    const lines = this.favoritesProvider.getLineFavoritesLines(
       editor.document.uri,
     );
 

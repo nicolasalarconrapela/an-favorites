@@ -88,25 +88,27 @@ export class LineFavoriteItem extends vscode.TreeItem {
   constructor(
     public readonly resourceUri: vscode.Uri,
     public readonly line: number,
+    public readonly column: number,
     public readonly group: string,
     public readonly isPinned: boolean,
   ) {
     super(
-      `${path.basename(resourceUri.fsPath)}:${line}`,
+      `${path.basename(resourceUri.fsPath)}:${line}:${column}`,
       vscode.TreeItemCollapsibleState.None,
     );
 
-    this.id = `favorite-line:${resourceUri.fsPath}:${line}`;
+    this.id = `favorite-line:${resourceUri.fsPath}:${line}:${column}`;
     this.resourceUri = resourceUri;
     this._fullPath = resourceUri.fsPath;
     this._dirPath = path.dirname(resourceUri.fsPath);
-    this.tooltip = `${this._fullPath}:${line}`;
+    this.tooltip = `${this._fullPath}:${line}:${column}`;
     this.description = undefined;
     this.iconPath = new vscode.ThemeIcon(isPinned ? 'pin' : 'bookmark');
     this.contextValue = isPinned ? 'lineFavoriteItem:pinned' : 'lineFavoriteItem';
 
     const lineIndex = Math.max(0, line - 1);
-    const range = new vscode.Range(lineIndex, 0, lineIndex, 0);
+    const columnIndex = Math.max(0, column - 1);
+    const range = new vscode.Range(lineIndex, columnIndex, lineIndex, columnIndex);
     this.command = {
       command: 'vscode.open',
       title: 'Abrir Archivo',
@@ -167,10 +169,30 @@ interface FavoriteMetadata {
 interface LineFavoriteData {
   path: string;
   line: number;
+  column: number;
   group: string;
   addedAt?: number;
   isPinned?: boolean;
 }
+
+interface LineFavoriteMetadata {
+  addedAt: number;
+  isPinned: boolean;
+  group: string;
+}
+
+const makePosKey = (line: number, column: number): string =>
+  `${line}:${column}`;
+
+const parsePosKey = (key: string): { line: number; column: number } => {
+  const [lineRaw, columnRaw] = key.split(':');
+  const line = Number.parseInt(lineRaw ?? '', 10);
+  const column = Number.parseInt(columnRaw ?? '', 10);
+  return {
+    line: Number.isFinite(line) ? line : 1,
+    column: Number.isFinite(column) ? column : 1,
+  };
+};
 
 export class FavoritesTreeDataProvider
   implements
@@ -202,7 +224,7 @@ export class FavoritesTreeDataProvider
   private favorites: Map<string, FavoriteMetadata> = new Map();
   private lineFavorites: Map<
     string,
-    Map<number, { addedAt: number; isPinned: boolean; group: string }>
+    Map<string, LineFavoriteMetadata>
   > = new Map();
 
   private groups: Set<string> = new Set([
@@ -210,7 +232,10 @@ export class FavoritesTreeDataProvider
   ]);
 
   public static readonly DEFAULT_GROUP = 'Sin Grupo';
-  private static readonly LINE_FAVORITES_KEY = 'anfavorites.lineFavorites.v1';
+  private static readonly LINE_FAVORITES_KEY_V1 =
+    'anfavorites.lineFavorites.v1';
+  private static readonly LINE_FAVORITES_KEY_V2 =
+    'anfavorites.lineFavorites.v2';
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -411,7 +436,8 @@ export class FavoritesTreeDataProvider
         if (!wf) {
           return;
         }
-        lineMap.forEach((metadata, line) => {
+        lineMap.forEach((metadata, posKey) => {
+          const { line, column } = parsePosKey(posKey);
           if (metadata.group !== element.groupName) {
             return;
           }
@@ -419,6 +445,7 @@ export class FavoritesTreeDataProvider
             new LineFavoriteItem(
               uri,
               line,
+              column,
               metadata.group,
               metadata.isPinned,
             ),
@@ -465,7 +492,8 @@ export class FavoritesTreeDataProvider
           wf &&
           wf.uri.toString() === element.workspaceFolder.uri.toString()
         ) {
-          lineMap.forEach((metadata, line) => {
+          lineMap.forEach((metadata, posKey) => {
+            const { line, column } = parsePosKey(posKey);
             if (metadata.group !== element.groupName) {
               return;
             }
@@ -473,6 +501,7 @@ export class FavoritesTreeDataProvider
               new LineFavoriteItem(
                 uri,
                 line,
+                column,
                 metadata.group,
                 metadata.isPinned,
               ),
@@ -573,20 +602,28 @@ export class FavoritesTreeDataProvider
     this.refresh();
   }
 
-  addLineFavorite(uri: vscode.Uri, line: number, group?: string): boolean {
-    if (line < 1) {
-      this.logger.warn('[lineFavorites] Ignoring invalid line', { line });
+  addLineFavoriteAtPosition(
+    uri: vscode.Uri,
+    line: number,
+    column: number,
+    group?: string,
+  ): boolean {
+    if (line < 1 || column < 1) {
+      this.logger.warn('[lineFavorites] Ignoring invalid position', {
+        line,
+        column,
+      });
       return false;
     }
 
-    if (this.hasLineFavorite(uri, line)) {
+    if (this.hasLineFavoriteAtPosition(uri, line, column)) {
       return false;
     }
 
     const filePath = uri.fsPath;
     const lineMap = this.lineFavorites.get(filePath) ?? new Map();
     const targetGroup = group || FavoritesTreeDataProvider.DEFAULT_GROUP;
-    lineMap.set(line, {
+    lineMap.set(makePosKey(line, column), {
       addedAt: Date.now(),
       isPinned: false,
       group: targetGroup,
@@ -822,6 +859,7 @@ export class FavoritesTreeDataProvider
             type: 'line',
             path: item.resourceUri.fsPath,
             line: item.line,
+            column: item.column,
           },
         ];
       }
@@ -894,7 +932,7 @@ export class FavoritesTreeDataProvider
         } else {
           const entries = parsed as Array<
             | { type: 'favorite'; path: string }
-            | { type: 'line'; path: string; line: number }
+            | { type: 'line'; path: string; line: number; column: number }
           >;
 
           this.logger.info(
@@ -912,7 +950,9 @@ export class FavoritesTreeDataProvider
             }
 
             const lineEntries = this.lineFavorites.get(entry.path);
-            const metadata = lineEntries?.get(entry.line);
+            const metadata = lineEntries?.get(
+              makePosKey(entry.line, entry.column),
+            );
             if (metadata && metadata.group !== targetGroupName) {
               metadata.group = targetGroupName;
               movedLineFavorites++;
@@ -1114,22 +1154,53 @@ export class FavoritesTreeDataProvider
   }
 
   private loadLineFavorites(): void {
-    const stored = this.storage.get<LineFavoriteData[]>(
-      FavoritesTreeDataProvider.LINE_FAVORITES_KEY,
+    const storedV2 = this.storage.get<LineFavoriteData[]>(
+      FavoritesTreeDataProvider.LINE_FAVORITES_KEY_V2,
     );
 
-    if (!stored || stored.length === 0) {
+    if (storedV2 && storedV2.length > 0) {
+      storedV2.forEach((entry) => {
+        if (
+          !entry.path ||
+          !entry.line ||
+          entry.line < 1 ||
+          !entry.column ||
+          entry.column < 1
+        ) {
+          return;
+        }
+        const lineMap = this.lineFavorites.get(entry.path) ?? new Map();
+        const groupName = entry.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
+        lineMap.set(makePosKey(entry.line, entry.column), {
+          addedAt: entry.addedAt ?? Date.now(),
+          isPinned: !!entry.isPinned,
+          group: groupName,
+        });
+        this.lineFavorites.set(entry.path, lineMap);
+        this.groups.add(groupName);
+      });
+
+      this.logger.info(
+        `[lineFavorites] Loaded line favorites v2. entries=${storedV2.length}`,
+      );
+      return;
+    }
+
+    const storedV1 = this.storage.get<
+      Array<Omit<LineFavoriteData, 'column'>>
+    >(FavoritesTreeDataProvider.LINE_FAVORITES_KEY_V1);
+    if (!storedV1 || storedV1.length === 0) {
       this.logger.info('[lineFavorites] No stored line favorites found');
       return;
     }
 
-    stored.forEach((entry) => {
+    storedV1.forEach((entry) => {
       if (!entry.path || !entry.line || entry.line < 1) {
         return;
       }
       const lineMap = this.lineFavorites.get(entry.path) ?? new Map();
       const groupName = entry.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
-      lineMap.set(entry.line, {
+      lineMap.set(makePosKey(entry.line, 1), {
         addedAt: entry.addedAt ?? Date.now(),
         isPinned: !!entry.isPinned,
         group: groupName,
@@ -1138,8 +1209,9 @@ export class FavoritesTreeDataProvider
       this.groups.add(groupName);
     });
 
+    this.saveLineFavorites();
     this.logger.info(
-      `[lineFavorites] Loaded line favorites. entries=${stored.length}`,
+      `[lineFavorites] Migrated line favorites v1 -> v2. entries=${storedV1.length}`,
     );
   }
 
@@ -1199,10 +1271,12 @@ export class FavoritesTreeDataProvider
     const serialized: LineFavoriteData[] = [];
 
     this.lineFavorites.forEach((lineMap, filePath) => {
-      lineMap.forEach((metadata, line) => {
+      lineMap.forEach((metadata, posKey) => {
+        const { line, column } = parsePosKey(posKey);
         serialized.push({
           path: filePath,
           line,
+          column,
           group: metadata.group,
           addedAt: metadata.addedAt,
           isPinned: metadata.isPinned,
@@ -1211,56 +1285,33 @@ export class FavoritesTreeDataProvider
     });
 
     this.storage.update(
-      FavoritesTreeDataProvider.LINE_FAVORITES_KEY,
+      FavoritesTreeDataProvider.LINE_FAVORITES_KEY_V2,
       serialized,
     );
   }
 
-  public toggleLineFavorite(uri: vscode.Uri, line: number): boolean {
-    if (line < 1) {
-      this.logger.warn('[lineFavorites] Ignoring invalid line', { line });
-      return false;
-    }
-
-    const filePath = uri.fsPath;
-    const existing = this.lineFavorites.get(filePath);
-
-    if (existing?.has(line)) {
-      existing.delete(line);
-      if (existing.size === 0) {
-        this.lineFavorites.delete(filePath);
-      }
-      this.saveLineFavorites();
-      this.refresh();
-      return false;
-    }
-
-    const lineMap = existing ?? new Map();
-    lineMap.set(line, {
-      addedAt: Date.now(),
-      isPinned: false,
-      group: FavoritesTreeDataProvider.DEFAULT_GROUP,
-    });
-    this.lineFavorites.set(filePath, lineMap);
-
-    this.saveLineFavorites();
-    this.refresh();
-    return true;
-  }
-
-  public getLineFavorites(uri: vscode.Uri): number[] {
+  public getLineFavoritesLines(uri: vscode.Uri): number[] {
     const entries = this.lineFavorites.get(uri.fsPath);
     if (!entries) return [];
-    return Array.from(entries.keys()).sort((a, b) => a - b);
+    const lines = new Set<number>();
+    entries.forEach((_metadata, posKey) => {
+      const { line } = parsePosKey(posKey);
+      if (line >= 1) {
+        lines.add(line);
+      }
+    });
+    return Array.from(lines).sort((a, b) => a - b);
   }
 
   public getAllLineFavorites(): LineFavoriteData[] {
     const result: LineFavoriteData[] = [];
     this.lineFavorites.forEach((lineMap, filePath) => {
-      lineMap.forEach((metadata, line) => {
+      lineMap.forEach((metadata, posKey) => {
+        const { line, column } = parsePosKey(posKey);
         result.push({
           path: filePath,
           line,
+          column,
           group: metadata.group,
           addedAt: metadata.addedAt,
           isPinned: metadata.isPinned,
@@ -1275,27 +1326,59 @@ export class FavoritesTreeDataProvider
     });
   }
 
-  public hasLineFavorite(uri: vscode.Uri, line: number): boolean {
-    return this.lineFavorites.get(uri.fsPath)?.has(line) ?? false;
-  }
-
-  public isLineFavoritePinned(uri: vscode.Uri, line: number): boolean {
-    return this.lineFavorites.get(uri.fsPath)?.get(line)?.isPinned ?? false;
-  }
-
-  public getLineFavoriteGroup(
+  public hasLineFavoriteAtPosition(
     uri: vscode.Uri,
     line: number,
-  ): string | undefined {
-    return this.lineFavorites.get(uri.fsPath)?.get(line)?.group;
+    column: number,
+  ): boolean {
+    return (
+      this.lineFavorites.get(uri.fsPath)?.has(makePosKey(line, column)) ??
+      false
+    );
   }
 
-  public toggleLineFavoritePin(uri: vscode.Uri, line: number): void {
+  public hasLineFavoriteOnLine(uri: vscode.Uri, line: number): boolean {
+    const entries = this.lineFavorites.get(uri.fsPath);
+    if (!entries) return false;
+    for (const posKey of entries.keys()) {
+      if (parsePosKey(posKey).line === line) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public isLineFavoritePinnedAtPosition(
+    uri: vscode.Uri,
+    line: number,
+    column: number,
+  ): boolean {
+    return (
+      this.lineFavorites.get(uri.fsPath)?.get(makePosKey(line, column))
+        ?.isPinned ?? false
+    );
+  }
+
+  public getLineFavoriteGroupAtPosition(
+    uri: vscode.Uri,
+    line: number,
+    column: number,
+  ): string | undefined {
+    return this.lineFavorites
+      .get(uri.fsPath)
+      ?.get(makePosKey(line, column))?.group;
+  }
+
+  public toggleLineFavoritePinAtPosition(
+    uri: vscode.Uri,
+    line: number,
+    column: number,
+  ): void {
     const entries = this.lineFavorites.get(uri.fsPath);
     if (!entries) {
       return;
     }
-    const metadata = entries.get(line);
+    const metadata = entries.get(makePosKey(line, column));
     if (!metadata) {
       return;
     }
@@ -1308,16 +1391,17 @@ export class FavoritesTreeDataProvider
     this.refresh();
   }
 
-  public moveLineFavorite(
+  public moveLineFavoriteAtPosition(
     uri: vscode.Uri,
     line: number,
+    column: number,
     newGroup: string,
   ): void {
     const entries = this.lineFavorites.get(uri.fsPath);
     if (!entries) {
       return;
     }
-    const metadata = entries.get(line);
+    const metadata = entries.get(makePosKey(line, column));
     if (!metadata) {
       return;
     }
@@ -1327,20 +1411,29 @@ export class FavoritesTreeDataProvider
     this.refresh();
   }
 
-  public removeLineFavorite(uri: vscode.Uri, line: number): void {
+  public removeLineFavoriteAtPosition(
+    uri: vscode.Uri,
+    line: number,
+    column: number,
+  ): boolean {
     const filePath = uri.fsPath;
     const entries = this.lineFavorites.get(filePath);
-    if (!entries || !entries.has(line)) {
-      return;
+    if (!entries) {
+      return false;
+    }
+    const posKey = makePosKey(line, column);
+    if (!entries.has(posKey)) {
+      return false;
     }
 
-    entries.delete(line);
+    entries.delete(posKey);
     if (entries.size === 0) {
       this.lineFavorites.delete(filePath);
     }
 
     this.saveLineFavorites();
     this.refresh();
+    return true;
   }
 
   public updateLineFavoritePath(oldPath: string, newPath: string): void {
