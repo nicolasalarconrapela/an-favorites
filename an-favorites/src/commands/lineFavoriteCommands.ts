@@ -18,12 +18,12 @@ export function registerLineFavoriteCommands(
         return;
       }
       favoritesProvider.removeLineFavoriteAtPosition(
-        item.resourceUri,
+        item.favoriteUri,
         item.line,
         item.column,
       );
       logger.info(
-        `[lineFavorites] Removed line ${item.line}:${item.column} -> ${item.resourceUri.fsPath}`,
+        `[lineFavorites] Removed line ${item.line}:${item.column} -> ${item.favoriteUri.fsPath}`,
       );
     },
   );
@@ -36,7 +36,7 @@ export function registerLineFavoriteCommands(
         return;
       }
       favoritesProvider.toggleLineFavoritePinAtPosition(
-        item.resourceUri,
+        item.favoriteUri,
         item.line,
         item.column,
       );
@@ -51,7 +51,7 @@ export function registerLineFavoriteCommands(
         return;
       }
       favoritesProvider.toggleLineFavoritePinAtPosition(
-        item.resourceUri,
+        item.favoriteUri,
         item.line,
         item.column,
       );
@@ -74,7 +74,7 @@ export function registerLineFavoriteCommands(
           lineIndex,
           columnIndex,
         );
-        await vscode.window.showTextDocument(item.resourceUri, {
+        await vscode.window.showTextDocument(item.favoriteUri, {
           viewColumn: vscode.ViewColumn.Beside,
           preview: false,
           selection: range,
@@ -100,7 +100,7 @@ export function registerLineFavoriteCommands(
       }
       const currentGroup =
         favoritesProvider.getLineFavoriteGroupAtPosition(
-          item.resourceUri,
+          item.favoriteUri,
           item.line,
           item.column,
         ) ??
@@ -112,7 +112,7 @@ export function registerLineFavoriteCommands(
         return;
       }
       favoritesProvider.moveLineFavoriteAtPosition(
-        item.resourceUri,
+        item.favoriteUri,
         item.line,
         item.column,
         selection,

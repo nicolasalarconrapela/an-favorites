@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.12] - 2026-02-01
+
+### Fixed
+- Se desactivan las decoraciones del Explorer en el árbol de favoritos.
+
 ## [0.9.11] - 2026-02-01
 
 ### Added

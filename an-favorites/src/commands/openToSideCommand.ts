@@ -9,16 +9,16 @@ export function registerOpenToSideCommand(
     'anfavorites.openToSide',
     async (item?: FavoriteItem) => {
       try {
-        if (!item || !item.resourceUri) {
+        if (!item || !item.favoriteUri) {
           logger.warn('[openToSide] Command triggered without valid item');
           return;
         }
 
         logger.info(
-          `[openToSide] Opening file to side: ${item.resourceUri.fsPath}`,
+          `[openToSide] Opening file to side: ${item.favoriteUri.fsPath}`,
         );
 
-        await vscode.window.showTextDocument(item.resourceUri, {
+        await vscode.window.showTextDocument(item.favoriteUri, {
           viewColumn: vscode.ViewColumn.Beside,
           preview: false,
         });

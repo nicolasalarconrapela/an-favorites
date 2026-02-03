@@ -287,9 +287,9 @@ export function registerManageGroupsCommands(
 
         for (const f of itemsToProcess) {
           logger.info(
-            `Moving favorite ${f.resourceUri.fsPath} to group "${targetGroup}"`,
+            `Moving favorite ${f.favoriteUri.fsPath} to group "${targetGroup}"`,
           );
-          favoritesProvider.moveFavorite(f.resourceUri, targetGroup);
+          favoritesProvider.moveFavorite(f.favoriteUri, targetGroup);
         }
 
         vscode.window.showInformationMessage(
@@ -341,9 +341,9 @@ export function registerManageGroupsCommands(
 
         for (const f of itemsToProcess) {
           logger.info(
-            `Removing from group: ${f.resourceUri.fsPath} (group: ${f.group})`,
+            `Removing from group: ${f.favoriteUri.fsPath} (group: ${f.group})`,
           );
-          favoritesProvider.resetFavoriteGroup(f.resourceUri);
+          favoritesProvider.resetFavoriteGroup(f.favoriteUri);
         }
 
         if (itemsToProcess.length > 1) {

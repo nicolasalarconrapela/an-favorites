@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.9.11",
+  "version": "0.9.12",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "engines": {

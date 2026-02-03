@@ -26,21 +26,22 @@ export class GroupItem extends vscode.TreeItem {
 export class FavoriteItem extends vscode.TreeItem {
   private _fullPath: string;
   private _dirPath: string;
+  public readonly favoriteUri: vscode.Uri;
 
   constructor(
-    public readonly resourceUri: vscode.Uri,
+    uri: vscode.Uri,
     public readonly group: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
     public readonly isPinned: boolean = false,
   ) {
-    super(path.basename(resourceUri.fsPath), collapsibleState);
+    super(path.basename(uri.fsPath), collapsibleState);
 
-    this.id = `favorite:${group}:${resourceUri.fsPath}`;
+    this.id = `favorite:${group}:${uri.fsPath}`;
 
-    this.resourceUri = resourceUri;
+    this.favoriteUri = uri;
 
-    this._fullPath = resourceUri.fsPath;
-    this._dirPath = path.dirname(resourceUri.fsPath);
+    this._fullPath = uri.fsPath;
+    this._dirPath = path.dirname(uri.fsPath);
 
     this.tooltip = this._fullPath;
 
@@ -50,7 +51,7 @@ export class FavoriteItem extends vscode.TreeItem {
       command: 'vscode.open',
       title: 'Abrir Archivo',
       arguments: [
-        resourceUri,
+        this.favoriteUri,
         {
           preview: false,
         },
@@ -79,28 +80,33 @@ export class FavoriteItem extends vscode.TreeItem {
   public get dirPath(): string {
     return this._dirPath;
   }
+
+  public getResourceUri(): vscode.Uri {
+    return this.favoriteUri;
+  }
 }
 
 export class LineFavoriteItem extends vscode.TreeItem {
   private _fullPath: string;
   private _dirPath: string;
+  public readonly favoriteUri: vscode.Uri;
 
   constructor(
-    public readonly resourceUri: vscode.Uri,
+    uri: vscode.Uri,
     public readonly line: number,
     public readonly column: number,
     public readonly group: string,
     public readonly isPinned: boolean,
   ) {
     super(
-      `${path.basename(resourceUri.fsPath)}:${line}:${column}`,
+      `${path.basename(uri.fsPath)}:${line}:${column}`,
       vscode.TreeItemCollapsibleState.None,
     );
 
-    this.id = `favorite-line:${resourceUri.fsPath}:${line}:${column}`;
-    this.resourceUri = resourceUri;
-    this._fullPath = resourceUri.fsPath;
-    this._dirPath = path.dirname(resourceUri.fsPath);
+    this.id = `favorite-line:${uri.fsPath}:${line}:${column}`;
+    this.favoriteUri = uri;
+    this._fullPath = uri.fsPath;
+    this._dirPath = path.dirname(uri.fsPath);
     this.tooltip = `${this._fullPath}:${line}:${column}`;
     this.description = undefined;
     this.iconPath = new vscode.ThemeIcon(isPinned ? 'pin' : 'bookmark');
@@ -113,7 +119,7 @@ export class LineFavoriteItem extends vscode.TreeItem {
       command: 'vscode.open',
       title: 'Abrir Archivo',
       arguments: [
-        resourceUri,
+        this.favoriteUri,
         {
           preview: false,
           selection: range,
@@ -136,6 +142,10 @@ export class LineFavoriteItem extends vscode.TreeItem {
 
   public get dirPath(): string {
     return this._dirPath;
+  }
+
+  public getResourceUri(): vscode.Uri {
+    return this.favoriteUri;
   }
 }
 export class WorkspaceItem extends vscode.TreeItem {
@@ -533,9 +543,9 @@ export class FavoritesTreeDataProvider
     try {
       await applyCollisionLabels(
         items,
-        (item) => item.resourceUri,
+        (item) => item.getResourceUri(),
         (item) => {
-          const rel = vscode.workspace.asRelativePath(item.resourceUri, false);
+          const rel = vscode.workspace.asRelativePath(item.getResourceUri(), false);
           const relDir = path.dirname(rel);
           item.setDescriptionText(relDir);
         },
@@ -851,13 +861,13 @@ export class FavoritesTreeDataProvider
 
     const draggedItems = source.flatMap((item) => {
       if (item instanceof FavoriteItem) {
-        return [{ type: 'favorite', path: item.resourceUri.fsPath }];
+        return [{ type: 'favorite', path: item.favoriteUri.fsPath }];
       }
       if (item instanceof LineFavoriteItem) {
         return [
           {
             type: 'line',
-            path: item.resourceUri.fsPath,
+            path: item.favoriteUri.fsPath,
             line: item.line,
             column: item.column,
           },

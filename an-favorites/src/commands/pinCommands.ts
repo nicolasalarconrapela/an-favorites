@@ -26,8 +26,8 @@ export function registerPinCommands(
         }
 
         for (const i of itemsToProcess) {
-          if (!provider.isPinned(i.resourceUri)) {
-            provider.togglePin(i.resourceUri);
+          if (!provider.isPinned(i.favoriteUri)) {
+            provider.togglePin(i.favoriteUri);
           }
         }
       },
@@ -49,8 +49,8 @@ export function registerPinCommands(
         }
 
         for (const i of itemsToProcess) {
-          if (provider.isPinned(i.resourceUri)) {
-            provider.togglePin(i.resourceUri);
+          if (provider.isPinned(i.favoriteUri)) {
+            provider.togglePin(i.favoriteUri);
           }
         }
       },

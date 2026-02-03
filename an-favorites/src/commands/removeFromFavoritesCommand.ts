@@ -30,14 +30,14 @@ export function registerRemoveFromFavoritesCommand(
 
       for (const current of itemsToProcess) {
         if (current instanceof FavoriteItem) {
-          logger.info(`Removing favorite: ${current.resourceUri.fsPath}`);
-          favoritesProvider.removeFavorite(current.resourceUri);
+          logger.info(`Removing favorite: ${current.favoriteUri.fsPath}`);
+          favoritesProvider.removeFavorite(current.favoriteUri);
         }
       }
 
       if (count === 1) {
         vscode.window.showInformationMessage(
-          `Eliminado de favoritos: ${itemsToProcess[0].resourceUri.fsPath}`,
+          `Eliminado de favoritos: ${itemsToProcess[0].favoriteUri.fsPath}`,
         );
       } else {
         vscode.window.showInformationMessage(
