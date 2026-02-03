@@ -189,11 +189,8 @@ export function activate(context: vscode.ExtensionContext): void {
       2000,
     ) ?? logger.debug(`Files deleted (batch): ${paths.length}`);
 
-    await Promise.all([
-      favoritesProvider.validateFavoritesForPaths(paths),
-      mruService.validateFilesForPaths(paths),
-      favoritesProvider.validateLineFavoritesForPaths(paths),
-    ]);
+    favoritesProvider.removeFileReferencesForPaths(paths);
+    mruService.removePaths(paths);
   };
 
   const scheduleValidation = (fsPath: string): void => {

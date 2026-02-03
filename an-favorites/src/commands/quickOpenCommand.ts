@@ -809,23 +809,7 @@ export function registerQuickOpenCommand(
         '[QuickOpen] Preparing QuickPick (not showing yet to avoid focus loss)...',
       );
 
-      try {
-        log.debug('[QuickOpen] Validating favorites...');
-        await favoritesProvider.validateFavorites();
-        log.debug('[QuickOpen] Favorites validated successfully');
-
-        log.debug('[QuickOpen] Validating line favorites...');
-        await favoritesProvider.validateLineFavorites();
-        log.debug('[QuickOpen] Line favorites validated successfully');
-
-        log.debug('[QuickOpen] Validating MRU files...');
-        await mruService.validateFiles();
-        log.debug('[QuickOpen] MRU files validated successfully');
-      } catch (error) {
-        log.error('[QuickOpen] ❌ ERROR during validation:', error);
-      }
-
-      log.debug('[QuickOpen] Validation phase complete');
+      log.debug('[QuickOpen] Validation skipped (handled by watcher/cleanup)');
 
       const disposables: vscode.Disposable[] = [];
       let isDisposed = false;
@@ -900,10 +884,7 @@ export function registerQuickOpenCommand(
             `[QuickOpen] Current search value: "${normalizedSearch}" (isSearching: ${isSearching})`,
           );
 
-          log.debug('[QuickOpen] Reloading favorites from storage...');
-          favoritesProvider.reloadFavorites();
-          favoritesProvider.reloadLineFavorites();
-          log.debug('[QuickOpen] Favorites reloaded');
+          log.debug('[QuickOpen] Using in-memory favorites state');
 
 
           const config = configService.getConfig();

@@ -242,10 +242,9 @@ export class FavoritesTreeDataProvider
   ]);
 
   public static readonly DEFAULT_GROUP = 'Sin Grupo';
-  private static readonly LINE_FAVORITES_KEY_V1 =
-    'anfavorites.lineFavorites.v1';
-  private static readonly LINE_FAVORITES_KEY_V2 =
-    'anfavorites.lineFavorites.v2';
+  private static readonly FAVORITES_KEY = 'anfavorites.favorites';
+  private static readonly GROUPS_KEY = 'anfavorites.groups';
+  private static readonly LINE_FAVORITES_KEY = 'anfavorites.lineFavorites';
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -254,16 +253,6 @@ export class FavoritesTreeDataProvider
   ) {
     this.loadFavorites();
     this.loadLineFavorites();
-    this.disposables.push(
-      this.storage.onDidChange(() => {
-        this.logger.info('[storage] External change detected -> reloading');
-        this.reloadFavorites();
-        this.reloadLineFavorites();
-        this.refresh();
-      }),
-    );
-
-
     this.disposables.push(
       vscode.workspace.onDidChangeWorkspaceFolders(() => {
         this.logger.info('[workspace] Workspace folders changed -> refresh()');
@@ -1065,29 +1054,19 @@ export class FavoritesTreeDataProvider
     }
   }
 
-  reloadFavorites(): void {
-    this.logger.info('[storage] reloadFavorites()');
-    this.favorites.clear();
-    this.loadFavorites();
-  }
-
-  reloadLineFavorites(): void {
-    this.logger.info('[storage] reloadLineFavorites()');
-    this.lineFavorites.clear();
-    this.loadLineFavorites();
-  }
-
   private loadFavorites(): void {
     const sharedData = this.storage.get<FavoriteData[]>(
-      'anfavorites.favorites.v2',
+      FavoritesTreeDataProvider.FAVORITES_KEY,
     );
-    const sharedGroups = this.storage.get<string[]>('anfavorites.groups');
+    const sharedGroups = this.storage.get<string[]>(
+      FavoritesTreeDataProvider.GROUPS_KEY,
+    );
 
     if (sharedGroups) {
       sharedGroups.forEach((g) => this.groups.add(g));
     }
 
-    if (sharedData) {
+    if (sharedData && sharedData.length > 0) {
       this.logger.info(
         `[storage] loadFavorites (shared) -> count=${sharedData.length}`,
       );
@@ -1102,59 +1081,6 @@ export class FavoritesTreeDataProvider
         this.groups.add(groupName);
       });
       this.checkForDuplicateNames();
-      return;
-    }
-
-    const workspaceStored = this.context.workspaceState.get<FavoriteData[]>(
-      'anfavorites.favorites.v2',
-    );
-    if (workspaceStored && workspaceStored.length > 0) {
-      this.logger.info(
-        `[storage] Migrating workspace v2 -> shared. Total=${workspaceStored.length}`,
-      );
-      workspaceStored.forEach((fav) => {
-        const groupName = fav.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
-        this.favorites.set(fav.path, {
-          group: groupName,
-          addedAt: fav.addedAt || Date.now(),
-          isPinned: !!fav.isPinned,
-        });
-        this.groups.add(groupName);
-      });
-      this.saveFavorites();
-      this.checkForDuplicateNames();
-      return;
-    }
-
-    const legacyFavorites = this.context.globalState.get<string[]>(
-      'anfavorites.favorites',
-    );
-    if (legacyFavorites && legacyFavorites.length > 0) {
-      this.logger.info(
-        `[storage] Migrating v1 (legacy) -> workspace. Total legacy=${legacyFavorites.length}`,
-      );
-
-      const now = Date.now();
-      let importedCount = 0;
-      legacyFavorites.forEach((filePath, index) => {
-        const uri = vscode.Uri.file(filePath);
-        if (vscode.workspace.getWorkspaceFolder(uri)) {
-          this.favorites.set(filePath, {
-            group: FavoritesTreeDataProvider.DEFAULT_GROUP,
-            addedAt: now - (legacyFavorites.length - index),
-            isPinned: false,
-          });
-          importedCount++;
-        }
-      });
-
-      if (importedCount > 0) {
-        this.saveFavorites();
-        this.logger.info(
-          `[storage] Migration v1 complete. Imported ${importedCount} favorites.`,
-        );
-      }
-
       this.checkForDuplicateNames();
       return;
     }
@@ -1164,53 +1090,28 @@ export class FavoritesTreeDataProvider
   }
 
   private loadLineFavorites(): void {
-    const storedV2 = this.storage.get<LineFavoriteData[]>(
-      FavoritesTreeDataProvider.LINE_FAVORITES_KEY_V2,
+    const stored = this.storage.get<LineFavoriteData[]>(
+      FavoritesTreeDataProvider.LINE_FAVORITES_KEY,
     );
 
-    if (storedV2 && storedV2.length > 0) {
-      storedV2.forEach((entry) => {
-        if (
-          !entry.path ||
-          !entry.line ||
-          entry.line < 1 ||
-          !entry.column ||
-          entry.column < 1
-        ) {
-          return;
-        }
-        const lineMap = this.lineFavorites.get(entry.path) ?? new Map();
-        const groupName = entry.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
-        lineMap.set(makePosKey(entry.line, entry.column), {
-          addedAt: entry.addedAt ?? Date.now(),
-          isPinned: !!entry.isPinned,
-          group: groupName,
-        });
-        this.lineFavorites.set(entry.path, lineMap);
-        this.groups.add(groupName);
-      });
-
-      this.logger.info(
-        `[lineFavorites] Loaded line favorites v2. entries=${storedV2.length}`,
-      );
-      return;
-    }
-
-    const storedV1 = this.storage.get<
-      Array<Omit<LineFavoriteData, 'column'>>
-    >(FavoritesTreeDataProvider.LINE_FAVORITES_KEY_V1);
-    if (!storedV1 || storedV1.length === 0) {
+    if (!stored || stored.length === 0) {
       this.logger.info('[lineFavorites] No stored line favorites found');
       return;
     }
 
-    storedV1.forEach((entry) => {
-      if (!entry.path || !entry.line || entry.line < 1) {
+    stored.forEach((entry) => {
+      if (
+        !entry.path ||
+        !entry.line ||
+        entry.line < 1 ||
+        !entry.column ||
+        entry.column < 1
+      ) {
         return;
       }
       const lineMap = this.lineFavorites.get(entry.path) ?? new Map();
       const groupName = entry.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
-      lineMap.set(makePosKey(entry.line, 1), {
+      lineMap.set(makePosKey(entry.line, entry.column), {
         addedAt: entry.addedAt ?? Date.now(),
         isPinned: !!entry.isPinned,
         group: groupName,
@@ -1219,9 +1120,8 @@ export class FavoritesTreeDataProvider
       this.groups.add(groupName);
     });
 
-    this.saveLineFavorites();
     this.logger.info(
-      `[lineFavorites] Migrated line favorites v1 -> v2. entries=${storedV1.length}`,
+      `[lineFavorites] Loaded line favorites. entries=${stored.length}`,
     );
   }
 
@@ -1273,8 +1173,14 @@ export class FavoritesTreeDataProvider
     this.logger.info(
       `[storage] saveFavorites (shared) -> count=${favoritesArray.length} groups=${this.groups.size}`,
     );
-    this.storage.update('anfavorites.favorites.v2', favoritesArray);
-    this.storage.update('anfavorites.groups', Array.from(this.groups));
+    this.storage.update(
+      FavoritesTreeDataProvider.FAVORITES_KEY,
+      favoritesArray,
+    );
+    this.storage.update(
+      FavoritesTreeDataProvider.GROUPS_KEY,
+      Array.from(this.groups),
+    );
   }
 
   private saveLineFavorites(): void {
@@ -1295,7 +1201,7 @@ export class FavoritesTreeDataProvider
     });
 
     this.storage.update(
-      FavoritesTreeDataProvider.LINE_FAVORITES_KEY_V2,
+      FavoritesTreeDataProvider.LINE_FAVORITES_KEY,
       serialized,
     );
   }
@@ -1600,6 +1506,40 @@ export class FavoritesTreeDataProvider
 
     this.saveFavorites();
     this.refresh();
+  }
+
+  public removeFileReferencesForPaths(filePaths: string[]): boolean {
+    const uniquePaths = Array.from(new Set(filePaths));
+    if (uniquePaths.length === 0) {
+      return false;
+    }
+
+    let favoritesRemoved = 0;
+    let lineFavoritesRemoved = 0;
+
+    uniquePaths.forEach((filePath) => {
+      if (this.favorites.delete(filePath)) {
+        favoritesRemoved++;
+      }
+      if (this.lineFavorites.delete(filePath)) {
+        lineFavoritesRemoved++;
+      }
+    });
+
+    if (favoritesRemoved > 0) {
+      this.saveFavorites();
+    }
+    if (lineFavoritesRemoved > 0) {
+      this.saveLineFavorites();
+    }
+    if (favoritesRemoved > 0 || lineFavoritesRemoved > 0) {
+      this.refresh();
+      this.logger.info(
+        `[cleanup] Removed file references. favorites=${favoritesRemoved} lineFavorites=${lineFavoritesRemoved}`,
+      );
+      return true;
+    }
+    return false;
   }
 
   public dispose(): void {

@@ -124,6 +124,18 @@ export class MRUService {
     this._onDidChangeRecentFiles.fire();
   }
 
+  public removePaths(filePaths: string[]): void {
+    const uniquePaths = new Set(filePaths);
+    const originalLength = this.mruList.length;
+    this.mruList = this.mruList.filter((fsPath) => !uniquePaths.has(fsPath));
+    if (this.mruList.length !== originalLength) {
+      const removed = originalLength - this.mruList.length;
+      this.logger.info(`[mru] Removed ${removed} paths from MRU`);
+      this.save();
+      this._onDidChangeRecentFiles.fire();
+    }
+  }
+
   public async validateFiles(): Promise<void> {
     const originalLength = this.mruList.length;
     const validFiles: string[] = [];

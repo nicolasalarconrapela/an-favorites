@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.13] - 2026-02-01
+
+### Changed
+- Se eliminó el versionado en storage para favoritos y líneas.
+- Quick Open deja de recargar desde storage y usa el estado en memoria.
+- Limpieza centralizada de rutas borradas (favoritos, líneas y MRU).
+
 ## [0.9.12] - 2026-02-01
 
 ### Fixed
