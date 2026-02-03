@@ -101,6 +101,50 @@
         "title": "Quitar del Grupo",
         "category": "AnFavorites",
         "icon": "$(close)"
+      },
+      {
+        "command": "anfavorites.getStarted",
+        "title": "AnFavorites: Get Started",
+        "category": "AnFavorites"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "anfavorites.getStarted",
+        "title": "Get Started with AnFavorites",
+        "description": "Learn how to manage and organize your favorite files efficiently",
+        "steps": [
+          {
+            "id": "anfavorites.basics",
+            "title": "Welcome to AnFavorites",
+            "description": "Learn the basics of managing favorites with line and column precision.\n[Open Guide](command:markdown.showPreview?%5B%22${workspaceFolder}/resources/walkthrough/01-basics.md%22%5D)",
+            "media": {
+              "markdown": "resources/walkthrough/01-basics.md"
+            }
+          },
+          {
+            "id": "anfavorites.quickopen",
+            "title": "Quick Open - Fast Navigation",
+            "description": "Master the Quick Open feature for lightning-fast access to your favorites and recent files.\n[Open Quick Open](command:anfavorites.quickOpen)\n[Read More](command:markdown.showPreview?%5B%22${workspaceFolder}/resources/walkthrough/02-quickopen.md%22%5D)",
+            "media": {
+              "markdown": "resources/walkthrough/02-quickopen.md"
+            }
+          },
+          {
+            "id": "anfavorites.groups",
+            "title": "Groups & Organization",
+            "description": "Organize favorites into groups with drag & drop support and multi-workspace features.\n[Create New Group](command:anfavorites.addGroup)\n[Read More](command:markdown.showPreview?%5B%22${workspaceFolder}/resources/walkthrough/03-groups.md%22%5D)",
+            "media": {
+              "markdown": "resources/walkthrough/03-groups.md"
+            }
+          }
+        ]
+      }
+    ],
+    "viewsWelcome": [
+      {
+        "view": "anfavorites.favoritesView",
+        "contents": "No favorites yet. Start organizing your workspace!\n[Add Current File to Favorites](command:anfavorites.addToFavorites)\n[Open Quick Open](command:anfavorites.quickOpen)\n[Get Started Guide](command:anfavorites.getStarted)"
       }
     ],
     "keybindings": [
