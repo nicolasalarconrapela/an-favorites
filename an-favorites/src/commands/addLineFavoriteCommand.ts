@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 import { Logger } from '../logging/logger';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 
@@ -206,124 +205,80 @@ export function registerAddLineFavoriteCommand(
 
   const addFromLocationDisposable = vscode.commands.registerTextEditorCommand(
     'anfavorites.addLineFavoriteFromPosition',
-    async () => {
-      const rawInput = await vscode.window.showInputBox({
-        title: 'Guardar línea por posición',
-        placeHolder: 'archivo:línea:columna (ej. package.json:6:234)',
-        prompt: 'También puedes usar archivo:línea si no tienes columna.',
-        validateInput: (value) => {
-          const trimmed = value.trim();
-          if (!trimmed) {
-            return 'Ingresa una ruta y línea.';
-          }
-          const match = trimmed.match(/:(\d+)(?::(\d+))?$/);
-          if (!match) {
-            return 'Formato inválido. Usa archivo:línea o archivo:línea:columna.';
-          }
-          const line = Number.parseInt(match[1], 10);
-          if (!Number.isFinite(line) || line < 1) {
-            return 'La línea debe ser un número mayor o igual a 1.';
-          }
-          if (match[2]) {
-            const column = Number.parseInt(match[2], 10);
-            if (!Number.isFinite(column) || column < 1) {
-              return 'La columna debe ser un número mayor o igual a 1.';
-            }
-          }
-          return null;
-        },
-      });
-
-      if (!rawInput) {
-        return;
-      }
-
-      const input = rawInput.trim();
-      const match = input.match(/:(\d+)(?::(\d+))?$/);
-      if (!match) {
+    async (editor) => {
+      const uri = editor.document.uri;
+      if (uri.scheme !== 'file') {
         vscode.window.showWarningMessage(
-          'Formato inválido. Usa archivo:línea o archivo:línea:columna.',
+          'Solo se pueden guardar líneas de archivos locales.',
         );
         return;
       }
 
-      const line = Number.parseInt(match[1], 10);
-      const column = match[2] ? Number.parseInt(match[2], 10) : 1;
-      if (!Number.isFinite(line) || line < 1) {
-        vscode.window.showWarningMessage('Número de línea inválido.');
-        return;
-      }
-      if (!Number.isFinite(column) || column < 1) {
-        vscode.window.showWarningMessage('Número de columna inválido.');
-        return;
-      }
+      const line = editor.selection.active.line + 1;
+      const column = editor.selection.active.character + 1;
+      const groups = favoritesProvider.getGroups();
 
-      const locationPath = input.slice(0, match.index);
-      if (!locationPath) {
-        vscode.window.showWarningMessage('Ruta de archivo inválida.');
-        return;
-      }
-
-      let targetUri: vscode.Uri | null = null;
-      if (path.isAbsolute(locationPath)) {
-        targetUri = vscode.Uri.file(locationPath);
-      } else {
-        const folders = vscode.workspace.workspaceFolders ?? [];
-        if (folders.length === 1) {
-          targetUri = vscode.Uri.joinPath(folders[0].uri, locationPath);
-        } else if (folders.length > 1) {
-          const matches = await vscode.workspace.findFiles(
-            `**/${locationPath}`,
-            undefined,
-            2,
-          );
-          if (matches.length > 0) {
-            targetUri = matches[0];
-          }
-        }
-      }
-
-      if (!targetUri) {
-        vscode.window.showWarningMessage(
-          'No se pudo resolver la ruta del archivo.',
-        );
-        return;
-      }
-
-      try {
-        const document = await vscode.workspace.openTextDocument(targetUri);
-        const maxLine = document.lineCount;
-        if (line > maxLine) {
-          vscode.window.showWarningMessage(
-            `La línea debe estar entre 1 y ${maxLine}.`,
-          );
-          return;
-        }
-
+      if (groups.length === 0) {
         const added = favoritesProvider.addLineFavoriteAtPosition(
-          targetUri,
+          uri,
           line,
           column,
         );
-        logger.info(
-          `[lineFavorites] ${added ? 'Added' : 'Skipped'} line ${line}:${column} -> ${targetUri.fsPath}`,
-        );
-
         if (added) {
           vscode.window.showInformationMessage(
-            `Posición ${line}:${column} guardada en favoritos (${targetUri.fsPath}).`,
+            `Posición ${line}:${column} guardada en favoritos.`,
           );
         } else {
           vscode.window.showInformationMessage(
             `La posición ${line}:${column} ya estaba en favoritos.`,
           );
         }
-      } catch (error) {
-        logger.error('[lineFavorites] Error opening file for position', error);
-        vscode.window.showErrorMessage(
-          'No se pudo abrir el archivo para guardar la línea.',
+        vscode.commands.executeCommand(
+          'setContext',
+          'anfavorites.lineFavoriteExistsAtCursor',
+          favoritesProvider.hasLineFavoriteAtPosition(uri, line, column),
+        );
+        vscode.commands.executeCommand(
+          'setContext',
+          'anfavorites.lineFavoriteExistsOnLine',
+          favoritesProvider.hasLineFavoriteOnLine(uri, line),
+        );
+        return;
+      }
+
+      const selectedGroup = await vscode.window.showQuickPick(groups, {
+        placeHolder: 'Selecciona un grupo para la línea favorita',
+        title: 'Guardar línea en favoritos (grupo)',
+      });
+      if (!selectedGroup) {
+        return;
+      }
+
+      const added = favoritesProvider.addLineFavoriteAtPosition(
+        uri,
+        line,
+        column,
+        selectedGroup,
+      );
+      if (added) {
+        vscode.window.showInformationMessage(
+          `Posición ${line}:${column} guardada en favoritos (${selectedGroup}).`,
+        );
+      } else {
+        vscode.window.showInformationMessage(
+          `La posición ${line}:${column} ya estaba en favoritos.`,
         );
       }
+      vscode.commands.executeCommand(
+        'setContext',
+        'anfavorites.lineFavoriteExistsAtCursor',
+        favoritesProvider.hasLineFavoriteAtPosition(uri, line, column),
+      );
+      vscode.commands.executeCommand(
+        'setContext',
+        'anfavorites.lineFavoriteExistsOnLine',
+        favoritesProvider.hasLineFavoriteOnLine(uri, line),
+      );
     },
   );
 

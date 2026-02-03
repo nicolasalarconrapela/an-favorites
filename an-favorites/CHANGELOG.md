@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.9.14] - 2026-02-01
+
+### Changed
+- El comando de línea por archivo ahora guarda la posición actual y permite elegir grupo.
+- Añadir a favoritos (nuevo grupo) siempre solicita el grupo aunque ya exista.
+
 ## [0.9.13] - 2026-02-01
 
 ### Changed

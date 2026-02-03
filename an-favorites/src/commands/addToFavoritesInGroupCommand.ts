@@ -39,33 +39,34 @@ export function registerAddToFavoritesInGroupCommand(
           return;
         }
 
-        if (favoritesProvider.hasFavorite(targetUri)) {
-          vscode.window.showInformationMessage(
-            'El archivo ya está en favoritos',
-          );
-          logger.info('File already in favorites');
-          return;
-        }
-
         const groups = favoritesProvider.getGroups();
         if (groups.length === 0) {
-          favoritesProvider.addFavorite(targetUri);
+          if (!favoritesProvider.hasFavorite(targetUri)) {
+            favoritesProvider.addFavorite(targetUri);
+          } else {
+            favoritesProvider.resetFavoriteGroup(targetUri);
+          }
           return;
         }
 
+        const currentGroup =
+          favoritesProvider.getGroupForFavorite(targetUri) ??
+          FavoritesTreeDataProvider.DEFAULT_GROUP;
         const selectedGroup = await vscode.window.showQuickPick(groups, {
           placeHolder: 'Selecciona el grupo donde añadir el favorito',
           title: 'Añadir a Grupo de Favoritos',
+          activeItem: currentGroup,
         });
 
         if (!selectedGroup) {
           return;
         }
 
-        logger.info(
-          `Adding favorite directly to group "${selectedGroup}": ${targetUri.fsPath}`,
-        );
-        favoritesProvider.addFavorite(targetUri, selectedGroup);
+        if (favoritesProvider.hasFavorite(targetUri)) {
+          favoritesProvider.moveFavorite(targetUri, selectedGroup);
+        } else {
+          favoritesProvider.addFavorite(targetUri, selectedGroup);
+        }
 
         vscode.window.showInformationMessage(
           `Añadido a favoritos en "${selectedGroup}": ${targetUri.fsPath}`,
