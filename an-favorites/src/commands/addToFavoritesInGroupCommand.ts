@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
+import { showGroupQuickPickWithCreate } from './groupQuickPick';
 
 export function registerAddToFavoritesInGroupCommand(
   context: vscode.ExtensionContext,
@@ -39,20 +40,12 @@ export function registerAddToFavoritesInGroupCommand(
           return;
         }
 
-        const groups = favoritesProvider.getGroups();
-        if (groups.length === 0) {
-          if (!favoritesProvider.hasFavorite(targetUri)) {
-            favoritesProvider.addFavorite(targetUri);
-          } else {
-            favoritesProvider.resetFavoriteGroup(targetUri);
-          }
-          return;
-        }
-
         const currentGroup =
           favoritesProvider.getGroupForFavorite(targetUri) ??
           FavoritesTreeDataProvider.DEFAULT_GROUP;
-        const selectedGroup = await vscode.window.showQuickPick(groups, {
+        const selectedGroup = await showGroupQuickPickWithCreate({
+          groups: favoritesProvider.getGroups(),
+          favoritesProvider,
           placeHolder: 'Selecciona el grupo donde añadir el favorito',
           title: 'Añadir a Grupo de Favoritos',
           activeItem: currentGroup,

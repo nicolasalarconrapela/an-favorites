@@ -4,6 +4,7 @@ import {
   GroupItem,
   FavoriteItem,
 } from '../views/FavoritesTreeDataProvider';
+import { showGroupQuickPickWithCreate } from './groupQuickPick';
 
 export function registerManageGroupsCommands(
   context: vscode.ExtensionContext,
@@ -232,58 +233,23 @@ export function registerManageGroupsCommands(
           return;
         }
 
-        const groups = favoritesProvider.getGroups();
-
-        const items: vscode.QuickPickItem[] = groups.map((grp) => ({
-          label: grp,
-          description:
-            grp === FavoritesTreeDataProvider.DEFAULT_GROUP
-              ? 'Grupo por defecto'
-              : undefined,
-        }));
-
-        items.push({
-          label: '$(add) Nuevo Grupo...',
-          description: 'Crear un nuevo grupo',
-        });
-
-        const selected = await vscode.window.showQuickPick(items, {
+        const selected = await showGroupQuickPickWithCreate({
+          groups: favoritesProvider.getGroups(),
+          favoritesProvider,
           placeHolder:
             itemsToProcess.length === 1
               ? `Mover de "${itemsToProcess[0].group}" a...`
               : `Mover ${itemsToProcess.length} elementos a...`,
+          activeItem:
+            itemsToProcess.length === 1 ? itemsToProcess[0].group : undefined,
+          title: 'Mover favoritos a grupo',
         });
 
         if (!selected) {
           return;
         }
 
-        let targetGroup: string;
-
-        if (selected.label.startsWith('$(add)')) {
-          const newGroupName = await vscode.window.showInputBox({
-            prompt: 'Nombre del nuevo grupo',
-            placeHolder: 'Ej: Proyectos, Documentación, etc.',
-            validateInput: (value) => {
-              if (!value || value.trim().length === 0) {
-                return 'El nombre no puede estar vacío';
-              }
-              if (groups.includes(value.trim())) {
-                return 'Este grupo ya existe';
-              }
-              return null;
-            },
-          });
-
-          if (!newGroupName) {
-            return;
-          }
-
-          targetGroup = newGroupName.trim();
-          favoritesProvider.addGroup(targetGroup);
-        } else {
-          targetGroup = selected.label;
-        }
+        const targetGroup = selected;
 
         for (const f of itemsToProcess) {
           logger.info(

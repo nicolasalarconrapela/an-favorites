@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { Logger } from '../logging/logger';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
+import { showGroupQuickPickWithCreate } from './groupQuickPick';
 
 export function registerAddLineFavoriteCommand(
   context: vscode.ExtensionContext,
@@ -72,14 +73,11 @@ export function registerAddLineFavoriteCommand(
         return;
       }
 
-      const groups = favoritesProvider.getGroups();
-      if (groups.length === 0) {
-        vscode.window.showInformationMessage('No hay grupos disponibles.');
-        return;
-      }
-
-      const selectedGroup = await vscode.window.showQuickPick(groups, {
+      const selectedGroup = await showGroupQuickPickWithCreate({
+        groups: favoritesProvider.getGroups(),
+        favoritesProvider,
         placeHolder: 'Selecciona un grupo para la línea favorita',
+        activeItem: FavoritesTreeDataProvider.DEFAULT_GROUP,
       });
       if (!selectedGroup) {
         return;
@@ -246,9 +244,12 @@ export function registerAddLineFavoriteCommand(
         return;
       }
 
-      const selectedGroup = await vscode.window.showQuickPick(groups, {
+      const selectedGroup = await showGroupQuickPickWithCreate({
+        groups,
+        favoritesProvider,
         placeHolder: 'Selecciona un grupo para la línea favorita',
         title: 'Guardar línea en favoritos (grupo)',
+        activeItem: FavoritesTreeDataProvider.DEFAULT_GROUP,
       });
       if (!selectedGroup) {
         return;

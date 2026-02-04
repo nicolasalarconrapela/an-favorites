@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.15] - 2026-02-01
+
+### Added
+- El selector de grupos permite crear un grupo nuevo desde la búsqueda y usarlo inmediatamente.
+
 ## [0.9.14] - 2026-02-01
 
 ### Changed

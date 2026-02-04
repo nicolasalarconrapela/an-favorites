@@ -4,6 +4,7 @@ import {
   LineFavoriteItem,
 } from '../views/FavoritesTreeDataProvider';
 import { Logger } from '../logging/logger';
+import { showGroupQuickPickWithCreate } from './groupQuickPick';
 
 export function registerLineFavoriteCommands(
   context: vscode.ExtensionContext,
@@ -93,11 +94,6 @@ export function registerLineFavoriteCommands(
         logger.warn('[lineFavorites] moveLineFavorite without item');
         return;
       }
-      const groups = favoritesProvider.getGroups();
-      if (groups.length === 0) {
-        vscode.window.showInformationMessage('No hay grupos disponibles.');
-        return;
-      }
       const currentGroup =
         favoritesProvider.getLineFavoriteGroupAtPosition(
           item.favoriteUri,
@@ -105,8 +101,11 @@ export function registerLineFavoriteCommands(
           item.column,
         ) ??
         FavoritesTreeDataProvider.DEFAULT_GROUP;
-      const selection = await vscode.window.showQuickPick(groups, {
+      const selection = await showGroupQuickPickWithCreate({
+        groups: favoritesProvider.getGroups(),
+        favoritesProvider,
         placeHolder: `Mover línea a grupo (actual: ${currentGroup})`,
+        activeItem: currentGroup,
       });
       if (!selection) {
         return;
