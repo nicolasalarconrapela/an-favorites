@@ -110,12 +110,21 @@ export function registerLineFavoriteCommands(
       if (!selection) {
         return;
       }
-      favoritesProvider.moveLineFavoriteAtPosition(
-        item.favoriteUri,
-        item.line,
-        item.column,
-        selection,
-      );
+      if (selection !== currentGroup) {
+        favoritesProvider.moveLineFavoriteAtPosition(
+          item.favoriteUri,
+          item.line,
+          item.column,
+          selection,
+        );
+        vscode.window.showInformationMessage(
+          `Archivo movido de "${currentGroup}" a "${selection}": ${item.favoriteUri.fsPath}`,
+        );
+      } else {
+        vscode.window.showInformationMessage(
+          `El archivo ya está en el grupo "${currentGroup}".`,
+        );
+      }
     },
   );
 

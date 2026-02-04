@@ -56,14 +56,22 @@ export function registerAddToFavoritesInGroupCommand(
         }
 
         if (favoritesProvider.hasFavorite(targetUri)) {
-          favoritesProvider.moveFavorite(targetUri, selectedGroup);
+          if (selectedGroup !== currentGroup) {
+            favoritesProvider.moveFavorite(targetUri, selectedGroup);
+            vscode.window.showInformationMessage(
+              `Archivo movido de "${currentGroup}" a "${selectedGroup}": ${targetUri.fsPath}`,
+            );
+          } else {
+            vscode.window.showInformationMessage(
+              `El archivo ya está en el grupo "${currentGroup}".`,
+            );
+          }
         } else {
           favoritesProvider.addFavorite(targetUri, selectedGroup);
+          vscode.window.showInformationMessage(
+            `Añadido a favoritos en "${selectedGroup}": ${targetUri.fsPath}`,
+          );
         }
-
-        vscode.window.showInformationMessage(
-          `Añadido a favoritos en "${selectedGroup}": ${targetUri.fsPath}`,
-        );
         logger.info('Favorite added successfully');
       } catch (error) {
         logger.error('Unexpected error in addToFavoritesInGroup', error);

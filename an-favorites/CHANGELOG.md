@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.16] - 2026-02-01
+
+### Changed
+- Se muestra un mensaje con el grupo origen y destino cuando se mueve un favorito entre grupos.
+
 ## [0.9.15] - 2026-02-01
 
 ### Added

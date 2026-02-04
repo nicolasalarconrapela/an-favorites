@@ -258,11 +258,22 @@ export function registerManageGroupsCommands(
           favoritesProvider.moveFavorite(f.favoriteUri, targetGroup);
         }
 
-        vscode.window.showInformationMessage(
-          itemsToProcess.length === 1
-            ? `Favorito movido a "${targetGroup}"`
-            : `${itemsToProcess.length} favoritos movidos a "${targetGroup}"`,
-        );
+        if (itemsToProcess.length === 1) {
+          const [favorite] = itemsToProcess;
+          if (favorite.group !== targetGroup) {
+            vscode.window.showInformationMessage(
+              `Archivo movido de "${favorite.group}" a "${targetGroup}": ${favorite.favoriteUri.fsPath}`,
+            );
+          } else {
+            vscode.window.showInformationMessage(
+              `El archivo ya está en el grupo "${targetGroup}".`,
+            );
+          }
+        } else {
+          vscode.window.showInformationMessage(
+            `${itemsToProcess.length} favoritos movidos a "${targetGroup}"`,
+          );
+        }
         logger.info(`Favorite(s) moved successfully`);
       },
     ),
