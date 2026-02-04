@@ -39,6 +39,7 @@ export class FavoriteItem extends vscode.TreeItem {
     this.id = `favorite:${group}:${uri.fsPath}`;
 
     this.favoriteUri = uri;
+    this.resourceUri = uri;
 
     this._fullPath = uri.fsPath;
     this._dirPath = path.dirname(uri.fsPath);
@@ -57,7 +58,6 @@ export class FavoriteItem extends vscode.TreeItem {
         },
       ],
     };
-    this.iconPath = vscode.ThemeIcon.File;
     let ctx = isPinned ? 'favoriteItem:pinned' : 'favoriteItem';
     if (group !== FavoritesTreeDataProvider.DEFAULT_GROUP) {
       ctx += ':grouped';

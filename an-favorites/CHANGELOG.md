@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.17] - 2026-02-01
+
+### Fixed
+- Se restauran los iconos de archivo en el árbol de favoritos.
+
 ## [0.9.16] - 2026-02-01
 
 ### Changed
