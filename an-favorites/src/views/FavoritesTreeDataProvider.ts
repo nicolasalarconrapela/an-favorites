@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { Logger } from '../logging/logger';
 import { SharedStorageService } from '../services/sharedStorageService';
-import { detectCollisions, safeBasenameFromUri } from '../utils/collisionUtils';
+import { applyCollisionLabels } from '../utils/collisionUtils';
 import { isExcludedPath } from '../utils/exclusionUtils';
 import { runWithConcurrency } from '../utils/concurrency';
 
@@ -33,23 +33,16 @@ export class FavoriteItem extends vscode.TreeItem {
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
     public readonly isPinned: boolean = false,
   ) {
-
-
-
-
     super(path.basename(resourceUri.fsPath), collapsibleState);
 
     this.id = `favorite:${group}:${resourceUri.fsPath}`;
-
 
     this.resourceUri = resourceUri;
 
     this._fullPath = resourceUri.fsPath;
     this._dirPath = path.dirname(resourceUri.fsPath);
 
-
     this.tooltip = this._fullPath;
-
 
     this.description = undefined;
 
@@ -71,17 +64,9 @@ export class FavoriteItem extends vscode.TreeItem {
     this.contextValue = ctx;
   }
 
-
-
-
-
-
   public setShowDescription(isDuplicate: boolean): void {
     this.description = isDuplicate ? this._dirPath : undefined;
   }
-
-
-
 
   public setDescriptionText(text?: string): void {
     this.description = text;
@@ -127,8 +112,10 @@ interface FavoriteMetadata {
 export class FavoritesTreeDataProvider
   implements
     vscode.TreeDataProvider<GroupItem | FavoriteItem | WorkspaceItem>,
-    vscode.TreeDragAndDropController<GroupItem | FavoriteItem | WorkspaceItem>
+    vscode.TreeDragAndDropController<GroupItem | FavoriteItem | WorkspaceItem>,
+    vscode.Disposable
 {
+  private readonly disposables: vscode.Disposable[] = [];
   private _onDidChangeTreeData: vscode.EventEmitter<
     GroupItem | FavoriteItem | WorkspaceItem | undefined | null | void
   > = new vscode.EventEmitter<
@@ -139,13 +126,11 @@ export class FavoritesTreeDataProvider
     GroupItem | FavoriteItem | WorkspaceItem | undefined | null | void
   > = this._onDidChangeTreeData.event;
 
-
   public readonly dragMimeTypes = ['application/vnd.code.tree.favorites'];
   public readonly dropMimeTypes = [
     'application/vnd.code.tree.favorites',
     'text/uri-list',
   ];
-
 
   private favorites: Map<string, FavoriteMetadata> = new Map();
 
@@ -161,30 +146,36 @@ export class FavoritesTreeDataProvider
     private storage: SharedStorageService,
   ) {
     this.loadFavorites();
-    this.storage.onDidChange(() => {
-      this.logger.info('[storage] External change detected -> reloading');
-      this.reloadFavorites();
-      this.refresh();
-    });
-
-
-    vscode.workspace.onDidChangeWorkspaceFolders(() => {
-      this.logger.info('[workspace] Workspace folders changed -> refresh()');
-      this.refresh();
-    });
-
-
-    vscode.workspace.onDidChangeConfiguration((e) => {
-      if (
-        e.affectsConfiguration('anfavorites.multiroot.separation') ||
-        e.affectsConfiguration('anfavorites.search.exclusions')
-      ) {
-        this.logger.info(
-          '[config] relevant configuration changed -> refresh()',
-        );
+    this.disposables.push(
+      this.storage.onDidChange(() => {
+        this.logger.info('[storage] External change detected -> reloading');
+        this.reloadFavorites();
         this.refresh();
-      }
-    });
+      }),
+    );
+
+
+    this.disposables.push(
+      vscode.workspace.onDidChangeWorkspaceFolders(() => {
+        this.logger.info('[workspace] Workspace folders changed -> refresh()');
+        this.refresh();
+      }),
+    );
+
+
+    this.disposables.push(
+      vscode.workspace.onDidChangeConfiguration((e) => {
+        if (
+          e.affectsConfiguration('anfavorites.multiroot.separation') ||
+          e.affectsConfiguration('anfavorites.search.exclusions')
+        ) {
+          this.logger.info(
+            '[config] relevant configuration changed -> refresh()',
+          );
+          this.refresh();
+        }
+      }),
+    );
 
     this.logger.info(
       `[init] Provider created. favorites=${this.favorites.size}`,
@@ -210,7 +201,6 @@ export class FavoritesTreeDataProvider
     const t0 = Date.now();
 
     if (!element) {
-
       const groups: GroupItem[] = [];
       const groupMap = this.getGroupMap();
 
@@ -222,9 +212,7 @@ export class FavoritesTreeDataProvider
         { workspaceFolders: ws },
       );
 
-
       groupMap.forEach((filePaths, groupName) => {
-
         let hasVisibleFiles = false;
 
         for (const filePath of filePaths) {
@@ -261,7 +249,6 @@ export class FavoritesTreeDataProvider
     }
 
     if (element instanceof GroupItem) {
-
       const config = vscode.workspace.getConfiguration('anfavorites.multiroot');
       const separationMode = config.get<string>('separation', 'none');
       const workspaceFolders = vscode.workspace.workspaceFolders || [];
@@ -312,7 +299,6 @@ export class FavoritesTreeDataProvider
         return Promise.resolve(workspaceItems);
       }
 
-
       const items: FavoriteItem[] = [];
       this.logger.debug(`[getChildren:group] Start "${element.groupName}"`);
 
@@ -320,7 +306,6 @@ export class FavoritesTreeDataProvider
         if (metadata.group !== element.groupName) return;
 
         const uri = vscode.Uri.file(filePath);
-
 
         const wf = vscode.workspace.getWorkspaceFolder(uri);
         if (!wf) {
@@ -386,9 +371,6 @@ export class FavoritesTreeDataProvider
     items: FavoriteItem[],
     groupName: string,
   ): Promise<void> {
-    const allUris = items.map((i) => i.resourceUri);
-
-
     const configSearch =
       vscode.workspace.getConfiguration('anfavorites.search');
     const searchExclusions = configSearch.get<string[]>('exclusions', [
@@ -396,27 +378,21 @@ export class FavoritesTreeDataProvider
     ]);
 
     try {
-      const collisions = await detectCollisions(
-        allUris,
-        searchExclusions,
-        this.logger,
-      );
-
-      this.logger.info(
-        `[collisions] Found ${collisions.size} colliding basenames in "${groupName}"`,
-      );
-
-      for (const item of items) {
-        const basename = safeBasenameFromUri(item.resourceUri);
-        if (collisions.has(basename)) {
-
+      await applyCollisionLabels(
+        items,
+        (item) => item.resourceUri,
+        (item) => {
           const rel = vscode.workspace.asRelativePath(item.resourceUri, false);
           const relDir = path.dirname(rel);
           item.setDescriptionText(relDir);
-        } else {
+        },
+        (item) => {
           item.setShowDescription(false);
-        }
-      }
+        },
+        searchExclusions,
+        undefined,
+        this.logger,
+      );
     } catch (err) {
       this.logger.error(
         '[collisions] Error detecting collisions in tree view',
@@ -425,23 +401,18 @@ export class FavoritesTreeDataProvider
     }
   }
 
-
   private getGroupMap(): Map<string, string[]> {
     const groupMap = new Map<string, string[]>();
 
-
     this.groups.forEach((g) => groupMap.set(g, []));
-
 
     if (!groupMap.has(FavoritesTreeDataProvider.DEFAULT_GROUP)) {
       groupMap.set(FavoritesTreeDataProvider.DEFAULT_GROUP, []);
       this.groups.add(FavoritesTreeDataProvider.DEFAULT_GROUP);
     }
 
-
     this.favorites.forEach((metadata, filePath) => {
       if (!groupMap.has(metadata.group)) {
-
         this.groups.add(metadata.group);
         groupMap.set(metadata.group, []);
       }
@@ -458,7 +429,6 @@ export class FavoritesTreeDataProvider
     this.logger.info(`[favorites] addFavorite -> ${filePath}`, {
       group: targetGroup,
     });
-
 
     this.favorites.set(filePath, {
       group: targetGroup,
@@ -557,7 +527,6 @@ export class FavoritesTreeDataProvider
       `[groups] removeGroup -> "${groupName}" (move to default)`,
     );
 
-
     this.favorites.forEach((metadata, filePath) => {
       if (metadata.group === groupName) {
         metadata.group = FavoritesTreeDataProvider.DEFAULT_GROUP;
@@ -591,7 +560,6 @@ export class FavoritesTreeDataProvider
     }
 
     this.logger.info(`[groups] renameGroup -> "${oldName}" => "${newName}"`);
-
 
     this.favorites.forEach((metadata, filePath) => {
       if (metadata.group === oldName) {
@@ -662,9 +630,6 @@ export class FavoritesTreeDataProvider
     return Array.from(this.getGroupMap().keys());
   }
 
-
-
-
   getRecentFavorites(count: number = 5): vscode.Uri[] {
     const allFavorites = Array.from(this.favorites.entries())
       .map(([filePath, metadata]) => ({
@@ -681,15 +646,12 @@ export class FavoritesTreeDataProvider
     return allFavorites.map((f) => f.uri);
   }
 
-
-
   handleDrag(
     source: (GroupItem | FavoriteItem | WorkspaceItem)[],
     dataTransfer: vscode.DataTransfer,
     token: vscode.CancellationToken,
   ): void | Thenable<void> {
     this.logger.info(`[dnd] handleDrag sourceItems=${source.length}`);
-
 
     const draggedFiles = source
       .filter((item): item is FavoriteItem => item instanceof FavoriteItem)
@@ -710,10 +672,8 @@ export class FavoritesTreeDataProvider
   ): Promise<void> {
     this.logger.info('[dnd] handleDrop initiated');
 
-
     let targetGroupName: string;
     if (!target) {
-
       targetGroupName = FavoritesTreeDataProvider.DEFAULT_GROUP;
     } else if (target instanceof GroupItem) {
       targetGroupName = target.groupName;
@@ -726,7 +686,6 @@ export class FavoritesTreeDataProvider
     }
 
     this.logger.info(`[dnd] Target group: "${targetGroupName}"`);
-
 
     const treeItem = dataTransfer.get('application/vnd.code.tree.favorites');
     if (treeItem) {
@@ -761,12 +720,9 @@ export class FavoritesTreeDataProvider
       }
     }
 
-
     const uriListItem = dataTransfer.get('text/uri-list');
     if (uriListItem) {
       try {
-
-
         const urlListResult = await uriListItem.asString();
         const uris = urlListResult.split('\r\n');
 
@@ -782,10 +738,8 @@ export class FavoritesTreeDataProvider
           try {
             const uri = vscode.Uri.parse(uriStr);
 
-
             if (uri.scheme === 'file') {
               try {
-
                 const stat = await vscode.workspace.fs.stat(uri);
                 if (stat.type === vscode.FileType.File) {
                   this.addFavorite(uri, targetGroupName);
@@ -797,7 +751,6 @@ export class FavoritesTreeDataProvider
                   );
                 }
               } catch (statErr) {
-
                 this.logger.warn(
                   `[dnd] Could not stat URI: ${uri.fsPath}`,
                   statErr,
@@ -829,9 +782,6 @@ export class FavoritesTreeDataProvider
     }
   }
 
-
-
-
   reloadFavorites(): void {
     this.logger.info('[storage] reloadFavorites()');
     this.favorites.clear();
@@ -839,7 +789,6 @@ export class FavoritesTreeDataProvider
   }
 
   private loadFavorites(): void {
-
     const sharedData = this.storage.get<FavoriteData[]>(
       'anfavorites.favorites.v2',
     );
@@ -867,7 +816,6 @@ export class FavoritesTreeDataProvider
       return;
     }
 
-
     const workspaceStored = this.context.workspaceState.get<FavoriteData[]>(
       'anfavorites.favorites.v2',
     );
@@ -888,7 +836,6 @@ export class FavoritesTreeDataProvider
       this.checkForDuplicateNames();
       return;
     }
-
 
     const legacyFavorites = this.context.globalState.get<string[]>(
       'anfavorites.favorites',
@@ -926,9 +873,6 @@ export class FavoritesTreeDataProvider
     this.logger.info('[storage] No favorites found (shared or migrated)');
     this.checkForDuplicateNames();
   }
-
-
-
 
   private checkForDuplicateNames(): void {
     const nameMap = new Map<string, string[]>();
@@ -1023,9 +967,7 @@ export class FavoritesTreeDataProvider
     }
   }
 
-  public async validateFavoritesForPaths(
-    filePaths: string[],
-  ): Promise<void> {
+  public async validateFavoritesForPaths(filePaths: string[]): Promise<void> {
     const uniquePaths = Array.from(
       new Set(filePaths.filter((filePath) => this.favorites.has(filePath))),
     );
@@ -1084,5 +1026,11 @@ export class FavoritesTreeDataProvider
 
     this.saveFavorites();
     this.refresh();
+  }
+
+  public dispose(): void {
+    this.disposables.forEach((disposable) => disposable.dispose());
+    this.disposables.length = 0;
+    this._onDidChangeTreeData.dispose();
   }
 }

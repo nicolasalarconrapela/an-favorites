@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 
 const DEFAULT_INDEX_DEBOUNCE_MS = 300;
+const COLLISION_INDEX_MAX_FILES = 20000;
 
 let cachedIndex: Map<string, Set<string>> | null = null;
 let cachedExclusionKey: string | null = null;
@@ -36,7 +37,9 @@ function scheduleIndexRebuild(reason: string, logger?: any): void {
     clearTimeout(rebuildTimer);
   }
   rebuildTimer = setTimeout(() => {
-    logger?.debug?.(`[collision-index] Rebuilding due to ${reason} (debounced)`);
+    logger?.debug?.(
+      `[collision-index] Rebuilding due to ${reason} (debounced)`,
+    );
     void rebuildWorkspaceIndex(lastExclusionPatterns, logger);
   }, DEFAULT_INDEX_DEBOUNCE_MS);
 }
@@ -57,26 +60,49 @@ function ensureWorkspaceIndexWatcher(logger?: any): void {
     scheduleIndexRebuild('change', logger);
   });
 
-  workspaceFolderListener =
-    vscode.workspace.onDidChangeWorkspaceFolders(() => {
-      logger?.info?.(
-        '[collision-index] Workspace folders changed -> clearing index cache',
-      );
-      cachedIndex = null;
-      cachedExclusionKey = null;
-      scheduleIndexRebuild('workspace-folders', logger);
-    });
+  workspaceFolderListener = vscode.workspace.onDidChangeWorkspaceFolders(() => {
+    logger?.info?.(
+      '[collision-index] Workspace folders changed -> clearing index cache',
+    );
+    cachedIndex = null;
+    cachedExclusionKey = null;
+    scheduleIndexRebuild('workspace-folders', logger);
+  });
+}
+
+export function disposeCollisionIndex(): void {
+  if (rebuildTimer) {
+    clearTimeout(rebuildTimer);
+    rebuildTimer = null;
+  }
+  indexWatcher?.dispose();
+  indexWatcher = null;
+  workspaceFolderListener?.dispose();
+  workspaceFolderListener = null;
+  cachedIndex = null;
+  cachedExclusionKey = null;
+  buildPromise = null;
+  lastExclusionPatterns = [];
 }
 
 async function buildWorkspaceIndex(
   exclusionPatterns: string[],
+  token?: vscode.CancellationToken,
   logger?: any,
 ): Promise<Map<string, Set<string>>> {
   const exclusionGlob = buildExclusionGlob(exclusionPatterns);
-  const files = await vscode.workspace.findFiles('**/*', exclusionGlob);
+  const files = await vscode.workspace.findFiles(
+    '**/*',
+    exclusionGlob,
+    COLLISION_INDEX_MAX_FILES,
+    token,
+  );
   const index = new Map<string, Set<string>>();
 
   for (const uri of files) {
+    if (token?.isCancellationRequested) {
+      return index;
+    }
     const basename = safeBasenameFromUri(uri);
     const normalized = normalizeFsPath(uri.fsPath);
     const bucket = index.get(basename);
@@ -95,11 +121,12 @@ async function buildWorkspaceIndex(
 
 async function rebuildWorkspaceIndex(
   exclusionPatterns: string[],
+  token?: vscode.CancellationToken,
   logger?: any,
 ): Promise<Map<string, Set<string>>> {
   const key = exclusionKeyFromPatterns(exclusionPatterns);
   cachedExclusionKey = key;
-  buildPromise = buildWorkspaceIndex(exclusionPatterns, logger)
+  buildPromise = buildWorkspaceIndex(exclusionPatterns, token, logger)
     .then((index) => {
       cachedIndex = index;
       buildPromise = null;
@@ -114,6 +141,7 @@ async function rebuildWorkspaceIndex(
 
 async function getWorkspaceIndex(
   exclusionPatterns: string[],
+  token?: vscode.CancellationToken,
   logger?: any,
 ): Promise<Map<string, Set<string>>> {
   const key = exclusionKeyFromPatterns(exclusionPatterns);
@@ -128,11 +156,8 @@ async function getWorkspaceIndex(
     return buildPromise;
   }
 
-  return rebuildWorkspaceIndex(exclusionPatterns, logger);
+  return rebuildWorkspaceIndex(exclusionPatterns, token, logger);
 }
-
-
-
 
 export function safeBasenameFromUri(uri: vscode.Uri): string {
   const fsPath = (uri as any)?.fsPath;
@@ -148,21 +173,16 @@ export function safeBasenameFromUri(uri: vscode.Uri): string {
   return '(sin nombre)';
 }
 
-
-
-
-
-
 export async function detectCollisions(
   uris: vscode.Uri[],
   exclusionPatterns: string[],
+  token?: vscode.CancellationToken,
   logger?: any,
 ): Promise<Set<string>> {
   const collisions = new Set<string>();
   if (uris.length === 0) return collisions;
 
-  const index = await getWorkspaceIndex(exclusionPatterns, logger);
-
+  const index = await getWorkspaceIndex(exclusionPatterns, token, logger);
 
   const byBasename = new Map<string, vscode.Uri[]>();
   for (const uri of uris) {
@@ -176,6 +196,9 @@ export async function detectCollisions(
   }
 
   for (const [basename, urisWithName] of byBasename.entries()) {
+    if (token?.isCancellationRequested) {
+      return collisions;
+    }
 
     if (urisWithName.length > 1) {
       logger?.debug(
@@ -201,9 +224,39 @@ export async function detectCollisions(
       }
     } catch (error) {
       logger?.warn(`[collision] Error searching for ${basename}:`, error);
-
     }
   }
 
   return collisions;
+}
+
+export async function applyCollisionLabels<T>(
+  items: T[],
+  getUri: (item: T) => vscode.Uri,
+  onCollision: (item: T, basename: string) => void,
+  onNoCollision: (item: T) => void,
+  exclusionPatterns: string[],
+  token?: vscode.CancellationToken,
+  logger?: any,
+): Promise<void> {
+  const uris = items.map((item) => getUri(item));
+  const collisions = await detectCollisions(
+    uris,
+    exclusionPatterns,
+    token,
+    logger,
+  );
+
+  for (const item of items) {
+    if (token?.isCancellationRequested) {
+      return;
+    }
+    const uri = getUri(item);
+    const basename = safeBasenameFromUri(uri);
+    if (collisions.has(basename)) {
+      onCollision(item, basename);
+    } else {
+      onNoCollision(item);
+    }
+  }
 }

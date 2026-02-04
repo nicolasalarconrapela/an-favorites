@@ -12,7 +12,6 @@ export function registerAddToFavoritesCommand(
       try {
         logger.debug('addToFavorites command triggered', { uri: uri?.fsPath });
 
-
         const targetUri = uri || vscode.window.activeTextEditor?.document.uri;
 
         if (!targetUri) {
@@ -22,7 +21,6 @@ export function registerAddToFavoritesCommand(
         }
 
         logger.debug(`Target URI: ${targetUri.fsPath}`);
-
 
         try {
           const stat = await vscode.workspace.fs.stat(targetUri);
@@ -46,7 +44,6 @@ export function registerAddToFavoritesCommand(
           logger.info('File already in favorites');
           return;
         }
-
 
         const groupName = FavoritesTreeDataProvider.DEFAULT_GROUP;
 

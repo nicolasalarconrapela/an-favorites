@@ -10,6 +10,7 @@ export class MRUService {
   private static readonly STORAGE_KEY = 'anfavorites.mru.history';
   private static readonly MAX_ENTRIES = 50;
   private mruList: string[] = [];
+  private readonly disposables: vscode.Disposable[] = [];
 
   private _onDidChangeRecentFiles = new vscode.EventEmitter<void>();
   public readonly onDidChangeRecentFiles = this._onDidChangeRecentFiles.event;
@@ -20,11 +21,13 @@ export class MRUService {
   ) {
     this.load();
 
-    vscode.window.onDidChangeActiveTextEditor((editor) => {
-      if (editor && editor.document.uri.scheme === 'file') {
-        this.add(editor.document.uri.fsPath);
-      }
-    });
+    this.disposables.push(
+      vscode.window.onDidChangeActiveTextEditor((editor) => {
+        if (editor && editor.document.uri.scheme === 'file') {
+          this.add(editor.document.uri.fsPath);
+        }
+      }),
+    );
 
     this.logger.info(
       `[init] MRUService created (Local Storage). items=${this.mruList.length}`,
@@ -226,5 +229,11 @@ export class MRUService {
       this.save();
       this._onDidChangeRecentFiles.fire();
     }
+  }
+
+  public dispose(): void {
+    this.disposables.forEach((disposable) => disposable.dispose());
+    this.disposables.length = 0;
+    this._onDidChangeRecentFiles.dispose();
   }
 }

@@ -11,10 +11,7 @@ function normalizePattern(pattern: string): string {
   return pattern.split(path.sep).join('/');
 }
 
-export function isExcludedPath(
-  fsPath: string,
-  patterns: string[],
-): boolean {
+export function isExcludedPath(fsPath: string, patterns: string[]): boolean {
   if (patterns.length === 0) {
     return false;
   }
