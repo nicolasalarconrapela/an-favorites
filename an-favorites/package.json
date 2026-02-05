@@ -2,22 +2,39 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.87",
+  "version": "0.8.88",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.86.0"
   },
-  "categories": [
-    "Other"
+  "categories": ["Other"],
+  "keywords": [
+    "favorites",
+    "bookmarks",
+    "quick open",
+    "productivity",
+    "files",
+    "explorer"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nicolasalarconrapela/an-favorites.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nicolasalarconrapela/an-favorites/issues"
+  },
+  "homepage": "https://github.com/nicolasalarconrapela/an-favorites#readme",
   "activationEvents": [
-    "onStartupFinished"
+     "onStartupFinished"
   ],
   "main": "./dist/bootstrap/extension.js",
   "files": [
     "dist/**",
+    "resources/**",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE",
     "package.json"
   ],
