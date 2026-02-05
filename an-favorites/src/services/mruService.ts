@@ -1,11 +1,16 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { Logger } from '../logging/logger';
+import { runWithConcurrency } from '../utils/concurrency';
+import { isExcludedPath } from '../utils/exclusionUtils';
+
+const VALIDATION_CONCURRENCY = 12;
 
 export class MRUService {
   private static readonly STORAGE_KEY = 'anfavorites.mru.history';
   private static readonly MAX_ENTRIES = 50;
   private mruList: string[] = [];
+  private readonly disposables: vscode.Disposable[] = [];
 
   private _onDidChangeRecentFiles = new vscode.EventEmitter<void>();
   public readonly onDidChangeRecentFiles = this._onDidChangeRecentFiles.event;
@@ -16,12 +21,13 @@ export class MRUService {
   ) {
     this.load();
 
-    // Listen for file changes to update MRU
-    vscode.window.onDidChangeActiveTextEditor((editor) => {
-      if (editor && editor.document.uri.scheme === 'file') {
-        this.add(editor.document.uri.fsPath);
-      }
-    });
+    this.disposables.push(
+      vscode.window.onDidChangeActiveTextEditor((editor) => {
+        if (editor && editor.document.uri.scheme === 'file') {
+          this.add(editor.document.uri.fsPath);
+        }
+      }),
+    );
 
     this.logger.info(
       `[init] MRUService created (Local Storage). items=${this.mruList.length}`,
@@ -29,12 +35,15 @@ export class MRUService {
   }
 
   private load(): void {
-    const stored = this.context.globalState.get<string[]>(
+    const stored = this.context.workspaceState.get<string[]>(
       MRUService.STORAGE_KEY,
     );
 
     if (stored && stored.length > 0) {
       this.mruList = stored;
+      this.removeEmptyEntries(
+        '[mru] Removed empty entries from loaded history',
+      );
       this.logger.info(`[mru] Loaded from globalState. count=${stored.length}`);
     } else {
       this.mruList = [];
@@ -44,13 +53,26 @@ export class MRUService {
     this.checkForDuplicateNames();
   }
 
-  /**
-   * Verifica y reporta nombres duplicados después de cargar recientes
-   */
+  private removeEmptyEntries(logMessage: string): void {
+    const originalLength = this.mruList.length;
+    this.mruList = this.mruList.filter((entry) => entry.trim() !== '');
+    if (this.mruList.length !== originalLength) {
+      const removed = originalLength - this.mruList.length;
+      this.logger.info(`${logMessage}. removed=${removed}`);
+      this.save();
+    }
+  }
+
   private checkForDuplicateNames(): void {
     const nameMap = new Map<string, string[]>();
+    const configSearch =
+      vscode.workspace.getConfiguration('anfavorites.search');
+    const searchExclusions = configSearch.get<string[]>('exclusions') ?? [];
 
     this.mruList.forEach((filePath) => {
+      if (isExcludedPath(filePath, searchExclusions)) {
+        return;
+      }
       const basename = path.basename(filePath);
       const existing = nameMap.get(basename);
       if (existing) {
@@ -75,17 +97,14 @@ export class MRUService {
   }
 
   private save(): void {
-    this.context.globalState.update(MRUService.STORAGE_KEY, this.mruList);
+    this.context.workspaceState.update(MRUService.STORAGE_KEY, this.mruList);
   }
 
   public add(fsPath: string): void {
-    // Remove if already exists to move it to top
     this.mruList = this.mruList.filter((p) => p !== fsPath);
 
-    // Add to top
     this.mruList.unshift(fsPath);
 
-    // Trim
     if (this.mruList.length > MRUService.MAX_ENTRIES) {
       this.mruList = this.mruList.slice(0, MRUService.MAX_ENTRIES);
     }
@@ -108,18 +127,27 @@ export class MRUService {
   public async validateFiles(): Promise<void> {
     const originalLength = this.mruList.length;
     const validFiles: string[] = [];
+    const t0 = Date.now();
 
     this.logger.info(`[validate] validateFiles start. size=${originalLength}`);
 
-    for (const fsPath of this.mruList) {
-      try {
-        const uri = vscode.Uri.file(fsPath);
-        await vscode.workspace.fs.stat(uri);
-        validFiles.push(fsPath);
-      } catch (error) {
-        this.logger.error(`[validate] Skipping invalid file: ${fsPath}`);
-      }
-    }
+    await runWithConcurrency(
+      this.mruList,
+      VALIDATION_CONCURRENCY,
+      async (fsPath) => {
+        try {
+          const uri = vscode.Uri.file(fsPath);
+          await vscode.workspace.fs.stat(uri);
+          validFiles.push(fsPath);
+        } catch (error) {
+          this.logger.error(`[validate] Skipping invalid file: ${fsPath}`);
+        }
+      },
+    );
+
+    this.logger.info(
+      `[validate] validateFiles done. processed=${this.mruList.length} valid=${validFiles.length} durationMs=${Date.now() - t0}`,
+    );
 
     if (validFiles.length !== originalLength) {
       const removed = originalLength - validFiles.length;
@@ -132,11 +160,60 @@ export class MRUService {
     }
   }
 
+  public async validateFilesForPaths(filePaths: string[]): Promise<void> {
+    const uniquePaths = Array.from(
+      new Set(filePaths.filter((filePath) => this.mruList.includes(filePath))),
+    );
+
+    if (uniquePaths.length === 0) {
+      return;
+    }
+
+    const toRemove: string[] = [];
+    const t0 = Date.now();
+
+    await runWithConcurrency(
+      uniquePaths,
+      VALIDATION_CONCURRENCY,
+      async (fsPath) => {
+        try {
+          const uri = vscode.Uri.file(fsPath);
+          await vscode.workspace.fs.stat(uri);
+        } catch {
+          toRemove.push(fsPath);
+        }
+      },
+    );
+
+    this.logger.info(
+      `[validate] validateFilesForPaths done. processed=${uniquePaths.length} missing=${toRemove.length} durationMs=${Date.now() - t0}`,
+    );
+
+    if (toRemove.length > 0) {
+      this.logger.info(
+        `[validate] Removing ${toRemove.length} missing files from MRU`,
+        toRemove,
+      );
+      const toRemoveSet = new Set(toRemove);
+      this.mruList = this.mruList.filter((fsPath) => !toRemoveSet.has(fsPath));
+      this.save();
+      this._onDidChangeRecentFiles.fire();
+    }
+  }
+
   public updatePath(oldPath: string, newPath: string): void {
+    const normalizedPath = newPath.trim();
+    if (!normalizedPath) {
+      this.logger.warn(
+        `[mru] updatePath ignored empty destination for ${oldPath}`,
+      );
+      return;
+    }
+
     const index = this.mruList.indexOf(oldPath);
     if (index !== -1) {
-      this.logger.info(`[mru] updatePath -> ${oldPath} => ${newPath}`);
-      this.mruList[index] = newPath;
+      this.logger.info(`[mru] updatePath -> ${oldPath} => ${normalizedPath}`);
+      this.mruList[index] = normalizedPath;
       this.save();
       this._onDidChangeRecentFiles.fire();
     } else {
@@ -152,5 +229,11 @@ export class MRUService {
       this.save();
       this._onDidChangeRecentFiles.fire();
     }
+  }
+
+  public dispose(): void {
+    this.disposables.forEach((disposable) => disposable.dispose());
+    this.disposables.length = 0;
+    this._onDidChangeRecentFiles.dispose();
   }
 }

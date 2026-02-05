@@ -5,7 +5,7 @@ import { FavoriteItem } from '../views/FavoritesTreeDataProvider';
 export function registerRemoveFromFavoritesCommand(
   context: vscode.ExtensionContext,
   favoritesProvider: FavoritesTreeDataProvider,
-  logger: any
+  logger: any,
 ): void {
   const disposable = vscode.commands.registerCommand(
     'anfavorites.removeFromFavorites',
@@ -23,7 +23,7 @@ export function registerRemoveFromFavoritesCommand(
         const confirm = await vscode.window.showWarningMessage(
           `¿Eliminar ${count} elementos de favoritos?`,
           { modal: true },
-          'Eliminar Todo'
+          'Eliminar Todo',
         );
         if (confirm !== 'Eliminar Todo') return;
       }
@@ -36,11 +36,15 @@ export function registerRemoveFromFavoritesCommand(
       }
 
       if (count === 1) {
-        vscode.window.showInformationMessage(`Eliminado de favoritos: ${itemsToProcess[0].resourceUri.fsPath}`);
+        vscode.window.showInformationMessage(
+          `Eliminado de favoritos: ${itemsToProcess[0].resourceUri.fsPath}`,
+        );
       } else {
-        vscode.window.showInformationMessage(`${count} elementos eliminados de favoritos.`);
+        vscode.window.showInformationMessage(
+          `${count} elementos eliminados de favoritos.`,
+        );
       }
-    }
+    },
   );
 
   context.subscriptions.push(disposable);
