@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "0.8.89",
+  "version": "0.8.90",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "license": "MIT",
@@ -271,9 +271,9 @@
         }
       },
       {
-        "title": "General",
+        "title": "Limits",
         "properties": {
-          "anfavorites.maxItems.favorites": {
+          "anfavorites.limits.maxPinned": {
             "type": "number",
             "default": 3,
             "enum": [
@@ -285,7 +285,7 @@
             ],
             "description": "Número de favoritos recientes a mostrar en Quick Open."
           },
-          "anfavorites.maxItems.pinned": {
+          "anfavorites.limits.quickOpen.maxFavorites": {
             "type": "number",
             "default": 3,
             "enum": [
@@ -295,7 +295,7 @@
             ],
             "description": "Número máximo de favoritos fijados permitidos."
           },
-          "anfavorites.maxItems.recentFiles": {
+          "anfavorites.limits.quickOpen.maxRecentFiles": {
             "type": "number",
             "default": 3,
             "enum": [
@@ -305,7 +305,12 @@
               5
             ],
             "description": "Número de archivos recientemente abiertos a mostrar en Quick Open."
-          },
+          }
+        }
+      },
+      {
+        "title": "Tree",
+        "properties": {
           "anfavorites.multiroot.separation": {
             "type": "string",
             "default": "none",
@@ -338,7 +343,7 @@
       {
         "title": "Search",
         "properties": {
-          "anfavorites.search.exclusions": {
+          "anfavorites.Zearch.exclusions": {
             "type": "array",
             "items": {
               "type": "string"
@@ -379,36 +384,31 @@
               "**/.history/**"
             ],
             "description": "Patrones de exclusión para búsqueda de archivos (node_modules, dist, build, caches, etc.)."
+          },
+          "anfavorites.search.maxSearchFiles": {
+            "type": "number",
+            "default": 1000,
+            "description": "Umbral máximo de archivos que Quick Open puede recuperar por búsqueda antes de mostrar un aviso."
+          },
+          "anfavorites.search.maxSearchResults": {
+            "type": "number",
+            "default": 200,
+            "description": "Límite máximo de resultados mostrados al buscar archivos en Quick Open."
+          },
+          "anfavorites.quickOpen.searchCacheSize": {
+            "type": "number",
+            "default": 30,
+            "description": "Tamaño máximo del caché LRU de búsquedas en Quick Open."
           }
         }
       },
       {
         "title": "Quick Open",
         "properties": {
-          "anfavorites.quickOpen.openToSide": {
-            "type": "boolean",
-            "default": true,
-            "description": "Si está activado, al abrir un archivo desde Quick Open se abrirá automáticamente en el editor lateral y se ocultará el botón 'Abrir al lado'."
-          },
           "anfavorites.quickOpen.showIcons": {
             "type": "boolean",
             "default": true,
             "description": "Mostrar iconos de archivo en la lista de Quick Open. Si está desactivado, solo se mostrarán las estrellas y botones."
-          },
-          "anfavorites.quickOpen.maxSearchResults": {
-            "type": "number",
-            "default": 200,
-            "description": "Límite máximo de resultados mostrados al buscar archivos en Quick Open."
-          },
-          "anfavorites.quickOpen.maxSearchFiles": {
-            "type": "number",
-            "default": 1000,
-            "description": "Umbral máximo de archivos que Quick Open puede recuperar por búsqueda antes de mostrar un aviso."
-          },
-          "anfavorites.quickOpen.searchCacheSize": {
-            "type": "number",
-            "default": 30,
-            "description": "Tamaño máximo del caché LRU de búsquedas en Quick Open."
           },
           "anfavorites.quickOpen.pathDetailLocation": {
             "type": "string",
@@ -435,6 +435,11 @@
               "Solo muestra la ruta cuando hay archivos con el mismo nombre."
             ],
             "description": "Controla cuándo se muestra la ruta del archivo en Quick Open."
+          },
+          "anfavorites.quickOpen.openToSide": {
+            "type": "boolean",
+            "default": true,
+            "description": "Si está activado, al abrir un archivo desde Quick Open se abrirá automáticamente en el editor lateral y se ocultará el botón 'Abrir al lado'."
           }
         }
       }
