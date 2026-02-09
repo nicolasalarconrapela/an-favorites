@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { FavoriteItem } from '../views/FavoritesTreeDataProvider';
+import { t } from '../utils/l10n';
 
 export function registerRemoveFromFavoritesCommand(
   context: vscode.ExtensionContext,
@@ -14,7 +15,7 @@ export function registerRemoveFromFavoritesCommand(
 
       if (itemsToProcess.length === 0) {
         vscode.window.showWarningMessage(
-          vscode.l10n.t('No item selected'),
+          t('No item selected'),
         );
         logger.warn('removeFromFavorites called without items');
         return;
@@ -22,9 +23,9 @@ export function registerRemoveFromFavoritesCommand(
 
       const count = itemsToProcess.length;
       if (count > 1) {
-        const deleteAllLabel = vscode.l10n.t('Remove All');
+        const deleteAllLabel = t('Remove All');
         const confirm = await vscode.window.showWarningMessage(
-          vscode.l10n.t(
+          t(
             'Remove {0} favorites?',
             count,
           ),
@@ -43,14 +44,14 @@ export function registerRemoveFromFavoritesCommand(
 
       if (count === 1) {
         vscode.window.showInformationMessage(
-          vscode.l10n.t(
+          t(
             'Removed from favorites: {0}',
             itemsToProcess[0].resourceUri.fsPath,
           ),
         );
       } else {
         vscode.window.showInformationMessage(
-          vscode.l10n.t(
+          t(
             '{0} favorites removed.',
             count,
           ),

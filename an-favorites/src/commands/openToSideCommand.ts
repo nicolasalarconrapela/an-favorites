@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { FavoriteItem } from '../views/FavoritesTreeDataProvider';
+import { t } from '../utils/l10n';
 
 export function registerOpenToSideCommand(
   context: vscode.ExtensionContext,
@@ -25,7 +26,7 @@ export function registerOpenToSideCommand(
       } catch (error) {
         logger.error('[openToSide] Error opening file to side', error);
         vscode.window.showErrorMessage(
-          vscode.l10n.t('Error opening file: {0}', String(error)),
+          t('Error opening file: {0}', String(error)),
         );
       }
     },

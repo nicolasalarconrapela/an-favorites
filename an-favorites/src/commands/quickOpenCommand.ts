@@ -15,6 +15,7 @@ import {
 } from '../utils/collisionUtils';
 import { VscodeQuickOpenConfigService } from '../adapters/vscodeQuickOpenConfigService';
 import { VscodeQuickOpenSearchService } from '../adapters/vscodeQuickOpenSearchService';
+import { t } from '../utils/l10n';
 
 type QuickOpenItem = vscode.QuickPickItem;
 
@@ -76,12 +77,6 @@ function isFileItem(item: vscode.QuickPickItem): item is FileQuickPickItem {
 }
 
 type FavoritesAction = 'clearRecents' | 'loadMore';
-
-const TOOLTIP_OPEN_TO_SIDE = vscode.l10n.t('Open to the Side');
-const TOOLTIP_REMOVE_RECENTS = vscode.l10n.t('Remove from Recent');
-const TOOLTIP_REMOVE_FAVORITES = vscode.l10n.t('Remove from Favorites');
-const TOOLTIP_PIN = vscode.l10n.t('Pin');
-const TOOLTIP_UNPIN = vscode.l10n.t('Unpin');
 
 interface ActionQuickPickItem extends vscode.QuickPickItem {
   action: FavoritesAction;
@@ -264,7 +259,7 @@ async function buildSearchItems(params: {
 
   if (cacheEntry.exceededMaxFiles) {
     noticeItem = {
-      label: vscode.l10n.t(
+      label: t(
         'Reached the maximum of {0} files. Refine your search.',
         config.maxSearchFiles,
       ),
@@ -314,8 +309,8 @@ async function buildSearchItems(params: {
 
   if (cacheEntry.uris.length > displayLimit) {
     loadMoreItem = {
-      label: vscode.l10n.t('Load more'),
-      description: vscode.l10n.t(
+      label: t('Load more'),
+      description: t(
         'Showing {0} of {1}',
         displayLimit,
         cacheEntry.uris.length,
@@ -532,7 +527,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     const buttons: vscode.QuickInputButton[] = [];
 
     const isPinnedState = this.isIndividualPinned;
-    const pinTooltip = isPinnedState ? TOOLTIP_UNPIN : TOOLTIP_PIN;
+    const pinTooltip = isPinnedState ? t('Unpin') : t('Pin');
 
     if (!this.isRecentlyOpened) {
       buttons.push({
@@ -550,21 +545,21 @@ class FileQuickPickItem implements vscode.QuickPickItem {
         this.isFavorite ? 'heart' : 'circle-outline',
       ),
       tooltip: this.isFavorite
-        ? vscode.l10n.t('Remove from Favorites')
-        : vscode.l10n.t('Add to Favorites'),
+        ? t('Remove from Favorites')
+        : t('Add to Favorites'),
     });
 
     if (!this._openToSide) {
       buttons.push({
         iconPath: createButtonIcon('split-horizontal', 'symbol-file'),
-        tooltip: TOOLTIP_OPEN_TO_SIDE,
+        tooltip: t('Open to the Side'),
       });
     }
 
     if (this.isRecentlyOpened) {
       buttons.push({
         iconPath: createButtonIcon('close', 'x'),
-        tooltip: TOOLTIP_REMOVE_RECENTS,
+        tooltip: t('Remove from Recent'),
       });
     }
 
@@ -624,7 +619,7 @@ export function registerQuickOpenCommand(
       const quickPick = vscode.window.createQuickPick<QuickOpenItem>();
       log.debug('[QuickOpen] QuickPick instance created');
 
-      quickPick.placeholder = vscode.l10n.t(
+      quickPick.placeholder = t(
         'Search files by name',
       );
       quickPick.matchOnDescription = true;
@@ -874,8 +869,8 @@ export function registerQuickOpenCommand(
           const hasFavoriteItems = recentFavItems.length > 0;
           items.push({
             label: hasFavoriteItems
-              ? vscode.l10n.t('Favorites')
-              : vscode.l10n.t('No favorites yet'),
+              ? t('Favorites')
+              : t('No favorites yet'),
             kind: vscode.QuickPickItemKind.Separator,
           });
           items.push({ label: ' ', alwaysShow: false });
@@ -884,7 +879,7 @@ export function registerQuickOpenCommand(
             items.push(...recentFavItems);
           } else if (!isSearching) {
             items.push({
-              label: vscode.l10n.t(
+              label: t(
                 'Search for a file and add it to favorites using the icon on the right',
               ),
               description: '',
@@ -896,14 +891,14 @@ export function registerQuickOpenCommand(
 
           items.push({
             label: hasRecentFiles
-              ? vscode.l10n.t('Recent')
-              : vscode.l10n.t('No new recent files'),
+              ? t('Recent')
+              : t('No new recent files'),
             kind: vscode.QuickPickItemKind.Separator,
           });
 
           if (hasRecentFiles) {
             const clearRecentsItem: ActionQuickPickItem = {
-              label: `$(trash) ${vscode.l10n.t('Clear all')}`,
+              label: `$(trash) ${t('Clear all')}`,
               action: 'clearRecents',
             };
 
@@ -975,7 +970,7 @@ export function registerQuickOpenCommand(
 
           if (otherItems.length > 0 || searchNoticeItem || loadMoreItem) {
             items.push({
-              label: vscode.l10n.t('Files'),
+              label: t('Files'),
               kind: vscode.QuickPickItemKind.Separator,
             });
             if (searchNoticeItem) {
@@ -1045,7 +1040,7 @@ export function registerQuickOpenCommand(
           log.error('Error loading files for QuickOpen', error);
           quickPick.items = [
             {
-              label: vscode.l10n.t('Error loading files (see logs)'),
+              label: t('Error loading files (see logs)'),
               kind: vscode.QuickPickItemKind.Separator,
             },
           ];
@@ -1240,7 +1235,7 @@ export function registerQuickOpenCommand(
               `[QuickOpen] ❌ File no longer exists: ${selected.resourceUri.fsPath}`,
             );
             vscode.window.showErrorMessage(
-              vscode.l10n.t(
+              t(
                 'File does not exist: {0}',
                 selected.resourceUri.fsPath,
               ),
@@ -1292,7 +1287,7 @@ export function registerQuickOpenCommand(
           const button = e.button;
           const uri = item.resourceUri;
 
-          if (button.tooltip === TOOLTIP_OPEN_TO_SIDE) {
+          if (button.tooltip === t('Open to the Side')) {
             log.info(`[QuickOpen] Opening to side: ${uri.fsPath}`);
             try {
               mruService.add(uri.fsPath);
@@ -1309,14 +1304,14 @@ export function registerQuickOpenCommand(
             return;
           }
 
-          if (button.tooltip === TOOLTIP_REMOVE_RECENTS) {
+          if (button.tooltip === t('Remove from Recent')) {
             log.info(`[QuickOpen] Removing from recents: ${uri.fsPath}`);
             mruService.remove(uri.fsPath);
 
             return;
           }
 
-          if (button.tooltip === TOOLTIP_REMOVE_FAVORITES) {
+          if (button.tooltip === t('Remove from Favorites')) {
             log.info(`[QuickOpen] Removing from favorites: ${uri.fsPath}`);
             favoritesProvider.removeFavorite(uri);
             item.isFavorite = false;
@@ -1335,8 +1330,8 @@ export function registerQuickOpenCommand(
           }
 
           if (
-            button.tooltip === TOOLTIP_PIN ||
-            button.tooltip === TOOLTIP_UNPIN
+            button.tooltip === t('Pin') ||
+            button.tooltip === t('Unpin')
           ) {
             log.info(`[QuickOpen] Toggling pin for: ${uri.fsPath}`);
             favoritesProvider.togglePin(uri);

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
+import { t } from '../utils/l10n';
 
 export function registerAddToFavoritesCommand(
   context: vscode.ExtensionContext,
@@ -16,7 +17,7 @@ export function registerAddToFavoritesCommand(
 
         if (!targetUri) {
           vscode.window.showWarningMessage(
-            vscode.l10n.t('No file selected'),
+            t('No file selected'),
           );
           logger.warn('No URI provided for addToFavorites');
           return;
@@ -28,7 +29,7 @@ export function registerAddToFavoritesCommand(
           const stat = await vscode.workspace.fs.stat(targetUri);
           if (stat.type === vscode.FileType.Directory) {
             vscode.window.showWarningMessage(
-              vscode.l10n.t(
+              t(
                 'Folders cannot be added to favorites',
               ),
             );
@@ -38,14 +39,14 @@ export function registerAddToFavoritesCommand(
         } catch (error) {
           logger.error('Error checking file', error);
           vscode.window.showErrorMessage(
-            vscode.l10n.t('Error checking file'),
+            t('Error checking file'),
           );
           return;
         }
 
         if (favoritesProvider.hasFavorite(targetUri)) {
           vscode.window.showInformationMessage(
-            vscode.l10n.t('File is already in favorites'),
+            t('File is already in favorites'),
           );
           logger.info('File already in favorites');
           return;
@@ -61,7 +62,7 @@ export function registerAddToFavoritesCommand(
         favoritesProvider.addFavorite(targetUri, groupName);
 
         vscode.window.showInformationMessage(
-          vscode.l10n.t(
+          t(
             'Added to favorites in "{0}": {1}',
             groupDisplayName,
             targetUri.fsPath,
@@ -71,7 +72,7 @@ export function registerAddToFavoritesCommand(
       } catch (error) {
         logger.error('Unexpected error in addToFavorites', error);
         vscode.window.showErrorMessage(
-          vscode.l10n.t('Error adding favorite: {0}', String(error)),
+          t('Error adding favorite: {0}', String(error)),
         );
       }
     },

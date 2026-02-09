@@ -15,8 +15,10 @@ import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
 import { SharedStorageService } from '../services/sharedStorageService';
 import { disposeCollisionIndex } from '../utils/collisionUtils';
+import { initializeL10n, t } from '../utils/l10n';
 
 export function activate(context: vscode.ExtensionContext): void {
+  initializeL10n(context);
   const loggingConfig = vscode.workspace.getConfiguration(
     'anfavorites.logging',
   );
@@ -29,7 +31,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const maxRotatedFiles = loggingConfig.get<number>('maxRotatedFiles', 5);
 
   const logger = createAppLogger(context, {
-    channelName: vscode.l10n.t('AnFavorites Logs'),
+    channelName: t('AnFavorites Logs'),
     level: logLevel,
     maxFileSizeBytes: 5 * 1024 * 1024,
     maxRotatedFiles,
