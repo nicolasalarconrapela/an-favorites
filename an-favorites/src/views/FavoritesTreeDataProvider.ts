@@ -7,6 +7,11 @@ import { isExcludedPath } from '../utils/exclusionUtils';
 import { runWithConcurrency } from '../utils/concurrency';
 
 const VALIDATION_CONCURRENCY = 12;
+const DEFAULT_GROUP_ID = 'Sin Grupo';
+const DEFAULT_GROUP_LABEL = vscode.l10n.t('Ungrouped');
+
+const getGroupDisplayName = (groupName: string): string =>
+  groupName === DEFAULT_GROUP_ID ? DEFAULT_GROUP_LABEL : groupName;
 
 export class GroupItem extends vscode.TreeItem {
   constructor(
@@ -14,10 +19,11 @@ export class GroupItem extends vscode.TreeItem {
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
     isDefault: boolean = false,
   ) {
-    super(groupName, collapsibleState);
+    const displayName = getGroupDisplayName(groupName);
+    super(displayName, collapsibleState);
 
     this.id = `group:${groupName}`;
-    this.tooltip = `Grupo: ${groupName}`;
+    this.tooltip = vscode.l10n.t('Group: {0}', displayName);
     this.iconPath = new vscode.ThemeIcon('folder');
     this.contextValue = isDefault ? 'groupItem:default' : 'groupItem';
   }
@@ -48,7 +54,7 @@ export class FavoriteItem extends vscode.TreeItem {
 
     this.command = {
       command: 'vscode.open',
-      title: 'Abrir Archivo',
+      title: vscode.l10n.t('Open File'),
       arguments: [
         resourceUri,
         {
@@ -138,7 +144,15 @@ export class FavoritesTreeDataProvider
     FavoritesTreeDataProvider.DEFAULT_GROUP,
   ]);
 
-  public static readonly DEFAULT_GROUP = 'Sin Grupo';
+  public static readonly DEFAULT_GROUP = DEFAULT_GROUP_ID;
+
+  public static getDefaultGroupLabel(): string {
+    return DEFAULT_GROUP_LABEL;
+  }
+
+  public static getGroupDisplayName(groupName: string): string {
+    return getGroupDisplayName(groupName);
+  }
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -707,15 +721,21 @@ export class FavoritesTreeDataProvider
         this.refresh();
 
         if (movedCount > 0) {
+          const targetGroupDisplayName =
+            FavoritesTreeDataProvider.getGroupDisplayName(targetGroupName);
           vscode.window.showInformationMessage(
-            `Se movieron ${movedCount} favoritos al grupo "${targetGroupName}"`,
+            vscode.l10n.t(
+              'Moved {0} favorites to group "{1}"',
+              movedCount,
+              targetGroupDisplayName,
+            ),
           );
         }
         return;
       } catch (err) {
         this.logger.error('[dnd] Error parsing internal drag data', err);
         vscode.window.showErrorMessage(
-          'Error al mover favoritos internamente.',
+          vscode.l10n.t('Error moving favorites internally.'),
         );
       }
     }
@@ -763,21 +783,32 @@ export class FavoritesTreeDataProvider
         }
 
         if (addedCount > 0) {
+          const targetGroupDisplayName =
+            FavoritesTreeDataProvider.getGroupDisplayName(targetGroupName);
           vscode.window.showInformationMessage(
-            `Se añadieron ${addedCount} archivos a "${targetGroupName}".`,
+            vscode.l10n.t(
+              'Added {0} files to "{1}".',
+              addedCount,
+              targetGroupDisplayName,
+            ),
           );
         }
 
         if (ignoredFoldersCount > 0) {
           vscode.window.showWarningMessage(
-            `Se ignoraron ${ignoredFoldersCount} carpetas (solo se permiten archivos).`,
+            vscode.l10n.t(
+              'Ignored {0} folders (only files are allowed).',
+              ignoredFoldersCount,
+            ),
           );
         }
 
         return;
       } catch (err) {
         this.logger.error('[dnd] Error processing external URIs', err);
-        vscode.window.showErrorMessage('Error al procesar archivos externos.');
+        vscode.window.showErrorMessage(
+          vscode.l10n.t('Error processing external files.'),
+        );
       }
     }
   }

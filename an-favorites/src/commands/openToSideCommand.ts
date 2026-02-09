@@ -24,7 +24,9 @@ export function registerOpenToSideCommand(
         });
       } catch (error) {
         logger.error('[openToSide] Error opening file to side', error);
-        vscode.window.showErrorMessage(`Error al abrir archivo: ${error}`);
+        vscode.window.showErrorMessage(
+          vscode.l10n.t('Error opening file: {0}', String(error)),
+        );
       }
     },
   );
