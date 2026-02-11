@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "0.11.2",
+  "version": "0.11.3",
   "publisher": "anappwilos",
   "enabledApiProposals": [
     "quickPickItemResource"
@@ -297,10 +297,6 @@
         },
         {
           "command": "anfavorites.removeFromGroup",
-          "when": "false"
-        },
-        {
-          "command": "workbench.view.extension.anfavorites-view-container",
           "when": "false"
         },
         {
