@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "publisher": "anappwilos",
   "enabledApiProposals": [
     "quickPickItemResource"
@@ -251,6 +251,50 @@
         },
         {
           "command": "anfavorites.removeFromFavorites",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.addToFavoritesInGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.addGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.removeGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.renameGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.pinFavorite",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.unpinFavorite",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.moveFavorite",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.openToSide",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.clearGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.removeFromGroup",
+          "when": "false"
+        },
+        {
+          "command": "workbench.view.extension.anfavorites-view-container",
           "when": "false"
         }
       ]
