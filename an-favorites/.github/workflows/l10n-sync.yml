@@ -1,0 +1,29 @@
+name: L10n Sync
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  l10n:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Export runtime l10n bundle
+        run: npm run l10n:export
+
+      - name: Ensure runtime bundle is up to date
+        run: git diff --exit-code l10n/bundle.l10n.json

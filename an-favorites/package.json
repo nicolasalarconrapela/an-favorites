@@ -1,8 +1,8 @@
 {
   "name": "an-favorites",
-  "displayName": "AnFavorites",
-  "description": "Application for managing favorites",
-  "version": "0.8.90",
+  "displayName": "%extension.displayName%",
+  "description": "%extension.description%",
+  "version": "0.9.1",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "license": "MIT",
@@ -30,8 +30,10 @@
      "onStartupFinished"
   ],
   "main": "./dist/bootstrap/extension.js",
+  "l10n": "./l10n",
   "files": [
     "dist/**",
+    "l10n/**",
     "resources/**",
     "README.md",
     "CHANGELOG.md",
@@ -42,81 +44,81 @@
     "commands": [
       {
         "command": "anfavorites.addToFavorites",
-        "title": "Añadir a Favoritos",
-        "category": "AnFavorites"
+        "title": "%command.addToFavorites.title%",
+        "category": "%command.category.anfavorites%"
       },
       {
         "command": "anfavorites.addToFavoritesInGroup",
-        "title": "Añadir a Favoritos (Elegir Grupo)",
-        "category": "AnFavorites"
+        "title": "%command.addToFavoritesInGroup.title%",
+        "category": "%command.category.anfavorites%"
       },
       {
         "command": "anfavorites.removeFromFavorites",
-        "title": "Eliminar de Favoritos",
-        "category": "AnFavorites",
+        "title": "%command.removeFromFavorites.title%",
+        "category": "%command.category.anfavorites%",
         "icon": "$(trash)"
       },
       {
         "command": "anfavorites.removeAllFavorites",
-        "title": "Eliminar Todo",
-        "category": "AnFavorites",
+        "title": "%command.removeAllFavorites.title%",
+        "category": "%command.category.anfavorites%",
         "icon": "$(trash)"
       },
       {
         "command": "anfavorites.addGroup",
-        "title": "Nuevo Grupo",
-        "category": "AnFavorites"
+        "title": "%command.addGroup.title%",
+        "category": "%command.category.anfavorites%"
       },
       {
         "command": "anfavorites.removeGroup",
-        "title": "Eliminar Grupo",
-        "category": "AnFavorites",
+        "title": "%command.removeGroup.title%",
+        "category": "%command.category.anfavorites%",
         "icon": "$(trash)"
       },
       {
         "command": "anfavorites.renameGroup",
-        "title": "Renombrar Grupo",
-        "category": "AnFavorites",
+        "title": "%command.renameGroup.title%",
+        "category": "%command.category.anfavorites%",
         "icon": "$(edit)"
       },
       {
         "command": "anfavorites.pinFavorite",
-        "title": "Fijar Favorito",
-        "category": "AnFavorites",
+        "title": "%command.pinFavorite.title%",
+        "category": "%command.category.anfavorites%",
         "icon": "$(pin)"
       },
       {
         "command": "anfavorites.unpinFavorite",
-        "title": "Desfijar Favorito",
-        "category": "AnFavorites",
+        "title": "%command.unpinFavorite.title%",
+        "category": "%command.category.anfavorites%",
         "icon": "$(pinned)"
       },
       {
         "command": "anfavorites.moveFavorite",
-        "title": "Mover a Grupo",
-        "category": "AnFavorites"
+        "title": "%command.moveFavorite.title%",
+        "category": "%command.category.anfavorites%"
       },
       {
         "command": "anfavorites.openToSide",
-        "title": "Abrir al lado",
-        "category": "AnFavorites",
+        "title": "%command.openToSide.title%",
+        "category": "%command.category.anfavorites%",
         "icon": "$(split-horizontal)"
       },
       {
         "command": "anfavorites.quickOpen",
-        "title": "Buscar Archivo (Favoritos)",
-        "category": "AnFavorites"
+        "title": "%command.quickOpen.title%",
+        "category": "%command.category.anfavorites%"
       },
       {
         "command": "anfavorites.clearGroup",
-        "title": "Limpiar Grupo",
-        "category": "AnFavorites",
+        "title": "%command.clearGroup.title%",
+        "category": "%command.category.anfavorites%",
         "icon": "$(clear-all)"
       },
       {
         "command": "anfavorites.removeFromGroup",
-        "title": "Quitar del Grupo",
-        "category": "AnFavorites",
+        "title": "%command.removeFromGroup.title%",
+        "category": "%command.category.anfavorites%",
         "icon": "$(close)"
       }
     ],
@@ -131,7 +133,7 @@
       "activitybar": [
         {
           "id": "anfavorites-view-container",
-          "title": "AnFavorites",
+          "title": "%viewsContainer.anfavorites.title%",
           "icon": "resources/icon_no_bg.svg"
         }
       ]
@@ -140,7 +142,7 @@
       "anfavorites-view-container": [
         {
           "id": "anfavorites.favoritesView",
-          "name": "Favoritos",
+          "name": "%view.favoritesView.name%",
           "icon": "resources/icon_no_bg.svg"
         }
       ]
@@ -250,7 +252,27 @@
     },
     "configuration": [
       {
-        "title": "Logging",
+        "title": "%config.general.title%",
+        "properties": {
+          "anfavorites.language": {
+            "type": "string",
+            "default": "auto",
+            "enum": [
+              "auto",
+              "en",
+              "es"
+            ],
+            "enumDescriptions": [
+              "%config.language.enum.auto%",
+              "%config.language.enum.en%",
+              "%config.language.enum.es%"
+            ],
+            "description": "%config.language.description%"
+          }
+        }
+      },
+      {
+        "title": "%config.logging.title%",
         "properties": {
           "anfavorites.logging.level": {
             "type": "string",
@@ -261,17 +283,17 @@
               "warn",
               "error"
             ],
-            "description": "Nivel mínimo de logs que se escriben en el canal y archivos."
+            "description": "%config.logging.level.description%"
           },
           "anfavorites.logging.maxRotatedFiles": {
             "type": "number",
             "default": 5,
-            "description": "Cantidad máxima de archivos de log rotados que se conservarán."
+            "description": "%config.logging.maxRotatedFiles.description%"
           }
         }
       },
       {
-        "title": "Limits",
+        "title": "%config.limits.title%",
         "properties": {
           "anfavorites.limits.maxPinned": {
             "type": "number",
@@ -283,7 +305,7 @@
               5,
               7
             ],
-            "description": "Número de favoritos recientes a mostrar en Quick Open."
+            "description": "%config.limits.maxPinned.description%"
           },
           "anfavorites.limits.quickOpen.maxFavorites": {
             "type": "number",
@@ -293,7 +315,7 @@
               4,
               5
             ],
-            "description": "Número máximo de favoritos fijados permitidos."
+            "description": "%config.limits.quickOpen.maxFavorites.description%"
           },
           "anfavorites.limits.quickOpen.maxRecentFiles": {
             "type": "number",
@@ -304,12 +326,12 @@
               4,
               5
             ],
-            "description": "Número de archivos recientemente abiertos a mostrar en Quick Open."
+            "description": "%config.limits.quickOpen.maxRecentFiles.description%"
           }
         }
       },
       {
-        "title": "Tree",
+        "title": "%config.tree.title%",
         "properties": {
           "anfavorites.multiroot.separation": {
             "type": "string",
@@ -321,27 +343,27 @@
               "both"
             ],
             "enumDescriptions": [
-              "Ninguna separación.",
-              "Solo separar en el grupo 'Sin Grupo'.",
-              "Solo separar en los grupos creados por el usuario.",
-              "Separar en todos los grupos."
+              "%config.multiroot.separation.enum.none%",
+              "%config.multiroot.separation.enum.ungrouped%",
+              "%config.multiroot.separation.enum.groups%",
+              "%config.multiroot.separation.enum.both%"
             ],
-            "description": "Permite separar los favoritos por nombre de la carpeta del espacio de trabajo en entornos multi-root."
+            "description": "%config.multiroot.separation.description%"
           }
         }
       },
       {
-        "title": "Storage",
+        "title": "%config.storage.title%",
         "properties": {
           "anfavorites.storage.shareAcrossIdes": {
             "type": "boolean",
             "default": false,
-            "description": "Comparte favoritos entre IDEs cuando el workspace es el mismo (root o multi-root). Guarda un archivo dentro del workspace o junto al .code-workspace."
+            "description": "%config.storage.shareAcrossIdes.description%"
           }
         }
       },
       {
-        "title": "Search",
+        "title": "%config.search.title%",
         "properties": {
           "anfavorites.Zearch.exclusions": {
             "type": "array",
@@ -383,32 +405,32 @@
               "**/CMakeFiles/**",
               "**/.history/**"
             ],
-            "description": "Patrones de exclusión para búsqueda de archivos (node_modules, dist, build, caches, etc.)."
+            "description": "%config.search.exclusions.description%"
           },
           "anfavorites.search.maxSearchFiles": {
             "type": "number",
             "default": 1000,
-            "description": "Umbral máximo de archivos que Quick Open puede recuperar por búsqueda antes de mostrar un aviso."
+            "description": "%config.search.maxSearchFiles.description%"
           },
           "anfavorites.search.maxSearchResults": {
             "type": "number",
             "default": 200,
-            "description": "Límite máximo de resultados mostrados al buscar archivos en Quick Open."
+            "description": "%config.search.maxSearchResults.description%"
           },
           "anfavorites.quickOpen.searchCacheSize": {
             "type": "number",
             "default": 30,
-            "description": "Tamaño máximo del caché LRU de búsquedas en Quick Open."
+            "description": "%config.quickOpen.searchCacheSize.description%"
           }
         }
       },
       {
-        "title": "Quick Open",
+        "title": "%config.quickOpen.title%",
         "properties": {
           "anfavorites.quickOpen.showIcons": {
             "type": "boolean",
             "default": true,
-            "description": "Mostrar iconos de archivo en la lista de Quick Open. Si está desactivado, solo se mostrarán las estrellas y botones."
+            "description": "%config.quickOpen.showIcons.description%"
           },
           "anfavorites.quickOpen.pathDetailLocation": {
             "type": "string",
@@ -418,10 +440,10 @@
               "detail"
             ],
             "enumDescriptions": [
-              "Muestra la información de la ruta seguida del nombre del archivo.",
-              "Muestra la información de la ruta debajo del nombre del archivo."
+              "%config.quickOpen.pathDetailLocation.enum.description%",
+              "%config.quickOpen.pathDetailLocation.enum.detail%"
             ],
-            "description": "Controla dónde se muestra la información detallada de la ruta del archivo (especialmente en multi-root)."
+            "description": "%config.quickOpen.pathDetailLocation.description%"
           },
           "anfavorites.quickOpen.showPathWhen": {
             "type": "string",
@@ -431,15 +453,15 @@
               "onConflict"
             ],
             "enumDescriptions": [
-              "Siempre muestra la ruta del archivo.",
-              "Solo muestra la ruta cuando hay archivos con el mismo nombre."
+              "%config.quickOpen.showPathWhen.enum.always%",
+              "%config.quickOpen.showPathWhen.enum.onConflict%"
             ],
-            "description": "Controla cuándo se muestra la ruta del archivo en Quick Open."
+            "description": "%config.quickOpen.showPathWhen.description%"
           },
           "anfavorites.quickOpen.openToSide": {
             "type": "boolean",
             "default": true,
-            "description": "Si está activado, al abrir un archivo desde Quick Open se abrirá automáticamente en el editor lateral y se ocultará el botón 'Abrir al lado'."
+            "description": "%config.quickOpen.openToSide.description%"
           }
         }
       }
@@ -451,6 +473,8 @@
     "format:write": "prettier --write .",
     "compile": "node scripts/esbuild.js",
     "watch": "node scripts/esbuild.js --watch",
+    "l10n:export": "l10n-dev export --outDir ./l10n ./src",
+    "l10n:validate": "l10n-dev validate ./l10n",
     "compile-tests": "tsc -p test/tsconfig.json",
     "test": "npm run compile-tests && node ./out/test/runTest.js",
     "prepublishOnly": "npm run lint && npm run test && npm run compile",
@@ -465,6 +489,7 @@
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^8.52.0",
     "@typescript-eslint/parser": "^8.52.0",
+    "@vscode/l10n-dev": "^0.5.0",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.7.1",
     "esbuild": "^0.27.2",
