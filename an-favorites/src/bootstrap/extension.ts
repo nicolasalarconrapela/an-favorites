@@ -10,6 +10,7 @@ import { registerManageGroupsCommands } from '../commands/manageGroupsCommand';
 import { registerPinCommands } from '../commands/pinCommands';
 import { registerOpenToSideCommand } from '../commands/openToSideCommand';
 import { registerQuickOpenCommand } from '../commands/quickOpenCommand';
+import { registerKeyboardShortcutCommand } from '../commands/keyboardShortcutCommand';
 import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
@@ -70,6 +71,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerManageGroupsCommands(context, favoritesProvider, logger);
   registerPinCommands(context, favoritesProvider, logger);
   registerOpenToSideCommand(context, logger);
+  registerKeyboardShortcutCommand(context, logger);
   logger.info('[activate] registering quickOpen...');
   registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
   logger.info('[activate] quickOpen registered.');

@@ -73,7 +73,7 @@ function buildSearchPattern(searchValue: string): string {
 }
 
 function isFileItem(item: vscode.QuickPickItem): item is FileQuickPickItem {
-  return typeof (item as any)?.resourceUri?.fsPath === 'string';
+  return typeof (item as any)?.internalUri?.fsPath === 'string';
 }
 
 type FavoritesAction = 'clearRecents' | 'loadMore';
@@ -290,7 +290,7 @@ async function buildSearchItems(params: {
       });
     })
     .filter((item) => {
-      const normalizedPath = normalizeFsPath(item.resourceUri.fsPath);
+      const normalizedPath = normalizeFsPath(item.internalUri.fsPath);
       return (
         !recentNormSet.has(normalizedPath) &&
         !recentFavNormSet.has(normalizedPath) &&
@@ -299,7 +299,7 @@ async function buildSearchItems(params: {
     })
     .slice(0, displayLimit)
     .map((item) => {
-      const isFav = favoritesProvider.hasFavorite(item.resourceUri);
+      const isFav = favoritesProvider.hasFavorite(item.internalUri);
       if (item.isFavorite !== isFav) {
         item.isFavorite = isFav;
         item.updateIcon(config.showIcons);
@@ -325,9 +325,6 @@ async function buildSearchItems(params: {
     loadMoreItem,
   };
 }
-
-
-
 
 async function validateFilesExistence(
   uris: vscode.Uri[],
@@ -406,7 +403,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   iconPath?: vscode.ThemeIcon;
   kind?: vscode.QuickPickItemKind;
 
-  resourceUri: vscode.Uri;
+  internalUri: vscode.Uri;
   isFavorite: boolean;
   isPinned: boolean;
   isRecentlyOpened: boolean;
@@ -445,7 +442,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
       showPathWhen = 'onConflict',
     } = params;
 
-    this.resourceUri = uri;
+    this.internalUri = uri;
     this.isFavorite = isFavorite;
     this.isPinned = isPinned;
     this.isRecentlyOpened = isRecentlyOpened;
@@ -519,7 +516,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
       this.iconPath = undefined;
     }
 
-    const baseName = safeBasenameFromUri(this.resourceUri);
+    const baseName = safeBasenameFromUri(this.internalUri);
     let iconPrefix = this.isFavorite ? '$(star-full) ' : '     ';
     if (this.isPinned) iconPrefix = '$(pin) ';
     this.label = `${iconPrefix} ${baseName}`;
@@ -619,9 +616,7 @@ export function registerQuickOpenCommand(
       const quickPick = vscode.window.createQuickPick<QuickOpenItem>();
       log.debug('[QuickOpen] QuickPick instance created');
 
-      quickPick.placeholder = t(
-        'Search files by name',
-      );
+      quickPick.placeholder = t('Search files by name');
       quickPick.matchOnDescription = true;
       quickPick.matchOnDetail = true;
       quickPick.canSelectMany = false;
@@ -682,7 +677,6 @@ export function registerQuickOpenCommand(
       let searchPage = 1;
       let previousSearchValue = '';
 
-
       const buildItems = async (
         searchQuery: string = quickPick.value,
       ): Promise<void> => {
@@ -706,13 +700,12 @@ export function registerQuickOpenCommand(
           previousSearchValue = normalizedSearch;
         }
 
-
         const currentActiveUri =
           quickPick.activeItems.length > 0 &&
           isFileItem(quickPick.activeItems[0])
             ? (
                 quickPick.activeItems[0] as FileQuickPickItem
-              ).resourceUri.toString()
+              ).internalUri.toString()
             : null;
 
         try {
@@ -726,7 +719,6 @@ export function registerQuickOpenCommand(
           log.debug('[QuickOpen] Reloading favorites from storage...');
           favoritesProvider.reloadFavorites();
           log.debug('[QuickOpen] Favorites reloaded');
-
 
           const config = configService.getConfig();
 
@@ -770,7 +762,6 @@ export function registerQuickOpenCommand(
           const pinnedFavUris = favoritesProvider
             .getPinnedFavorites()
             .slice(0, config.maxPinned);
-
 
           const allPinnedUrisUnsafe = [...pinnedFavUris];
 
@@ -840,9 +831,6 @@ export function registerQuickOpenCommand(
             return exists;
           });
 
-
-
-
           const pinnedItems = buildPinnedItems(
             validPinnedUris,
             favoritesProvider,
@@ -859,7 +847,6 @@ export function registerQuickOpenCommand(
             config,
           );
 
-
           const items: QuickOpenItem[] = [];
 
           if (pinnedItems.length > 0) {
@@ -868,9 +855,7 @@ export function registerQuickOpenCommand(
 
           const hasFavoriteItems = recentFavItems.length > 0;
           items.push({
-            label: hasFavoriteItems
-              ? t('Favorites')
-              : t('No favorites yet'),
+            label: hasFavoriteItems ? t('Favorites') : t('No favorites yet'),
             kind: vscode.QuickPickItemKind.Separator,
           });
           items.push({ label: ' ', alwaysShow: false });
@@ -890,9 +875,7 @@ export function registerQuickOpenCommand(
           const hasRecentFiles = recentItems.length > 0;
 
           items.push({
-            label: hasRecentFiles
-              ? t('Recent')
-              : t('No new recent files'),
+            label: hasRecentFiles ? t('Recent') : t('No new recent files'),
             kind: vscode.QuickPickItemKind.Separator,
           });
 
@@ -937,7 +920,6 @@ export function registerQuickOpenCommand(
             loadMoreItem = searchResult.loadMoreItem;
           }
 
-
           const allFileItems = [
             ...pinnedItems,
             ...recentFavItems,
@@ -950,7 +932,7 @@ export function registerQuickOpenCommand(
           );
           await applyCollisionLabels(
             allFileItems,
-            (item) => item.resourceUri,
+            (item) => item.internalUri,
             (item) => {
               item.setShowDescription(true);
             },
@@ -989,7 +971,7 @@ export function registerQuickOpenCommand(
               const itemToRestore = items.find(
                 (i) =>
                   isFileItem(i) &&
-                  i.resourceUri.toString() === currentActiveUri,
+                  i.internalUri.toString() === currentActiveUri,
               );
               if (itemToRestore) {
                 quickPick.activeItems = [itemToRestore as FileQuickPickItem];
@@ -1008,7 +990,7 @@ export function registerQuickOpenCommand(
           } else if (currentActiveUri) {
             const itemToSelect = items.find(
               (i) =>
-                isFileItem(i) && i.resourceUri.toString() === currentActiveUri,
+                isFileItem(i) && i.internalUri.toString() === currentActiveUri,
             );
             if (itemToSelect) {
               quickPick.activeItems = [itemToSelect as FileQuickPickItem];
@@ -1217,7 +1199,6 @@ export function registerQuickOpenCommand(
             return;
           }
 
-
           if (!isFileItem(selected)) {
             log.debug(
               '[QuickOpen] Selected item is not a file item (separator or action)',
@@ -1225,20 +1206,17 @@ export function registerQuickOpenCommand(
             return;
           }
 
-          log.info(`[QuickOpen] Opening file: ${selected.resourceUri.fsPath}`);
+          log.info(`[QuickOpen] Opening file: ${selected.internalUri.fsPath}`);
 
           try {
-            await vscode.workspace.fs.stat(selected.resourceUri);
+            await vscode.workspace.fs.stat(selected.internalUri);
             log.debug('[QuickOpen] File exists, proceeding to open');
           } catch (error) {
             log.warn(
-              `[QuickOpen] ❌ File no longer exists: ${selected.resourceUri.fsPath}`,
+              `[QuickOpen] ❌ File no longer exists: ${selected.internalUri.fsPath}`,
             );
             vscode.window.showErrorMessage(
-              t(
-                'File does not exist: {0}',
-                selected.resourceUri.fsPath,
-              ),
+              t('File does not exist: {0}', selected.internalUri.fsPath),
             );
 
             log.info(
@@ -1254,7 +1232,7 @@ export function registerQuickOpenCommand(
           }
 
           try {
-            mruService.add(selected.resourceUri.fsPath);
+            mruService.add(selected.internalUri.fsPath);
             log.debug('[QuickOpen] File added to MRU');
           } catch (e) {
             log.warn('[QuickOpen] Failed to add MRU item', e);
@@ -1266,7 +1244,7 @@ export function registerQuickOpenCommand(
             .getConfiguration('anfavorites.quickOpen')
             .get<boolean>('openToSide', false);
 
-          await vscode.window.showTextDocument(selected.resourceUri, {
+          await vscode.window.showTextDocument(selected.internalUri, {
             preview: false,
             viewColumn: openToSide ? vscode.ViewColumn.Beside : undefined,
           });
@@ -1285,7 +1263,7 @@ export function registerQuickOpenCommand(
           }
 
           const button = e.button;
-          const uri = item.resourceUri;
+          const uri = item.internalUri;
 
           if (button.tooltip === t('Open to the Side')) {
             log.info(`[QuickOpen] Opening to side: ${uri.fsPath}`);
@@ -1329,10 +1307,7 @@ export function registerQuickOpenCommand(
             return;
           }
 
-          if (
-            button.tooltip === t('Pin') ||
-            button.tooltip === t('Unpin')
-          ) {
+          if (button.tooltip === t('Pin') || button.tooltip === t('Unpin')) {
             log.info(`[QuickOpen] Toggling pin for: ${uri.fsPath}`);
             favoritesProvider.togglePin(uri);
 

@@ -2,14 +2,16 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "0.9.1",
+  "version": "0.11.5",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "license": "MIT",
   "engines": {
     "vscode": "^1.86.0"
   },
-  "categories": ["Other"],
+  "categories": [
+    "Other"
+  ],
   "keywords": [
     "favorites",
     "bookmarks",
@@ -27,7 +29,7 @@
   },
   "homepage": "https://github.com/nicolasalarconrapela/an-favorites#readme",
   "activationEvents": [
-     "onStartupFinished"
+    "onStartupFinished"
   ],
   "main": "./dist/bootstrap/extension.js",
   "l10n": "./l10n",
@@ -120,13 +122,19 @@
         "title": "%command.removeFromGroup.title%",
         "category": "%command.category.anfavorites%",
         "icon": "$(close)"
+      },
+      {
+        "command": "anfavorites.configureKeybindings",
+        "title": "%command.configureKeybindings.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(keyboard)"
       }
     ],
     "keybindings": [
       {
         "command": "anfavorites.quickOpen",
-        "key": "alt+shift+f",
-        "mac": "alt+shift+f"
+        "key": "ctrl+alt+f",
+        "mac": "ctrl+alt+f"
       }
     ],
     "viewsContainers": {
@@ -247,6 +255,50 @@
         {
           "command": "anfavorites.removeFromFavorites",
           "when": "false"
+        },
+        {
+          "command": "anfavorites.addToFavoritesInGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.addGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.removeGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.renameGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.pinFavorite",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.unpinFavorite",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.moveFavorite",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.openToSide",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.clearGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.removeFromGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.configureKeybindings",
+          "when": "true"
         }
       ]
     },
@@ -357,7 +409,8 @@
         "properties": {
           "anfavorites.storage.shareAcrossIdes": {
             "type": "boolean",
-            "default": false,
+            "scope": "application",
+            "default": true,
             "description": "%config.storage.shareAcrossIdes.description%"
           }
         }
@@ -434,7 +487,7 @@
           },
           "anfavorites.quickOpen.pathDetailLocation": {
             "type": "string",
-            "default": "detail",
+            "default": "description",
             "enum": [
               "description",
               "detail"
@@ -489,7 +542,7 @@
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^8.52.0",
     "@typescript-eslint/parser": "^8.52.0",
-    "@vscode/l10n-dev": "^0.5.0",
+    "@vscode/l10n-dev": "^0.0.35",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.7.1",
     "esbuild": "^0.27.2",
