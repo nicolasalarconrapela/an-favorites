@@ -16,6 +16,7 @@
   "command.quickOpen.title": "Buscar Archivo (Favoritos)",
   "command.clearGroup.title": "Limpiar Grupo",
   "command.removeFromGroup.title": "Quitar del Grupo",
+  "command.configureKeybindings.title": "Configurar Atajos de Teclado",
   "viewsContainer.anfavorites.title": "AnFavorites",
   "view.favoritesView.name": "Favoritos",
   "config.general.title": "General",

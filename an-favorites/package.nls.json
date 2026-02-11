@@ -16,6 +16,7 @@
   "command.quickOpen.title": "Search File (Favorites)",
   "command.clearGroup.title": "Clear Group",
   "command.removeFromGroup.title": "Remove from Group",
+  "command.configureKeybindings.title": "Configure Keyboard Shortcuts",
   "viewsContainer.anfavorites.title": "AnFavorites",
   "view.favoritesView.name": "Favorites",
   "config.general.title": "General",

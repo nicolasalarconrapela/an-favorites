@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "publisher": "anappwilos",
   "enabledApiProposals": [
     "quickPickItemResource"
@@ -125,6 +125,12 @@
         "title": "%command.removeFromGroup.title%",
         "category": "%command.category.anfavorites%",
         "icon": "$(close)"
+      },
+      {
+        "command": "anfavorites.configureKeybindings",
+        "title": "%command.configureKeybindings.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(keyboard)"
       }
     ],
     "keybindings": [
@@ -296,6 +302,10 @@
         {
           "command": "workbench.view.extension.anfavorites-view-container",
           "when": "false"
+        },
+        {
+          "command": "anfavorites.configureKeybindings",
+          "when": "true"
         }
       ]
     },
