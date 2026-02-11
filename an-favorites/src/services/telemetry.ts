@@ -4,4 +4,3 @@ export class TelemetryService {
     void eventName;
   }
 }
-

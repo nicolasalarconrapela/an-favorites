@@ -4,21 +4,29 @@ import {
   GroupItem,
   FavoriteItem,
 } from '../views/FavoritesTreeDataProvider';
+import { t } from '../utils/l10n';
+
+type GroupQuickPickItem = vscode.QuickPickItem & { groupName: string };
+type MoveGroupQuickPickItem = vscode.QuickPickItem & {
+  groupName?: string;
+  isCreate?: boolean;
+};
 
 export function registerManageGroupsCommands(
   context: vscode.ExtensionContext,
   favoritesProvider: FavoritesTreeDataProvider,
   logger: any,
 ): void {
-  // Comando: Añadir nuevo grupo
   context.subscriptions.push(
     vscode.commands.registerCommand('anfavorites.addGroup', async () => {
       const groupInput = await vscode.window.showInputBox({
-        prompt: 'Nombre del nuevo grupo (puedes crear varios separados por comas)',
-        placeHolder: 'Ej: Proyectos, Documentación, G2',
+        prompt: t(
+          'New group name (you can create multiple separated by commas)',
+        ),
+        placeHolder: t('e.g. Projects, Documentation, G2'),
         validateInput: (value) => {
           if (!value || value.trim().length === 0) {
-            return 'El nombre no puede estar vacío';
+            return t('Name cannot be empty');
           }
           return null;
         },
@@ -34,7 +42,8 @@ export function registerManageGroupsCommands(
 
         let createdCount = 0;
         let existingCount = 0;
-        const lastCreatedGroupName = groupNames.length === 1 ? groupNames[0] : '';
+        const lastCreatedGroupName =
+          groupNames.length === 1 ? groupNames[0] : '';
 
         for (const name of groupNames) {
           logger.info(`Adding new group: ${name}`);
@@ -50,28 +59,44 @@ export function registerManageGroupsCommands(
 
         if (createdCount > 0) {
           if (groupNames.length === 1) {
-            vscode.window.showInformationMessage(`Grupo "${lastCreatedGroupName}" creado`);
+            vscode.window.showInformationMessage(
+              t('Group "{0}" created', lastCreatedGroupName),
+            );
           } else {
-            vscode.window.showInformationMessage(`Se han creado ${createdCount} grupos correctamente.`);
+            vscode.window.showInformationMessage(
+              t(
+                '{0} groups created successfully.',
+                createdCount,
+              ),
+            );
           }
         }
 
         if (existingCount > 0) {
           if (groupNames.length === 1) {
-            vscode.window.showErrorMessage('Este grupo ya existe');
+            vscode.window.showErrorMessage(
+              t('This group already exists'),
+            );
           } else {
-            vscode.window.showWarningMessage(`${existingCount} grupos ya existían y no fueron creados.`);
+            vscode.window.showWarningMessage(
+              t(
+                '{0} groups already existed and were not created.',
+                existingCount,
+              ),
+            );
           }
         }
       }
     }),
   );
 
-  // Comando: Eliminar grupo
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.removeGroup',
-      async (item?: GroupItem, selectedItems?: (GroupItem | FavoriteItem)[]) => {
+      async (
+        item?: GroupItem,
+        selectedItems?: (GroupItem | FavoriteItem)[],
+      ) => {
         let groupsToProcess: string[] = [];
 
         if (selectedItems && selectedItems.length > 0) {
@@ -83,27 +108,31 @@ export function registerManageGroupsCommands(
         }
 
         if (groupsToProcess.length === 0) {
-          // Show picker if no group provided
           const groups = favoritesProvider
             .getGroups()
             .filter((grp) => grp !== FavoritesTreeDataProvider.DEFAULT_GROUP);
           if (groups.length === 0) {
-            vscode.window.showInformationMessage('No hay grupos para eliminar');
+            vscode.window.showInformationMessage(
+              t('No groups to remove'),
+            );
             return;
           }
 
-          const selected = await vscode.window.showQuickPick(groups, {
-            placeHolder: 'Selecciona el grupo a eliminar',
+          const groupItems: GroupQuickPickItem[] = groups.map((group) => ({
+            label: FavoritesTreeDataProvider.getGroupDisplayName(group),
+            groupName: group,
+          }));
+
+          const selected = await vscode.window.showQuickPick(groupItems, {
+            placeHolder: t('Select the group to remove'),
           });
           if (selected) {
-            groupsToProcess = [selected];
+            groupsToProcess = [selected.groupName];
           } else {
             return;
           }
         }
 
-        // Filtrar grupo por defecto (no debería poder seleccionarse para borrar como grupo,
-        // pero por seguridad lo filtramos)
         groupsToProcess = groupsToProcess.filter(
           (g) => g !== FavoritesTreeDataProvider.DEFAULT_GROUP,
         );
@@ -111,30 +140,50 @@ export function registerManageGroupsCommands(
         if (groupsToProcess.length === 0) return;
 
         const count = groupsToProcess.length;
+        const deleteLabel = t('Remove');
+        const defaultGroupDisplayName =
+          FavoritesTreeDataProvider.getDefaultGroupLabel();
         const confirm = await vscode.window.showWarningMessage(
           count === 1
-            ? `¿Eliminar el grupo "${groupsToProcess[0]}"? Los favoritos se moverán a "${FavoritesTreeDataProvider.DEFAULT_GROUP}"`
-            : `¿Eliminar los ${count} grupos seleccionados? Los favoritos se moverán a "${FavoritesTreeDataProvider.DEFAULT_GROUP}"`,
+            ? t(
+                'Remove group "{0}"? Favorites will be moved to "{1}"',
+                FavoritesTreeDataProvider.getGroupDisplayName(
+                  groupsToProcess[0],
+                ),
+                defaultGroupDisplayName,
+              )
+            : t(
+                'Remove {0} selected groups? Favorites will be moved to "{1}"',
+                count,
+                defaultGroupDisplayName,
+              ),
           { modal: true },
-          'Eliminar',
+          deleteLabel,
         );
 
-        if (confirm === 'Eliminar') {
+        if (confirm === deleteLabel) {
           for (const g of groupsToProcess) {
             logger.info(`Removing group: ${g}`);
             favoritesProvider.removeGroup(g);
           }
           vscode.window.showInformationMessage(
             count === 1
-              ? `Grupo "${groupsToProcess[0]}" eliminado`
-              : `${count} grupos eliminados`,
+              ? t(
+                  'Group "{0}" removed',
+                  FavoritesTreeDataProvider.getGroupDisplayName(
+                    groupsToProcess[0],
+                  ),
+                )
+              : t(
+                  '{0} groups removed',
+                  count,
+                ),
           );
         }
       },
     ),
   );
 
-  // Comando: Renombrar grupo
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.renameGroup',
@@ -144,20 +193,25 @@ export function registerManageGroupsCommands(
         if (item && item instanceof GroupItem) {
           oldName = item.groupName;
         } else {
-          // Show picker if no group provided
           const groups = favoritesProvider
             .getGroups()
             .filter((grp) => grp !== FavoritesTreeDataProvider.DEFAULT_GROUP);
           if (groups.length === 0) {
             vscode.window.showInformationMessage(
-              'No hay grupos para renombrar',
+              t('No groups to rename'),
             );
             return;
           }
 
-          oldName = await vscode.window.showQuickPick(groups, {
-            placeHolder: 'Selecciona el grupo a renombrar',
+          const groupItems: GroupQuickPickItem[] = groups.map((group) => ({
+            label: FavoritesTreeDataProvider.getGroupDisplayName(group),
+            groupName: group,
+          }));
+
+          const selected = await vscode.window.showQuickPick(groupItems, {
+            placeHolder: t('Select the group to rename'),
           });
+          oldName = selected?.groupName;
         }
 
         if (!oldName) {
@@ -166,25 +220,25 @@ export function registerManageGroupsCommands(
 
         if (oldName === FavoritesTreeDataProvider.DEFAULT_GROUP) {
           vscode.window.showWarningMessage(
-            'No se puede renombrar el grupo por defecto',
+            t('The default group cannot be renamed'),
           );
           return;
         }
 
         const newName = await vscode.window.showInputBox({
-          prompt: `Nuevo nombre para "${oldName}"`,
+          prompt: t('New name for "{0}"', oldName),
           value: oldName,
           valueSelection: [0, oldName.length],
-          title: `Renombrar Grupo: ${oldName}`,
+          title: t('Rename Group: {0}', oldName),
           validateInput: (value) => {
             if (!value || value.trim().length === 0) {
-              return 'El nombre no puede estar vacío';
+              return t('Name cannot be empty');
             }
             if (value.trim() === oldName) {
-              return 'El nombre debe ser diferente';
+              return t('Name must be different');
             }
             if (favoritesProvider.getGroups().includes(value.trim())) {
-              return 'Este grupo ya existe';
+              return t('This group already exists');
             }
             return null;
           },
@@ -201,11 +255,13 @@ export function registerManageGroupsCommands(
           );
           if (success) {
             vscode.window.showInformationMessage(
-              `Grupo renombrado a "${newName}"`,
+              t('Group renamed to "{0}"', newName),
             );
             logger.info(`Group renamed successfully`);
           } else {
-            vscode.window.showErrorMessage('No se pudo renombrar el grupo');
+            vscode.window.showErrorMessage(
+              t('Could not rename group'),
+            );
             logger.error(
               `Failed to rename group from "${oldName}" to "${trimmedNewName}"`,
             );
@@ -215,7 +271,6 @@ export function registerManageGroupsCommands(
     ),
   );
 
-  // Comando: Mover favorito a otro grupo
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.moveFavorite',
@@ -225,33 +280,42 @@ export function registerManageGroupsCommands(
         );
 
         if (itemsToProcess.length === 0) {
-          vscode.window.showWarningMessage('Selecciona un favorito para mover');
+          vscode.window.showWarningMessage(
+            t('Select a favorite to move'),
+          );
           return;
         }
 
         const groups = favoritesProvider.getGroups();
-        // Si hay varios, no mostramos el grupo actual "específico" en el filtrado si son de grupos distintos,
-        // pero para simplificar, permitimos moverlos todos a cualquier grupo que no sea el del primero?
-        // Mejor: mostrar todos los grupos y ya está.
-        const items: vscode.QuickPickItem[] = groups.map((grp) => ({
-          label: grp,
+
+        const items: MoveGroupQuickPickItem[] = groups.map((grp) => ({
+          label: FavoritesTreeDataProvider.getGroupDisplayName(grp),
+          groupName: grp,
           description:
             grp === FavoritesTreeDataProvider.DEFAULT_GROUP
-              ? 'Grupo por defecto'
+              ? t('Default group')
               : undefined,
         }));
 
-        // Añadir opción para crear nuevo grupo
         items.push({
-          label: '$(add) Nuevo Grupo...',
-          description: 'Crear un nuevo grupo',
+          label: `$(add) ${t('New Group...')}`,
+          description: t('Create a new group'),
+          isCreate: true,
         });
 
         const selected = await vscode.window.showQuickPick(items, {
           placeHolder:
             itemsToProcess.length === 1
-              ? `Mover de "${itemsToProcess[0].group}" a...`
-              : `Mover ${itemsToProcess.length} elementos a...`,
+              ? t(
+                  'Move from "{0}" to...',
+                  FavoritesTreeDataProvider.getGroupDisplayName(
+                    itemsToProcess[0].group,
+                  ),
+                )
+              : t(
+                  'Move {0} items to...',
+                  itemsToProcess.length,
+                ),
         });
 
         if (!selected) {
@@ -260,16 +324,18 @@ export function registerManageGroupsCommands(
 
         let targetGroup: string;
 
-        if (selected.label.startsWith('$(add)')) {
+        if (selected.isCreate) {
           const newGroupName = await vscode.window.showInputBox({
-            prompt: 'Nombre del nuevo grupo',
-            placeHolder: 'Ej: Proyectos, Documentación, etc.',
+            prompt: t('New group name'),
+            placeHolder: t(
+              'e.g. Projects, Documentation, etc.',
+            ),
             validateInput: (value) => {
               if (!value || value.trim().length === 0) {
-                return 'El nombre no puede estar vacío';
+                return t('Name cannot be empty');
               }
               if (groups.includes(value.trim())) {
-                return 'Este grupo ya existe';
+                return t('This group already exists');
               }
               return null;
             },
@@ -282,8 +348,11 @@ export function registerManageGroupsCommands(
           targetGroup = newGroupName.trim();
           favoritesProvider.addGroup(targetGroup);
         } else {
-          targetGroup = selected.label;
+          targetGroup = selected.groupName ?? FavoritesTreeDataProvider.DEFAULT_GROUP;
         }
+
+        const targetGroupDisplayName =
+          FavoritesTreeDataProvider.getGroupDisplayName(targetGroup);
 
         for (const f of itemsToProcess) {
           logger.info(
@@ -294,15 +363,21 @@ export function registerManageGroupsCommands(
 
         vscode.window.showInformationMessage(
           itemsToProcess.length === 1
-            ? `Favorito movido a "${targetGroup}"`
-            : `${itemsToProcess.length} favoritos movidos a "${targetGroup}"`,
+            ? t(
+                'Favorite moved to "{0}"',
+                targetGroupDisplayName,
+              )
+            : t(
+                '{0} favorites moved to "{1}"',
+                itemsToProcess.length,
+                targetGroupDisplayName,
+              ),
         );
         logger.info(`Favorite(s) moved successfully`);
       },
     ),
   );
 
-  // Comando: Limpiar grupo (mover items a default)
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.clearGroup',
@@ -311,24 +386,33 @@ export function registerManageGroupsCommands(
           return;
         }
 
+        const clearGroupLabel = t('Clear Group');
+        const defaultGroupDisplayName =
+          FavoritesTreeDataProvider.getDefaultGroupLabel();
         const confirm = await vscode.window.showWarningMessage(
-          `¿Mover todos los favoritos de "${item.groupName}" a "Sin Grupo"?`,
+          t(
+            'Move all favorites from "{0}" to "{1}"?',
+            FavoritesTreeDataProvider.getGroupDisplayName(item.groupName),
+            defaultGroupDisplayName,
+          ),
           { modal: true },
-          'Limpiar Grupo',
+          clearGroupLabel,
         );
 
-        if (confirm === 'Limpiar Grupo') {
+        if (confirm === clearGroupLabel) {
           logger.info(`Clearing group: ${item.groupName}`);
           favoritesProvider.clearGroupItems(item.groupName);
           vscode.window.showInformationMessage(
-            `Grupo "${item.groupName}" vaciado`,
+            t(
+              'Group "{0}" cleared',
+              FavoritesTreeDataProvider.getGroupDisplayName(item.groupName),
+            ),
           );
         }
       },
     ),
   );
 
-  // Comando: Quitar del grupo (mover a default)
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.removeFromGroup',
@@ -350,29 +434,35 @@ export function registerManageGroupsCommands(
 
         if (itemsToProcess.length > 1) {
           vscode.window.showInformationMessage(
-            `${itemsToProcess.length} elementos movidos a "Sin Grupo"`,
+            t(
+              '{0} items moved to "{1}"',
+              itemsToProcess.length,
+              FavoritesTreeDataProvider.getDefaultGroupLabel(),
+            ),
           );
         }
       },
     ),
   );
 
-  // Comando: Eliminar TODOS los favoritos
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.removeAllFavorites',
       async () => {
+        const deleteAllLabel = t('Remove All');
         const confirm = await vscode.window.showWarningMessage(
-          '¿Estás seguro de que quieres eliminar TODOS los favoritos?',
+          t(
+            'Are you sure you want to remove ALL favorites?',
+          ),
           { modal: true },
-          'Eliminar Todo',
+          deleteAllLabel,
         );
 
-        if (confirm === 'Eliminar Todo') {
+        if (confirm === deleteAllLabel) {
           logger.info('Removing ALL favorites');
           favoritesProvider.removeAllFavorites();
           vscode.window.showInformationMessage(
-            'Todos los favoritos eliminados',
+            t('All favorites removed'),
           );
         }
       },

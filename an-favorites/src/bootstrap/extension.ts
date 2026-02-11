@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { createAppLogger } from '../logging/loggingModule';
+import { LogLevel } from '../logging/logger';
 
 import { registerAddToFavoritesCommand } from '../commands/addToFavoritesCommand';
 import { registerAddToFavoritesInGroupCommand } from '../commands/addToFavoritesInGroupCommand';
@@ -9,46 +10,60 @@ import { registerManageGroupsCommands } from '../commands/manageGroupsCommand';
 import { registerPinCommands } from '../commands/pinCommands';
 import { registerOpenToSideCommand } from '../commands/openToSideCommand';
 import { registerQuickOpenCommand } from '../commands/quickOpenCommand';
+import { registerKeyboardShortcutCommand } from '../commands/keyboardShortcutCommand';
 import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
 import { SharedStorageService } from '../services/sharedStorageService';
+import { disposeCollisionIndex } from '../utils/collisionUtils';
+import { initializeL10n, t } from '../utils/l10n';
 
 export function activate(context: vscode.ExtensionContext): void {
+  initializeL10n(context);
+  const loggingConfig = vscode.workspace.getConfiguration(
+    'anfavorites.logging',
+  );
+  const configuredLevel = loggingConfig.get<LogLevel>('level', 'info');
+  const logLevel: LogLevel =
+    configuredLevel &&
+    ['debug', 'info', 'warn', 'error'].includes(configuredLevel)
+      ? configuredLevel
+      : 'info';
+  const maxRotatedFiles = loggingConfig.get<number>('maxRotatedFiles', 5);
+
   const logger = createAppLogger(context, {
-    channelName: 'AnFavorites Logs',
-    level: 'debug',
+    channelName: t('AnFavorites Logs'),
+    level: logLevel,
     maxFileSizeBytes: 5 * 1024 * 1024,
+    maxRotatedFiles,
   });
 
   logger.info('━━━ Extension activation started ━━━');
   logger.show(true);
 
-  const sharedStorage = new SharedStorageService(logger);
+  const sharedStorage = new SharedStorageService(context, logger);
   const telemetry = new TelemetryService();
   const mruService = new MRUService(context, logger);
 
   logger.info('Registering favorites tree provider...');
 
-  // Registrar el árbol de favoritos
   const favoritesProvider = new FavoritesTreeDataProvider(
     context,
     logger,
     sharedStorage,
   );
+  context.subscriptions.push(favoritesProvider);
 
-  // ✅ Usamos createTreeView en lugar de registerTreeDataProvider para habilitar Drag & Drop
   const treeView = vscode.window.createTreeView('anfavorites.favoritesView', {
     treeDataProvider: favoritesProvider,
-    dragAndDropController: favoritesProvider, // Habilitar controlador D&D
-    canSelectMany: true, // Permitir selección múltiple para D&D masivo
+    dragAndDropController: favoritesProvider,
+    canSelectMany: true,
   });
 
   context.subscriptions.push(treeView);
 
   logger.info('Registering favorites commands...');
 
-  // Registrar comandos de favoritos con logger
   registerAddToFavoritesCommand(context, favoritesProvider, logger);
   registerAddToFavoritesInGroupCommand(context, favoritesProvider, logger);
   registerRemoveFromFavoritesCommand(context, favoritesProvider, logger);
@@ -56,6 +71,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerManageGroupsCommands(context, favoritesProvider, logger);
   registerPinCommands(context, favoritesProvider, logger);
   registerOpenToSideCommand(context, logger);
+  registerKeyboardShortcutCommand(context, logger);
   logger.info('[activate] registering quickOpen...');
   registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
   logger.info('[activate] quickOpen registered.');
@@ -74,31 +90,120 @@ export function activate(context: vscode.ExtensionContext): void {
   telemetry.track('activated');
   logger.info('━━━ Extension activation completed successfully ━━━');
 
-  // Watch for file deletions to automatically clean up favorites and recent files
-  const fileWatcher = vscode.workspace.createFileSystemWatcher('**/*');
+  const watchedPaths = new Map<string, vscode.FileSystemWatcher>();
+  const pendingValidations = new Set<string>();
+  let validationTimer: NodeJS.Timeout | undefined;
+  let watcherSyncTimer: NodeJS.Timeout | undefined;
 
-  fileWatcher.onDidDelete(async (uri) => {
-    logger.debug(`File deleted: ${uri.fsPath}`);
+  const flushValidations = async (): Promise<void> => {
+    const paths = Array.from(pendingValidations);
+    pendingValidations.clear();
+    validationTimer = undefined;
+
+    if (paths.length === 0) {
+      return;
+    }
+
+    logger.throttle?.(
+      'debug',
+      'watcher:file-deleted',
+      `Files deleted (batch): ${paths.length}`,
+      undefined,
+      2000,
+    ) ?? logger.debug(`Files deleted (batch): ${paths.length}`);
 
     await Promise.all([
-      favoritesProvider.validateFavorites(),
-      mruService.validateFiles(),
+      favoritesProvider.validateFavoritesForPaths(paths),
+      mruService.validateFilesForPaths(paths),
     ]);
+  };
 
-    logger.debug(`Validated lists after file deletion: ${uri.fsPath}`);
-  });
+  const scheduleValidation = (fsPath: string): void => {
+    pendingValidations.add(fsPath);
+    if (validationTimer) {
+      clearTimeout(validationTimer);
+    }
+    validationTimer = setTimeout(() => {
+      void flushValidations();
+    }, 300);
+  };
 
-  context.subscriptions.push(fileWatcher);
+  const createWatcherForPath = (
+    fsPath: string,
+  ): vscode.FileSystemWatcher | null => {
+    const baseName = path.basename(fsPath);
+    if (!baseName) {
+      return null;
+    }
 
-  // Watch for file renames/moves to update paths in favorites and recent files
+    const pattern = new vscode.RelativePattern(path.dirname(fsPath), baseName);
+    const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+    watcher.onDidDelete((uri) => scheduleValidation(uri.fsPath));
+    return watcher;
+  };
+
+  const syncFileWatchers = (): void => {
+    const favoritePaths = favoritesProvider.getFavoritePaths();
+    const recentPaths = mruService.getRecentFiles();
+    const targetPaths = new Set([...favoritePaths, ...recentPaths]);
+
+    for (const [fsPath, watcher] of watchedPaths) {
+      if (!targetPaths.has(fsPath)) {
+        watcher.dispose();
+        watchedPaths.delete(fsPath);
+      }
+    }
+
+    for (const fsPath of targetPaths) {
+      if (watchedPaths.has(fsPath)) {
+        continue;
+      }
+
+      const watcher = createWatcherForPath(fsPath);
+      if (!watcher) {
+        continue;
+      }
+      watchedPaths.set(fsPath, watcher);
+      context.subscriptions.push(watcher);
+    }
+  };
+
+  const scheduleWatcherSync = (): void => {
+    if (watcherSyncTimer) {
+      clearTimeout(watcherSyncTimer);
+    }
+    watcherSyncTimer = setTimeout(() => {
+      watcherSyncTimer = undefined;
+      syncFileWatchers();
+    }, 200);
+  };
+
+  scheduleWatcherSync();
+
+  context.subscriptions.push(
+    favoritesProvider.onDidChangeTreeData(() => {
+      scheduleWatcherSync();
+    }),
+  );
+  context.subscriptions.push(
+    mruService.onDidChangeRecentFiles(() => {
+      scheduleWatcherSync();
+    }),
+  );
+
   const renameListener = vscode.workspace.onDidRenameFiles(async (event) => {
-    logger.debug(`Files renamed/moved: ${event.files.length} files`);
+    logger.throttle?.(
+      'debug',
+      'watcher:file-renamed',
+      `Files renamed/moved: ${event.files.length} files`,
+      undefined,
+      2000,
+    ) ?? logger.debug(`Files renamed/moved: ${event.files.length} files`);
 
     for (const file of event.files) {
       const oldPath = file.oldUri.fsPath;
       const newPath = file.newUri.fsPath;
 
-      // Check if the filename actually changed (not just moved)
       const oldName = path.basename(oldPath);
       const newName = path.basename(newPath);
       const nameChanged = oldName !== newName;
@@ -107,13 +212,9 @@ export function activate(context: vscode.ExtensionContext): void {
         `Updating path: ${oldPath} -> ${newPath} (name changed: ${nameChanged})`,
       );
 
-      // Always update the paths in storage
       favoritesProvider.updatePath(oldPath, newPath);
       mruService.updatePath(oldPath, newPath);
 
-      // If the name changed, we need to recalculate collision detection
-      // The updatePath methods already fire refresh events, but this ensures
-      // that the collision detection logic runs again for all affected items
       if (nameChanged) {
         logger.debug(
           `Filename changed: "${oldName}" -> "${newName}", collision detection will be recalculated`,
@@ -123,7 +224,21 @@ export function activate(context: vscode.ExtensionContext): void {
   });
 
   context.subscriptions.push(renameListener);
+  context.subscriptions.push({
+    dispose: () => {
+      if (validationTimer) {
+        clearTimeout(validationTimer);
+      }
+      if (watcherSyncTimer) {
+        clearTimeout(watcherSyncTimer);
+      }
+      watchedPaths.forEach((watcher) => watcher.dispose());
+      watchedPaths.clear();
+    },
+  });
   context.subscriptions.push({ dispose: () => sharedStorage.dispose() });
+  context.subscriptions.push({ dispose: () => mruService.dispose() });
+  context.subscriptions.push({ dispose: () => disposeCollisionIndex() });
   context.subscriptions.push({ dispose: () => logger.dispose?.() });
 }
 

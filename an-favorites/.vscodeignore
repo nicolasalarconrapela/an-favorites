@@ -3,7 +3,6 @@
 **/*.test.ts
 node_modules
 out
-dist
 .vscode
 .gitignore
 .eslintrc.cjs

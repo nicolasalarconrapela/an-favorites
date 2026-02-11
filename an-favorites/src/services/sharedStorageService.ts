@@ -1,131 +1,337 @@
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+import crypto from 'crypto';
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
 import { Logger } from '../logging/logger';
 
 /**
- * Servicio que gestiona un almacenamiento persistente compartido entre instancias (VS Code / AnGravity).
- * Utiliza un archivo JSON en el directorio home del usuario (~/.an-favorites/storage.json).
+ * Servicio de almacenamiento persistente Cross-IDE.
+ *
+ * Permite guardar favoritos en una ubicación global del SO (AppData, etc.),
+ * garantizando que distintos IDEs (VS Code, Cursor) vean los mismos datos para el mismo proyecto.
  */
 export class SharedStorageService {
-  private static readonly DIR_NAME = '.an-favorites';
-  private static readonly FILE_NAME = 'storage.json';
+  private static readonly SHARED_SETTING_KEY =
+    'anfavorites.storage.shareAcrossIdes';
 
-  private storagePath: string;
-  private data: Record<string, any> = {};
-  private watcher: fs.FSWatcher | null = null;
-
-  // Emisor de eventos para notificar cambios externos
   private _onDidChange = new vscode.EventEmitter<string | undefined>();
   public readonly onDidChange = this._onDidChange.event;
 
-  constructor(private logger: Logger) {
-    const homeDir = os.homedir();
-    const storageDir = path.join(homeDir, SharedStorageService.DIR_NAME);
-    this.storagePath = path.join(storageDir, SharedStorageService.FILE_NAME);
+  private sharedFilePath: string | null = null;
+  private useSharedFile = false;
 
-    this.logger.info(`[SharedStorage] Inicializando en: ${this.storagePath}`);
+  private fileWatcher: vscode.FileSystemWatcher | null = null;
+  private nodeFileWatcher: fs.FSWatcher | null = null;
 
-    this.ensureStorageExists(storageDir);
-    this.load();
-    this.watchFile();
-  }
+  private lastWriteTime = 0;
+  private debounceTimer: NodeJS.Timeout | null = null;
 
-  private ensureStorageExists(dir: string): void {
-    try {
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
+  // Listener de configuración para reaccionar a cambios en User Settings
+  private configListener: vscode.Disposable | null = null;
+
+  constructor(
+    private context: vscode.ExtensionContext,
+    private logger: Logger,
+  ) {
+    // Inicialización
+    this.applyConfig(false);
+
+    // Reaccionar a cambios en el setting 'anfavorites.storage.shareAcrossIdes'
+    this.configListener = vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration(SharedStorageService.SHARED_SETTING_KEY)) {
+        this.logger.info(
+          '[SharedStorage] Configuración cambiada. Reevaluando.',
+        );
+        this.applyConfig(true);
       }
-      if (!fs.existsSync(this.storagePath)) {
-        fs.writeFileSync(this.storagePath, JSON.stringify({}, null, 2), 'utf8');
-      }
-    } catch (error) {
-      this.logger.error(
-        '[SharedStorage] Error asegurando existencia del archivo',
-        error,
-      );
-    }
+    });
+
+    // Reaccionar a cambios de carpetas del workspace
+    this.context.subscriptions.push(
+      vscode.workspace.onDidChangeWorkspaceFolders(() => {
+        this.logger.info(
+          '[SharedStorage] Workspace folders cambiaron. Reevaluando.',
+        );
+        this.applyConfig(true);
+      }),
+    );
   }
 
-  private load(): void {
-    try {
-      if (fs.existsSync(this.storagePath)) {
-        const content = fs.readFileSync(this.storagePath, 'utf8');
-        this.data = JSON.parse(content);
-      } else {
-        this.data = {};
-      }
-      this.logger.debug(
-        `[SharedStorage] Datos cargados. Keys: ${Object.keys(this.data).length}`,
-      );
-    } catch (error) {
-      this.logger.error('[SharedStorage] Error cargando datos', error);
-      this.data = {};
-    }
-  }
-
-  private watchFile(): void {
-    try {
-      let fsWait: NodeJS.Timeout | null = null;
-      this.watcher = fs.watch(this.storagePath, (eventType) => {
-        if (eventType === 'change') {
-          // Debounce simple para evitar lecturas múltiples rápidas
-          if (fsWait) return;
-          fsWait = setTimeout(() => {
-            fsWait = null;
-            this.logger.info(
-              '[SharedStorage] Cambio detectado en disco, recargando...',
-            );
-            this.load();
-            // Notificar que TODO ha cambiado (undefined key implica refresh general)
-            this._onDidChange.fire(undefined);
-          }, 100);
-        }
-      });
-    } catch (error) {
-      this.logger.warn(
-        '[SharedStorage] No se pudo establecer watcher (puede ser normal en algunos FS)',
-        error,
-      );
-    }
-  }
-
-  /**
-   * Obtiene un valor del almacenamiento compartido.
-   * @param key Clave a recuperar
-   * @param defaultValue Valor por defecto si no existe
-   */
   public get<T>(key: string, defaultValue?: T): T | undefined {
-    return this.data[key] !== undefined ? this.data[key] : defaultValue;
-  }
-
-  /**
-   * Guarda un valor en el almacenamiento compartido y lo persiste a disco.
-   * @param key Clave a guardar
-   * @param value Valor a guardar
-   */
-  public update(key: string, value: any): void {
-    this.data[key] = value;
-    this.save();
-    // No disparamos onDidChange aquí porque el cambio es local y síncrono,
-    // quien llama a update ya sabe que actualizó.
-  }
-
-  private save(): void {
-    try {
-      // Escritura atómica (no garantizada 100% sin librerías extra, pero suficiente aquí)
-      const content = JSON.stringify(this.data, null, 2);
-      fs.writeFileSync(this.storagePath, content, 'utf8');
-    } catch (error) {
-      this.logger.error('[SharedStorage] Error guardando datos', error);
+    if (this.useSharedFile && this.sharedFilePath) {
+      const data = this.readSharedData();
+      const value = data[key] as T | undefined;
+      if (value === undefined && defaultValue !== undefined) {
+        return defaultValue;
+      }
+      return value ?? defaultValue;
     }
+
+    if (defaultValue !== undefined) {
+      return this.context.workspaceState.get<T>(key, defaultValue as T);
+    }
+    return this.context.workspaceState.get<T>(key);
+  }
+
+  public update(key: string, value: any): void {
+    if (this.useSharedFile && this.sharedFilePath) {
+      try {
+        const data = this.readSharedData();
+        data[key] = value;
+        this.writeSharedData(data);
+        this._onDidChange.fire(key);
+      } catch (error) {
+        this.logger.error(
+          `[SharedStorage] Error al actualizar almacenamiento: ${key}`,
+          error,
+        );
+      }
+      return;
+    }
+
+    this.context.workspaceState.update(key, value).then(() => {
+      this._onDidChange.fire(key);
+    });
   }
 
   public dispose(): void {
-    if (this.watcher) {
-      this.watcher.close();
-      this.watcher = null;
+    this._onDidChange.dispose();
+    this.stopWatchers();
+    this.configListener?.dispose();
+    this.configListener = null;
+
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+    }
+  }
+
+  private stopWatchers(): void {
+    this.fileWatcher?.dispose();
+    this.fileWatcher = null;
+    this.nodeFileWatcher?.close();
+    this.nodeFileWatcher = null;
+  }
+
+  private applyConfig(forceReload: boolean): void {
+    this.stopWatchers();
+
+    const config = vscode.workspace.getConfiguration('anfavorites.storage');
+    const inspect = config.inspect<boolean>('shareAcrossIdes');
+
+    // Mover configuración del Workspace a Global si existe para no ensuciar .vscode
+    if (
+      inspect?.workspaceValue !== undefined ||
+      inspect?.workspaceFolderValue !== undefined
+    ) {
+      const val = inspect.workspaceValue ?? inspect.workspaceFolderValue;
+      config.update('shareAcrossIdes', val, vscode.ConfigurationTarget.Global);
+      config.update(
+        'shareAcrossIdes',
+        undefined,
+        vscode.ConfigurationTarget.Workspace,
+      );
+      config.update(
+        'shareAcrossIdes',
+        undefined,
+        vscode.ConfigurationTarget.WorkspaceFolder,
+      );
+      this.logger.info(
+        '[SharedStorage] Configuración movida a Global (User Settings) para mantener limpio el .vscode',
+      );
+    }
+
+    const shouldShare = config.get<boolean>('shareAcrossIdes', true);
+
+    this.sharedFilePath = this.resolveWorkspaceStoragePath();
+
+    if (shouldShare && this.sharedFilePath) {
+      this.ensureStorageFile();
+      this.startFileWatcher();
+      this.useSharedFile = true;
+      this.logger.info('[SharedStorage] Modo Cross-IDE ACTIVADO.', {
+        path: this.sharedFilePath,
+      });
+    } else {
+      this.useSharedFile = false;
+      this.logger.info(
+        '[SharedStorage] Modo Cross-IDE DESACTIVADO. Usando workspaceState.',
+      );
+    }
+
+    if (forceReload) {
+      this._onDidChange.fire(undefined);
+    }
+  }
+
+  private resolveWorkspaceStoragePath(): string | null {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    let workspaceIdString: string;
+
+    if (vscode.workspace.workspaceFile) {
+      workspaceIdString = vscode.workspace.workspaceFile.fsPath;
+    } else if (workspaceFolders && workspaceFolders.length > 0) {
+      workspaceIdString = workspaceFolders[0].uri.fsPath;
+    } else {
+      return null;
+    }
+
+    const normalizedPath =
+      process.platform === 'win32'
+        ? workspaceIdString.toLowerCase()
+        : workspaceIdString;
+
+    const hash = crypto.createHash('md5').update(normalizedPath).digest('hex');
+
+    const homedir = os.homedir();
+    const platform = process.platform;
+    let basePath: string;
+
+    if (platform === 'win32') {
+      basePath =
+        process.env.APPDATA || path.join(homedir, 'AppData', 'Roaming');
+    } else if (platform === 'darwin') {
+      basePath = path.join(homedir, 'Library', 'Application Support');
+    } else {
+      basePath = path.join(homedir, '.config');
+    }
+
+    return path.join(
+      basePath,
+      'AnAppWiLos',
+      'AnFavorites',
+      'workspaces',
+      `workspace_${hash}.json`,
+    );
+  }
+
+  private ensureStorageFile(): void {
+    if (!this.sharedFilePath) {
+      return;
+    }
+
+    const dir = path.dirname(this.sharedFilePath);
+    if (!fs.existsSync(dir)) {
+      try {
+        fs.mkdirSync(dir, { recursive: true });
+      } catch (error) {
+        this.logger.error(
+          `[SharedStorage] No se pudo crear directorio: ${dir}`,
+          error,
+        );
+      }
+    }
+
+    if (!fs.existsSync(this.sharedFilePath)) {
+      try {
+        fs.writeFileSync(this.sharedFilePath, JSON.stringify({}, null, 2));
+      } catch (error) {
+        this.logger.error(
+          `[SharedStorage] No se pudo iniciar archivo: ${this.sharedFilePath}`,
+          error,
+        );
+      }
+    }
+  }
+
+  private startFileWatcher(): void {
+    if (!this.sharedFilePath) {
+      return;
+    }
+
+    try {
+      const dir = path.dirname(this.sharedFilePath);
+      const fileName = path.basename(this.sharedFilePath);
+      const pattern = new vscode.RelativePattern(
+        vscode.Uri.file(dir),
+        fileName,
+      );
+      this.fileWatcher = vscode.workspace.createFileSystemWatcher(pattern);
+
+      const fireChange = () => this.handleExternalChange('VS Code Watcher');
+
+      this.fileWatcher.onDidChange(fireChange);
+      this.fileWatcher.onDidCreate(fireChange);
+      this.fileWatcher.onDidDelete(fireChange);
+    } catch (error) {
+      // Ignorar
+    }
+
+    try {
+      if (fs.existsSync(this.sharedFilePath)) {
+        this.nodeFileWatcher = fs.watch(this.sharedFilePath, (eventType) => {
+          if (eventType === 'change' || eventType === 'rename') {
+            this.handleExternalChange('Node fs.watch');
+          }
+        });
+      }
+    } catch (error) {
+      // Ignorar
+    }
+  }
+
+  private handleExternalChange(source: string): void {
+    const now = Date.now();
+    if (now - this.lastWriteTime < 250) {
+      return;
+    }
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+    }
+    this.debounceTimer = setTimeout(() => {
+      this.logger.info(
+        `[SharedStorage] Cambio externo detectado (${source}). Recargando.`,
+      );
+      this._onDidChange.fire(undefined);
+      this.debounceTimer = null;
+    }, 100);
+  }
+
+  private readSharedData(): Record<string, unknown> {
+    if (!this.sharedFilePath) return {};
+    try {
+      if (!fs.existsSync(this.sharedFilePath)) return {};
+      const raw = fs.readFileSync(this.sharedFilePath, 'utf8');
+      if (!raw.trim()) return {};
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object')
+        return parsed as Record<string, unknown>;
+    } catch (error) {
+      this.logger.warn('[SharedStorage] Error lectura', { error });
+    }
+    return {};
+  }
+
+  private writeSharedData(data: Record<string, unknown>): void {
+    if (!this.sharedFilePath) return;
+
+    const dir = path.dirname(this.sharedFilePath);
+    if (!fs.existsSync(dir)) {
+      try {
+        fs.mkdirSync(dir, { recursive: true });
+      } catch {}
+    }
+
+    const tempPath = path.join(
+      dir,
+      `.tmp_${path.basename(this.sharedFilePath)}_${Date.now()}`,
+    );
+
+    try {
+      const serialized = JSON.stringify(data, null, 2);
+      fs.writeFileSync(tempPath, serialized, 'utf8');
+      try {
+        fs.renameSync(tempPath, this.sharedFilePath);
+      } catch {
+        fs.copyFileSync(tempPath, this.sharedFilePath);
+        fs.unlinkSync(tempPath);
+      }
+      this.lastWriteTime = Date.now();
+    } catch (error) {
+      this.logger.error('[SharedStorage] Error escritura', error);
+      try {
+        if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+      } catch {}
     }
   }
 }

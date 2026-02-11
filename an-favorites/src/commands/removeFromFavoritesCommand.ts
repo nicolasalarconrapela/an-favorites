@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { FavoriteItem } from '../views/FavoritesTreeDataProvider';
+import { t } from '../utils/l10n';
 
 export function registerRemoveFromFavoritesCommand(
   context: vscode.ExtensionContext,
   favoritesProvider: FavoritesTreeDataProvider,
-  logger: any
+  logger: any,
 ): void {
   const disposable = vscode.commands.registerCommand(
     'anfavorites.removeFromFavorites',
@@ -13,19 +14,25 @@ export function registerRemoveFromFavoritesCommand(
       const itemsToProcess = selectedItems || (item ? [item] : []);
 
       if (itemsToProcess.length === 0) {
-        vscode.window.showWarningMessage('No se seleccionó ningún elemento');
+        vscode.window.showWarningMessage(
+          t('No item selected'),
+        );
         logger.warn('removeFromFavorites called without items');
         return;
       }
 
       const count = itemsToProcess.length;
       if (count > 1) {
+        const deleteAllLabel = t('Remove All');
         const confirm = await vscode.window.showWarningMessage(
-          `¿Eliminar ${count} elementos de favoritos?`,
+          t(
+            'Remove {0} favorites?',
+            count,
+          ),
           { modal: true },
-          'Eliminar Todo'
+          deleteAllLabel,
         );
-        if (confirm !== 'Eliminar Todo') return;
+        if (confirm !== deleteAllLabel) return;
       }
 
       for (const current of itemsToProcess) {
@@ -36,11 +43,21 @@ export function registerRemoveFromFavoritesCommand(
       }
 
       if (count === 1) {
-        vscode.window.showInformationMessage(`Eliminado de favoritos: ${itemsToProcess[0].resourceUri.fsPath}`);
+        vscode.window.showInformationMessage(
+          t(
+            'Removed from favorites: {0}',
+            itemsToProcess[0].resourceUri.fsPath,
+          ),
+        );
       } else {
-        vscode.window.showInformationMessage(`${count} elementos eliminados de favoritos.`);
+        vscode.window.showInformationMessage(
+          t(
+            '{0} favorites removed.',
+            count,
+          ),
+        );
       }
-    }
+    },
   );
 
   context.subscriptions.push(disposable);
