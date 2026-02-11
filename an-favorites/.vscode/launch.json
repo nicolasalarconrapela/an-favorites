@@ -9,6 +9,8 @@
       "args": [
         "--profile-temp",
         "--disable-extensions",
+        "--enable-proposed-api",
+        "anappwilos.an-favorites",
         "--extensionDevelopmentPath=${workspaceFolder}",
         "${workspaceFolder}/.vscode-test/Empty"
       ],
@@ -26,6 +28,8 @@
       "args": [
         "--profile-temp",
         "--disable-extensions",
+        "--enable-proposed-api",
+        "anappwilos.an-favorites",
         "--extensionDevelopmentPath=${workspaceFolder}",
         "${workspaceFolder}/.vscode-test/Empty"
       ],
@@ -49,6 +53,8 @@
       "runtimeExecutable": "${execPath}",
       "args": [
         "--disable-extensions",
+        "--enable-proposed-api",
+        "anappwilos.an-favorites",
         "--extensionDevelopmentPath=${workspaceFolder}",
         "${workspaceFolder}/.vscode-test/Empty"
       ],
@@ -65,6 +71,8 @@
       "runtimeExecutable": "${execPath}",
       "args": [
         "--disable-extensions",
+        "--enable-proposed-api",
+        "anappwilos.an-favorites",
         "--extensionDevelopmentPath=${workspaceFolder}",
         "${workspaceFolder}/.vscode-test/Empty"
       ],
