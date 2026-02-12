@@ -148,6 +148,8 @@ export class FavoritesTreeDataProvider
     FavoritesTreeDataProvider.DEFAULT_GROUP,
   ]);
 
+  private _isSaving = false;
+
   public static readonly DEFAULT_GROUP = DEFAULT_GROUP_ID;
 
   public static getDefaultGroupLabel(): string {
@@ -166,12 +168,17 @@ export class FavoritesTreeDataProvider
     this.loadFavorites();
     this.disposables.push(
       this.storage.onDidChange(() => {
+        if (this._isSaving) {
+          this.logger.debug(
+            '[storage] Ignoring self-triggered change during save',
+          );
+          return;
+        }
         this.logger.info('[storage] External change detected -> reloading');
         this.reloadFavorites();
         this.refresh();
       }),
     );
-
 
     this.disposables.push(
       vscode.workspace.onDidChangeWorkspaceFolders(() => {
@@ -179,7 +186,6 @@ export class FavoritesTreeDataProvider
         this.refresh();
       }),
     );
-
 
     this.disposables.push(
       vscode.workspace.onDidChangeConfiguration((e) => {
@@ -566,15 +572,18 @@ export class FavoritesTreeDataProvider
     }
 
     const groupMap = this.getGroupMap();
-    if (!groupMap.has(oldName) || groupMap.has(newName)) {
+    if (!groupMap.has(oldName)) {
       this.logger.warn(
-        `[groups] renameGroup FAILED -> "${oldName}" to "${newName}"`,
-        {
-          oldExists: groupMap.has(oldName),
-          newExists: groupMap.has(newName),
-        },
+        `[groups] renameGroup FAILED (source not found) -> "${oldName}"`,
       );
       return false;
+    }
+
+    const isMerge = groupMap.has(newName);
+    if (isMerge) {
+      this.logger.info(
+        `[groups] renameGroup MERGING -> "${oldName}" into "${newName}"`,
+      );
     }
 
     this.logger.info(`[groups] renameGroup -> "${oldName}" => "${newName}"`);
@@ -738,9 +747,7 @@ export class FavoritesTreeDataProvider
         return;
       } catch (err) {
         this.logger.error('[dnd] Error parsing internal drag data', err);
-        vscode.window.showErrorMessage(
-          t('Error moving favorites internally.'),
-        );
+        vscode.window.showErrorMessage(t('Error moving favorites internally.'));
       }
     }
 
@@ -790,11 +797,7 @@ export class FavoritesTreeDataProvider
           const targetGroupDisplayName =
             FavoritesTreeDataProvider.getGroupDisplayName(targetGroupName);
           vscode.window.showInformationMessage(
-            t(
-              'Added {0} files to "{1}".',
-              addedCount,
-              targetGroupDisplayName,
-            ),
+            t('Added {0} files to "{1}".', addedCount, targetGroupDisplayName),
           );
         }
 
@@ -810,9 +813,7 @@ export class FavoritesTreeDataProvider
         return;
       } catch (err) {
         this.logger.error('[dnd] Error processing external URIs', err);
-        vscode.window.showErrorMessage(
-          t('Error processing external files.'),
-        );
+        vscode.window.showErrorMessage(t('Error processing external files.'));
       }
     }
   }
@@ -820,6 +821,8 @@ export class FavoritesTreeDataProvider
   reloadFavorites(): void {
     this.logger.info('[storage] reloadFavorites()');
     this.favorites.clear();
+    this.groups.clear();
+    this.groups.add(FavoritesTreeDataProvider.DEFAULT_GROUP);
     this.loadFavorites();
   }
 
@@ -957,8 +960,13 @@ export class FavoritesTreeDataProvider
     this.logger.info(
       `[storage] saveFavorites (shared) -> count=${favoritesArray.length} groups=${this.groups.size}`,
     );
-    this.storage.update('anfavorites.favorites.v2', favoritesArray);
-    this.storage.update('anfavorites.groups', Array.from(this.groups));
+    this._isSaving = true;
+    try {
+      this.storage.update('anfavorites.favorites.v2', favoritesArray);
+      this.storage.update('anfavorites.groups', Array.from(this.groups));
+    } finally {
+      this._isSaving = false;
+    }
   }
 
   public async validateFavorites(): Promise<void> {
