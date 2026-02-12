@@ -64,19 +64,14 @@ export function registerManageGroupsCommands(
             );
           } else {
             vscode.window.showInformationMessage(
-              t(
-                '{0} groups created successfully.',
-                createdCount,
-              ),
+              t('{0} groups created successfully.', createdCount),
             );
           }
         }
 
         if (existingCount > 0) {
           if (groupNames.length === 1) {
-            vscode.window.showErrorMessage(
-              t('This group already exists'),
-            );
+            vscode.window.showErrorMessage(t('This group already exists'));
           } else {
             vscode.window.showWarningMessage(
               t(
@@ -112,9 +107,7 @@ export function registerManageGroupsCommands(
             .getGroups()
             .filter((grp) => grp !== FavoritesTreeDataProvider.DEFAULT_GROUP);
           if (groups.length === 0) {
-            vscode.window.showInformationMessage(
-              t('No groups to remove'),
-            );
+            vscode.window.showInformationMessage(t('No groups to remove'));
             return;
           }
 
@@ -174,10 +167,7 @@ export function registerManageGroupsCommands(
                     groupsToProcess[0],
                   ),
                 )
-              : t(
-                  '{0} groups removed',
-                  count,
-                ),
+              : t('{0} groups removed', count),
           );
         }
       },
@@ -197,9 +187,7 @@ export function registerManageGroupsCommands(
             .getGroups()
             .filter((grp) => grp !== FavoritesTreeDataProvider.DEFAULT_GROUP);
           if (groups.length === 0) {
-            vscode.window.showInformationMessage(
-              t('No groups to rename'),
-            );
+            vscode.window.showInformationMessage(t('No groups to rename'));
             return;
           }
 
@@ -237,9 +225,7 @@ export function registerManageGroupsCommands(
             if (value.trim() === oldName) {
               return t('Name must be different');
             }
-            if (favoritesProvider.getGroups().includes(value.trim())) {
-              return t('This group already exists');
-            }
+            // Allow merging: do not check if group exists
             return null;
           },
         });
@@ -259,9 +245,7 @@ export function registerManageGroupsCommands(
             );
             logger.info(`Group renamed successfully`);
           } else {
-            vscode.window.showErrorMessage(
-              t('Could not rename group'),
-            );
+            vscode.window.showErrorMessage(t('Could not rename group'));
             logger.error(
               `Failed to rename group from "${oldName}" to "${trimmedNewName}"`,
             );
@@ -280,9 +264,7 @@ export function registerManageGroupsCommands(
         );
 
         if (itemsToProcess.length === 0) {
-          vscode.window.showWarningMessage(
-            t('Select a favorite to move'),
-          );
+          vscode.window.showWarningMessage(t('Select a favorite to move'));
           return;
         }
 
@@ -312,10 +294,7 @@ export function registerManageGroupsCommands(
                     itemsToProcess[0].group,
                   ),
                 )
-              : t(
-                  'Move {0} items to...',
-                  itemsToProcess.length,
-                ),
+              : t('Move {0} items to...', itemsToProcess.length),
         });
 
         if (!selected) {
@@ -327,9 +306,7 @@ export function registerManageGroupsCommands(
         if (selected.isCreate) {
           const newGroupName = await vscode.window.showInputBox({
             prompt: t('New group name'),
-            placeHolder: t(
-              'e.g. Projects, Documentation, etc.',
-            ),
+            placeHolder: t('e.g. Projects, Documentation, etc.'),
             validateInput: (value) => {
               if (!value || value.trim().length === 0) {
                 return t('Name cannot be empty');
@@ -348,7 +325,8 @@ export function registerManageGroupsCommands(
           targetGroup = newGroupName.trim();
           favoritesProvider.addGroup(targetGroup);
         } else {
-          targetGroup = selected.groupName ?? FavoritesTreeDataProvider.DEFAULT_GROUP;
+          targetGroup =
+            selected.groupName ?? FavoritesTreeDataProvider.DEFAULT_GROUP;
         }
 
         const targetGroupDisplayName =
@@ -363,10 +341,7 @@ export function registerManageGroupsCommands(
 
         vscode.window.showInformationMessage(
           itemsToProcess.length === 1
-            ? t(
-                'Favorite moved to "{0}"',
-                targetGroupDisplayName,
-              )
+            ? t('Favorite moved to "{0}"', targetGroupDisplayName)
             : t(
                 '{0} favorites moved to "{1}"',
                 itemsToProcess.length,
@@ -451,9 +426,7 @@ export function registerManageGroupsCommands(
       async () => {
         const deleteAllLabel = t('Remove All');
         const confirm = await vscode.window.showWarningMessage(
-          t(
-            'Are you sure you want to remove ALL favorites?',
-          ),
+          t('Are you sure you want to remove ALL favorites?'),
           { modal: true },
           deleteAllLabel,
         );
@@ -461,9 +434,7 @@ export function registerManageGroupsCommands(
         if (confirm === deleteAllLabel) {
           logger.info('Removing ALL favorites');
           favoritesProvider.removeAllFavorites();
-          vscode.window.showInformationMessage(
-            t('All favorites removed'),
-          );
+          vscode.window.showInformationMessage(t('All favorites removed'));
         }
       },
     ),

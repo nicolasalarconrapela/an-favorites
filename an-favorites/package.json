@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "0.11.5",
+  "version": "0.11.6",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "license": "MIT",
@@ -14,6 +14,7 @@
   ],
   "keywords": [
     "favorites",
+    "bookmark",
     "bookmarks",
     "quick open",
     "productivity",
