@@ -2,29 +2,33 @@
 
 ¡Reordena tus favoritos y grupos fácilmente con soporte completo de arrastrar y soltar!
 
-## Qué Puedes Hacer
+## Elemento Individual
 
-AnFavorites soporta arrastrar y soltar completo en la vista de árbol:
+Arrastra cualquier favorito a una nueva posición o a un grupo diferente:
+
+<video src="../../media/drag&drop_unique.mp4" autoplay loop muted></video>
+
+## Múltiples Elementos
+
+Mantén **Ctrl** (o **Cmd** en Mac) para seleccionar varios favoritos, luego arrástralos todos a la vez:
+
+<video src="../../media/drag&drop_multi.mp4" autoplay loop muted></video>
+
+> ⚠️ **Nota:** Las carpetas no se pueden añadir directamente como favoritos — solo se admiten archivos individuales.
+
+## Reordenar Internamente
+
+Reordena favoritos dentro del mismo grupo arrastrándolos arriba o abajo:
+
+<video src="../../media/drag&drop_intern.mp4" autoplay loop muted></video>
+
+## Qué Puedes Hacer
 
 - **Reordenar favoritos** dentro del mismo grupo arrastrándolos arriba o abajo
 - **Mover favoritos entre grupos** arrastrándolos a un grupo diferente
 - **Reordenar grupos** arrastrándolos a una nueva posición
-
-## Cómo Usarlo
-
-1. Ve al panel **AnFavorites** en la barra lateral
-2. **Haz clic y mantén** presionado sobre un favorito o grupo
-3. **Arrastra** hasta la posición deseada
-4. **Suelta** para dejarlo en su lugar
-
-## Selección Múltiple
-
-Mantén **Ctrl** (o **Cmd** en Mac) para seleccionar varios favoritos, luego arrástralos todos a la vez a un nuevo grupo o posición.
-
-## Combinar con Pines
-
-Los favoritos fijados siempre se mantienen arriba de su sección. Combina arrastrar y soltar con los pines para crear la organización perfecta para tu flujo de trabajo.
+- **Selección múltiple** con Ctrl/Cmd para mover varios favoritos a la vez
 
 ## Consejo 💡
 
-¡Usa arrastrar y soltar para reorganizar rápidamente cuando la estructura de tu proyecto cambie — sin necesidad de eliminar y volver a añadir favoritos!
+¡Combina arrastrar y soltar con los pines para crear la organización perfecta para tu flujo de trabajo!
