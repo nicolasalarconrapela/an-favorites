@@ -1,3 +1,5 @@
+![Logo_&_Banner](./resources/banner_logo.png)
+
 # AnFavorites
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -5,38 +7,26 @@
 [![Installs](https://vsmarketplacebadge.apphb.com/installs/nicolasalarconrapela.an-favorites.svg)](https://marketplace.visualstudio.com/items?itemName=nicolasalarconrapela.an-favorites)
 [![Open Source](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/nicolasalarconrapela/an-favorites)
 
-<!-- 
-SUGGESTED IMAGE: Hero Banner
-Description: A high-quality, wide banner image showing the AnFavorites logo and a subtle background representing code or organization.
-Dimensions: 1280x640px
--->
+AnFavorites es una extensión profesional, 100% de código abierto, para Visual Studio Code que optimiza tu flujo de trabajo ofreciéndote acceso instantáneo a lo más importante.
 
-**AnFavorites** is a professional, 100% open-source extension for Visual Studio Code designed to streamline your development workflow by efficiently managing your favorite files, commands, and resources. Built with performance and usability in mind, it integrates seamlessly into your coding environment.
+Con un único atajo de teclado (por defecto, configurable), QuickPick te permite abrir tus archivos favoritos en cuestión de segundos. Podrás gestionar de forma rápida e intuitiva tus elementos fijados más recientes e incluso utilizarlo como buscador ágil dentro de tu entorno de desarrollo.
 
-## 🚀 Features
+<video src="./resources/demo01.mp4" controls="false" autoplay="true" loop="true" muted="true" width="100%"></video>
+
+Si trabajas con varios IDEs, tus favoritos se sincronizan automáticamente entre ellos, para que nunca pierdas el hilo de lo realmente importante en tu flujo diario.
 
 <!-- 
 SUGGESTED IMAGE: Feature Highlight GIF
 Description: A smooth GIF demonstrating the core functionality: adding a file to favorites and quickly accessing it via the webview or command palette.
 -->
 
+## 🚀 Features
+
 - **Smart Favorites Management**: Organize your most-used files and commands effortlessly.
 - **Integrated Webview**: A clean, modern interface to manage your resources.
 - **Quick Access**: Execute commands and open files with minimal keystrokes.
 - **Multi-language Support**: Fully localized for English and Spanish speakers.
 - **Professional Logging**: specialized logging system for debugging and monitoring.
-
-## 📸 Screenshots
-
-<!-- 
-SUGGESTED IMAGE: Dashboard Screenshot
-Description: A screenshot of the main "AnFavorites" webview dashboard, showing organized lists of favorites with a clean, modern UI theme.
--->
-
-<!-- 
-SUGGESTED IMAGE: Quick Open Command
-Description: A screenshot showing the Quick Open execution (e.g., accessing a favorite via command palette), highlighting speed and efficiency.
--->
 
 ## 🛠️ Installation
 
@@ -73,18 +63,6 @@ npm run watch
 ```
 
 Press `F5` in VS Code to open a new window with your extension loaded.
-
-## 📂 Project Structure
-
-The codebase follows a clean, modular architecture:
-
-- `src/bootstrap`: Application initialization and setup.
-- `src/commands`: Implementation of VS Code commands.
-- `src/services`: Core business logic and data management.
-- `src/adapters`: Integration layer for VS Code APIs.
-- `src/config`: Configuration management.
-- `src/logging`: Robust logging system.
-- `src/types`: TypeScript type definitions.
 
 ## 📄 License
 
