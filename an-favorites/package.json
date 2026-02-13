@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "license": "MIT",
@@ -529,7 +529,7 @@
           {
             "id": "anfavorites.walkthrough.keyboard",
             "title": "Configure Your Shortcut",
-            "description": "Set up the keyboard shortcut to open Quick Open — your central hub for favorites.\n[Configure Keyboard Shortcuts](command:anfavorites.configureKeybindings)\n[Read More](command:markdown.showPreview?%5B%22${workspaceFolder}/resources/walkthrough/01-keyboard-shortcut.md%22%5D)",
+            "description": "Set up the keyboard shortcut to open Quick Open — your central hub for favorites.\n[Configure Keyboard Shortcuts](command:anfavorites.configureKeybindings)",
             "media": {
               "markdown": "resources/walkthrough/01-keyboard-shortcut.md"
             },
@@ -540,7 +540,7 @@
           {
             "id": "anfavorites.walkthrough.firstFavorite",
             "title": "Add Your First Favorite",
-            "description": "Right-click in the editor, explorer, or use Quick Open to add files to your favorites.\n[Open Quick Open](command:anfavorites.quickOpen)\n[Read More](command:markdown.showPreview?%5B%22${workspaceFolder}/resources/walkthrough/02-first-favorite.md%22%5D)",
+            "description": "Right-click in the editor, explorer, or use Quick Open to add files to your favorites.\n[Open Quick Open](command:anfavorites.quickOpen)",
             "media": {
               "markdown": "resources/walkthrough/02-first-favorite.md"
             },
@@ -551,7 +551,7 @@
           {
             "id": "anfavorites.walkthrough.groups",
             "title": "Groups & Organization",
-            "description": "Organize favorites into groups with drag & drop support and multi-workspace features.\n[Create New Group](command:anfavorites.addGroup)\n[Read More](command:markdown.showPreview?%5B%22${workspaceFolder}/resources/walkthrough/03-groups.md%22%5D)",
+            "description": "Organize favorites into groups with drag & drop support and multi-workspace features.\n[Create New Group](command:anfavorites.addGroup)",
             "media": {
               "markdown": "resources/walkthrough/03-groups.md"
             },
@@ -562,7 +562,7 @@
           {
             "id": "anfavorites.walkthrough.syncIdes",
             "title": "Sync Across IDEs",
-            "description": "Your favorites sync automatically between VS Code, Cursor, Windsurf and any IDE sharing the same workspace.\n[Open Storage Settings](command:workbench.action.openSettings?%5B%22anfavorites.storage%22%5D)\n[Read More](command:markdown.showPreview?%5B%22${workspaceFolder}/resources/walkthrough/04-sync-ides.md%22%5D)",
+            "description": "Your favorites sync automatically between VS Code, Cursor, Windsurf and any IDE sharing the same workspace.\n[Open Storage Settings](command:workbench.action.openSettings?%5B%22anfavorites.storage%22%5D)",
             "media": {
               "markdown": "resources/walkthrough/04-sync-ides.md"
             }
@@ -570,7 +570,7 @@
           {
             "id": "anfavorites.walkthrough.dragDrop",
             "title": "Drag & Drop",
-            "description": "Reorder favorites and groups effortlessly by dragging them in the tree view.\n[Read More](command:markdown.showPreview?%5B%22${workspaceFolder}/resources/walkthrough/05-drag-and-drop.md%22%5D)",
+            "description": "Reorder favorites and groups effortlessly by dragging them in the tree view.",
             "media": {
               "markdown": "resources/walkthrough/05-drag-and-drop.md"
             }
@@ -578,7 +578,7 @@
           {
             "id": "anfavorites.walkthrough.settings",
             "title": "Explore Settings",
-            "description": "Customize AnFavorites to match your workflow — search, limits, language, and more.\n[Open AnFavorites Settings](command:workbench.action.openSettings?%5B%22anfavorites%22%5D)\n[Read More](command:markdown.showPreview?%5B%22${workspaceFolder}/resources/walkthrough/06-settings.md%22%5D)",
+            "description": "Customize AnFavorites to match your workflow — search, limits, language, and more.\n[Open AnFavorites Settings](command:workbench.action.openSettings?%5B%22anfavorites%22%5D)",
             "media": {
               "markdown": "resources/walkthrough/06-settings.md"
             },
@@ -597,7 +597,7 @@
           {
             "id": "anfavorites.walkthrough.es.keyboard",
             "title": "Configura Tu Atajo",
-            "description": "Configura el atajo de teclado para abrir Quick Open — tu centro de control para favoritos.\n[Configurar Atajos de Teclado](command:anfavorites.configureKeybindings)\n[Leer Más](command:markdown.showPreview?%5B%22${workspaceFolder}/resources/walkthrough/es/01-keyboard-shortcut.md%22%5D)",
+            "description": "Configura el atajo de teclado para abrir Quick Open — tu centro de control para favoritos.\n[Configurar Atajos de Teclado](command:anfavorites.configureKeybindings)",
             "media": {
               "markdown": "resources/walkthrough/es/01-keyboard-shortcut.md"
             },
@@ -608,7 +608,7 @@
           {
             "id": "anfavorites.walkthrough.es.firstFavorite",
             "title": "Añade Tu Primer Favorito",
-            "description": "Haz clic derecho en el editor, explorador, o usa Quick Open para añadir archivos a tus favoritos.\n[Abrir Quick Open](command:anfavorites.quickOpen)\n[Leer Más](command:markdown.showPreview?%5B%22${workspaceFolder}/resources/walkthrough/es/02-first-favorite.md%22%5D)",
+            "description": "Haz clic derecho en el editor, explorador, o usa Quick Open para añadir archivos a tus favoritos.\n[Abrir Quick Open](command:anfavorites.quickOpen)",
             "media": {
               "markdown": "resources/walkthrough/es/02-first-favorite.md"
             },
@@ -619,7 +619,7 @@
           {
             "id": "anfavorites.walkthrough.es.groups",
             "title": "Grupos y Organización",
-            "description": "Organiza favoritos en grupos con arrastrar y soltar y funciones multi-workspace.\n[Crear Nuevo Grupo](command:anfavorites.addGroup)\n[Leer Más](command:markdown.showPreview?%5B%22${workspaceFolder}/resources/walkthrough/es/03-groups.md%22%5D)",
+            "description": "Organiza favoritos en grupos con arrastrar y soltar y funciones multi-workspace.\n[Crear Nuevo Grupo](command:anfavorites.addGroup)",
             "media": {
               "markdown": "resources/walkthrough/es/03-groups.md"
             },
@@ -630,7 +630,7 @@
           {
             "id": "anfavorites.walkthrough.es.syncIdes",
             "title": "Sincronización entre IDEs",
-            "description": "Tus favoritos se sincronizan automáticamente entre VS Code, Cursor, Windsurf y cualquier IDE que comparta el mismo workspace.\n[Abrir Configuración de Almacenamiento](command:workbench.action.openSettings?%5B%22anfavorites.storage%22%5D)\n[Leer Más](command:markdown.showPreview?%5B%22${workspaceFolder}/resources/walkthrough/es/04-sync-ides.md%22%5D)",
+            "description": "Tus favoritos se sincronizan automáticamente entre VS Code, Cursor, Windsurf y cualquier IDE que comparta el mismo workspace.\n[Abrir Configuración de Almacenamiento](command:workbench.action.openSettings?%5B%22anfavorites.storage%22%5D)",
             "media": {
               "markdown": "resources/walkthrough/es/04-sync-ides.md"
             }
@@ -638,7 +638,7 @@
           {
             "id": "anfavorites.walkthrough.es.dragDrop",
             "title": "Arrastra y Suelta",
-            "description": "Reordena favoritos y grupos fácilmente arrastrándolos en la vista de árbol.\n[Leer Más](command:markdown.showPreview?%5B%22${workspaceFolder}/resources/walkthrough/es/05-drag-and-drop.md%22%5D)",
+            "description": "Reordena favoritos y grupos fácilmente arrastrándolos en la vista de árbol.",
             "media": {
               "markdown": "resources/walkthrough/es/05-drag-and-drop.md"
             }
@@ -646,7 +646,7 @@
           {
             "id": "anfavorites.walkthrough.es.settings",
             "title": "Explora la Configuración",
-            "description": "Personaliza AnFavorites para adaptarlo a tu flujo de trabajo — búsqueda, límites, idioma y más.\n[Abrir Configuración de AnFavorites](command:workbench.action.openSettings?%5B%22anfavorites%22%5D)\n[Leer Más](command:markdown.showPreview?%5B%22${workspaceFolder}/resources/walkthrough/es/06-settings.md%22%5D)",
+            "description": "Personaliza AnFavorites para adaptarlo a tu flujo de trabajo — búsqueda, límites, idioma y más.\n[Abrir Configuración de AnFavorites](command:workbench.action.openSettings?%5B%22anfavorites%22%5D)",
             "media": {
               "markdown": "resources/walkthrough/es/06-settings.md"
             },
