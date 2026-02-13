@@ -76,6 +76,17 @@ export function activate(context: vscode.ExtensionContext): void {
   registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
   logger.info('[activate] quickOpen registered.');
 
+  // Register Get Started command
+  context.subscriptions.push(
+    vscode.commands.registerCommand('anfavorites.getStarted', () => {
+      vscode.commands.executeCommand(
+        'workbench.action.openWalkthrough',
+        'anappwilos.an-favorites#anfavorites.getStarted',
+        false,
+      );
+    }),
+  );
+
   telemetry.track('activated');
   logger.info('━━━ Extension activation completed successfully ━━━');
 
