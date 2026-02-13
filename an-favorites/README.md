@@ -7,6 +7,8 @@
 [![Installs](https://vsmarketplacebadge.apphb.com/installs/nicolasalarconrapela.an-favorites.svg)](https://marketplace.visualstudio.com/items?itemName=nicolasalarconrapela.an-favorites)
 [![Open Source](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/nicolasalarconrapela/an-favorites)
 
+![alt text](./resources/init.png)
+
 AnFavorites es una extensión profesional, 100% de código abierto, para Visual Studio Code que optimiza tu flujo de trabajo ofreciéndote acceso instantáneo a lo más importante.
 
 Con un único atajo de teclado (por defecto, configurable), QuickPick te permite abrir tus archivos favoritos en cuestión de segundos. Podrás gestionar de forma rápida e intuitiva tus elementos fijados más recientes e incluso utilizarlo como buscador ágil dentro de tu entorno de desarrollo.
