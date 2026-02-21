@@ -1247,10 +1247,23 @@ export function registerQuickOpenCommand(
             .getConfiguration('anfavorites.quickOpen')
             .get<boolean>('openToSide', false);
 
-          await vscode.window.showTextDocument(selected.internalUri, {
-            preview: false,
-            viewColumn: openToSide ? vscode.ViewColumn.Beside : undefined,
-          });
+          // Reuse existing tab if the file is already open
+          const existingEditor = vscode.window.visibleTextEditors.find(
+            (editor) =>
+              editor.document.uri.toString() ===
+              selected.internalUri.toString(),
+          );
+          if (existingEditor) {
+            await vscode.window.showTextDocument(existingEditor.document, {
+              preview: false,
+              viewColumn: existingEditor.viewColumn,
+            });
+          } else {
+            await vscode.window.showTextDocument(selected.internalUri, {
+              preview: false,
+              viewColumn: openToSide ? vscode.ViewColumn.Beside : undefined,
+            });
+          }
           log.info('[QuickOpen] ✓ File opened successfully, hiding QuickPick');
           quickPick.hide();
         }),
@@ -1273,10 +1286,21 @@ export function registerQuickOpenCommand(
             try {
               mruService.add(uri.fsPath);
 
-              await vscode.window.showTextDocument(uri, {
-                viewColumn: vscode.ViewColumn.Beside,
-                preview: false,
-              });
+              // Reuse existing tab if the file is already open
+              const existingEditor = vscode.window.visibleTextEditors.find(
+                (editor) => editor.document.uri.toString() === uri.toString(),
+              );
+              if (existingEditor) {
+                await vscode.window.showTextDocument(existingEditor.document, {
+                  preview: false,
+                  viewColumn: existingEditor.viewColumn,
+                });
+              } else {
+                await vscode.window.showTextDocument(uri, {
+                  viewColumn: vscode.ViewColumn.Beside,
+                  preview: false,
+                });
+              }
 
               quickPick.hide();
             } catch (err) {

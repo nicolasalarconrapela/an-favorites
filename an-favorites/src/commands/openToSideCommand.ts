@@ -19,10 +19,22 @@ export function registerOpenToSideCommand(
           `[openToSide] Opening file to side: ${item.resourceUri.fsPath}`,
         );
 
-        await vscode.window.showTextDocument(item.resourceUri, {
-          viewColumn: vscode.ViewColumn.Beside,
-          preview: false,
-        });
+        // Reuse existing tab if the file is already open
+        const existingEditor = vscode.window.visibleTextEditors.find(
+          (editor) =>
+            editor.document.uri.toString() === item.resourceUri.toString(),
+        );
+        if (existingEditor) {
+          await vscode.window.showTextDocument(existingEditor.document, {
+            preview: false,
+            viewColumn: existingEditor.viewColumn,
+          });
+        } else {
+          await vscode.window.showTextDocument(item.resourceUri, {
+            viewColumn: vscode.ViewColumn.Beside,
+            preview: false,
+          });
+        }
       } catch (error) {
         logger.error('[openToSide] Error opening file to side', error);
         vscode.window.showErrorMessage(
