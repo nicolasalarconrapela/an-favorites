@@ -828,7 +828,10 @@ export function registerQuickOpenCommand(
             if (!exists) {
               mruService.remove(uri.fsPath);
             }
-            return exists;
+            if (!exists) return false;
+            // Exclude items already shown in Pinned or Favorites sections
+            const norm = normalizeFsPath(uri.fsPath);
+            return !pinnedNormSet.has(norm) && !recentFavNormSet.has(norm);
           });
 
           const pinnedItems = buildPinnedItems(
