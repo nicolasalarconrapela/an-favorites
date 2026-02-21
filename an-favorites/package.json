@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "0.13.2",
+  "version": "0.13.3",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "license": "MIT",
@@ -514,8 +514,15 @@
           },
           "anfavorites.quickOpen.openToSide": {
             "type": "boolean",
+            "scope": "application",
             "default": true,
             "description": "%config.quickOpen.openToSide.description%"
+          },
+          "anfavorites.quickOpen.openInNewWindow": {
+            "type": "boolean",
+            "scope": "application",
+            "default": false,
+            "description": "%config.quickOpen.openInNewWindow.description%"
           }
         }
       }

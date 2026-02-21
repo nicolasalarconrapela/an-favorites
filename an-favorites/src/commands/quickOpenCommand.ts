@@ -153,6 +153,7 @@ function buildPinnedItems(
       isPinned: true,
       isRecentlyOpened: false,
       openToSide: config.openToSide,
+      openInNewWindow: config.openInNewWindow,
       isIndividualPinned: isIndividual,
       showIcons: config.showIcons,
       pathDetailLocation: config.pathDetailLocation,
@@ -175,6 +176,7 @@ function buildRecentFavoriteItems(
       isIndividualPinned: isPinned,
       isRecentlyOpened: false,
       openToSide: config.openToSide,
+      openInNewWindow: config.openInNewWindow,
       showIcons: config.showIcons,
       pathDetailLocation: config.pathDetailLocation,
       showPathWhen: config.showPathWhen,
@@ -197,6 +199,7 @@ function buildRecentItems(
       isIndividualPinned: isPinned,
       isRecentlyOpened: true,
       openToSide: config.openToSide,
+      openInNewWindow: config.openInNewWindow,
       showIcons: config.showIcons,
       pathDetailLocation: config.pathDetailLocation,
       showPathWhen: config.showPathWhen,
@@ -284,6 +287,7 @@ async function buildSearchItems(params: {
         isPinned: false,
         isRecentlyOpened: false,
         openToSide: config.openToSide,
+        openInNewWindow: config.openInNewWindow,
         showIcons: config.showIcons,
         pathDetailLocation: config.pathDetailLocation,
         showPathWhen: config.showPathWhen,
@@ -415,6 +419,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   private _detailPathText?: string;
 
   private _openToSide: boolean;
+  private _openInNewWindow: boolean;
   public showIcons: boolean;
   private pathDetailLocation: 'description' | 'detail';
   private showPathWhen: 'always' | 'onConflict';
@@ -425,6 +430,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     isPinned?: boolean;
     isRecentlyOpened?: boolean;
     openToSide?: boolean;
+    openInNewWindow?: boolean;
     isIndividualPinned?: boolean;
     showIcons?: boolean;
     pathDetailLocation?: 'description' | 'detail';
@@ -436,6 +442,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
       isPinned = false,
       isRecentlyOpened = false,
       openToSide = false,
+      openInNewWindow = false,
       isIndividualPinned = false,
       showIcons = true,
       pathDetailLocation = 'detail',
@@ -447,6 +454,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     this.isPinned = isPinned;
     this.isRecentlyOpened = isRecentlyOpened;
     this._openToSide = openToSide;
+    this._openInNewWindow = openInNewWindow;
     this.isIndividualPinned = isIndividualPinned;
     this.showIcons = showIcons;
     this.pathDetailLocation = pathDetailLocation;
@@ -550,6 +558,13 @@ class FileQuickPickItem implements vscode.QuickPickItem {
       buttons.push({
         iconPath: createButtonIcon('split-horizontal', 'symbol-file'),
         tooltip: t('Open to the Side'),
+      });
+    }
+
+    if (!this._openInNewWindow) {
+      buttons.push({
+        iconPath: createButtonIcon('link-external', 'symbol-file'),
+        tooltip: t('Open in New Window'),
       });
     }
 
@@ -1246,23 +1261,51 @@ export function registerQuickOpenCommand(
           const openToSide = vscode.workspace
             .getConfiguration('anfavorites.quickOpen')
             .get<boolean>('openToSide', false);
+          const openInNewWindow = vscode.workspace
+            .getConfiguration('anfavorites.quickOpen')
+            .get<boolean>('openInNewWindow', false);
 
-          // Reuse existing tab if the file is already open
-          const existingEditor = vscode.window.visibleTextEditors.find(
-            (editor) =>
-              editor.document.uri.toString() ===
-              selected.internalUri.toString(),
-          );
-          if (existingEditor) {
-            await vscode.window.showTextDocument(existingEditor.document, {
-              preview: false,
-              viewColumn: existingEditor.viewColumn,
-            });
+          if (openInNewWindow) {
+            log.info(
+              `[QuickOpen] Opening in new window: ${selected.internalUri.fsPath}`,
+            );
+            // Reuse existing tab if the file is already open
+            const existingEditor = vscode.window.visibleTextEditors.find(
+              (editor) =>
+                editor.document.uri.toString() ===
+                selected.internalUri.toString(),
+            );
+            if (existingEditor) {
+              await vscode.window.showTextDocument(existingEditor.document, {
+                preview: false,
+                viewColumn: existingEditor.viewColumn,
+              });
+            } else {
+              await vscode.window.showTextDocument(selected.internalUri, {
+                preview: false,
+              });
+              await vscode.commands.executeCommand(
+                'workbench.action.moveEditorToNewWindow',
+              );
+            }
           } else {
-            await vscode.window.showTextDocument(selected.internalUri, {
-              preview: false,
-              viewColumn: openToSide ? vscode.ViewColumn.Beside : undefined,
-            });
+            // Reuse existing tab if the file is already open
+            const existingEditor = vscode.window.visibleTextEditors.find(
+              (editor) =>
+                editor.document.uri.toString() ===
+                selected.internalUri.toString(),
+            );
+            if (existingEditor) {
+              await vscode.window.showTextDocument(existingEditor.document, {
+                preview: false,
+                viewColumn: existingEditor.viewColumn,
+              });
+            } else {
+              await vscode.window.showTextDocument(selected.internalUri, {
+                preview: false,
+                viewColumn: openToSide ? vscode.ViewColumn.Beside : undefined,
+              });
+            }
           }
           log.info('[QuickOpen] ✓ File opened successfully, hiding QuickPick');
           quickPick.hide();
@@ -1305,6 +1348,36 @@ export function registerQuickOpenCommand(
               quickPick.hide();
             } catch (err) {
               log.error(`[QuickOpen] Error opening to side`, err);
+            }
+            return;
+          }
+
+          if (button.tooltip === t('Open in New Window')) {
+            log.info(`[QuickOpen] Opening in new window: ${uri.fsPath}`);
+            try {
+              mruService.add(uri.fsPath);
+
+              // Reuse existing tab if the file is already open
+              const existingEditor = vscode.window.visibleTextEditors.find(
+                (editor) => editor.document.uri.toString() === uri.toString(),
+              );
+              if (existingEditor) {
+                await vscode.window.showTextDocument(existingEditor.document, {
+                  preview: false,
+                  viewColumn: existingEditor.viewColumn,
+                });
+              } else {
+                await vscode.window.showTextDocument(uri, {
+                  preview: false,
+                });
+                await vscode.commands.executeCommand(
+                  'workbench.action.moveEditorToNewWindow',
+                );
+              }
+
+              quickPick.hide();
+            } catch (err) {
+              log.error(`[QuickOpen] Error opening in new window`, err);
             }
             return;
           }

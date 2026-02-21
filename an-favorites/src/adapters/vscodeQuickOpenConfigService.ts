@@ -9,10 +9,16 @@ export class VscodeQuickOpenConfigService implements QuickOpenConfigService {
     const configMaxItems = vscode.workspace.getConfiguration(
       'anfavorites.maxItems',
     );
-    const configSearch = vscode.workspace.getConfiguration('anfavorites.search');
-    const configQuickOpen =
-      vscode.workspace.getConfiguration('anfavorites.quickOpen');
+    const configSearch =
+      vscode.workspace.getConfiguration('anfavorites.search');
+    const configQuickOpen = vscode.workspace.getConfiguration(
+      'anfavorites.quickOpen',
+    );
     const openToSide = configQuickOpen.get<boolean>('openToSide', false);
+    const openInNewWindow = configQuickOpen.get<boolean>(
+      'openInNewWindow',
+      false,
+    );
 
     const maxRecentFavorites = configMaxItems.get<number>('favorites', 3);
     const maxPinned = configMaxItems.get<number>('pinned', 3);
@@ -50,6 +56,7 @@ export class VscodeQuickOpenConfigService implements QuickOpenConfigService {
       maxSearchFiles,
       searchCacheSize,
       openToSide,
+      openInNewWindow,
       showIcons,
       pathDetailLocation,
       showPathWhen,
