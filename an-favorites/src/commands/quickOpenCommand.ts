@@ -1330,6 +1330,15 @@ export function registerQuickOpenCommand(
 
             item.isFavorite = true;
             item.updateIcon(item.showIcons);
+
+            const currentItems = quickPick.items;
+            const index = currentItems.indexOf(item);
+            if (index !== -1) {
+              const newItems = [...currentItems];
+              newItems[index] = item;
+              quickPick.items = newItems;
+              quickPick.activeItems = [item];
+            }
             return;
           }
 
