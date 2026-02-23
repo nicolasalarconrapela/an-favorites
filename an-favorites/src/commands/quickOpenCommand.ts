@@ -154,6 +154,8 @@ function buildPinnedItems(
       isRecentlyOpened: false,
       openToSide: config.openToSide,
       openInNewWindow: config.openInNewWindow,
+      showOpenToSideButton: config.showOpenToSideButton,
+      showOpenInNewWindowButton: config.showOpenInNewWindowButton,
       isIndividualPinned: isIndividual,
       showIcons: config.showIcons,
       pathDetailLocation: config.pathDetailLocation,
@@ -177,6 +179,8 @@ function buildRecentFavoriteItems(
       isRecentlyOpened: false,
       openToSide: config.openToSide,
       openInNewWindow: config.openInNewWindow,
+      showOpenToSideButton: config.showOpenToSideButton,
+      showOpenInNewWindowButton: config.showOpenInNewWindowButton,
       showIcons: config.showIcons,
       pathDetailLocation: config.pathDetailLocation,
       showPathWhen: config.showPathWhen,
@@ -200,6 +204,8 @@ function buildRecentItems(
       isRecentlyOpened: true,
       openToSide: config.openToSide,
       openInNewWindow: config.openInNewWindow,
+      showOpenToSideButton: config.showOpenToSideButton,
+      showOpenInNewWindowButton: config.showOpenInNewWindowButton,
       showIcons: config.showIcons,
       pathDetailLocation: config.pathDetailLocation,
       showPathWhen: config.showPathWhen,
@@ -288,6 +294,8 @@ async function buildSearchItems(params: {
         isRecentlyOpened: false,
         openToSide: config.openToSide,
         openInNewWindow: config.openInNewWindow,
+        showOpenToSideButton: config.showOpenToSideButton,
+        showOpenInNewWindowButton: config.showOpenInNewWindowButton,
         showIcons: config.showIcons,
         pathDetailLocation: config.pathDetailLocation,
         showPathWhen: config.showPathWhen,
@@ -420,6 +428,8 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 
   private _openToSide: boolean;
   private _openInNewWindow: boolean;
+  private _showOpenToSideButton: boolean;
+  private _showOpenInNewWindowButton: boolean;
   public showIcons: boolean;
   private pathDetailLocation: 'description' | 'detail';
   private showPathWhen: 'always' | 'onConflict';
@@ -431,6 +441,8 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     isRecentlyOpened?: boolean;
     openToSide?: boolean;
     openInNewWindow?: boolean;
+    showOpenToSideButton?: boolean;
+    showOpenInNewWindowButton?: boolean;
     isIndividualPinned?: boolean;
     showIcons?: boolean;
     pathDetailLocation?: 'description' | 'detail';
@@ -443,6 +455,8 @@ class FileQuickPickItem implements vscode.QuickPickItem {
       isRecentlyOpened = false,
       openToSide = false,
       openInNewWindow = false,
+      showOpenToSideButton = true,
+      showOpenInNewWindowButton = true,
       isIndividualPinned = false,
       showIcons = true,
       pathDetailLocation = 'detail',
@@ -455,6 +469,8 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     this.isRecentlyOpened = isRecentlyOpened;
     this._openToSide = openToSide;
     this._openInNewWindow = openInNewWindow;
+    this._showOpenToSideButton = showOpenToSideButton;
+    this._showOpenInNewWindowButton = showOpenInNewWindowButton;
     this.isIndividualPinned = isIndividualPinned;
     this.showIcons = showIcons;
     this.pathDetailLocation = pathDetailLocation;
@@ -554,17 +570,24 @@ class FileQuickPickItem implements vscode.QuickPickItem {
         : t('Add to Favorites'),
     });
 
-    if (!this._openToSide) {
+    if (!this._openToSide && this._showOpenToSideButton) {
       buttons.push({
         iconPath: createButtonIcon('split-horizontal', 'symbol-file'),
         tooltip: t('Open to the Side'),
       });
     }
 
-    if (!this._openInNewWindow) {
+    if (!this._openInNewWindow && this._showOpenInNewWindowButton) {
       buttons.push({
         iconPath: createButtonIcon('link-external', 'symbol-file'),
         tooltip: t('Open in New Window'),
+      });
+    }
+
+    if (this._openToSide || this._openInNewWindow) {
+      buttons.push({
+        iconPath: createButtonIcon('go-to-file', 'symbol-file'),
+        tooltip: t('Open in Active Editor'),
       });
     }
 
@@ -1260,10 +1283,10 @@ export function registerQuickOpenCommand(
 
           const openToSide = vscode.workspace
             .getConfiguration('anfavorites.quickOpen')
-            .get<boolean>('openToSide', false);
+            .get<boolean>('actions.openToSide', false);
           const openInNewWindow = vscode.workspace
             .getConfiguration('anfavorites.quickOpen')
-            .get<boolean>('openInNewWindow', false);
+            .get<boolean>('actions.openInNewWindow', false);
 
           if (openInNewWindow) {
             log.info(
@@ -1378,6 +1401,33 @@ export function registerQuickOpenCommand(
               quickPick.hide();
             } catch (err) {
               log.error(`[QuickOpen] Error opening in new window`, err);
+            }
+            return;
+          }
+
+          if (button.tooltip === t('Open in Active Editor')) {
+            log.info(`[QuickOpen] Opening in active editor: ${uri.fsPath}`);
+            try {
+              mruService.add(uri.fsPath);
+
+              // Reuse existing tab if the file is already open
+              const existingEditor = vscode.window.visibleTextEditors.find(
+                (editor) => editor.document.uri.toString() === uri.toString(),
+              );
+              if (existingEditor) {
+                await vscode.window.showTextDocument(existingEditor.document, {
+                  preview: false,
+                  viewColumn: existingEditor.viewColumn,
+                });
+              } else {
+                await vscode.window.showTextDocument(uri, {
+                  preview: false,
+                });
+              }
+
+              quickPick.hide();
+            } catch (err) {
+              log.error(`[QuickOpen] Error opening in active editor`, err);
             }
             return;
           }

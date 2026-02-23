@@ -53,5 +53,7 @@
   "config.quickOpen.showPathWhen.enum.always": "Always show the file path.",
   "config.quickOpen.showPathWhen.enum.onConflict": "Only show the path when there are files with the same name.",
   "config.quickOpen.openToSide.description": "When enabled, opening a file from Quick Open will open it in the side editor and hide the 'Open to the Side' button.",
-  "config.quickOpen.openInNewWindow.description": "When enabled, opening a file from Quick Open will open it in a new window by default and hide the 'Open in New Window' button."
+  "config.quickOpen.openInNewWindow.description": "When enabled, opening a file from Quick Open will open it in a new window by default and hide the 'Open in New Window' button.",
+  "config.quickOpen.showOpenToSideButton.description": "Whether to show the 'Open to the Side' button in Quick Open items.",
+  "config.quickOpen.showOpenInNewWindowButton.description": "Whether to show the 'Open in New Window' button in Quick Open items."
 }

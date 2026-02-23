@@ -53,5 +53,7 @@
   "config.quickOpen.showPathWhen.enum.always": "Siempre muestra la ruta del archivo.",
   "config.quickOpen.showPathWhen.enum.onConflict": "Solo muestra la ruta cuando hay archivos con el mismo nombre.",
   "config.quickOpen.openToSide.description": "Si está activado, al abrir un archivo desde Quick Open se abrirá automáticamente en el editor lateral y se ocultará el botón 'Abrir al lado'.",
-  "config.quickOpen.openInNewWindow.description": "Si está activado, al abrir un archivo desde Quick Open se abrirá automáticamente en una nueva ventana y se ocultará el botón 'Abrir en nueva ventana'."
+  "config.quickOpen.openInNewWindow.description": "Si está activado, al abrir un archivo desde Quick Open se abrirá automáticamente en una nueva ventana y se ocultará el botón 'Abrir en nueva ventana'.",
+  "config.quickOpen.showOpenToSideButton.description": "Mostrar el botón 'Abrir al lado' en los elementos de Quick Open.",
+  "config.quickOpen.showOpenInNewWindowButton.description": "Mostrar el botón 'Abrir en nueva ventana' en los elementos de Quick Open."
 }

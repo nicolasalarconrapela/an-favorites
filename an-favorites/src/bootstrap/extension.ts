@@ -90,28 +90,31 @@ export function activate(context: vscode.ExtensionContext): void {
   // Enforce mutual exclusivity for openToSide and openInNewWindow
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(async (e) => {
-      if (e.affectsConfiguration('anfavorites.quickOpen.openToSide')) {
+      if (e.affectsConfiguration('anfavorites.quickOpen.actions.openToSide')) {
         const config = vscode.workspace.getConfiguration(
           'anfavorites.quickOpen',
         );
-        const openToSide = config.get<boolean>('openToSide', false);
+        const openToSide = config.get<boolean>('actions.openToSide', false);
         if (openToSide) {
           await config.update(
-            'openInNewWindow',
+            'actions.openInNewWindow',
             false,
             vscode.ConfigurationTarget.Global,
           );
         }
       } else if (
-        e.affectsConfiguration('anfavorites.quickOpen.openInNewWindow')
+        e.affectsConfiguration('anfavorites.quickOpen.actions.openInNewWindow')
       ) {
         const config = vscode.workspace.getConfiguration(
           'anfavorites.quickOpen',
         );
-        const openInNewWindow = config.get<boolean>('openInNewWindow', false);
+        const openInNewWindow = config.get<boolean>(
+          'actions.openInNewWindow',
+          false,
+        );
         if (openInNewWindow) {
           await config.update(
-            'openToSide',
+            'actions.openToSide',
             false,
             vscode.ConfigurationTarget.Global,
           );

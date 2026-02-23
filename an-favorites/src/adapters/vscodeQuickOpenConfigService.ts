@@ -14,10 +14,21 @@ export class VscodeQuickOpenConfigService implements QuickOpenConfigService {
     const configQuickOpen = vscode.workspace.getConfiguration(
       'anfavorites.quickOpen',
     );
-    const openToSide = configQuickOpen.get<boolean>('openToSide', false);
-    const openInNewWindow = configQuickOpen.get<boolean>(
-      'openInNewWindow',
+    const openToSide = configQuickOpen.get<boolean>(
+      'actions.openToSide',
       false,
+    );
+    const openInNewWindow = configQuickOpen.get<boolean>(
+      'actions.openInNewWindow',
+      false,
+    );
+    const showOpenToSideButton = configQuickOpen.get<boolean>(
+      'actions.showOpenToSideButton',
+      true,
+    );
+    const showOpenInNewWindowButton = configQuickOpen.get<boolean>(
+      'actions.showOpenInNewWindowButton',
+      true,
     );
 
     const maxRecentFavorites = configMaxItems.get<number>('favorites', 3);
@@ -57,6 +68,8 @@ export class VscodeQuickOpenConfigService implements QuickOpenConfigService {
       searchCacheSize,
       openToSide,
       openInNewWindow,
+      showOpenToSideButton,
+      showOpenInNewWindowButton,
       showIcons,
       pathDetailLocation,
       showPathWhen,

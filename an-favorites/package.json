@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "0.13.3",
+  "version": "0.13.4",
   "publisher": "anappwilos",
   "icon": "resources/icon.png",
   "license": "MIT",
@@ -512,17 +512,27 @@
             ],
             "description": "%config.quickOpen.showPathWhen.description%"
           },
-          "anfavorites.quickOpen.openToSide": {
+          "anfavorites.quickOpen.actions.openToSide": {
             "type": "boolean",
             "scope": "application",
             "default": true,
             "description": "%config.quickOpen.openToSide.description%"
           },
-          "anfavorites.quickOpen.openInNewWindow": {
+          "anfavorites.quickOpen.actions.openInNewWindow": {
             "type": "boolean",
             "scope": "application",
             "default": false,
             "description": "%config.quickOpen.openInNewWindow.description%"
+          },
+          "anfavorites.quickOpen.actions.showOpenToSideButton": {
+            "type": "boolean",
+            "default": true,
+            "description": "%config.quickOpen.showOpenToSideButton.description%"
+          },
+          "anfavorites.quickOpen.actions.showOpenInNewWindowButton": {
+            "type": "boolean",
+            "default": true,
+            "description": "%config.quickOpen.showOpenInNewWindowButton.description%"
           }
         }
       }
