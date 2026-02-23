@@ -1,11 +1,23 @@
 ![Logo_&_Banner](./resources/banner_logo.png)
 
-# AnFavorites
+<h1 align="left">AnFavorites</h1>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://vsmarketplacebadge.apphb.com/version/nicolasalarconrapela.an-favorites.svg)](https://marketplace.visualstudio.com/items?itemName=nicolasalarconrapela.an-favorites)
-[![Installs](https://vsmarketplacebadge.apphb.com/installs/nicolasalarconrapela.an-favorites.svg)](https://marketplace.visualstudio.com/items?itemName=nicolasalarconrapela.an-favorites)
-[![Open Source](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/nicolasalarconrapela/an-favorites)
+<br/>
+
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
+    <img src="https://img.shields.io/visual-studio-marketplace/i/AnAppWilos.an-favorites.svg?color=85C1E9&style=for-the-badge" alt="Visual Studio Marketplace Installs">
+  </a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites&ssr=false#version-history">
+    <img src="https://img.shields.io/visual-studio-marketplace/v/AnAppWilos.an-favorites.svg?color=orange&label=Version&style=for-the-badge" alt="Visual Studio Marketplace Version">
+  </a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
+    <img src="https://img.shields.io/visual-studio-marketplace/r/AnAppWilos.an-favorites.svg?color=orange&label=Rating&style=for-the-badge" alt="Visual Studio Marketplace Rating">
+  </a>
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License">
+  </a>
+</p>
 
 ![alt text](./resources/init.png)
 

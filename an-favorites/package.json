@@ -2,10 +2,36 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "publisher": "AnAppWilos",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
   "preview": true,
   "icon": "resources/icon.png",
+  "badges": [
+    {
+      "url": "https://vsmarketplacebadges.dev/version/nicolasalarconrapela.an-favorites.svg",
+      "href": "https://marketplace.visualstudio.com/items?itemName=nicolasalarconrapela.an-favorites",
+      "description": "Version"
+    },
+    {
+      "url": "https://vsmarketplacebadges.dev/installs/nicolasalarconrapela.an-favorites.svg",
+      "href": "https://marketplace.visualstudio.com/items?itemName=nicolasalarconrapela.an-favorites",
+      "description": "Installs"
+    },
+    {
+      "url": "https://vsmarketplacebadges.dev/rating/nicolasalarconrapela.an-favorites.svg",
+      "href": "https://marketplace.visualstudio.com/items?itemName=nicolasalarconrapela.an-favorites",
+      "description": "Rating"
+    },
+    {
+      "url": "https://vsmarketplacebadges.dev/downloads/nicolasalarconrapela.an-favorites.svg",
+      "href": "https://marketplace.visualstudio.com/items?itemName=nicolasalarconrapela.an-favorites",
+      "description": "Downloads"
+    }
+  ],
   "license": "MIT",
   "engines": {
     "vscode": "^1.86.0"
