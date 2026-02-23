@@ -2,8 +2,9 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "0.13.6",
+  "version": "0.14.0",
   "publisher": "AnAppWilos",
+  "preview": true,
   "icon": "resources/icon.png",
   "license": "MIT",
   "engines": {
