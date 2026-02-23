@@ -6,76 +6,89 @@
 
 <p align="center">
   <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
-    <img src="https://img.shields.io/visual-studio-marketplace/i/AnAppWilos.an-favorites?color=blue&label=Installs&style=for-the-badge" 
-         alt="Visual Studio Marketplace Installs">
-  </a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites&ssr=false#version-history">
-    <img src="https://img.shields.io/visual-studio-marketplace/v/AnAppWilos.an-favorites?color=orange&label=Version&style=for-the-badge" 
-         alt="Visual Studio Marketplace Version">
+    <img src="https://vsmarketplacebadges.dev/installs/AnAppWilos.an-favorites.png?style=for-the-badge" alt="Visual Studio Marketplace Installs">
   </a>
   <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
-    <img src="https://img.shields.io/visual-studio-marketplace/r/AnAppWilos.an-favorites?color=brightgreen&label=Rating&style=for-the-badge" 
-         alt="Visual Studio Marketplace Rating">
+    <img src="https://vsmarketplacebadges.dev/downloads/AnAppWilos.an-favorites.png?style=for-the-badge" alt="Visual Studio Marketplace Downloads">
+  </a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites&ssr=false#version-history">
+    <img src="https://vsmarketplacebadges.dev/version-short/AnAppWilos.an-favorites.png?style=for-the-badge" alt="Visual Studio Marketplace Version">
+  </a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
+    <img src="https://vsmarketplacebadges.dev/rating-star/AnAppWilos.an-favorites.png?style=for-the-badge" alt="Visual Studio Marketplace Rating">
   </a>
   <a href="https://opensource.org/licenses/MIT">
-    <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" 
-         alt="License MIT">
+    <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License MIT">
   </a>
 </p>
 
 ![img_init](https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/init.png?raw=true)
 
-AnFavorites is a professional, 100% open-source extension for Visual Studio Code that optimizes your workflow by offering instant access to what matters most.
+**AnFavorites** is a professional, 100% open-source extension for Visual Studio Code that optimizes your workflow by offering instant, centralized access to what matters most.
 
-With a single keyboard shortcut (fully configurable), QuickPick allows you to open your favorite files in seconds. You can quickly and intuitively manage your most recent pinned items and even use it as an agile search tool within your development environment.
+With a single keyboard shortcut (`Ctrl+Alt+F`), Quick Open allows you to effortlessly jump to your favorite files in seconds. Visually manage your pinned items, categorize them into folders, and use AnFavorites as a fast, native search tool inside your development environment limits.
 
 <video src="https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/demo01.mp4?raw=true" controls="false" autoplay="true" loop="true" muted="true" width="100%"></video>
 
-If you work with multiple IDEs, your favorites automatically sync between them, ensuring you never lose track of what's truly important in your daily workflow.
+If you work with multiple environments (like Cursor or Windsurf), your favorites will **automatically sync across IDEs** sharing the same workspace—ensuring you never lose track of what's truly important.
 
-## 🚀 Features
+## 🚀 Key Features
 
-- **Smart Favorites Management**: Organize your most-used files and commands effortlessly.
-- **Integrated Webview**: A clean, modern interface to manage your resources.
-- **Quick Access**: Execute commands and open files with minimal keystrokes.
-- **Multi-language Support**: Fully localized for English and Spanish speakers.
-- **Professional Logging**: specialized logging system for debugging and monitoring.
+- **⚡ Quick Open (`Ctrl+Alt+F`)**: A lightning-fast custom picker unifying recent searches, pinned files, and groups in one place.
+- **📂 Smart Groups & Organization**: Manage and group your files seamlessly with full **Drag & Drop** support in the AnFavorites sidebar tree view.
+- **🔄 IDE Syncronization**: Share favorites between VS Code, Cursor, Windsurf, or any IDE working on the same workspace out-of-the-box.
+- **📌 Pin & Prioritize**: Pin your most critical files directly to the root of your favorites view so they are always 1-click away.
+- **🧩 Multi-root Workspace Support**: Efficient file categorization that understands and organizes files relative to multi-root workspace folders.
+- **🔍 Configurable Exclusions**: Easily ignore messy folders (`node_modules`, `.git`, `.venv`) from searches to keep your UI lightning-fast.
+- **🌐 Dual Language**: Completely localized out-of-the-box for **English** and **Spanish** (`en` / `es`).
+
+---
 
 ## 🛠️ Installation
 
-You can install the extension directly from the Visual Studio Code Marketplace:
+You can install the extension directly from the Visual Studio Marketplace:
 
 1. Open VS Code.
 2. Go to the Extensions view (`Ctrl+Shift+X`).
 3. Search for `AnFavorites`.
 4. Click **Install**.
+   _(Requires VS Code 1.86.0 or higher)_
+
+---
+
+## ⚙️ Extension Settings
+
+AnFavorites provides extensive options to suit your workflow. Open VS Code Settings (`Ctrl+,`) and search for **AnFavorites**:
+
+| Setting                                 | Description                                                                 | Default                    |
+| --------------------------------------- | --------------------------------------------------------------------------- | -------------------------- |
+| `anfavorites.limits.maxPinned`          | Maximum number of files allowed to be pinned directly.                      | `3`                        |
+| `anfavorites.quickOpen.maxFavorites`    | How many favorite files populate the Quick Open initial view.               | `3`                        |
+| `anfavorites.tree.multiroot.separation` | Modifies how files display in multi-root workspaces (none, groups).         | `none`                     |
+| `anfavorites.search.exclusions`         | A glob list of files/folders to hide during workspace searches.             | `[**/node_modules/**,...]` |
+| `anfavorites.storage.shareAcrossIdes`   | Syncs workspace favorites across all compatible IDEs running the workspace. | `true`                     |
+| `anfavorites.language`                  | Forcibly set Extension Language to auto, English, or Spanish.               | `auto`                     |
+
+---
 
 ## 💻 Development & Contributing
 
-We believe in the power of open source! This project is 100% open source and we welcome contributions from the community.
-
-### Prerequisites
-
-- Node.js
-- npm
+We believe in the power of open source! This project is 100% community-driven and contributions, issues, and feature requests are very welcome.
 
 ### Quick Start
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/an-favorites.git
+git clone https://github.com/nicolasalarconrapela/an-favorites.git
 
 # Install dependencies
 npm install
 
-# Compile the extension
+# Compile the extension (use "npm run watch" for active development)
 npm run compile
-
-# Watch for changes during development
-npm run watch
 ```
 
-Press `F5` in VS Code to open a new window with your extension loaded.
+Press `F5` in VS Code to open a new Extension Development Host window.
 
 ## 📄 License
 
@@ -83,4 +96,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Made with ❤️ by the AnAppWiLos.
+Made with ❤️ by **AnAppWiLos**.
