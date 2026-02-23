@@ -689,9 +689,6 @@
     "prepublishOnly": "npm run lint && npm run test && npm run compile",
     "package": "vsce package --no-dependencies"
   },
-  "dependencies": {
-    "minimatch": "^9.0.5"
-  },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
     "@types/node": "^25.0.6",
@@ -702,9 +699,15 @@
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.7.1",
     "esbuild": "^0.27.2",
-    "eslint": "^9.39.2",
-    "mocha": "^11.3.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.8",
+    "mocha": "^11.7.5",
     "prettier": "^3.7.4",
-    "typescript": "^5.9.3"
+    "typescript": "^5.7.3"
+  },
+  "overrides": {
+    "diff": "8.0.3",
+    "minimatch": "10.2.2",
+    "minimist": "1.2.8"
   }
 }
