@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "0.15.9",
+  "version": "0.15.10",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",

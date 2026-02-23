@@ -31,7 +31,10 @@
 
 Además te permite gestionar visualmente tus elementos anclados, categorízalos en carpetas y usa AnFavorites como una herramienta de búsqueda nativa y rápida dentro de los límites de tu entorno de desarrollo.
 
-<video src="https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/demo01.mp4?raw=true" controls="false" autoplay="true" loop="true" muted="true" width="100%"></video>
+<video
+  src="https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/main/resources/demo01.mp4" controls muted playsinline loop preload="metadata"
+  style="width: 100%; max-width: 100%; border-radius: 12px;">
+</video>
 
 Si trabajas con varios entornos (como Cursor o Windsurf), tus favoritos se **sincronizarán automáticamente en todos los IDE** que compartan el mismo espacio de trabajo, lo que te garantiza que nunca pierdas de vista lo realmente importante.
 
