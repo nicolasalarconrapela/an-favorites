@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "0.14.2",
+  "version": "0.14.3",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -12,23 +12,23 @@
   "icon": "resources/icon.png",
   "badges": [
     {
-      "url": "https://vsmarketplacebadges.dev/version/nicolasalarconrapela.an-favorites.svg",
-      "href": "https://marketplace.visualstudio.com/items?itemName=nicolasalarconrapela.an-favorites",
+      "url": "https://vsmarketplacebadges.dev/version/AnAppWiLos.an-favorites.png",
+      "href": "https://marketplace.visualstudio.com/items?itemName=AnAppWiLos.an-favorites",
       "description": "Version"
     },
     {
-      "url": "https://vsmarketplacebadges.dev/installs/nicolasalarconrapela.an-favorites.svg",
-      "href": "https://marketplace.visualstudio.com/items?itemName=nicolasalarconrapela.an-favorites",
+      "url": "https://vsmarketplacebadges.dev/installs/AnAppWiLos.an-favorites.png",
+      "href": "https://marketplace.visualstudio.com/items?itemName=AnAppWiLos.an-favorites",
       "description": "Installs"
     },
     {
-      "url": "https://vsmarketplacebadges.dev/rating/nicolasalarconrapela.an-favorites.svg",
-      "href": "https://marketplace.visualstudio.com/items?itemName=nicolasalarconrapela.an-favorites",
+      "url": "https://vsmarketplacebadges.dev/rating/AnAppWiLos.an-favorites.png",
+      "href": "https://marketplace.visualstudio.com/items?itemName=AnAppWiLos.an-favorites",
       "description": "Rating"
     },
     {
-      "url": "https://vsmarketplacebadges.dev/downloads/nicolasalarconrapela.an-favorites.svg",
-      "href": "https://marketplace.visualstudio.com/items?itemName=nicolasalarconrapela.an-favorites",
+      "url": "https://vsmarketplacebadges.dev/downloads/AnAppWiLos.an-favorites.png",
+      "href": "https://marketplace.visualstudio.com/items?itemName=AnAppWiLos.an-favorites",
       "description": "Downloads"
     }
   ],
