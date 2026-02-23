@@ -1,65 +1,740 @@
 {
-  "name": "yes",
-  "displayName": "AnFavorites",
-  "description": "Application for managing favorites",
-  "version": "0.1.0",
-  "publisher": "anappwilos",
-  "engines": {
-    "vscode": "^1.85.0"
+  "name": "an-favorites",
+  "displayName": "%extension.displayName%",
+  "description": "%extension.description%",
+  "version": "0.14.4",
+  "publisher": "AnAppWilos",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
   },
-  "categories": ["Other"],
-  "activationEvents": [
-    "onCommand:anfavorites.hello"
-    ,
-    "onCommand:anfavorites.openWebview"
-    
+  "preview": true,
+  "icon": "resources/icon.png",
+  "badges": [
+    {
+      "url": "https://vsmarketplacebadges.dev/version/AnAppWiLos.an-favorites.png",
+      "href": "https://marketplace.visualstudio.com/items?itemName=AnAppWiLos.an-favorites",
+      "description": "Version"
+    },
+    {
+      "url": "https://vsmarketplacebadges.dev/installs/AnAppWiLos.an-favorites.png",
+      "href": "https://marketplace.visualstudio.com/items?itemName=AnAppWiLos.an-favorites",
+      "description": "Installs"
+    },
+    {
+      "url": "https://vsmarketplacebadges.dev/rating/AnAppWiLos.an-favorites.png",
+      "href": "https://marketplace.visualstudio.com/items?itemName=AnAppWiLos.an-favorites",
+      "description": "Rating"
+    },
+    {
+      "url": "https://vsmarketplacebadges.dev/downloads/AnAppWiLos.an-favorites.png",
+      "href": "https://marketplace.visualstudio.com/items?itemName=AnAppWiLos.an-favorites",
+      "description": "Downloads"
+    }
   ],
-  "main": "./dist/extension.js",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.86.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "favorites",
+    "bookmark",
+    "bookmarks",
+    "quick open",
+    "productivity",
+    "files",
+    "explorer",
+    "pinned"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nicolasalarconrapela/an-favorites.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nicolasalarconrapela/an-favorites/issues"
+  },
+  "homepage": "https://github.com/nicolasalarconrapela/an-favorites#readme",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/bootstrap/extension.js",
+  "l10n": "./l10n",
+  "files": [
+    "dist/**",
+    "l10n/**",
+    "resources/**",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "package.json"
+  ],
   "contributes": {
     "commands": [
       {
-        "command": "anfavorites.hello",
-        "title": "AnFavorites: Hello"
-      }
-      ,
+        "command": "anfavorites.addToFavorites",
+        "title": "%command.addToFavorites.title%",
+        "category": "%command.category.anfavorites%"
+      },
       {
-        "command": "anfavorites.openWebview",
-        "title": "AnFavorites: Open Webview"
+        "command": "anfavorites.addToFavoritesInGroup",
+        "title": "%command.addToFavoritesInGroup.title%",
+        "category": "%command.category.anfavorites%"
+      },
+      {
+        "command": "anfavorites.removeFromFavorites",
+        "title": "%command.removeFromFavorites.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "anfavorites.removeAllFavorites",
+        "title": "%command.removeAllFavorites.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "anfavorites.addGroup",
+        "title": "%command.addGroup.title%",
+        "category": "%command.category.anfavorites%"
+      },
+      {
+        "command": "anfavorites.removeGroup",
+        "title": "%command.removeGroup.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "anfavorites.renameGroup",
+        "title": "%command.renameGroup.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "anfavorites.pinFavorite",
+        "title": "%command.pinFavorite.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(pin)"
+      },
+      {
+        "command": "anfavorites.unpinFavorite",
+        "title": "%command.unpinFavorite.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(pinned)"
+      },
+      {
+        "command": "anfavorites.moveFavorite",
+        "title": "%command.moveFavorite.title%",
+        "category": "%command.category.anfavorites%"
+      },
+      {
+        "command": "anfavorites.openToSide",
+        "title": "%command.openToSide.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(split-horizontal)"
+      },
+      {
+        "command": "anfavorites.quickOpen",
+        "title": "%command.quickOpen.title%",
+        "category": "%command.category.anfavorites%"
+      },
+      {
+        "command": "anfavorites.clearGroup",
+        "title": "%command.clearGroup.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "anfavorites.removeFromGroup",
+        "title": "%command.removeFromGroup.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(close)"
+      },
+      {
+        "command": "anfavorites.configureKeybindings",
+        "title": "%command.configureKeybindings.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(keyboard)"
       }
-      
     ],
-    "configuration": {
-      "title": "AnFavorites",
-      "properties": {
-        "anfavorites.enableGreeting": {
-          "type": "boolean",
-          "default": true,
-          "description": "Habilita el saludo."
+    "keybindings": [
+      {
+        "command": "anfavorites.quickOpen",
+        "key": "ctrl+alt+f",
+        "mac": "ctrl+alt+f"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "anfavorites-view-container",
+          "title": "%viewsContainer.anfavorites.title%",
+          "icon": "resources/icon_no_bg.svg"
+        }
+      ]
+    },
+    "views": {
+      "anfavorites-view-container": [
+        {
+          "id": "anfavorites.favoritesView",
+          "name": "%view.favoritesView.name%",
+          "icon": "resources/icon_no_bg.svg"
+        }
+      ]
+    },
+    "menus": {
+      "editor/context": [
+        {
+          "command": "anfavorites.addToFavorites",
+          "group": "modification"
+        },
+        {
+          "command": "anfavorites.addToFavoritesInGroup",
+          "group": "modification"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "anfavorites.addToFavorites",
+          "group": "1_modification"
+        },
+        {
+          "command": "anfavorites.addToFavoritesInGroup",
+          "group": "1_modification"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "anfavorites.addToFavorites",
+          "when": "!explorerResourceIsFolder",
+          "group": "2_workspace@1"
+        },
+        {
+          "command": "anfavorites.addToFavoritesInGroup",
+          "when": "!explorerResourceIsFolder",
+          "group": "2_workspace@2"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "anfavorites.addGroup",
+          "when": "view == anfavorites.favoritesView",
+          "group": "navigation"
+        },
+        {
+          "command": "anfavorites.removeAllFavorites",
+          "when": "view == anfavorites.favoritesView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "anfavorites.openToSide",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /favoriteItem/",
+          "group": "inline@1"
+        },
+        {
+          "command": "anfavorites.pinFavorite",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /^favoriteItem(:grouped)?$/",
+          "group": "inline@0"
+        },
+        {
+          "command": "anfavorites.unpinFavorite",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /^favoriteItem:pinned(:grouped)?$/",
+          "group": "inline@0"
+        },
+        {
+          "command": "anfavorites.removeFromFavorites",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /^favoriteItem(:pinned)?$/",
+          "group": "inline@2"
+        },
+        {
+          "command": "anfavorites.moveFavorite",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /favoriteItem/",
+          "group": "favorites@1"
+        },
+        {
+          "command": "anfavorites.renameGroup",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /groupItem/",
+          "group": "inline"
+        },
+        {
+          "command": "anfavorites.removeGroup",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /groupItem/",
+          "group": "inline"
+        },
+        {
+          "command": "anfavorites.clearGroup",
+          "when": "view == anfavorites.favoritesView && viewItem == groupItem",
+          "group": "inline"
+        },
+        {
+          "command": "anfavorites.removeFromGroup",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /:grouped/",
+          "group": "inline@3"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "anfavorites.addToFavorites",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.removeFromFavorites",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.addToFavoritesInGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.addGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.removeGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.renameGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.pinFavorite",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.unpinFavorite",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.moveFavorite",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.openToSide",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.clearGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.removeFromGroup",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.configureKeybindings",
+          "when": "true"
+        }
+      ]
+    },
+    "configuration": [
+      {
+        "title": "%config.general.title%",
+        "properties": {
+          "anfavorites.language": {
+            "type": "string",
+            "default": "auto",
+            "enum": [
+              "auto",
+              "en",
+              "es"
+            ],
+            "enumDescriptions": [
+              "%config.language.enum.auto%",
+              "%config.language.enum.en%",
+              "%config.language.enum.es%"
+            ],
+            "description": "%config.language.description%"
+          }
+        }
+      },
+      {
+        "title": "%config.logging.title%",
+        "properties": {
+          "anfavorites.logging.level": {
+            "type": "string",
+            "default": "info",
+            "enum": [
+              "debug",
+              "info",
+              "warn",
+              "error"
+            ],
+            "description": "%config.logging.level.description%"
+          },
+          "anfavorites.logging.maxRotatedFiles": {
+            "type": "number",
+            "default": 5,
+            "description": "%config.logging.maxRotatedFiles.description%"
+          }
+        }
+      },
+      {
+        "title": "%config.limits.title%",
+        "properties": {
+          "anfavorites.limits.maxPinned": {
+            "type": "number",
+            "default": 3,
+            "enum": [
+              2,
+              3,
+              4,
+              5,
+              7
+            ],
+            "description": "%config.limits.maxPinned.description%"
+          },
+          "anfavorites.limits.quickOpen.maxFavorites": {
+            "type": "number",
+            "default": 3,
+            "enum": [
+              3,
+              4,
+              5
+            ],
+            "description": "%config.limits.quickOpen.maxFavorites.description%"
+          },
+          "anfavorites.limits.quickOpen.maxRecentFiles": {
+            "type": "number",
+            "default": 3,
+            "enum": [
+              2,
+              3,
+              4,
+              5
+            ],
+            "description": "%config.limits.quickOpen.maxRecentFiles.description%"
+          }
+        }
+      },
+      {
+        "title": "%config.tree.title%",
+        "properties": {
+          "anfavorites.multiroot.separation": {
+            "type": "string",
+            "default": "none",
+            "enum": [
+              "none",
+              "ungrouped",
+              "groups",
+              "both"
+            ],
+            "enumDescriptions": [
+              "%config.multiroot.separation.enum.none%",
+              "%config.multiroot.separation.enum.ungrouped%",
+              "%config.multiroot.separation.enum.groups%",
+              "%config.multiroot.separation.enum.both%"
+            ],
+            "description": "%config.multiroot.separation.description%"
+          }
+        }
+      },
+      {
+        "title": "%config.storage.title%",
+        "properties": {
+          "anfavorites.storage.shareAcrossIdes": {
+            "type": "boolean",
+            "scope": "application",
+            "default": true,
+            "description": "%config.storage.shareAcrossIdes.description%"
+          }
+        }
+      },
+      {
+        "title": "%config.search.title%",
+        "properties": {
+          "anfavorites.Zearch.exclusions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**",
+              "**/out/**",
+              "**/coverage/**",
+              "**/.cache/**",
+              "**/.parcel-cache/**",
+              "**/.turbo/**",
+              "**/.next/**",
+              "**/.nuxt/**",
+              "**/.vite/**",
+              "**/__pycache__/**",
+              "**/.venv/**",
+              "**/venv/**",
+              "**/env/**",
+              "**/ENV/**",
+              "**/.pytest_cache/**",
+              "**/.mypy_cache/**",
+              "**/.ruff_cache/**",
+              "**/.tox/**",
+              "**/.ipynb_checkpoints/**",
+              "**/target/**",
+              "**/.gradle/**",
+              "**/.settings/**",
+              "**/.idea/**",
+              "**/bin/**",
+              "**/obj/**",
+              "**/.vs/**",
+              "**/TestResults/**",
+              "**/artifacts/**",
+              "**/cmake-build-*/**",
+              "**/CMakeFiles/**",
+              "**/.history/**"
+            ],
+            "description": "%config.search.exclusions.description%"
+          },
+          "anfavorites.search.maxSearchFiles": {
+            "type": "number",
+            "default": 1000,
+            "description": "%config.search.maxSearchFiles.description%"
+          },
+          "anfavorites.search.maxSearchResults": {
+            "type": "number",
+            "default": 200,
+            "description": "%config.search.maxSearchResults.description%"
+          },
+          "anfavorites.quickOpen.searchCacheSize": {
+            "type": "number",
+            "default": 30,
+            "description": "%config.quickOpen.searchCacheSize.description%"
+          }
+        }
+      },
+      {
+        "title": "%config.quickOpen.title%",
+        "properties": {
+          "anfavorites.quickOpen.showIcons": {
+            "type": "boolean",
+            "default": true,
+            "description": "%config.quickOpen.showIcons.description%"
+          },
+          "anfavorites.quickOpen.pathDetailLocation": {
+            "type": "string",
+            "default": "description",
+            "enum": [
+              "description",
+              "detail"
+            ],
+            "enumDescriptions": [
+              "%config.quickOpen.pathDetailLocation.enum.description%",
+              "%config.quickOpen.pathDetailLocation.enum.detail%"
+            ],
+            "description": "%config.quickOpen.pathDetailLocation.description%"
+          },
+          "anfavorites.quickOpen.showPathWhen": {
+            "type": "string",
+            "default": "onConflict",
+            "enum": [
+              "always",
+              "onConflict"
+            ],
+            "enumDescriptions": [
+              "%config.quickOpen.showPathWhen.enum.always%",
+              "%config.quickOpen.showPathWhen.enum.onConflict%"
+            ],
+            "description": "%config.quickOpen.showPathWhen.description%"
+          },
+          "anfavorites.quickOpen.actions.openToSide": {
+            "type": "boolean",
+            "scope": "application",
+            "default": true,
+            "description": "%config.quickOpen.openToSide.description%"
+          },
+          "anfavorites.quickOpen.actions.openInNewWindow": {
+            "type": "boolean",
+            "scope": "application",
+            "default": false,
+            "description": "%config.quickOpen.openInNewWindow.description%"
+          },
+          "anfavorites.quickOpen.actions.showOpenToSideButton": {
+            "type": "boolean",
+            "default": true,
+            "description": "%config.quickOpen.showOpenToSideButton.description%"
+          },
+          "anfavorites.quickOpen.actions.showOpenInNewWindowButton": {
+            "type": "boolean",
+            "default": true,
+            "description": "%config.quickOpen.showOpenInNewWindowButton.description%"
+          }
         }
       }
-    }
+    ],
+    "walkthroughs": [
+      {
+        "id": "anfavorites.getStarted",
+        "title": "Get Started with AnFavorites",
+        "description": "Learn how to manage and organize your favorite files efficiently",
+        "steps": [
+          {
+            "id": "anfavorites.walkthrough.keyboard",
+            "title": "Configure Your Shortcut",
+            "description": "Set up the keyboard shortcut to open Quick Open — your central hub for favorites.\n[Configure Keyboard Shortcuts](command:anfavorites.configureKeybindings)",
+            "media": {
+              "markdown": "resources/walkthrough/01-keyboard-shortcut.md"
+            },
+            "completionEvents": [
+              "onCommand:anfavorites.configureKeybindings"
+            ]
+          },
+          {
+            "id": "anfavorites.walkthrough.firstFavorite",
+            "title": "Add Your First Favorite",
+            "description": "Right-click in the editor, explorer, or use Quick Open to add files to your favorites.\n[Open Quick Open](command:anfavorites.quickOpen)",
+            "media": {
+              "markdown": "resources/walkthrough/02-first-favorite.md"
+            },
+            "completionEvents": [
+              "onCommand:anfavorites.addToFavorites"
+            ]
+          },
+          {
+            "id": "anfavorites.walkthrough.groups",
+            "title": "Groups & Organization",
+            "description": "Organize favorites into groups with drag & drop support and multi-workspace features.\n[Create New Group](command:anfavorites.addGroup)",
+            "media": {
+              "markdown": "resources/walkthrough/03-groups.md"
+            },
+            "completionEvents": [
+              "onCommand:anfavorites.addGroup"
+            ]
+          },
+          {
+            "id": "anfavorites.walkthrough.syncIdes",
+            "title": "Sync Across IDEs",
+            "description": "Your favorites sync automatically between VS Code, Cursor, Windsurf and any IDE sharing the same workspace.\n[Open Storage Settings](command:workbench.action.openSettings?%5B%22anfavorites.storage%22%5D)",
+            "media": {
+              "markdown": "resources/walkthrough/04-sync-ides.md"
+            }
+          },
+          {
+            "id": "anfavorites.walkthrough.dragDrop",
+            "title": "Drag & Drop",
+            "description": "Reorder favorites and groups effortlessly by dragging them in the tree view.",
+            "media": {
+              "markdown": "resources/walkthrough/05-drag-and-drop.md"
+            }
+          },
+          {
+            "id": "anfavorites.walkthrough.settings",
+            "title": "Explore Settings",
+            "description": "Customize AnFavorites to match your workflow — search, limits, language, and more.\n[Open AnFavorites Settings](command:workbench.action.openSettings?%5B%22anfavorites%22%5D)",
+            "media": {
+              "markdown": "resources/walkthrough/06-settings.md"
+            },
+            "completionEvents": [
+              "onSettingChanged:anfavorites.language"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "anfavorites.getStarted.es",
+        "title": "Primeros Pasos con AnFavorites",
+        "description": "Aprende a gestionar y organizar tus archivos favoritos de forma eficiente",
+        "when": "config.anfavorites.language == 'es' || (config.anfavorites.language == 'auto' && locale == 'es')",
+        "steps": [
+          {
+            "id": "anfavorites.walkthrough.es.keyboard",
+            "title": "Configura Tu Atajo",
+            "description": "Configura el atajo de teclado para abrir Quick Open — tu centro de control para favoritos.\n[Configurar Atajos de Teclado](command:anfavorites.configureKeybindings)",
+            "media": {
+              "markdown": "resources/walkthrough/es/01-keyboard-shortcut.md"
+            },
+            "completionEvents": [
+              "onCommand:anfavorites.configureKeybindings"
+            ]
+          },
+          {
+            "id": "anfavorites.walkthrough.es.firstFavorite",
+            "title": "Añade Tu Primer Favorito",
+            "description": "Haz clic derecho en el editor, explorador, o usa Quick Open para añadir archivos a tus favoritos.\n[Abrir Quick Open](command:anfavorites.quickOpen)",
+            "media": {
+              "markdown": "resources/walkthrough/es/02-first-favorite.md"
+            },
+            "completionEvents": [
+              "onCommand:anfavorites.addToFavorites"
+            ]
+          },
+          {
+            "id": "anfavorites.walkthrough.es.groups",
+            "title": "Grupos y Organización",
+            "description": "Organiza favoritos en grupos con arrastrar y soltar y funciones multi-workspace.\n[Crear Nuevo Grupo](command:anfavorites.addGroup)",
+            "media": {
+              "markdown": "resources/walkthrough/es/03-groups.md"
+            },
+            "completionEvents": [
+              "onCommand:anfavorites.addGroup"
+            ]
+          },
+          {
+            "id": "anfavorites.walkthrough.es.syncIdes",
+            "title": "Sincronización entre IDEs",
+            "description": "Tus favoritos se sincronizan automáticamente entre VS Code, Cursor, Windsurf y cualquier IDE que comparta el mismo workspace.\n[Abrir Configuración de Almacenamiento](command:workbench.action.openSettings?%5B%22anfavorites.storage%22%5D)",
+            "media": {
+              "markdown": "resources/walkthrough/es/04-sync-ides.md"
+            }
+          },
+          {
+            "id": "anfavorites.walkthrough.es.dragDrop",
+            "title": "Arrastra y Suelta",
+            "description": "Reordena favoritos y grupos fácilmente arrastrándolos en la vista de árbol.",
+            "media": {
+              "markdown": "resources/walkthrough/es/05-drag-and-drop.md"
+            }
+          },
+          {
+            "id": "anfavorites.walkthrough.es.settings",
+            "title": "Explora la Configuración",
+            "description": "Personaliza AnFavorites para adaptarlo a tu flujo de trabajo — búsqueda, límites, idioma y más.\n[Abrir Configuración de AnFavorites](command:workbench.action.openSettings?%5B%22anfavorites%22%5D)",
+            "media": {
+              "markdown": "resources/walkthrough/es/06-settings.md"
+            },
+            "completionEvents": [
+              "onSettingChanged:anfavorites.language"
+            ]
+          }
+        ]
+      }
+    ]
   },
   "scripts": {
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint .",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
-    "build": "node scripts/build.js",
+    "compile": "node scripts/esbuild.js",
+    "watch": "node scripts/esbuild.js --watch",
+    "l10n:export": "l10n-dev export --outDir ./l10n ./src",
+    "l10n:validate": "l10n-dev validate ./l10n",
     "compile-tests": "tsc -p test/tsconfig.json",
     "test": "npm run compile-tests && node ./out/test/runTest.js",
+    "prepublishOnly": "npm run lint && npm run test && npm run compile",
     "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
-    "@types/node": "^20.11.30",
+    "@types/node": "^25.0.6",
     "@types/vscode": "^1.85.0",
-    "@typescript-eslint/eslint-plugin": "^7.3.1",
-    "@typescript-eslint/parser": "^7.3.1",
-    "@vscode/test-electron": "^2.3.9",
-    "esbuild": "^0.20.2",
+    "@typescript-eslint/eslint-plugin": "^8.52.0",
+    "@typescript-eslint/parser": "^8.52.0",
+    "@vscode/l10n-dev": "^0.0.35",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.7.1",
+    "esbuild": "^0.27.2",
     "eslint": "^8.57.0",
-    "mocha": "^10.3.0",
-    "prettier": "^3.2.5",
-    "typescript": "^5.4.2",
-    "vsce": "^2.15.0"
+    "eslint-config-prettier": "^10.1.8",
+    "mocha": "^11.7.5",
+    "prettier": "^3.7.4",
+    "typescript": "^5.7.3"
+  },
+  "overrides": {
+    "diff": "8.0.3",
+    "minimatch": "10.2.2",
+    "minimist": "1.2.8"
   }
 }
