@@ -87,42 +87,6 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   );
 
-  // Enforce mutual exclusivity for openToSide and openInNewWindow
-  context.subscriptions.push(
-    vscode.workspace.onDidChangeConfiguration(async (e) => {
-      if (e.affectsConfiguration('anfavorites.quickOpen.actions.openToSide')) {
-        const config = vscode.workspace.getConfiguration(
-          'anfavorites.quickOpen',
-        );
-        const openToSide = config.get<boolean>('actions.openToSide', false);
-        if (openToSide) {
-          await config.update(
-            'actions.openInNewWindow',
-            false,
-            vscode.ConfigurationTarget.Global,
-          );
-        }
-      } else if (
-        e.affectsConfiguration('anfavorites.quickOpen.actions.openInNewWindow')
-      ) {
-        const config = vscode.workspace.getConfiguration(
-          'anfavorites.quickOpen',
-        );
-        const openInNewWindow = config.get<boolean>(
-          'actions.openInNewWindow',
-          false,
-        );
-        if (openInNewWindow) {
-          await config.update(
-            'actions.openToSide',
-            false,
-            vscode.ConfigurationTarget.Global,
-          );
-        }
-      }
-    }),
-  );
-
   telemetry.track('activated');
   logger.info('━━━ Extension activation completed successfully ━━━');
 

@@ -1,16 +1,12 @@
-# Walkthrough Media Assets
+# Placeholder Image
 
-This directory is reserved for walkthrough media assets (images, GIFs, etc.).
+This is a placeholder file. Replace with actual hero.png image (recommended size: 400x300px or similar).
 
-## Recommended Assets
+The hero image should visually represent AnFavorites features such as:
 
-Place the following images here for the walkthrough steps:
+- Favorites tree view
+- Quick Open dialog
+- Gutter decorations
+- Groups organization
 
-- `01-keyboard-shortcut.png` — Screenshot showing the keyboard shortcut configuration
-- `02-first-favorite.png` — Screenshot showing how to add a favorite
-- `03-groups.png` — Screenshot showing group organization
-- `04-sync-ides.png` — Diagram showing cross-IDE sync
-- `05-drag-and-drop.png` — Screenshot showing drag and drop in action
-- `06-settings.png` — Screenshot showing the settings page
-
-Recommended image size: **400x300px** or similar aspect ratio.
+You can create a simple graphic or screenshot composite showing these features.
