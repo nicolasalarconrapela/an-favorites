@@ -11,14 +11,18 @@ AnFavorites is highly configurable. Here are the most useful settings to customi
 ## 🎨 Quick Open
 
 - **Show icons** (`anfavorites.quickOpen.showIcons`): Toggle file icons in the Quick Open list
-- **Path detail location** (`anfavorites.quickOpen.pathDetailLocation`): Show file paths below or beside the file name
-- **Open to side** (`anfavorites.quickOpen.openToSide`): Automatically open files in a side editor
+- **Path detail location** (`anfavorites.quickOpen.pathDetailLocation`): Show file paths below (**detail**) or beside (**description**) the file name
+- **Show path when** (`anfavorites.quickOpen.showPathWhen`): Always show paths or only on name conflicts
+- **Open to side** (`anfavorites.quickOpen.actions.openToSide`): Automatically open files in a side editor
+- **Open in new window** (`anfavorites.quickOpen.actions.openInNewWindow`): Open files in a new VS Code window by default
+- **Button visibility**: Toggle the "Open to Side" and "Open in New Window" buttons in the list
 
 ## 📊 Limits
 
 - **Max pinned** (`anfavorites.limits.maxPinned`): Maximum pinned favorites allowed (default: 3)
-- **Max favorites in Quick Open** (`anfavorites.limits.quickOpen.maxFavorites`): Recent favorites shown (default: 3)
-- **Max recent files** (`anfavorites.limits.quickOpen.maxRecentFiles`): Recent files shown in Quick Open (default: 3)
+- **Max favorites in Quick Open** (`anfavorites.limits.quickOpen.maxFavorites`): Number of recent favorites shown (default: 3)
+- **Max recent files** (`anfavorites.limits.quickOpen.maxRecentFiles`): Number of recent files shown (default: 3)
+- **Search cache size** (`anfavorites.quickOpen.searchCacheSize`): Number of recent searches kept in memory
 
 ## 🌍 Language
 
@@ -28,7 +32,7 @@ Choose between **English**, **Español**, or **Auto** (follows VS Code's languag
 
 ## 💾 Storage
 
-- **Share across IDEs** (`anfavorites.storage.shareAcrossIdes`): Enable/disable cross-IDE synchronization
+- **Share across IDEs** (`anfavorites.storage.shareAcrossIdes`): Enable/disable cross-IDE synchronization. This allows sharing favorites between VS Code, Cursor, Windsurf, etc. if they share the same workspace.
 
 ## Pro Tip 💡
 

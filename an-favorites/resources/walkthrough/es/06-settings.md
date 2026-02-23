@@ -11,14 +11,18 @@ AnFavorites es altamente configurable. Aquí están los ajustes más útiles par
 ## 🎨 Quick Open
 
 - **Mostrar iconos** (`anfavorites.quickOpen.showIcons`): Activa/desactiva los iconos de archivo en la lista de Quick Open
-- **Ubicación del detalle** (`anfavorites.quickOpen.pathDetailLocation`): Muestra las rutas debajo o al lado del nombre del archivo
-- **Abrir al lado** (`anfavorites.quickOpen.openToSide`): Abre automáticamente archivos en el editor lateral
+- **Ubicación del detalle** (`anfavorites.quickOpen.pathDetailLocation`): Muestra las rutas debajo (**detail**) o al lado (**description**) del nombre del archivo
+- **Cuándo mostrar la ruta** (`anfavorites.quickOpen.showPathWhen`): Mostrar siempre la ruta o solo cuando haya conflictos de nombre
+- **Abrir al lado** (`anfavorites.quickOpen.actions.openToSide`): Abre automáticamente archivos en el editor lateral
+- **Abrir en nueva ventana** (`anfavorites.quickOpen.actions.openInNewWindow`): Abre archivos en una nueva ventana de VS Code por defecto
+- **Visibilidad de botones**: Activa/desactiva los botones de "Abrir al lado" y "Abrir en nueva ventana" en la lista
 
 ## 📊 Límites
 
 - **Máximo de fijados** (`anfavorites.limits.maxPinned`): Máximo de favoritos fijados permitidos (por defecto: 3)
-- **Máximo de favoritos en Quick Open** (`anfavorites.limits.quickOpen.maxFavorites`): Favoritos recientes mostrados (por defecto: 3)
-- **Máximo de archivos recientes** (`anfavorites.limits.quickOpen.maxRecentFiles`): Archivos recientes en Quick Open (por defecto: 3)
+- **Máximo de favoritos en Quick Open** (`anfavorites.limits.quickOpen.maxFavorites`): Número de favoritos recientes mostrados (por defecto: 3)
+- **Máximo de archivos recientes** (`anfavorites.limits.quickOpen.maxRecentFiles`): Número de archivos recientes mostrados (por defecto: 3)
+- **Tamaño del caché de búsqueda** (`anfavorites.quickOpen.searchCacheSize`): Número de búsquedas recientes mantenidas en memoria
 
 ## 🌍 Idioma
 
@@ -28,7 +32,7 @@ Elige entre **English**, **Español** o **Auto** (sigue la configuración de idi
 
 ## 💾 Almacenamiento
 
-- **Compartir entre IDEs** (`anfavorites.storage.shareAcrossIdes`): Activa/desactiva la sincronización entre IDEs
+- **Compartir entre IDEs** (`anfavorites.storage.shareAcrossIdes`): Activa/desactiva la sincronización entre IDEs. Esto permite compartir favoritos entre VS Code, Cursor, Windsurf, etc. si comparten el mismo espacio de trabajo.
 
 ## Consejo 💡
 
