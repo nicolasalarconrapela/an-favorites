@@ -2,8 +2,8 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "0.13.4",
-  "publisher": "anappwilos",
+  "version": "0.13.5",
+  "publisher": "AnAppWilos",
   "icon": "resources/icon.png",
   "license": "MIT",
   "engines": {
@@ -19,7 +19,8 @@
     "quick open",
     "productivity",
     "files",
-    "explorer"
+    "explorer",
+    "pinned"
   ],
   "repository": {
     "type": "git",
