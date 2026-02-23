@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "0.14.4",
+  "version": "0.15.10",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -12,24 +12,9 @@
   "icon": "resources/icon.png",
   "badges": [
     {
-      "url": "https://vsmarketplacebadges.dev/version/AnAppWiLos.an-favorites.png",
-      "href": "https://marketplace.visualstudio.com/items?itemName=AnAppWiLos.an-favorites",
-      "description": "Version"
-    },
-    {
-      "url": "https://vsmarketplacebadges.dev/installs/AnAppWiLos.an-favorites.png",
-      "href": "https://marketplace.visualstudio.com/items?itemName=AnAppWiLos.an-favorites",
-      "description": "Installs"
-    },
-    {
-      "url": "https://vsmarketplacebadges.dev/rating/AnAppWiLos.an-favorites.png",
-      "href": "https://marketplace.visualstudio.com/items?itemName=AnAppWiLos.an-favorites",
-      "description": "Rating"
-    },
-    {
-      "url": "https://vsmarketplacebadges.dev/downloads/AnAppWiLos.an-favorites.png",
-      "href": "https://marketplace.visualstudio.com/items?itemName=AnAppWiLos.an-favorites",
-      "description": "Downloads"
+      "url": "https://img.shields.io/open-vsx/v/AnAppWilos/an-favorites.svg",
+      "href": "https://open-vsx.org/extension/AnAppWilos/an-favorites",
+      "description": "Open VSX Version"
     }
   ],
   "license": "MIT",
@@ -62,15 +47,6 @@
   ],
   "main": "./dist/bootstrap/extension.js",
   "l10n": "./l10n",
-  "files": [
-    "dist/**",
-    "l10n/**",
-    "resources/**",
-    "README.md",
-    "CHANGELOG.md",
-    "LICENSE",
-    "package.json"
-  ],
   "contributes": {
     "commands": [
       {
@@ -724,17 +700,20 @@
     "@typescript-eslint/parser": "^8.52.0",
     "@vscode/l10n-dev": "^0.0.35",
     "@vscode/test-electron": "^2.5.2",
-    "@vscode/vsce": "^3.7.1",
+    "@vscode/vsce": "^3.7.2-7",
     "esbuild": "^0.27.2",
-    "eslint": "^8.57.0",
+    "eslint": "^10.0.1",
     "eslint-config-prettier": "^10.1.8",
-    "mocha": "^11.7.5",
+    "mocha": "^10.7.5",
     "prettier": "^3.7.4",
     "typescript": "^5.7.3"
   },
   "overrides": {
     "diff": "8.0.3",
+    "minimist": "1.2.8",
     "minimatch": "10.2.2",
-    "minimist": "1.2.8"
+    "@vscode/vsce": {
+      "minimatch": "3.1.2"
+    }
   }
 }

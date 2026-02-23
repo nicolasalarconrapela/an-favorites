@@ -8,3 +8,7 @@ out
 .eslintrc.cjs
 .prettierrc.json
 .editorconfig
+resources/media/*.mp4
+resources/*.mp4
+resources/banner_logo_v1.png
+resources/init.png

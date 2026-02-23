@@ -827,8 +827,7 @@ export function registerQuickOpenCommand(
             .filter((uri) => {
               return (
                 uri.scheme === 'file' &&
-                !!vscode.workspace.getWorkspaceFolder(uri) &&
-                !pinnedNormSet.has(normalizeFsPath(uri.fsPath))
+                !!vscode.workspace.getWorkspaceFolder(uri)
               );
             })
             .slice(0, config.maxRecentFavorites);
