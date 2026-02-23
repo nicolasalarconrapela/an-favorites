@@ -10,13 +10,16 @@ import { registerManageGroupsCommands } from '../commands/manageGroupsCommand';
 import { registerPinCommands } from '../commands/pinCommands';
 import { registerOpenToSideCommand } from '../commands/openToSideCommand';
 import { registerQuickOpenCommand } from '../commands/quickOpenCommand';
+import { registerKeyboardShortcutCommand } from '../commands/keyboardShortcutCommand';
 import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
 import { SharedStorageService } from '../services/sharedStorageService';
 import { disposeCollisionIndex } from '../utils/collisionUtils';
+import { initializeL10n, t } from '../utils/l10n';
 
 export function activate(context: vscode.ExtensionContext): void {
+  initializeL10n(context);
   const loggingConfig = vscode.workspace.getConfiguration(
     'anfavorites.logging',
   );
@@ -29,7 +32,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const maxRotatedFiles = loggingConfig.get<number>('maxRotatedFiles', 5);
 
   const logger = createAppLogger(context, {
-    channelName: 'AnFavorites Logs',
+    channelName: t('AnFavorites Logs'),
     level: logLevel,
     maxFileSizeBytes: 5 * 1024 * 1024,
     maxRotatedFiles,
@@ -68,9 +71,57 @@ export function activate(context: vscode.ExtensionContext): void {
   registerManageGroupsCommands(context, favoritesProvider, logger);
   registerPinCommands(context, favoritesProvider, logger);
   registerOpenToSideCommand(context, logger);
+  registerKeyboardShortcutCommand(context, logger);
   logger.info('[activate] registering quickOpen...');
   registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
   logger.info('[activate] quickOpen registered.');
+
+  // Register Get Started command
+  context.subscriptions.push(
+    vscode.commands.registerCommand('anfavorites.getStarted', () => {
+      vscode.commands.executeCommand(
+        'workbench.action.openWalkthrough',
+        'anappwilos.an-favorites#anfavorites.getStarted',
+        false,
+      );
+    }),
+  );
+
+  // Enforce mutual exclusivity for openToSide and openInNewWindow
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration(async (e) => {
+      if (e.affectsConfiguration('anfavorites.quickOpen.actions.openToSide')) {
+        const config = vscode.workspace.getConfiguration(
+          'anfavorites.quickOpen',
+        );
+        const openToSide = config.get<boolean>('actions.openToSide', false);
+        if (openToSide) {
+          await config.update(
+            'actions.openInNewWindow',
+            false,
+            vscode.ConfigurationTarget.Global,
+          );
+        }
+      } else if (
+        e.affectsConfiguration('anfavorites.quickOpen.actions.openInNewWindow')
+      ) {
+        const config = vscode.workspace.getConfiguration(
+          'anfavorites.quickOpen',
+        );
+        const openInNewWindow = config.get<boolean>(
+          'actions.openInNewWindow',
+          false,
+        );
+        if (openInNewWindow) {
+          await config.update(
+            'actions.openToSide',
+            false,
+            vscode.ConfigurationTarget.Global,
+          );
+        }
+      }
+    }),
+  );
 
   telemetry.track('activated');
   logger.info('━━━ Extension activation completed successfully ━━━');

@@ -1,5 +1,8 @@
 import * as vscode from 'vscode';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
+import { t } from '../utils/l10n';
+
+type GroupQuickPickItem = vscode.QuickPickItem & { groupName: string };
 
 export function registerAddToFavoritesInGroupCommand(
   context: vscode.ExtensionContext,
@@ -17,7 +20,9 @@ export function registerAddToFavoritesInGroupCommand(
         const targetUri = uri || vscode.window.activeTextEditor?.document.uri;
 
         if (!targetUri) {
-          vscode.window.showWarningMessage('No se seleccionó ningún archivo');
+          vscode.window.showWarningMessage(
+            t('No file selected'),
+          );
           logger.warn('No URI provided for addToFavoritesInGroup');
           return;
         }
@@ -28,20 +33,22 @@ export function registerAddToFavoritesInGroupCommand(
           const stat = await vscode.workspace.fs.stat(targetUri);
           if (stat.type === vscode.FileType.Directory) {
             vscode.window.showWarningMessage(
-              'No se pueden añadir carpetas a favoritos',
+              t('Folders cannot be added to favorites'),
             );
             logger.warn('Attempted to add directory to favorits');
             return;
           }
         } catch (error) {
           logger.error('Error checking file', error);
-          vscode.window.showErrorMessage('Error al verificar el archivo');
+          vscode.window.showErrorMessage(
+            t('Error checking file'),
+          );
           return;
         }
 
         if (favoritesProvider.hasFavorite(targetUri)) {
           vscode.window.showInformationMessage(
-            'El archivo ya está en favoritos',
+            t('File is already in favorites'),
           );
           logger.info('File already in favorites');
           return;
@@ -53,27 +60,50 @@ export function registerAddToFavoritesInGroupCommand(
           return;
         }
 
-        const selectedGroup = await vscode.window.showQuickPick(groups, {
-          placeHolder: 'Selecciona el grupo donde añadir el favorito',
-          title: 'Añadir a Grupo de Favoritos',
-        });
+        const quickPickTitle = t('Add to Favorites Group');
+        const quickPickPlaceholder = t(
+          'Select the group to add the favorite to',
+        );
+
+        const groupItems: GroupQuickPickItem[] = groups.map((group) => ({
+          label: FavoritesTreeDataProvider.getGroupDisplayName(group),
+          groupName: group,
+        }));
+
+        const selectedGroup = await vscode.window.showQuickPick<GroupQuickPickItem>(
+          groupItems,
+          {
+          placeHolder: quickPickPlaceholder,
+          title: quickPickTitle,
+          },
+        );
 
         if (!selectedGroup) {
           return;
         }
 
+        const targetGroup = selectedGroup.groupName;
+
         logger.info(
-          `Adding favorite directly to group "${selectedGroup}": ${targetUri.fsPath}`,
+          `Adding favorite directly to group "${targetGroup}": ${targetUri.fsPath}`,
         );
-        favoritesProvider.addFavorite(targetUri, selectedGroup);
+        favoritesProvider.addFavorite(targetUri, targetGroup);
+        const targetGroupDisplayName =
+          FavoritesTreeDataProvider.getGroupDisplayName(targetGroup);
 
         vscode.window.showInformationMessage(
-          `Añadido a favoritos en "${selectedGroup}": ${targetUri.fsPath}`,
+          t(
+            'Added to favorites in "{0}": {1}',
+            targetGroupDisplayName,
+            targetUri.fsPath,
+          ),
         );
         logger.info('Favorite added successfully');
       } catch (error) {
         logger.error('Unexpected error in addToFavoritesInGroup', error);
-        vscode.window.showErrorMessage(`Error al añadir favorito: ${error}`);
+        vscode.window.showErrorMessage(
+          t('Error adding favorite: {0}', String(error)),
+        );
       }
     },
   );

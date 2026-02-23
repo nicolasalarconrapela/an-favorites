@@ -13,6 +13,9 @@ export interface QuickOpenConfig {
   maxSearchFiles: number;
   searchCacheSize: number;
   openToSide: boolean;
+  openInNewWindow: boolean;
+  showOpenToSideButton: boolean;
+  showOpenInNewWindowButton: boolean;
   showIcons: boolean;
   pathDetailLocation: 'description' | 'detail';
   showPathWhen: 'always' | 'onConflict';
