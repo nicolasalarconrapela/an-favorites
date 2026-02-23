@@ -31,7 +31,7 @@
 
 It also allows you to visually manage your pinned items, categorize them into folders, and use AnFavorites as a fast, native search tool within your development environment.
 
-<video src="https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/demo01.mp4?raw=true" controls="false" autoplay="true" loop="true" muted="true" width="100%"></video>
+<video src="https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/demo01 .mp4" controls="false" autoplay="true" loop="true" muted="true" width="100%" alt="Video"></video>
 
 If you work with multiple environments (like Cursor or Windsurf), your favorites will **automatically sync across IDEs** sharing the same workspace—ensuring you never lose track of what's truly important.
 
