@@ -21,13 +21,13 @@
 
 ![alt text](./resources/init.png)
 
-AnFavorites es una extensión profesional, 100% de código abierto, para Visual Studio Code que optimiza tu flujo de trabajo ofreciéndote acceso instantáneo a lo más importante.
+AnFavorites is a professional, 100% open-source extension for Visual Studio Code that optimizes your workflow by offering instant access to what matters most.
 
-Con un único atajo de teclado (por defecto, configurable), QuickPick te permite abrir tus archivos favoritos en cuestión de segundos. Podrás gestionar de forma rápida e intuitiva tus elementos fijados más recientes e incluso utilizarlo como buscador ágil dentro de tu entorno de desarrollo.
+With a single keyboard shortcut (fully configurable), QuickPick allows you to open your favorite files in seconds. You can quickly and intuitively manage your most recent pinned items and even use it as an agile search tool within your development environment.
 
 <video src="./resources/demo01.mp4" controls="false" autoplay="true" loop="true" muted="true" width="100%"></video>
 
-Si trabajas con varios IDEs, tus favoritos se sincronizan automáticamente entre ellos, para que nunca pierdas el hilo de lo realmente importante en tu flujo diario.
+If you work with multiple IDEs, your favorites automatically sync between them, ensuring you never lose track of what's truly important in your daily workflow.
 
 <!-- 
 SUGGESTED IMAGE: Feature Highlight GIF
