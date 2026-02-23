@@ -1,4 +1,4 @@
-![Logo_&_Banner](./resources/banner_logo.png)
+![Logo_&_Banner](https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/banner_logo.png?raw=true)
 
 <h1 align="left">AnFavorites</h1>
 
@@ -6,81 +6,89 @@
 
 <p align="center">
   <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
-    <img src="https://img.shields.io/visual-studio-marketplace/i/AnAppWilos.an-favorites?color=blue&label=Installs&style=for-the-badge" 
-         alt="Visual Studio Marketplace Installs">
+    <img src="https://img.shields.io/visual-studio-marketplace/i/AnAppWilos.an-favorites?color=blue&label=Instalaciones&style=for-the-badge"
+          alt="Visual Studio Marketplace Instalaciones">
   </a>
   <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites&ssr=false#version-history">
-    <img src="https://img.shields.io/visual-studio-marketplace/v/AnAppWilos.an-favorites?color=orange&label=Version&style=for-the-badge" 
-         alt="Visual Studio Marketplace Version">
+    <img src="https://img.shields.io/visual-studio-marketplace/v/AnAppWilos.an-favorites?color=orange&label=Versión&style=for-the-badge"
+          alt="Visual Studio Marketplace Versión">
   </a>
   <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
-    <img src="https://img.shields.io/visual-studio-marketplace/r/AnAppWilos.an-favorites?color=brightgreen&label=Rating&style=for-the-badge" 
-         alt="Visual Studio Marketplace Rating">
+    <img src="https://img.shields.io/visual-studio-marketplace/r/AnAppWilos.an-favorites?color=brightgreen&label=Valoración&style=for-the-badge"
+          alt="Visual Studio Marketplace Valoración">
   </a>
   <a href="https://opensource.org/licenses/MIT">
-    <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" 
-         alt="License MIT">
+    <img src="https://img.shields.io/badge/Licencia-MIT-yellow?style=for-the-badge"
+          alt="Licencia MIT">
   </a>
 </p>
 
-![alt text](./resources/init.png)
+![img_init](https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/init.png?raw=true)
 
-AnFavorites es una extensión profesional, 100% de código abierto, para Visual Studio Code que optimiza tu flujo de trabajo ofreciéndote acceso instantáneo a lo más importante.
+**AnFavorites** es una extensión profesional, 100% de código abierto, para Visual Studio Code que optimiza tu flujo de trabajo ofreciéndote acceso instantáneo a lo que realmente importa.
 
-Con un único atajo de teclado (totalmente configurable), QuickPick te permite abrir tus archivos favoritos en cuestión de segundos. Podrás gestionar de forma rápida e intuitiva tus elementos fijados más recientes e incluso utilizarlo como buscador ágil dentro de tu entorno de desarrollo.
+Con un solo atajo de teclado (totalmente configurable), QuickPick te permite abrir tus archivos favoritos en segundos. Puedes gestionar de forma rápida e intuitiva tus elementos pineados más recientes e incluso utilizarlo como una herramienta de búsqueda ágil dentro de tu entorno de desarrollo.
 
-<video src="./resources/demo01.mp4" controls="false" autoplay="true" loop="true" muted="true" width="100%"></video>
+<video src="https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/demo01.mp4?raw=true" controls="false" autoplay="true" loop="true" muted="true" width="100%"></video>
 
-Si trabajas con varios IDEs, tus favoritos se sincronizan automáticamente entre ellos, para que nunca pierdas el hilo de lo realmente importante en tu flujo diario.
+Si trabajas con múltiples IDEs, tus favoritos se sincronizan automáticamente entre ellos, garantizando que nunca pierdas el hilo de lo verdaderamente importante en tu flujo diario.
+
+---
 
 ## 🚀 Características
 
-- **Gestión Inteligente de Favoritos**: Organiza tus archivos y comandos más usados sin esfuerzo.
-- **Webview Integrada**: Una interfaz limpia y moderna para gestionar tus recursos.
-- **Acceso Rápido**: Ejecuta comandos y abre archivos con el mínimo de pulsaciones.
-- **Soporte Multi-idioma**: Totalmente localizado para hablantes de inglés y español.
-- **Logging Profesional**: Sistema de logs especializado para depuración y monitoreo.
+* **Gestión Inteligente de Favoritos**: Organiza fácilmente tus archivos y comandos más utilizados.
+* **Webview Integrada**: Interfaz limpia y moderna para gestionar tus recursos.
+* **Acceso Rápido**: Ejecuta comandos y abre archivos con el mínimo número de pulsaciones.
+* **Soporte Multilenguaje**: Totalmente localizado en inglés y español.
+* **Logging Profesional**: Sistema de registro especializado para depuración y monitorización.
+
+---
 
 ## 🛠️ Instalación
 
-Puedes instalar la extensión directamente desde el Visual Studio Code Marketplace:
+Puedes instalar la extensión directamente desde el Marketplace de Visual Studio Code:
 
 1. Abre VS Code.
 2. Ve a la vista de Extensiones (`Ctrl+Shift+X`).
 3. Busca `AnFavorites`.
 4. Haz clic en **Instalar**.
 
+---
+
 ## 💻 Desarrollo y Contribución
 
-¡Creemos en el poder del código abierto! Este proyecto es 100% open source y agradecemos las contribuciones de la comunidad.
+Creemos en el poder del código abierto. Este proyecto es 100% open source y damos la bienvenida a contribuciones de la comunidad.
 
-### Requisitos Previos
+### Requisitos previos
 
-- Node.js
-- npm
+* Node.js
+* npm
 
-### Inicio Rápido
+### Inicio rápido
 
 ```bash
-# Clona el repositorio
-git clone https://github.com/nicolasalarconrapela/an-favorites.git
+# Clonar el repositorio
+git clone https://github.com/YOUR_USERNAME/an-favorites.git
 
-# Instala las dependencias
+# Instalar dependencias
 npm install
 
-# Compila la extensión
+# Compilar la extensión
 npm run compile
 
-# Vigila los cambios durante el desarrollo
+# Modo desarrollo (watch)
 npm run watch
 ```
 
-Presiona `F5` en VS Code para abrir una nueva ventana con tu extensión cargada.
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT - mira el archivo [LICENSE](LICENSE) para más detalles.
+Pulsa `F5` en VS Code para abrir una nueva ventana con la extensión cargada.
 
 ---
 
-Hecho con ❤️ por la Comunidad Open Source.
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
+
+---
+
+Hecho con ❤️ por AnAppWiLos.

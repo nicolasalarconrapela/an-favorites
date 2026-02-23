@@ -1,4 +1,4 @@
-![Logo_&_Banner](./resources/banner_logo.png)
+![Logo_&_Banner](https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/banner_logo.png?raw=true)
 
 <h1 align="left">AnFavorites</h1>
 
@@ -23,20 +23,15 @@
   </a>
 </p>
 
-![alt text](./resources/init.png)
+![img_init](https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/init.png?raw=true)
 
 AnFavorites is a professional, 100% open-source extension for Visual Studio Code that optimizes your workflow by offering instant access to what matters most.
 
 With a single keyboard shortcut (fully configurable), QuickPick allows you to open your favorite files in seconds. You can quickly and intuitively manage your most recent pinned items and even use it as an agile search tool within your development environment.
 
-<video src="./resources/demo01.mp4" controls="false" autoplay="true" loop="true" muted="true" width="100%"></video>
+<video src="https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/demo01.mp4?raw=true" controls="false" autoplay="true" loop="true" muted="true" width="100%"></video>
 
 If you work with multiple IDEs, your favorites automatically sync between them, ensuring you never lose track of what's truly important in your daily workflow.
-
-<!--
-SUGGESTED IMAGE: Feature Highlight GIF
-Description: A smooth GIF demonstrating the core functionality: adding a file to favorites and quickly accessing it via the webview or command palette.
--->
 
 ## 🚀 Features
 
@@ -88,4 +83,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Made with ❤️ by the Open Source Community.
+Made with ❤️ by the AnAppWiLos.
