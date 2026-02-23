@@ -5,17 +5,20 @@
 <br/>
 
 <p align="center">
-  <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
+  <!-- <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
     <img src="https://vsmarketplacebadges.dev/installs/AnAppWilos.an-favorites.png?style=for-the-badge" alt="Visual Studio Marketplace Installs">
   </a>
   <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
     <img src="https://vsmarketplacebadges.dev/downloads/AnAppWilos.an-favorites.png?style=for-the-badge" alt="Visual Studio Marketplace Downloads">
-  </a>
+  </a> -->
   <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites&ssr=false#version-history">
     <img src="https://vsmarketplacebadges.dev/version-short/AnAppWilos.an-favorites.png?style=for-the-badge" alt="Visual Studio Marketplace Version">
   </a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
+  <!-- <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
     <img src="https://vsmarketplacebadges.dev/rating-star/AnAppWilos.an-favorites.png?style=for-the-badge" alt="Visual Studio Marketplace Rating">
+  </a> -->
+  <a href="https://open-vsx.org/extension/AnAppWilos/an-favorites">
+    <img src="https://img.shields.io/open-vsx/v/AnAppWilos/an-favorites?style=for-the-badge&label=Open%20VSX" alt="Open VSX Version">
   </a>
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License MIT">
@@ -24,9 +27,9 @@
 
 ![img_init](https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/init.png?raw=true)
 
-**AnFavorites** is a professional, 100% open-source extension for Visual Studio Code that optimizes your workflow by offering instant, centralized access to what matters most.
+**AnFavorites** is an extension that optimizes your file workflow by providing instant, centralized access to your most important files with a single keyboard shortcut (`Ctrl+Alt+F`).
 
-With a single keyboard shortcut (`Ctrl+Alt+F`), Quick Open allows you to effortlessly jump to your favorite files in seconds. Visually manage your pinned items, categorize them into folders, and use AnFavorites as a fast, native search tool inside your development environment limits.
+It also allows you to visually manage your pinned items, categorize them into folders, and use AnFavorites as a fast, native search tool within your development environment.
 
 <video src="https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/demo01.mp4?raw=true" controls="false" autoplay="true" loop="true" muted="true" width="100%"></video>
 
