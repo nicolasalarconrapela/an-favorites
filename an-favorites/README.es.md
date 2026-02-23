@@ -6,16 +6,20 @@
 
 <p align="center">
   <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
-    <img src="https://img.shields.io/visual-studio-marketplace/i/AnAppWilos.an-favorites.svg?color=85C1E9&style=for-the-badge" alt="Visual Studio Marketplace Installs">
+    <img src="https://img.shields.io/visual-studio-marketplace/i/AnAppWilos.an-favorites?color=blue&label=Installs&style=for-the-badge" 
+         alt="Visual Studio Marketplace Installs">
   </a>
   <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites&ssr=false#version-history">
-    <img src="https://img.shields.io/visual-studio-marketplace/v/AnAppWilos.an-favorites.svg?color=orange&label=Version&style=for-the-badge" alt="Visual Studio Marketplace Version">
+    <img src="https://img.shields.io/visual-studio-marketplace/v/AnAppWilos.an-favorites?color=orange&label=Version&style=for-the-badge" 
+         alt="Visual Studio Marketplace Version">
   </a>
   <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
-    <img src="https://img.shields.io/visual-studio-marketplace/r/AnAppWilos.an-favorites.svg?color=orange&label=Rating&style=for-the-badge" alt="Visual Studio Marketplace Rating">
+    <img src="https://img.shields.io/visual-studio-marketplace/r/AnAppWilos.an-favorites?color=brightgreen&label=Rating&style=for-the-badge" 
+         alt="Visual Studio Marketplace Rating">
   </a>
   <a href="https://opensource.org/licenses/MIT">
-    <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License">
+    <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" 
+         alt="License MIT">
   </a>
 </p>
 
