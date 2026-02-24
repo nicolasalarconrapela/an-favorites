@@ -151,7 +151,9 @@ export class LoggingModule implements Logger {
   }
 
   setLevel(level: LogLevel): void {
+    const oldLevel = this.level;
     this.level = level;
+    this.info(`[logging] Level changed from ${oldLevel} to ${level}`);
   }
 
   throttle(

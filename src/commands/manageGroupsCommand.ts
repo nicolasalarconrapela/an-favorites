@@ -46,11 +46,11 @@ export function registerManageGroupsCommands(
           groupNames.length === 1 ? groupNames[0] : '';
 
         for (const name of groupNames) {
-          logger.info(`Adding new group: ${name}`);
+          logger.debug(`Adding new group: ${name}`);
           const success = favoritesProvider.addGroup(name);
           if (success) {
             createdCount++;
-            logger.info(`Group created successfully: ${name}`);
+            logger.debug(`Group created successfully: ${name}`);
           } else {
             existingCount++;
             logger.warn(`Group already exists or failed: ${name}`);
@@ -156,7 +156,7 @@ export function registerManageGroupsCommands(
 
         if (confirm === deleteLabel) {
           for (const g of groupsToProcess) {
-            logger.info(`Removing group: ${g}`);
+            logger.debug(`Removing group: ${g}`);
             favoritesProvider.removeGroup(g);
           }
           vscode.window.showInformationMessage(
@@ -232,7 +232,7 @@ export function registerManageGroupsCommands(
 
         if (newName) {
           const trimmedNewName = newName.trim();
-          logger.info(
+          logger.debug(
             `Renaming group from "${oldName}" to "${trimmedNewName}"`,
           );
           const success = favoritesProvider.renameGroup(
@@ -243,7 +243,7 @@ export function registerManageGroupsCommands(
             vscode.window.showInformationMessage(
               t('Group renamed to "{0}"', newName),
             );
-            logger.info(`Group renamed successfully`);
+            logger.debug(`Group renamed successfully`);
           } else {
             vscode.window.showErrorMessage(t('Could not rename group'));
             logger.error(
@@ -333,7 +333,7 @@ export function registerManageGroupsCommands(
           FavoritesTreeDataProvider.getGroupDisplayName(targetGroup);
 
         for (const f of itemsToProcess) {
-          logger.info(
+          logger.debug(
             `Moving favorite ${f.resourceUri.fsPath} to group "${targetGroup}"`,
           );
           favoritesProvider.moveFavorite(f.resourceUri, targetGroup);
@@ -348,7 +348,7 @@ export function registerManageGroupsCommands(
                 targetGroupDisplayName,
               ),
         );
-        logger.info(`Favorite(s) moved successfully`);
+        logger.debug(`Favorite(s) moved successfully`);
       },
     ),
   );
@@ -375,7 +375,7 @@ export function registerManageGroupsCommands(
         );
 
         if (confirm === clearGroupLabel) {
-          logger.info(`Clearing group: ${item.groupName}`);
+          logger.debug(`Clearing group: ${item.groupName}`);
           favoritesProvider.clearGroupItems(item.groupName);
           vscode.window.showInformationMessage(
             t(
@@ -401,7 +401,7 @@ export function registerManageGroupsCommands(
         }
 
         for (const f of itemsToProcess) {
-          logger.info(
+          logger.debug(
             `Removing from group: ${f.resourceUri.fsPath} (group: ${f.group})`,
           );
           favoritesProvider.resetFavoriteGroup(f.resourceUri);
@@ -432,7 +432,7 @@ export function registerManageGroupsCommands(
         );
 
         if (confirm === deleteAllLabel) {
-          logger.info('Removing ALL favorites');
+          logger.debug('Removing ALL favorites');
           favoritesProvider.removeAllFavorites();
           vscode.window.showInformationMessage(t('All favorites removed'));
         }

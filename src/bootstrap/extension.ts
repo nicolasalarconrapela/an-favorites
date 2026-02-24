@@ -38,14 +38,13 @@ export function activate(context: vscode.ExtensionContext): void {
     maxRotatedFiles,
   });
 
-  logger.info('━━━ Extension activation started ━━━');
-  logger.show(true);
+  logger.debug('━━━ Extension activation started ━━━');
 
   const sharedStorage = new SharedStorageService(context, logger);
   const telemetry = new TelemetryService();
   const mruService = new MRUService(context, logger);
 
-  logger.info('Registering favorites tree provider...');
+  logger.debug('Registering favorites tree provider...');
 
   const favoritesProvider = new FavoritesTreeDataProvider(
     context,
@@ -62,7 +61,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(treeView);
 
-  logger.info('Registering favorites commands...');
+  logger.debug('Registering favorites commands...');
 
   registerAddToFavoritesCommand(context, favoritesProvider, logger);
   registerAddToFavoritesInGroupCommand(context, favoritesProvider, logger);
@@ -72,9 +71,9 @@ export function activate(context: vscode.ExtensionContext): void {
   registerPinCommands(context, favoritesProvider, logger);
   registerOpenToSideCommand(context, logger);
   registerKeyboardShortcutCommand(context, logger);
-  logger.info('[activate] registering quickOpen...');
+  logger.debug('[activate] registering quickOpen...');
   registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
-  logger.info('[activate] quickOpen registered.');
+  logger.debug('[activate] quickOpen registered.');
 
   // Register Get Started command
   context.subscriptions.push(
@@ -90,7 +89,14 @@ export function activate(context: vscode.ExtensionContext): void {
   // Enforce mutual exclusivity for openToSide and openInNewWindow
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(async (e) => {
-      if (e.affectsConfiguration('anfavorites.quickOpen.actions.openToSide')) {
+      if (e.affectsConfiguration('anfavorites.logging.level')) {
+        const newLevel = vscode.workspace
+          .getConfiguration('anfavorites.logging')
+          .get<LogLevel>('level', 'info');
+        logger.setLevel(newLevel);
+      } else if (
+        e.affectsConfiguration('anfavorites.quickOpen.actions.openToSide')
+      ) {
         const config = vscode.workspace.getConfiguration(
           'anfavorites.quickOpen',
         );
@@ -124,7 +130,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   telemetry.track('activated');
-  logger.info('━━━ Extension activation completed successfully ━━━');
+  logger.debug('━━━ Extension activation completed successfully ━━━');
 
   const watchedPaths = new Map<string, vscode.FileSystemWatcher>();
   const pendingValidations = new Set<string>();

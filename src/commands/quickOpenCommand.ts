@@ -640,9 +640,9 @@ export function registerQuickOpenCommand(
         message: string,
         metadata?: unknown,
       ) => logThrottled(level, key, message, metadata, log);
-      log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      log.info('🔍 [QuickOpen] COMMAND STARTED - ALT+SHIFT+F');
-      log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      log.debug('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      log.debug('🔍 [QuickOpen] COMMAND STARTED - ALT+SHIFT+F');
+      log.debug('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       log.debug(
         `[QuickOpen] Environment: ${vscode.env.appName} (${vscode.version})`,
@@ -692,23 +692,23 @@ export function registerQuickOpenCommand(
         buildTokenSource?.cancel();
         buildTokenSource?.dispose();
         buildTokenSource = null;
-        log.info('[QuickOpen] Disposing QuickPick and listeners...');
+        log.debug('[QuickOpen] Disposing QuickPick and listeners...');
         try {
           disposables.forEach((d) => d.dispose());
-          log.info(`[QuickOpen] Disposed ${disposables.length} listeners`);
+          log.debug(`[QuickOpen] Disposed ${disposables.length} listeners`);
         } finally {
           quickPick.dispose();
-          log.info('[QuickOpen] QuickPick disposed');
+          log.debug('[QuickOpen] QuickPick disposed');
         }
       };
 
       disposables.push(
         quickPick.onDidHide(() => {
-          log.info('[QuickOpen] onDidHide triggered');
+          log.debug('[QuickOpen] onDidHide triggered');
           safeDispose();
         }),
       );
-      log.info('[QuickOpen] onDidHide listener registered');
+      log.debug('[QuickOpen] onDidHide listener registered');
 
       const searchCache = new LruCache<string, SearchCacheEntry>(30);
       let buildTokenSource: vscode.CancellationTokenSource | null = null;
