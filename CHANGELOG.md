@@ -1,125 +1,56 @@
-To avoid noise
-- Quick Open: Strong logger typing to improve consistency and testing
-- Collisions: Unified collision tag application between TreeDataProvider and Quick Open
+# Changelog
 
-## [0.8.74] - 2026-01-29
-
-### Fixed
-
-- Lifecycle: The collision index can now be correctly reactivated after a deactivate
-
-## [0.8.73] - 2026-01-29
-
-### Fixed
-
-- Lifecycle: Internal listeners for MRU and TreeDataProvider are now freed to prevent leaks on reload
-- Lifecycle: Added cleanup of the global collision index and its watchers on deactivate
-
-## [0.8.71] - 2026-01-28
+## [1.0.5] - 2026-02-24
 
 ### Changed
 
-- Logging: Quick Open now uses correlationId per session and reduces noise in environment/validation logs
-- Logging: TreeDataProvider now moves logs to debug refresh/getChildren for production
+- Documentation: Unified and translated the complete Changelog to English.
+- Documentation: Reformatted version history for better readability and structure.
+- Maintenance: General repository cleanup and version synchronization.
 
-## [0.8.70] - 2026-01-28
-
-### Changed
-
-- TypeScript code: cleaning up unnecessary comments
-
-## [0.8.69] - 2026-01-28
+## [1.0.3] - 2026-02-24
 
 ### Changed
 
-- Logging: context support (scope/correlationId), sanitization and redaction of sensitive metadata, safe serialization, and lazy evaluation
-- Logging: timer helper, console output option, and one-line JSON for files
+- Logging: General refactor to reduce verbosity in the output channel.
+- Logging: Internal process logs (Quick Open, tree refresh, command execution) now use the `debug` level by default.
+- Logging: Support for dynamically updating the log level when changing settings without requiring a restart.
+- Logging: A confirmation message is displayed in the output when the logging level is changed.
+- UI: Automatic opening of the output channel when activating the extension has been removed.
 
-## [0.8.62] - 2026-01-27
+## [1.0.0] - 2026-02-23
 
-### Changed
+### Added
 
-- Quick Open: when deleting a favorite during a search, the icon updates without rebuilding the list
-
-## [0.8.61] - 2026-01-27
-
-### Changed
-
-- Quick Open: does not rebuild the favorites list when searching to maintain the Current position
-
-## [0.8.60] - 2026-01-27
-
-### Changed
-
-- Quick Open: Recent favorites now respect the order in which they were added to prevent the most recently added favorite from appearing first.
-
-## [0.8.59] - 2026-01-27
+- **Core Strategy**: Official release of the stable version with a robust architecture for favorites management.
+- **Quick Open (CTRL+ALT+F)**: New ultra-fast search interface that integrates favorites, recent files, and global search across the workspace.
+- **Group System**: Allows you to organize favorites into custom folders with full drag-and-drop support for reordering items and groups.
+- **Favorites by Line**: Unique ability to save not only files, but also specific lines of code (advanced bookmarks) with integration into the tree and Quick Open.
+- **Multi-IDE Synchronization**: New shared storage system that allows you to automatically synchronize your favorites between VS Code, Cursor, Windsurf, and other IDEs based on the same workspace.
+- **Collision Detection**: Intelligent identification of files with duplicate names in the tree and Quick Open, adding path tags only when necessary to avoid ambiguity.
+- **Multi-root Support**: Advanced workspace management with multiple root folders, allowing you to separate favorites by project name.
+- **Internalization**: Full bilingual support (Spanish and English) and interactive walkthroughs for new users.
+- **Advanced Logging**: Professional logging system with file rotation, configurable levels, and metadata-enriched output.
 
 ### Changed
 
-- Quick Open: Debounces rebuilds for external changes to reduce micro-flickers when toggling favorites.
+- Complete refactoring of the repository structure to meet production standards.
+- Dramatic performance improvement in file validation using concurrency pools.
+- UX: Optimized context menus in the editor, browser, and tree view.
+- UI: Implementation of dynamic icons and visual states (pinned, grouped).
 
-## [0.8.58] - 2026-01-27
+## [0.8.86] - 2026-01-30
 
-### Changed
+### Added
 
-- Exclusion detection now considers relative folder paths in multi-root workspaces.
-
-## [0.8.57] - 2026-01-27
-
-### Changed
-
-- Duplicate name reports now respect the patterns in `anfavorites.search.exclusions`.
-
-## [0.8.56] - 2026-01-21
-
-### Changed
-
-- MRU: Clean up empty paths on load and validate updatePath to discard empty entries
-- Quick Open: Direct removal of non-existent paths from the MRU
-
-## [0.8.55] - 2026-01-20
-
-### Changed
-
-- Validation of favorites and MRU with limited concurrency pool and duration/processed metrics
-
-## [0.8.54] - 2026-01-19
-
-### Changed
-
-- Watcher limited to favorites and recent paths with automatic synchronization
-- Specific validation per deleted file and debounce for bursts
-
-## [0.8.53] - 2026-01-18
-
-### Changed
-
-- Transactional write with temporary file and atomic rename on shared storage
-- Version control by etag, simple merge by key, and issuance of onDidChange in local changes
-- Write conflict logging for diagnostics
-
-## [0.8.52] - 2026-01-17
-
-### Changed
-
-- Configurable log level via settings and default in info
-- Asynchronous log writing with queuing and cleaning of rotated logs
-- Throttling of repetitive logs in Quick Open and watchers
-
-## [0.8.51] - 2026-01-16
-
-### Changed
-
-- Incremental search in Quick Open with configurable limits and warning when exceeding the file threshold
-- Limit on displayed results and LRU caching per session to prevent indefinite growth
+- Storage: aplica cambios en caliente al activar/desactivar la sincronización compartida
 
 ## [0.4.1] - 2026-01-15
 
 ### Changed
 
-- Collision index caching per workspace with debounced refresh and reaction to filesystem events
-- Reuse of the collision index in the favorites tree and Quick Open to avoid repeated searches
+- Cache del índice de colisiones por workspace con refresco debounced y reaccionando a eventos del filesystem
+- Reutilización del índice de colisiones en árbol de favoritos y Quick Open para evitar búsquedas repetidas
 
 ## [0.4.0] - 2026-01-15
 
@@ -149,7 +80,7 @@ To avoid noise
 ### Added
 
 - Basic logging system with VS Code output channel
--Hello command functionality
+- Hello command functionality
 - Webview command
 
 ## [0.1.0] - 2026-01-13
@@ -157,5 +88,5 @@ To avoid noise
 ### Added
 
 - Initial version with basic extension structure
--Hello command
+- Hello command
 - Webview functionality
