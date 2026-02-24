@@ -39,7 +39,6 @@ export function activate(context: vscode.ExtensionContext): void {
   });
 
   logger.info('━━━ Extension activation started ━━━');
-  logger.show(true);
 
   const sharedStorage = new SharedStorageService(context, logger);
   const telemetry = new TelemetryService();
