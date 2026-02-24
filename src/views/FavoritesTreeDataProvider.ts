@@ -174,7 +174,7 @@ export class FavoritesTreeDataProvider
           );
           return;
         }
-        this.logger.info('[storage] External change detected -> reloading');
+        this.logger.debug('[storage] External change detected -> reloading');
         this.reloadFavorites();
         this.refresh();
       }),
@@ -182,7 +182,7 @@ export class FavoritesTreeDataProvider
 
     this.disposables.push(
       vscode.workspace.onDidChangeWorkspaceFolders(() => {
-        this.logger.info('[workspace] Workspace folders changed -> refresh()');
+        this.logger.debug('[workspace] Workspace folders changed -> refresh()');
         this.refresh();
       }),
     );
@@ -193,7 +193,7 @@ export class FavoritesTreeDataProvider
           e.affectsConfiguration('anfavorites.multiroot.separation') ||
           e.affectsConfiguration('anfavorites.search.exclusions')
         ) {
-          this.logger.info(
+          this.logger.debug(
             '[config] relevant configuration changed -> refresh()',
           );
           this.refresh();
@@ -201,7 +201,7 @@ export class FavoritesTreeDataProvider
       }),
     );
 
-    this.logger.info(
+    this.logger.debug(
       `[init] Provider created. favorites=${this.favorites.size}`,
     );
   }
@@ -450,7 +450,7 @@ export class FavoritesTreeDataProvider
     const targetGroup = group || FavoritesTreeDataProvider.DEFAULT_GROUP;
     const filePath = uri.fsPath;
 
-    this.logger.info(`[favorites] addFavorite -> ${filePath}`, {
+    this.logger.debug(`[favorites] addFavorite -> ${filePath}`, {
       group: targetGroup,
     });
 
@@ -465,21 +465,21 @@ export class FavoritesTreeDataProvider
   }
 
   removeFavorite(uri: vscode.Uri): void {
-    this.logger.info(`[favorites] removeFavorite -> ${uri.fsPath}`);
+    this.logger.debug(`[favorites] removeFavorite -> ${uri.fsPath}`);
     this.favorites.delete(uri.fsPath);
     this.saveFavorites();
     this.refresh();
   }
 
   removeAllFavorites(): void {
-    this.logger.info('[favorites] removeAllFavorites');
+    this.logger.debug('[favorites] removeAllFavorites');
     this.favorites.clear();
     this.saveFavorites();
     this.refresh();
   }
 
   clearGroupItems(groupName: string): void {
-    this.logger.info(`[favorites] clearGroupItems -> ${groupName}`);
+    this.logger.debug(`[favorites] clearGroupItems -> ${groupName}`);
     this.favorites.forEach((metadata, filePath) => {
       if (metadata.group === groupName) {
         metadata.group = FavoritesTreeDataProvider.DEFAULT_GROUP;
@@ -494,7 +494,7 @@ export class FavoritesTreeDataProvider
     const metadata = this.favorites.get(uri.fsPath);
     if (!metadata) return;
 
-    this.logger.info(`[favorites] resetFavoriteGroup -> ${uri.fsPath}`);
+    this.logger.debug(`[favorites] resetFavoriteGroup -> ${uri.fsPath}`);
     metadata.group = FavoritesTreeDataProvider.DEFAULT_GROUP;
 
     this.saveFavorites();
@@ -510,7 +510,7 @@ export class FavoritesTreeDataProvider
   }
 
   deleteFavoritesInGroup(groupName: string): void {
-    this.logger.info(`[favorites] deleteFavoritesInGroup -> ${groupName}`);
+    this.logger.debug(`[favorites] deleteFavoritesInGroup -> ${groupName}`);
     const toDelete: string[] = [];
 
     this.favorites.forEach((metadata, filePath) => {
@@ -532,7 +532,7 @@ export class FavoritesTreeDataProvider
       return false;
     }
 
-    this.logger.info(`[groups] addGroup OK -> "${groupName}"`);
+    this.logger.debug(`[groups] addGroup OK -> "${groupName}"`);
     this.groups.add(groupName);
     this.saveFavorites();
     this.refresh();
@@ -547,14 +547,14 @@ export class FavoritesTreeDataProvider
       return;
     }
 
-    this.logger.info(
+    this.logger.debug(
       `[groups] removeGroup -> "${groupName}" (move to default)`,
     );
 
     this.favorites.forEach((metadata, filePath) => {
       if (metadata.group === groupName) {
         metadata.group = FavoritesTreeDataProvider.DEFAULT_GROUP;
-        this.logger.info(`[groups] Moved favorite to default`, {
+        this.logger.debug(`[groups] Moved favorite to default`, {
           filePath,
         });
       }
@@ -581,17 +581,17 @@ export class FavoritesTreeDataProvider
 
     const isMerge = groupMap.has(newName);
     if (isMerge) {
-      this.logger.info(
+      this.logger.debug(
         `[groups] renameGroup MERGING -> "${oldName}" into "${newName}"`,
       );
     }
 
-    this.logger.info(`[groups] renameGroup -> "${oldName}" => "${newName}"`);
+    this.logger.debug(`[groups] renameGroup -> "${oldName}" => "${newName}"`);
 
     this.favorites.forEach((metadata, filePath) => {
       if (metadata.group === oldName) {
         metadata.group = newName;
-        this.logger.info(`[groups] Updated favorite group`, {
+        this.logger.debug(`[groups] Updated favorite group`, {
           filePath,
           newName,
         });
@@ -615,7 +615,7 @@ export class FavoritesTreeDataProvider
       return;
     }
 
-    this.logger.info(`[favorites] moveFavorite -> ${uri.fsPath}`, {
+    this.logger.debug(`[favorites] moveFavorite -> ${uri.fsPath}`, {
       from: metadata.group,
       to: newGroup,
     });
@@ -633,7 +633,7 @@ export class FavoritesTreeDataProvider
     if (metadata.isPinned) {
       metadata.addedAt = Date.now();
     }
-    this.logger.info(
+    this.logger.debug(
       `[favorites] togglePin -> ${uri.fsPath} = ${metadata.isPinned}`,
     );
     this.saveFavorites();
@@ -666,7 +666,7 @@ export class FavoritesTreeDataProvider
       .sort((a, b) => b.addedAt - a.addedAt)
       .slice(0, count);
 
-    this.logger.info(
+    this.logger.debug(
       `[favorites] getRecentFavorites count=${count}`,
       allFavorites.map((f) => f.uri.fsPath),
     );
@@ -678,7 +678,7 @@ export class FavoritesTreeDataProvider
     dataTransfer: vscode.DataTransfer,
     token: vscode.CancellationToken,
   ): void | Thenable<void> {
-    this.logger.info(`[dnd] handleDrag sourceItems=${source.length}`);
+    this.logger.debug(`[dnd] handleDrag sourceItems=${source.length}`);
 
     const draggedFiles = source
       .filter((item): item is FavoriteItem => item instanceof FavoriteItem)
@@ -697,7 +697,7 @@ export class FavoritesTreeDataProvider
     dataTransfer: vscode.DataTransfer,
     token: vscode.CancellationToken,
   ): Promise<void> {
-    this.logger.info('[dnd] handleDrop initiated');
+    this.logger.debug('[dnd] handleDrop initiated');
 
     let targetGroupName: string;
     if (!target) {
@@ -712,13 +712,13 @@ export class FavoritesTreeDataProvider
       return;
     }
 
-    this.logger.info(`[dnd] Target group: "${targetGroupName}"`);
+    this.logger.debug(`[dnd] Target group: "${targetGroupName}"`);
 
     const treeItem = dataTransfer.get('application/vnd.code.tree.favorites');
     if (treeItem) {
       try {
         const filePaths = JSON.parse(treeItem.value) as string[];
-        this.logger.info(
+        this.logger.debug(
           `[dnd] Moving ${filePaths.length} internal items to "${targetGroupName}"`,
         );
 
@@ -757,7 +757,7 @@ export class FavoritesTreeDataProvider
         const urlListResult = await uriListItem.asString();
         const uris = urlListResult.split('\r\n');
 
-        this.logger.info(
+        this.logger.debug(
           `[dnd] Adding ${uris.length} external items to "${targetGroupName}"`,
         );
 
@@ -777,7 +777,7 @@ export class FavoritesTreeDataProvider
                   addedCount++;
                 } else {
                   ignoredFoldersCount++;
-                  this.logger.info(
+                  this.logger.debug(
                     `[dnd] Ignored directory/other: ${uri.fsPath}`,
                   );
                 }
@@ -819,7 +819,7 @@ export class FavoritesTreeDataProvider
   }
 
   reloadFavorites(): void {
-    this.logger.info('[storage] reloadFavorites()');
+    this.logger.debug('[storage] reloadFavorites()');
     this.favorites.clear();
     this.groups.clear();
     this.groups.add(FavoritesTreeDataProvider.DEFAULT_GROUP);
@@ -837,7 +837,7 @@ export class FavoritesTreeDataProvider
     }
 
     if (sharedData) {
-      this.logger.info(
+      this.logger.debug(
         `[storage] loadFavorites (shared) -> count=${sharedData.length}`,
       );
       sharedData.forEach((fav) => {
@@ -858,7 +858,7 @@ export class FavoritesTreeDataProvider
       'anfavorites.favorites.v2',
     );
     if (workspaceStored && workspaceStored.length > 0) {
-      this.logger.info(
+      this.logger.debug(
         `[storage] Migrating workspace v2 -> shared. Total=${workspaceStored.length}`,
       );
       workspaceStored.forEach((fav) => {
@@ -879,7 +879,7 @@ export class FavoritesTreeDataProvider
       'anfavorites.favorites',
     );
     if (legacyFavorites && legacyFavorites.length > 0) {
-      this.logger.info(
+      this.logger.debug(
         `[storage] Migrating v1 (legacy) -> workspace. Total legacy=${legacyFavorites.length}`,
       );
 
@@ -899,7 +899,7 @@ export class FavoritesTreeDataProvider
 
       if (importedCount > 0) {
         this.saveFavorites();
-        this.logger.info(
+        this.logger.debug(
           `[storage] Migration v1 complete. Imported ${importedCount} favorites.`,
         );
       }
@@ -908,7 +908,7 @@ export class FavoritesTreeDataProvider
       return;
     }
 
-    this.logger.info('[storage] No favorites found (shared or migrated)');
+    this.logger.debug('[storage] No favorites found (shared or migrated)');
     this.checkForDuplicateNames();
   }
 
@@ -941,7 +941,7 @@ export class FavoritesTreeDataProvider
         duplicates,
       );
     } else {
-      this.logger.info('[duplicates] No duplicate basenames found');
+      this.logger.debug('[duplicates] No duplicate basenames found');
     }
   }
 
@@ -957,7 +957,7 @@ export class FavoritesTreeDataProvider
       });
     });
 
-    this.logger.info(
+    this.logger.debug(
       `[storage] saveFavorites (shared) -> count=${favoritesArray.length} groups=${this.groups.size}`,
     );
     this._isSaving = true;
@@ -974,7 +974,7 @@ export class FavoritesTreeDataProvider
     const toDelete: string[] = [];
     const t0 = Date.now();
 
-    this.logger.info(
+    this.logger.debug(
       `[validate] validateFavorites start. size=${originalSize}`,
     );
 
@@ -992,12 +992,12 @@ export class FavoritesTreeDataProvider
       },
     );
 
-    this.logger.info(
+    this.logger.debug(
       `[validate] validateFavorites done. processed=${favoritePaths.length} missing=${toDelete.length} durationMs=${Date.now() - t0}`,
     );
 
     if (toDelete.length > 0) {
-      this.logger.info(
+      this.logger.debug(
         `[validate] Removing missing favorites count=${toDelete.length}`,
         toDelete,
       );
@@ -1006,7 +1006,7 @@ export class FavoritesTreeDataProvider
       this.saveFavorites();
       this.refresh();
     } else {
-      this.logger.info('[validate] No missing favorites found');
+      this.logger.debug('[validate] No missing favorites found');
     }
   }
 
@@ -1035,12 +1035,12 @@ export class FavoritesTreeDataProvider
       },
     );
 
-    this.logger.info(
+    this.logger.debug(
       `[validate] validateFavoritesForPaths done. processed=${uniquePaths.length} missing=${toDelete.length} durationMs=${Date.now() - t0}`,
     );
 
     if (toDelete.length > 0) {
-      this.logger.info(
+      this.logger.debug(
         `[validate] Removing missing favorites count=${toDelete.length}`,
         toDelete,
       );
@@ -1060,7 +1060,7 @@ export class FavoritesTreeDataProvider
       return;
     }
 
-    this.logger.info(`[favorites] updatePath -> ${oldPath} => ${newPath}`, {
+    this.logger.debug(`[favorites] updatePath -> ${oldPath} => ${newPath}`, {
       group: metadata.group,
     });
 

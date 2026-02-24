@@ -29,7 +29,7 @@ export class MRUService {
       }),
     );
 
-    this.logger.info(
+    this.logger.debug(
       `[init] MRUService created (Local Storage). items=${this.mruList.length}`,
     );
   }
@@ -44,10 +44,12 @@ export class MRUService {
       this.removeEmptyEntries(
         '[mru] Removed empty entries from loaded history',
       );
-      this.logger.info(`[mru] Loaded from globalState. count=${stored.length}`);
+      this.logger.debug(
+        `[mru] Loaded from globalState. count=${stored.length}`,
+      );
     } else {
       this.mruList = [];
-      this.logger.info('[mru] No history in globalState.');
+      this.logger.debug('[mru] No history in globalState.');
     }
 
     this.checkForDuplicateNames();
@@ -58,7 +60,7 @@ export class MRUService {
     this.mruList = this.mruList.filter((entry) => entry.trim() !== '');
     if (this.mruList.length !== originalLength) {
       const removed = originalLength - this.mruList.length;
-      this.logger.info(`${logMessage}. removed=${removed}`);
+      this.logger.debug(`${logMessage}. removed=${removed}`);
       this.save();
     }
   }
@@ -92,7 +94,7 @@ export class MRUService {
         duplicates,
       );
     } else {
-      this.logger.info('[duplicates] No duplicate basenames in MRU');
+      this.logger.debug('[duplicates] No duplicate basenames in MRU');
     }
   }
 
@@ -118,7 +120,7 @@ export class MRUService {
   }
 
   public clear(): void {
-    this.logger.info('[mru] clear() called');
+    this.logger.debug('[mru] clear() called');
     this.mruList = [];
     this.save();
     this._onDidChangeRecentFiles.fire();
@@ -129,7 +131,7 @@ export class MRUService {
     const validFiles: string[] = [];
     const t0 = Date.now();
 
-    this.logger.info(`[validate] validateFiles start. size=${originalLength}`);
+    this.logger.debug(`[validate] validateFiles start. size=${originalLength}`);
 
     await runWithConcurrency(
       this.mruList,
@@ -145,18 +147,20 @@ export class MRUService {
       },
     );
 
-    this.logger.info(
+    this.logger.debug(
       `[validate] validateFiles done. processed=${this.mruList.length} valid=${validFiles.length} durationMs=${Date.now() - t0}`,
     );
 
     if (validFiles.length !== originalLength) {
       const removed = originalLength - validFiles.length;
-      this.logger.info(`[validate] Removing ${removed} missing files from MRU`);
+      this.logger.debug(
+        `[validate] Removing ${removed} missing files from MRU`,
+      );
       this.mruList = validFiles;
       this.save();
       this._onDidChangeRecentFiles.fire();
     } else {
-      this.logger.info('[validate] No missing files in MRU');
+      this.logger.debug('[validate] No missing files in MRU');
     }
   }
 
@@ -185,12 +189,12 @@ export class MRUService {
       },
     );
 
-    this.logger.info(
+    this.logger.debug(
       `[validate] validateFilesForPaths done. processed=${uniquePaths.length} missing=${toRemove.length} durationMs=${Date.now() - t0}`,
     );
 
     if (toRemove.length > 0) {
-      this.logger.info(
+      this.logger.debug(
         `[validate] Removing ${toRemove.length} missing files from MRU`,
         toRemove,
       );
@@ -212,7 +216,7 @@ export class MRUService {
 
     const index = this.mruList.indexOf(oldPath);
     if (index !== -1) {
-      this.logger.info(`[mru] updatePath -> ${oldPath} => ${normalizedPath}`);
+      this.logger.debug(`[mru] updatePath -> ${oldPath} => ${normalizedPath}`);
       this.mruList[index] = normalizedPath;
       this.save();
       this._onDidChangeRecentFiles.fire();
@@ -225,7 +229,7 @@ export class MRUService {
     this.mruList = this.mruList.filter((p) => p !== fsPath);
 
     if (this.mruList.length !== originalLength) {
-      this.logger.info(`[mru] Removed file: ${fsPath}`);
+      this.logger.debug(`[mru] Removed file: ${fsPath}`);
       this.save();
       this._onDidChangeRecentFiles.fire();
     }
