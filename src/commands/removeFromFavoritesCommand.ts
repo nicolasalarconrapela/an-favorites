@@ -14,9 +14,7 @@ export function registerRemoveFromFavoritesCommand(
       const itemsToProcess = selectedItems || (item ? [item] : []);
 
       if (itemsToProcess.length === 0) {
-        vscode.window.showWarningMessage(
-          t('No item selected'),
-        );
+        vscode.window.showWarningMessage(t('No item selected'));
         logger.warn('removeFromFavorites called without items');
         return;
       }
@@ -25,10 +23,7 @@ export function registerRemoveFromFavoritesCommand(
       if (count > 1) {
         const deleteAllLabel = t('Remove All');
         const confirm = await vscode.window.showWarningMessage(
-          t(
-            'Remove {0} favorites?',
-            count,
-          ),
+          t('Remove {0} favorites?', count),
           { modal: true },
           deleteAllLabel,
         );
@@ -37,7 +32,7 @@ export function registerRemoveFromFavoritesCommand(
 
       for (const current of itemsToProcess) {
         if (current instanceof FavoriteItem) {
-          logger.info(`Removing favorite: ${current.resourceUri.fsPath}`);
+          logger.debug(`Removing favorite: ${current.resourceUri.fsPath}`);
           favoritesProvider.removeFavorite(current.resourceUri);
         }
       }
@@ -51,10 +46,7 @@ export function registerRemoveFromFavoritesCommand(
         );
       } else {
         vscode.window.showInformationMessage(
-          t(
-            '{0} favorites removed.',
-            count,
-          ),
+          t('{0} favorites removed.', count),
         );
       }
     },

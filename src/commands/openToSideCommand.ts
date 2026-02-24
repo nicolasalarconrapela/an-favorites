@@ -15,7 +15,7 @@ export function registerOpenToSideCommand(
           return;
         }
 
-        logger.info(
+        logger.debug(
           `[openToSide] Opening file to side: ${item.resourceUri.fsPath}`,
         );
 
@@ -45,5 +45,5 @@ export function registerOpenToSideCommand(
   );
 
   context.subscriptions.push(disposable);
-  logger.info('[openToSide] Command registered');
+  logger.debug('[openToSide] Command registered');
 }

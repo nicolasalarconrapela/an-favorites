@@ -15,7 +15,7 @@ export function registerPinCommands(
     vscode.commands.registerCommand(
       'anfavorites.pinFavorite',
       async (item?: FavoriteItem, selectedItems?: FavoriteItem[]) => {
-        logger.info('[commands] Pin favorite triggered');
+        logger.debug('[commands] Pin favorite command registered');
         const itemsToProcess = (selectedItems || (item ? [item] : [])).filter(
           (i) => i instanceof FavoriteItem,
         );
@@ -38,7 +38,7 @@ export function registerPinCommands(
     vscode.commands.registerCommand(
       'anfavorites.unpinFavorite',
       async (item?: FavoriteItem, selectedItems?: FavoriteItem[]) => {
-        logger.info('[commands] Unpin favorite triggered');
+        logger.debug('[commands] Unpin favorite triggered');
         const itemsToProcess = (selectedItems || (item ? [item] : [])).filter(
           (i) => i instanceof FavoriteItem,
         );

@@ -16,9 +16,7 @@ export function registerAddToFavoritesCommand(
         const targetUri = uri || vscode.window.activeTextEditor?.document.uri;
 
         if (!targetUri) {
-          vscode.window.showWarningMessage(
-            t('No file selected'),
-          );
+          vscode.window.showWarningMessage(t('No file selected'));
           logger.warn('No URI provided for addToFavorites');
           return;
         }
@@ -29,18 +27,14 @@ export function registerAddToFavoritesCommand(
           const stat = await vscode.workspace.fs.stat(targetUri);
           if (stat.type === vscode.FileType.Directory) {
             vscode.window.showWarningMessage(
-              t(
-                'Folders cannot be added to favorites',
-              ),
+              t('Folders cannot be added to favorites'),
             );
             logger.warn('Attempted to add directory to favorites');
             return;
           }
         } catch (error) {
           logger.error('Error checking file', error);
-          vscode.window.showErrorMessage(
-            t('Error checking file'),
-          );
+          vscode.window.showErrorMessage(t('Error checking file'));
           return;
         }
 
@@ -48,7 +42,7 @@ export function registerAddToFavoritesCommand(
           vscode.window.showInformationMessage(
             t('File is already in favorites'),
           );
-          logger.info('File already in favorites');
+          logger.debug('File already in favorites');
           return;
         }
 
@@ -56,7 +50,7 @@ export function registerAddToFavoritesCommand(
         const groupDisplayName =
           FavoritesTreeDataProvider.getGroupDisplayName(groupName);
 
-        logger.info(
+        logger.debug(
           `Adding favorite directly to default group: ${targetUri.fsPath}`,
         );
         favoritesProvider.addFavorite(targetUri, groupName);
@@ -68,7 +62,7 @@ export function registerAddToFavoritesCommand(
             targetUri.fsPath,
           ),
         );
-        logger.info('Favorite added successfully');
+        logger.debug('Favorite added successfully');
       } catch (error) {
         logger.error('Unexpected error in addToFavorites', error);
         vscode.window.showErrorMessage(
