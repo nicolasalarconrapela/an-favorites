@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -133,6 +133,30 @@
         "title": "%command.configureKeybindings.title%",
         "category": "%command.category.anfavorites%",
         "icon": "$(keyboard)"
+      },
+      {
+        "command": "anfavorites.addCommandFavorite",
+        "title": "%command.addCommandFavorite.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(add)"
+      },
+      {
+        "command": "anfavorites.runCommandFavorite",
+        "title": "%command.runCommandFavorite.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(run)"
+      },
+      {
+        "command": "anfavorites.editCommandFavorite",
+        "title": "%command.editCommandFavorite.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "anfavorites.removeCommandFavorite",
+        "title": "%command.removeCommandFavorite.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(trash)"
       }
     ],
     "keybindings": [
@@ -156,6 +180,11 @@
         {
           "id": "anfavorites.favoritesView",
           "name": "%view.favoritesView.name%",
+          "icon": "resources/icon_no_bg.svg"
+        },
+        {
+          "id": "anfavorites.commandsView",
+          "name": "%view.commandsView.name%",
           "icon": "resources/icon_no_bg.svg"
         }
       ]
@@ -202,6 +231,11 @@
         {
           "command": "anfavorites.removeAllFavorites",
           "when": "view == anfavorites.favoritesView",
+          "group": "navigation"
+        },
+        {
+          "command": "anfavorites.addCommandFavorite",
+          "when": "view == anfavorites.commandsView",
           "group": "navigation"
         }
       ],
@@ -250,6 +284,21 @@
           "command": "anfavorites.removeFromGroup",
           "when": "view == anfavorites.favoritesView && viewItem =~ /:grouped/",
           "group": "inline@3"
+        },
+        {
+          "command": "anfavorites.runCommandFavorite",
+          "when": "view == anfavorites.commandsView && viewItem =~ /^commandItem/",
+          "group": "inline@0"
+        },
+        {
+          "command": "anfavorites.editCommandFavorite",
+          "when": "view == anfavorites.commandsView && viewItem =~ /^commandItem/",
+          "group": "inline@1"
+        },
+        {
+          "command": "anfavorites.removeCommandFavorite",
+          "when": "view == anfavorites.commandsView && viewItem =~ /^commandItem/",
+          "group": "inline@2"
         }
       ],
       "commandPalette": [
@@ -304,6 +353,18 @@
         {
           "command": "anfavorites.configureKeybindings",
           "when": "true"
+        },
+        {
+          "command": "anfavorites.runCommandFavorite",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.editCommandFavorite",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.removeCommandFavorite",
+          "when": "false"
         }
       ]
     },
@@ -423,7 +484,7 @@
       {
         "title": "%config.search.title%",
         "properties": {
-          "anfavorites.Zearch.exclusions": {
+          "anfavorites.search.exclusions": {
             "type": "array",
             "items": {
               "type": "string"

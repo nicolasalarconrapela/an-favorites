@@ -1,6 +1,10 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
+import {
+  CommandFavoritesTreeDataProvider,
+  CommandItem,
+} from '../views/CommandFavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
 import { Logger } from '../logging/logger';
 import {
@@ -74,6 +78,31 @@ function buildSearchPattern(searchValue: string): string {
 
 function isFileItem(item: vscode.QuickPickItem): item is FileQuickPickItem {
   return typeof (item as any)?.internalUri?.fsPath === 'string';
+}
+
+function isCommandItem(item: vscode.QuickPickItem): item is CommandQuickPickItem {
+  return typeof (item as any)?.commandItemRef !== 'undefined';
+}
+
+class CommandQuickPickItem implements vscode.QuickPickItem {
+  label: string;
+  description?: string;
+  detail?: string;
+  iconPath?: vscode.ThemeIcon;
+
+  readonly commandItemRef: CommandItem;
+
+  constructor(commandItem: CommandItem) {
+    this.commandItemRef = commandItem;
+    const data = commandItem.data;
+    const modeIcon = data.background ? '$(server-process)' : '$(terminal)';
+    this.label = `${modeIcon} ${data.label}`;
+    this.description = data.command;
+    this.detail = data.cwd ? `cwd: ${data.cwd}` : undefined;
+    this.iconPath = new vscode.ThemeIcon(
+      data.background ? 'server-process' : 'terminal',
+    );
+  }
 }
 
 type FavoritesAction = 'clearRecents' | 'loadMore';
@@ -478,10 +507,10 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 
     const baseName = safeBasenameFromUri(uri);
 
-    let iconPrefix = isFavorite ? '$(star-full)' : '$(star-empty)';
-    if (isPinned) iconPrefix = '$(pin)';
+    let iconPrefix = isFavorite ? '$(star-full) ' : '$(star-empty) ';
+    if (isPinned) iconPrefix = '$(pin) ';
 
-    this.label = `${iconPrefix} ${baseName}`;
+    this.label = `${iconPrefix}${baseName}`;
 
     const { rel, rootName } = workspaceRelativeLabel(uri);
 
@@ -535,15 +564,15 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 
   updateIcon(showIcons: boolean = true): void {
     if (showIcons) {
-      this.iconPath = createIconWithFallback('file', 'symbol-file');
+      this.iconPath = createIconWithFallback('symbol-file', 'file');
     } else {
       this.iconPath = undefined;
     }
 
     const baseName = safeBasenameFromUri(this.internalUri);
-    let iconPrefix = this.isFavorite ? '$(star-full) ' : '     ';
+    let iconPrefix = this.isFavorite ? '$(star-full) ' : '$(star-empty) ';
     if (this.isPinned) iconPrefix = '$(pin) ';
-    this.label = `${iconPrefix} ${baseName}`;
+    this.label = `${iconPrefix}${baseName}`;
 
     const buttons: vscode.QuickInputButton[] = [];
 
@@ -605,6 +634,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 export function registerQuickOpenCommand(
   context: vscode.ExtensionContext,
   favoritesProvider: FavoritesTreeDataProvider,
+  commandsProvider: CommandFavoritesTreeDataProvider,
   logger: Logger,
   mruService: MRUService,
 ): void {
@@ -647,7 +677,9 @@ export function registerQuickOpenCommand(
       log.debug(
         `[QuickOpen] Environment: ${vscode.env.appName} (${vscode.version})`,
       );
-      log.debug(`[QuickOpen] URI Scheme: ${vscode.env.uriScheme}`);
+      const appName = (vscode.env.appName || '').toLowerCase();
+      const uriScheme = (vscode.env.uriScheme || '').toLowerCase();
+      log.debug(`[QuickOpen] URI Scheme: ${uriScheme}`);
       log.debug(`[QuickOpen] Platform: ${process.platform}`);
       log.debug(`[QuickOpen] Language: ${vscode.env.language}`);
 
@@ -941,6 +973,22 @@ export function registerQuickOpenCommand(
           let searchNoticeItem: QuickOpenItem | null = null;
           let loadMoreItem: ActionQuickPickItem | null = null;
 
+          // Commands section
+          const allCommands = commandsProvider.getCommands();
+          if (allCommands.length > 0) {
+            const commandQuickPickItems = allCommands
+              .sort((a, b) => b.addedAt - a.addedAt)
+              .map((data) => {
+                const item = new CommandItem(data);
+                return new CommandQuickPickItem(item);
+              });
+            items.push({
+              label: t('Commands'),
+              kind: vscode.QuickPickItemKind.Separator,
+            });
+            items.push(...commandQuickPickItems);
+          }
+
           if (isSearching) {
             quickPick.busy = true;
             const searchResult = await buildSearchItems({
@@ -1044,17 +1092,22 @@ export function registerQuickOpenCommand(
               const indexToSelect = hasPinned ? 0 : 1;
 
               const isAnGravityEnv =
-                vscode.env.appName.includes('angravity') ||
-                vscode.env.uriScheme.includes('angravity');
+                appName.includes('angravity') ||
+                appName.includes('antigravity') ||
+                uriScheme.includes('angravity') ||
+                uriScheme.includes('antigravity');
               const isCursor =
-                vscode.env.appName.includes('cursor') ||
-                vscode.env.uriScheme.includes('cursor');
+                appName.includes('cursor') || uriScheme.includes('cursor');
 
               const forceIndexOne = isAnGravityEnv || isCursor;
 
-              const finalIndex = forceIndexOne ? 1 : indexToSelect;
+              const finalIndex = forceIndexOne
+                ? Math.min(1, fileItems.length - 1)
+                : Math.min(indexToSelect, fileItems.length - 1);
 
-              quickPick.activeItems = [fileItems[finalIndex]];
+              if (finalIndex >= 0) {
+                quickPick.activeItems = [fileItems[finalIndex]];
+              }
             }
           }
         } catch (error) {
@@ -1145,6 +1198,17 @@ export function registerQuickOpenCommand(
             'MRU list changed, rebuilding QuickOpen items',
           );
           debouncedExternalRebuild('mru');
+        }),
+      );
+
+      disposables.push(
+        commandsProvider.onDidChangeTreeData(async () => {
+          logThrottledWithContext(
+            'debug',
+            'quickopen:commands-changed',
+            'Commands changed, rebuilding QuickOpen items',
+          );
+          debouncedExternalRebuild('commands');
         }),
       );
 
@@ -1240,6 +1304,14 @@ export function registerQuickOpenCommand(
           }
 
           if (!isFileItem(selected)) {
+            if (isCommandItem(selected)) {
+              log.info(
+                `[QuickOpen] Executing command: "${selected.commandItemRef.data.label}"`,
+              );
+              commandsProvider.runCommand(selected.commandItemRef);
+              quickPick.hide();
+              return;
+            }
             log.debug(
               '[QuickOpen] Selected item is not a file item (separator or action)',
             );

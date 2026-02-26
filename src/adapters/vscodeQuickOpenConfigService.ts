@@ -40,15 +40,18 @@ export class VscodeQuickOpenConfigService implements QuickOpenConfigService {
       'quickOpen.maxRecentFiles',
       3,
     );
-    const maxSearchResults = configQuickOpen.get<number>(
-      'maxSearchResults',
-      200,
-    );
-    const maxSearchFiles = configQuickOpen.get<number>('maxSearchFiles', 1000);
+    const maxSearchResults = configSearch.get<number>('maxSearchResults', 200);
+    const maxSearchFiles = configSearch.get<number>('maxSearchFiles', 1000);
     const searchCacheSize = configQuickOpen.get<number>('searchCacheSize', 30);
 
-    const isAnGravity = vscode.env.appName.includes('AnGravity');
-    const defaultShowIcons = isAnGravity ? false : true;
+    const appName = (vscode.env.appName || '').toLowerCase();
+    const uriScheme = (vscode.env.uriScheme || '').toLowerCase();
+    const isAnGravity =
+      appName.includes('angravity') ||
+      appName.includes('antigravity') ||
+      uriScheme.includes('angravity') ||
+      uriScheme.includes('antigravity');
+    const defaultShowIcons = true;
     const showIcons = configQuickOpen.get<boolean>(
       'showIcons',
       defaultShowIcons,
