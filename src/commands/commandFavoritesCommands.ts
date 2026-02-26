@@ -99,7 +99,7 @@ async function createTextStep(opts: {
     const showBack = opts.showBack ?? false;
 
     // Set initial buttons based on pre-filled value
-    inputBox.buttons = inputButtons(showBack, !!(opts.currentValue?.trim()));
+    inputBox.buttons = inputButtons(showBack, !!opts.currentValue?.trim());
 
     let finished = false;
     const disposables: vscode.Disposable[] = [];
@@ -180,15 +180,21 @@ async function promptCwd(
   stepNumber: number = 3,
 ): Promise<string | null | undefined | Back> {
   const folders = vscode.workspace.workspaceFolders;
-  const stepTitle = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps}) — ${t('Select working directory')}`;
+  const isMultiRoot = folders && folders.length > 1;
+  const workspaceType = isMultiRoot ? t('Multi-root') : t('Workspace');
+  const stepTitle = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps}) — ${t('Select working directory')} [${workspaceType}]`;
 
   // No workspace folders: fallback to manual InputBox with back + next buttons
   if (!folders || folders.length === 0) {
     return new Promise<string | null | undefined | Back>((resolve) => {
       const inputBox = vscode.window.createInputBox();
       inputBox.title = stepTitle;
-      inputBox.prompt = t('Working directory (relative to workspace root, leave empty for root)');
-      inputBox.placeholder = t('e.g.: backend  or  /absolute/path  or  leave empty');
+      inputBox.prompt = t(
+        'Working directory (relative to workspace root, leave empty for root)',
+      );
+      inputBox.placeholder = t(
+        'e.g.: backend  or  /absolute/path  or  leave empty',
+      );
       inputBox.value = currentCwd ?? '';
       inputBox.ignoreFocusOut = true;
       // For directory: empty is valid → Next always shown. Back always shown.
@@ -225,23 +231,46 @@ async function promptCwd(
     });
   }
 
-  const isMultiRoot = folders.length > 1;
+  // Removed duplicate const isMultiRoot = folders.length > 1;
 
   // Navigation state — null means "multi-root top level"
-  let currentFolder: vscode.WorkspaceFolder | null = isMultiRoot ? null : folders[0];
-  let currentAbsPath: string | null = isMultiRoot ? null : folders[0].uri.fsPath;
+  let currentFolder: vscode.WorkspaceFolder | null = isMultiRoot
+    ? null
+    : folders[0];
+  let currentAbsPath: string | null = isMultiRoot
+    ? null
+    : folders[0].uri.fsPath;
+
+  if (currentCwd) {
+    const resolved = resolveWorkspaceCwd(currentCwd);
+    if (resolved) {
+      currentAbsPath = resolved;
+      const folder = vscode.workspace.getWorkspaceFolder(
+        vscode.Uri.file(resolved),
+      );
+      if (folder) {
+        currentFolder = folder;
+      }
+    }
+  }
+
+  const initialValue = currentAbsPath ?? '';
 
   const quickPick = vscode.window.createQuickPick<NavItem>();
   quickPick.title = stepTitle;
   quickPick.placeholder = t('Choose a directory where the command will run');
+  quickPick.value = initialValue;
   quickPick.matchOnDescription = true;
   quickPick.ignoreFocusOut = true;
+
+  let userMovedSelection = false;
+  let ignoreNextActiveChange = false;
 
   async function buildItems() {
     quickPick.busy = true;
     const items: NavItem[] = [];
 
-    if (currentAbsPath === null) {
+    if (currentAbsPath === null && folders) {
       // Multi-root top level: show each workspace folder as navigable entry
       for (const folder of folders) {
         items.push({
@@ -253,8 +282,8 @@ async function promptCwd(
           navAbsPath: folder.uri.fsPath,
         });
       }
-    } else {
-      const isAtFolderRoot = currentAbsPath === currentFolder!.uri.fsPath;
+    } else if (currentAbsPath !== null && currentFolder) {
+      const isAtFolderRoot = currentAbsPath === currentFolder.uri.fsPath;
 
       // [↑] Go up — shown when inside a subfolder OR at folder root in multi-root
       if (!isAtFolderRoot || isMultiRoot) {
@@ -264,34 +293,12 @@ async function promptCwd(
             : path.dirname(currentAbsPath);
         items.push({
           label: `$(arrow-up) ..`,
-          description: upDesc,
+          description: `${upDesc}  [${currentAbsPath}]`,
           navType: 'goUp',
         });
       }
 
-      // [✓] Select current folder as CWD
-      let cwdValue: string | null;
-      let currentDirName: string;
-      if (isAtFolderRoot) {
-        cwdValue = null;
-        currentDirName = isMultiRoot
-          ? `${currentFolder!.name} — ${t('Workspace root')}`
-          : t('Workspace root');
-      } else {
-        const relPath = path
-          .relative(currentFolder!.uri.fsPath, currentAbsPath)
-          .replace(/\\/g, '/');
-        cwdValue = isMultiRoot ? `${currentFolder!.name}/${relPath}` : relPath;
-        currentDirName = path.basename(currentAbsPath);
-      }
-
-      items.push({
-        label: `$(check) ${currentDirName}`,
-        description: currentAbsPath,
-        detail: t('Choose a directory where the command will run'),
-        navType: 'selectCurrent',
-        navCwd: cwdValue,
-      });
+      // Removed selectCurrent item (redundant with Next button and path in textbox)
 
       items.push({ label: '', kind: vscode.QuickPickItemKind.Separator });
 
@@ -312,7 +319,7 @@ async function promptCwd(
             label: `$(folder) ${subdir}`,
             description: absSubdir,
             navType: 'enterFolder',
-            navFolder: currentFolder!,
+            navFolder: currentFolder,
             navAbsPath: absSubdir,
           });
         }
@@ -331,6 +338,13 @@ async function promptCwd(
 
     quickPick.items = items;
 
+    if (currentAbsPath !== null) {
+      quickPick.value = currentAbsPath;
+    }
+    quickPick.activeItems = [];
+    ignoreNextActiveChange = true;
+    userMovedSelection = false;
+
     // Update buttons based on selection: always include Back (left), add Next (right) if valid selection
     updateButtons();
 
@@ -345,11 +359,8 @@ async function promptCwd(
     buttons.push(BACK_BUTTON);
 
     // Next button (right): show when a valid selectable item is chosen
-    if (
-      selectedItem &&
-      selectedItem.navType &&
-      ['selectCurrent', 'enterFolder', 'manual'].includes(selectedItem.navType)
-    ) {
+    // Next button (right): show when we have any path to accept
+    if (currentAbsPath !== null || quickPick.value.trim().length > 0) {
       buttons.push(NEXT_BUTTON);
     }
 
@@ -372,6 +383,10 @@ async function promptCwd(
     }
   }
 
+  // Tracks the full absolute path of the currently highlighted QuickPick item,
+  // so it can be pre-filled in the InputBox when the user opens manual entry.
+  let syncedInputValue: string = currentCwd ?? '';
+
   return new Promise<string | null | undefined | Back>((resolve) => {
     let finished = false;
     const disposables: vscode.Disposable[] = [];
@@ -384,100 +399,141 @@ async function promptCwd(
       resolve(result);
     }
 
+    function getStoredCwd(absPath: string): string | null {
+      if (!folders) return absPath;
+      const folder = vscode.workspace.getWorkspaceFolder(
+        vscode.Uri.file(absPath),
+      );
+      if (!folder) return absPath;
+      const rel = path.relative(folder.uri.fsPath, absPath).replace(/\\/g, '/');
+      const isMultiRoot = folders.length > 1;
+      if (isMultiRoot) {
+        return rel === '' || rel === '.'
+          ? folder.name
+          : `${folder.name}/${rel}`;
+      }
+      return rel === '' || rel === '.' ? null : rel;
+    }
+
     disposables.push(
       quickPick.onDidAccept(async () => {
         if (finished) return;
+
+        // If Enter was pressed on the input box (value matches path and selection hasn't moved),
+        // we accept the path in the box.
+        const currentVal = quickPick.value.trim();
+        const comparisonVal = currentAbsPath || '';
+        if (
+          currentVal === comparisonVal &&
+          !userMovedSelection &&
+          currentAbsPath !== null
+        ) {
+          done(getStoredCwd(currentAbsPath));
+          return;
+        }
+
         const item = quickPick.selectedItems[0] as NavItem | undefined;
-        if (!item || item.kind === vscode.QuickPickItemKind.Separator) return;
 
-        if (item.navType === 'stepBack') {
-          done(BACK);
-          return;
-        }
-
-        if (item.navType === 'enterFolder') {
-          currentFolder = item.navFolder!;
-          currentAbsPath = item.navAbsPath!;
-          quickPick.value = '';
-          await buildItems();
-          return;
-        }
-
-        if (item.navType === 'goUp') {
-          goUp();
-          quickPick.value = '';
-          await buildItems();
-          return;
-        }
-
-        if (item.navType === 'selectCurrent') {
-          done(item.navCwd ?? null);
-          return;
-        }
-
-        if (item.navType === 'manual') {
-          // Hide the QuickPick temporarily (do NOT dispose — we may need to re-show it)
-          finished = true; // prevent onDidHide from resolving
-          quickPick.hide();
-
-          // Open an InputBox for manual entry with back (left) + next (right) buttons
-          const manual = await new Promise<string | null | Back | undefined>((resolveManual) => {
-            const inputBox = vscode.window.createInputBox();
-            inputBox.title = stepTitle;
-            inputBox.prompt = t('Working directory (relative to workspace root, leave empty for root)');
-            inputBox.placeholder = t('e.g.: backend  or  /absolute/path  or  leave empty');
-            inputBox.value = currentCwd ?? '';
-            inputBox.ignoreFocusOut = true;
-            // Directory: empty is valid → Next always shown. Back always shown.
-            inputBox.buttons = [BACK_BUTTON, NEXT_BUTTON];
-
-            let manualFinished = false;
-            const manualDisposables: vscode.Disposable[] = [];
-
-            function doneManual(result: string | null | Back | undefined) {
-              if (manualFinished) return;
-              manualFinished = true;
-              manualDisposables.forEach((d) => d.dispose());
-              inputBox.dispose();
-              resolveManual(result);
-            }
-
-            manualDisposables.push(
-              inputBox.onDidAccept(() => {
-                doneManual(inputBox.value.trim() || null);
-              }),
-            );
-
-            manualDisposables.push(
-              inputBox.onDidTriggerButton((button) => {
-                if (button === BACK_BUTTON) {
-                  doneManual(BACK);
-                } else {
-                  doneManual(inputBox.value.trim() || null);
-                }
-              }),
-            );
-
-            manualDisposables.push(
-              inputBox.onDidHide(() => {
-                doneManual(undefined);
-              }),
-            );
-
-            inputBox.show();
-          });
-
-          if (isBack(manual)) {
-            // User pressed back → return to directory QuickPick
-            finished = false;
-            await buildItems();
-            quickPick.show();
-          } else {
-            // Accepted, Next, or cancelled → close QuickPick and resolve
-            disposables.forEach((d) => d.dispose());
-            quickPick.dispose();
-            resolve(manual === undefined ? undefined : manual);
+        if (item && item.kind !== vscode.QuickPickItemKind.Separator) {
+          if ((item as any).navType === 'stepBack') {
+            done(BACK);
+            return;
           }
+
+          if (item && item.navType === 'enterFolder') {
+            currentFolder = item.navFolder!;
+            currentAbsPath = item.navAbsPath!;
+            quickPick.value = currentAbsPath;
+            await buildItems();
+            return;
+          }
+
+          if (item && item.navType === 'goUp') {
+            goUp();
+            quickPick.value = currentAbsPath ?? '';
+            await buildItems();
+            return;
+          }
+
+          if (item && item.navType === 'manual') {
+            // ... manual logic remains the same
+            // (I will keep the manual logic for now as it's a useful fallback)
+            // Hide the QuickPick temporarily (do NOT dispose — we may need to re-show it)
+            finished = true; // prevent onDidHide from resolving
+            quickPick.hide();
+
+            // Open an InputBox for manual entry with back (left) + next (right) buttons
+            const manual = await new Promise<string | null | Back | undefined>(
+              (resolveManual) => {
+                const inputBox = vscode.window.createInputBox();
+                inputBox.title = stepTitle;
+                inputBox.prompt = t(
+                  'Working directory (relative to workspace root, leave empty for root)',
+                );
+                inputBox.placeholder = t(
+                  'e.g.: backend  or  /absolute/path  or  leave empty',
+                );
+                inputBox.value = quickPick.value || (currentAbsPath ?? '');
+                inputBox.ignoreFocusOut = true;
+                // Directory: empty is valid → Next always shown. Back always shown.
+                inputBox.buttons = [BACK_BUTTON, NEXT_BUTTON];
+
+                let manualFinished = false;
+                const manualDisposables: vscode.Disposable[] = [];
+
+                function doneManual(result: string | null | Back | undefined) {
+                  if (manualFinished) return;
+                  manualFinished = true;
+                  manualDisposables.forEach((d) => d.dispose());
+                  inputBox.dispose();
+                  resolveManual(result);
+                }
+
+                manualDisposables.push(
+                  inputBox.onDidAccept(() => {
+                    doneManual(inputBox.value.trim() || null);
+                  }),
+                );
+
+                manualDisposables.push(
+                  inputBox.onDidTriggerButton((button) => {
+                    if (button === BACK_BUTTON) {
+                      doneManual(BACK);
+                    } else {
+                      doneManual(inputBox.value.trim() || null);
+                    }
+                  }),
+                );
+
+                manualDisposables.push(
+                  inputBox.onDidHide(() => {
+                    doneManual(undefined);
+                  }),
+                );
+
+                inputBox.show();
+              },
+            );
+
+            if (isBack(manual)) {
+              // User pressed back → return to directory QuickPick
+              finished = false;
+              await buildItems();
+              quickPick.show();
+            } else {
+              disposables.forEach((d) => d.dispose());
+              quickPick.dispose();
+              resolve(manual === undefined ? undefined : manual);
+            }
+            return;
+          }
+        }
+
+        // If no item is selected (or Enter pressed on search/path box), accept the current path
+        const value = quickPick.value.trim();
+        const finalPath = value || currentAbsPath;
+        if (finalPath) {
+          done(getStoredCwd(finalPath));
         }
       }),
     );
@@ -491,91 +547,64 @@ async function promptCwd(
           // Back button always goes to previous step
           done(BACK);
         } else if (button === NEXT_BUTTON) {
-          // Simulate pressing Enter on the selected item
-          const item = quickPick.selectedItems[0] as NavItem | undefined;
-          if (!item) return;
-          if (item.navType === 'enterFolder') {
-            currentFolder = item.navFolder!;
-            currentAbsPath = item.navAbsPath!;
-            quickPick.value = '';
-            await buildItems();
-            return;
-          }
-          if (item.navType === 'goUp') {
-            goUp();
-            quickPick.value = '';
-            await buildItems();
-            return;
-          }
-          if (item.navType === 'selectCurrent') {
-            done(item.navCwd ?? null);
-            return;
-          }
-          if (item.navType === 'manual') {
-            finished = true;
-            quickPick.hide();
-            const manual = await new Promise<string | null | Back | undefined>((resolveManual) => {
-              const inputBox = vscode.window.createInputBox();
-              inputBox.title = stepTitle;
-              inputBox.prompt = t('Working directory (relative to workspace root, leave empty for root)');
-              inputBox.placeholder = t('e.g.: backend  or  /absolute/path  or  leave empty');
-              inputBox.value = currentCwd ?? '';
-              inputBox.ignoreFocusOut = true;
-              inputBox.buttons = [BACK_BUTTON, NEXT_BUTTON];
-
-              let manualFinished = false;
-              const manualDisposables: vscode.Disposable[] = [];
-
-              function doneManual(result: string | null | Back | undefined) {
-                if (manualFinished) return;
-                manualFinished = true;
-                manualDisposables.forEach((d) => d.dispose());
-                inputBox.dispose();
-                resolveManual(result);
-              }
-
-              manualDisposables.push(
-                inputBox.onDidAccept(() => {
-                  doneManual(inputBox.value.trim() || null);
-                }),
-              );
-
-              manualDisposables.push(
-                inputBox.onDidTriggerButton((button) => {
-                  if (button === BACK_BUTTON) {
-                    doneManual(BACK);
-                  } else {
-                    doneManual(inputBox.value.trim() || null);
-                  }
-                }),
-              );
-
-              manualDisposables.push(
-                inputBox.onDidHide(() => {
-                  doneManual(undefined);
-                }),
-              );
-
-              inputBox.show();
-            });
-
-            if (isBack(manual)) {
-              finished = false;
-              await buildItems();
-              quickPick.show();
-            } else {
-              disposables.forEach((d) => d.dispose());
-              quickPick.dispose();
-              resolve(manual === undefined ? undefined : manual);
-            }
+          const value = quickPick.value.trim();
+          const finalPath = value || currentAbsPath;
+          if (finalPath) {
+            done(getStoredCwd(finalPath));
           }
         }
       }),
     );
 
-    // Update buttons when selection changes
+    // Track if user moved selection or if it was automatic
+    disposables.push(
+      quickPick.onDidChangeActive((active) => {
+        if (ignoreNextActiveChange) {
+          ignoreNextActiveChange = false;
+          return;
+        }
+        if (active.length > 0) {
+          userMovedSelection = true;
+        }
+        updateButtons();
+      }),
+    );
+
+    // Sync selected item's absolute path to QuickPick value field and InputBox pre-fill
     disposables.push(
       quickPick.onDidChangeSelection(() => {
+        const selection = quickPick.selectedItems;
+        const item = selection[0] as NavItem | undefined;
+        if (
+          item &&
+          item.navType !== 'manual' &&
+          item.kind !== vscode.QuickPickItemKind.Separator
+        ) {
+          const fullPath =
+            item.navAbsPath ??
+            ((item as any).navType === 'selectCurrent' &&
+            currentAbsPath !== null
+              ? currentAbsPath
+              : undefined);
+          if (fullPath !== undefined) {
+            quickPick.value = fullPath;
+            userMovedSelection = true; // Selecting an item counts as moving
+            ignoreNextActiveChange = true;
+            quickPick.activeItems = [...selection];
+            syncedInputValue = fullPath;
+          }
+        }
+        updateButtons();
+      }),
+    );
+
+    disposables.push(
+      quickPick.onDidChangeValue((val) => {
+        // If the user manually types the current path, reset the "moved" flag
+        if (val.trim() === (currentAbsPath || '')) {
+          userMovedSelection = false;
+          ignoreNextActiveChange = true;
+        }
         updateButtons();
       }),
     );
@@ -695,7 +724,7 @@ async function runPreviewStep(
     inputBox.title = title;
     inputBox.prompt = t('Preview');
     inputBox.value = previewCommand;
-    inputBox.readOnly = true;
+    // inputBox.readOnly = true; // Removed because it doesn't exist on InputBox
     inputBox.ignoreFocusOut = true;
 
     let finished = false;
@@ -791,9 +820,12 @@ interface CommandFlowResult {
   background: boolean;
 }
 
-async function promptCommandFlow(
-  existing?: { label: string; command: string; cwd?: string; background: boolean },
-): Promise<CommandFlowResult | undefined> {
+async function promptCommandFlow(existing?: {
+  label: string;
+  command: string;
+  cwd?: string;
+  background: boolean;
+}): Promise<CommandFlowResult | undefined> {
   const TOTAL = 5;
   let step = 1;
 
@@ -904,7 +936,9 @@ export function registerCommandFavoritesCommands(
       'anfavorites.runCommandFavorite',
       (item?: CommandItem) => {
         if (!item) {
-          logger.warn('[commandFavorites] runCommandFavorite called without item');
+          logger.warn(
+            '[commandFavorites] runCommandFavorite called without item',
+          );
           return;
         }
         commandsProvider.runCommand(item);

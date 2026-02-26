@@ -52,16 +52,17 @@ function resolveWorkspaceCwd(cwd?: string): string | undefined {
   const folders = vscode.workspace.workspaceFolders;
   if (!folders || folders.length === 0) return cwd;
 
-  // Multi-root: paths are stored as "FolderName/subdir" — resolve against the matching root
+  // Multi-root: paths are stored as "FolderName/subdir" or just "FolderName"
   if (folders.length > 1) {
     const slashIdx = cwd.indexOf('/');
-    if (slashIdx !== -1) {
-      const folderName = cwd.slice(0, slashIdx);
-      const subdir = cwd.slice(slashIdx + 1);
-      const matchingFolder = folders.find((f) => f.name === folderName);
-      if (matchingFolder) {
-        return path.join(matchingFolder.uri.fsPath, subdir);
-      }
+    const folderName = slashIdx !== -1 ? cwd.slice(0, slashIdx) : cwd;
+    const subdir = slashIdx !== -1 ? cwd.slice(slashIdx + 1) : undefined;
+
+    const matchingFolder = folders.find((f) => f.name === folderName);
+    if (matchingFolder) {
+      return subdir
+        ? path.join(matchingFolder.uri.fsPath, subdir)
+        : matchingFolder.uri.fsPath;
     }
   }
 
@@ -139,7 +140,10 @@ export class CommandFavoritesTreeDataProvider
     }
   }
 
-  editCommand(id: string, data: Partial<Omit<CommandFavoriteData, 'id' | 'addedAt'>>): boolean {
+  editCommand(
+    id: string,
+    data: Partial<Omit<CommandFavoriteData, 'id' | 'addedAt'>>,
+  ): boolean {
     const idx = this.commands.findIndex((c) => c.id === id);
     if (idx === -1) {
       this.logger.warn(`[commands] editCommand FAILED (not found) -> id=${id}`);
@@ -178,7 +182,9 @@ export class CommandFavoritesTreeDataProvider
       };
       vscode.tasks.executeTask(task).then(
         () => {
-          this.logger.debug(`[commands] Background task started: "${data.label}"`);
+          this.logger.debug(
+            `[commands] Background task started: "${data.label}"`,
+          );
         },
         (err) => {
           this.logger.error(`[commands] Error starting background task`, err);
@@ -194,7 +200,9 @@ export class CommandFavoritesTreeDataProvider
       });
       terminal.sendText(data.command);
       terminal.show();
-      this.logger.debug(`[commands] Foreground terminal created: "${data.label}"`);
+      this.logger.debug(
+        `[commands] Foreground terminal created: "${data.label}"`,
+      );
     }
   }
 
@@ -202,7 +210,9 @@ export class CommandFavoritesTreeDataProvider
     const stored = this.storage.get<CommandFavoriteData[]>(STORAGE_KEY);
     if (stored && Array.isArray(stored)) {
       this.commands = stored;
-      this.logger.debug(`[commands] loadCommands -> count=${this.commands.length}`);
+      this.logger.debug(
+        `[commands] loadCommands -> count=${this.commands.length}`,
+      );
     } else {
       this.commands = [];
       this.logger.debug('[commands] loadCommands -> no data found');
@@ -213,7 +223,9 @@ export class CommandFavoritesTreeDataProvider
     this._isSaving = true;
     try {
       this.storage.update(STORAGE_KEY, this.commands);
-      this.logger.debug(`[commands] saveCommands -> count=${this.commands.length}`);
+      this.logger.debug(
+        `[commands] saveCommands -> count=${this.commands.length}`,
+      );
     } finally {
       this._isSaving = false;
     }

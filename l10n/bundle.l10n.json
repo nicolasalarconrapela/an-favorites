@@ -129,5 +129,7 @@
   "Back to beginning to edit all fields": "Back to beginning to edit all fields",
   "Next step": "Next step",
   "Run command in a terminal and return": "Run command in a terminal and return",
-  "Choose action": "Choose action"
+  "Choose action": "Choose action",
+  "Workspace": "Workspace",
+  "Multi-root": "Multi-root"
 }

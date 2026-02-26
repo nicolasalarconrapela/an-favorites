@@ -129,5 +129,7 @@
   "Back to beginning to edit all fields": "Volver al inicio para editar todos los campos",
   "Next step": "Siguiente paso",
   "Run command in a terminal and return": "Ejecutar comando en terminal y volver",
-  "Choose action": "Elige una acción"
+  "Choose action": "Elige una acción",
+  "Workspace": "Workspace",
+  "Multi-root": "Multiraíz"
 }

@@ -80,7 +80,9 @@ function isFileItem(item: vscode.QuickPickItem): item is FileQuickPickItem {
   return typeof (item as any)?.internalUri?.fsPath === 'string';
 }
 
-function isCommandItem(item: vscode.QuickPickItem): item is CommandQuickPickItem {
+function isCommandItem(
+  item: vscode.QuickPickItem,
+): item is CommandQuickPickItem {
   return typeof (item as any)?.commandItemRef !== 'undefined';
 }
 
@@ -686,7 +688,10 @@ export function registerQuickOpenCommand(
       const quickPick = vscode.window.createQuickPick<QuickOpenItem>();
       log.debug('[QuickOpen] QuickPick instance created');
 
-      quickPick.placeholder = t('Search files by name');
+      const folders = vscode.workspace.workspaceFolders;
+      const isMultiRoot = folders && folders.length > 1;
+      const workspaceType = isMultiRoot ? t('Multi-root') : t('Workspace');
+      quickPick.placeholder = `${t('Search files by name')} [${workspaceType}]`;
       quickPick.matchOnDescription = true;
       quickPick.matchOnDetail = true;
       quickPick.canSelectMany = false;
