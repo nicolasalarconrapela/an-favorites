@@ -52,6 +52,19 @@ function resolveWorkspaceCwd(cwd?: string): string | undefined {
   const folders = vscode.workspace.workspaceFolders;
   if (!folders || folders.length === 0) return cwd;
 
+  // Multi-root: paths are stored as "FolderName/subdir" — resolve against the matching root
+  if (folders.length > 1) {
+    const slashIdx = cwd.indexOf('/');
+    if (slashIdx !== -1) {
+      const folderName = cwd.slice(0, slashIdx);
+      const subdir = cwd.slice(slashIdx + 1);
+      const matchingFolder = folders.find((f) => f.name === folderName);
+      if (matchingFolder) {
+        return path.join(matchingFolder.uri.fsPath, subdir);
+      }
+    }
+  }
+
   return path.join(folders[0].uri.fsPath, cwd);
 }
 
