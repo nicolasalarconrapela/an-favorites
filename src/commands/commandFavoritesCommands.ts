@@ -2,10 +2,10 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { Logger } from '../logging/logger';
 import {
-  CommandFavoritesTreeDataProvider,
+  FavoritesTreeDataProvider,
   CommandItem,
   resolveWorkspaceCwd,
-} from '../views/CommandFavoritesTreeDataProvider';
+} from '../views/FavoritesTreeDataProvider';
 import { t } from '../utils/l10n';
 
 // Directories excluded from the directory picker
@@ -233,13 +233,11 @@ async function promptCwd(
 
   // Removed duplicate const isMultiRoot = folders.length > 1;
 
-  // Navigation state — null means "multi-root top level"
-  let currentFolder: vscode.WorkspaceFolder | null = isMultiRoot
-    ? null
-    : folders[0];
-  let currentAbsPath: string | null = isMultiRoot
-    ? null
-    : folders[0].uri.fsPath;
+  // Navigation state — null means "multi-root top level" or "workspace root"
+  let currentFolder: vscode.WorkspaceFolder | null =
+    !isMultiRoot && currentCwd ? folders[0] : null;
+  let currentAbsPath: string | null =
+    !isMultiRoot && currentCwd ? folders[0].uri.fsPath : null;
 
   if (currentCwd) {
     const resolved = resolveWorkspaceCwd(currentCwd);
@@ -399,7 +397,8 @@ async function promptCwd(
       resolve(result);
     }
 
-    function getStoredCwd(absPath: string): string | null {
+    function getStoredCwd(absPath: string | null): string | null {
+      if (!absPath) return null;
       if (!folders) return absPath;
       const folder = vscode.workspace.getWorkspaceFolder(
         vscode.Uri.file(absPath),
@@ -532,9 +531,7 @@ async function promptCwd(
         // If no item is selected (or Enter pressed on search/path box), accept the current path
         const value = quickPick.value.trim();
         const finalPath = value || currentAbsPath;
-        if (finalPath) {
-          done(getStoredCwd(finalPath));
-        }
+        done(getStoredCwd(finalPath));
       }),
     );
 
@@ -549,9 +546,7 @@ async function promptCwd(
         } else if (button === NEXT_BUTTON) {
           const value = quickPick.value.trim();
           const finalPath = value || currentAbsPath;
-          if (finalPath) {
-            done(getStoredCwd(finalPath));
-          }
+          done(getStoredCwd(finalPath));
         }
       }),
     );
@@ -927,7 +922,7 @@ async function promptCommandFlow(existing?: {
 
 export function registerCommandFavoritesCommands(
   context: vscode.ExtensionContext,
-  commandsProvider: CommandFavoritesTreeDataProvider,
+  commandsProvider: FavoritesTreeDataProvider,
   logger: Logger,
 ): void {
   // ── Run command (from tree click or programmatic call) ─────────────
