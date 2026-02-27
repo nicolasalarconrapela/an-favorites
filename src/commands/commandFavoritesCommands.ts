@@ -802,8 +802,7 @@ async function runPreviewStep(
 // ── Preview command builder ─────────────────────────────────────────────────
 
 function buildPreviewCommand(command: string, cwd?: string): string {
-  if (!cwd) return command;
-  return `cd "${cwd}" && ${command}`;
+  return command;
 }
 
 // ── Main wizard flow ────────────────────────────────────────────────────────
