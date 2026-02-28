@@ -692,7 +692,7 @@ async function runModeStep(
   });
 }
 
-// ── Preview step (step 5) ───────────────────────────────────────────────────
+// ── Preview step (step 4) ───────────────────────────────────────────────────
 
 /**
  * Shows the preview step with Save / Test / Edit / Cancel options.
@@ -702,107 +702,139 @@ async function runModeStep(
  *   • 'edit'    → user chose Edit (restart from step 1)
  *   • undefined → user cancelled (Escape or Cancel)
  */
+type PreviewResult =
+  | { action: 'save'; command: string; background: boolean }
+  | { action: 'edit' }
+  | undefined;
+
 async function runPreviewStep(
   title: string,
-  previewCommand: string,
   command: string,
   cwd: string | undefined,
   background: boolean,
-): Promise<'save' | 'test' | 'edit' | undefined> {
-  interface PreviewItem extends vscode.QuickPickItem {
-    action?: 'save' | 'test' | 'edit' | 'cancel';
-  }
+): Promise<PreviewResult | Back> {
+  const SAVE_BTN: vscode.QuickInputButton = {
+    iconPath: new vscode.ThemeIcon('save'),
+    tooltip: t('Save'),
+  };
+  const TEST_BTN: vscode.QuickInputButton = {
+    iconPath: new vscode.ThemeIcon('debug-start'),
+    tooltip: t('Test Command'),
+  };
+  const MODE_BG_BTN: vscode.QuickInputButton = {
+    iconPath: new vscode.ThemeIcon('server-process'),
+    tooltip: t('Mode: Background'),
+  };
+  const MODE_FG_BTN: vscode.QuickInputButton = {
+    iconPath: new vscode.ThemeIcon('terminal'),
+    tooltip: t('Mode: Foreground'),
+  };
 
-  // Show command preview in an InputBox first
-  await new Promise<void>((resolve) => {
+  let internalCommand = command;
+  let internalBackground = background;
+
+  return new Promise<PreviewResult | Back>((resolve) => {
     const inputBox = vscode.window.createInputBox();
     inputBox.title = title;
-    inputBox.prompt = t('Preview');
-    inputBox.value = previewCommand;
-    // inputBox.readOnly = true; // Removed because it doesn't exist on InputBox
+    inputBox.placeholder = t('Shell command to execute');
+    inputBox.value = internalCommand;
     inputBox.ignoreFocusOut = true;
 
-    let finished = false;
-    const disposables: vscode.Disposable[] = [];
+    function updateUI() {
+      inputBox.prompt = `[${t('Mode')}: ${
+        internalBackground ? t('Background') : t('Foreground')
+      }]`;
 
-    function done() {
-      if (finished) return;
-      finished = true;
-      disposables.forEach((d) => d.dispose());
-      inputBox.dispose();
-      resolve();
+      inputBox.buttons = [
+        BACK_BUTTON,
+        internalBackground ? MODE_BG_BTN : MODE_FG_BTN,
+        TEST_BTN,
+        SAVE_BTN,
+      ];
     }
+
+    updateUI();
+
+    const disposables: vscode.Disposable[] = [];
 
     disposables.push(
       inputBox.onDidAccept(() => {
-        done();
+        const val = inputBox.value.trim();
+        if (!val) {
+          vscode.window.showWarningMessage(t('Command cannot be empty.'));
+          return;
+        }
+        internalCommand = val;
+        disposables.forEach((d) => d.dispose());
+        inputBox.dispose();
+        resolve({
+          action: 'save',
+          command: internalCommand,
+          background: internalBackground,
+        });
+      }),
+    );
+
+    disposables.push(
+      inputBox.onDidTriggerButton(async (btn) => {
+        if (btn === BACK_BUTTON) {
+          disposables.forEach((d) => d.dispose());
+          inputBox.dispose();
+          resolve(BACK);
+          return;
+        }
+
+        if (btn === SAVE_BTN) {
+          const val = inputBox.value.trim();
+          if (!val) {
+            vscode.window.showWarningMessage(t('Command cannot be empty.'));
+            return;
+          }
+          internalCommand = val;
+          disposables.forEach((d) => d.dispose());
+          inputBox.dispose();
+          resolve({
+            action: 'save',
+            command: internalCommand,
+            background: internalBackground,
+          });
+          return;
+        }
+
+        if (btn === TEST_BTN) {
+          const val = inputBox.value.trim();
+          if (!val) {
+            vscode.window.showWarningMessage(t('Command cannot be empty.'));
+            return;
+          }
+          const resolvedCwd = resolveWorkspaceCwd(cwd);
+          const terminal = vscode.window.createTerminal({
+            name: t('Test Command'),
+            cwd: resolvedCwd,
+          });
+          terminal.sendText(val);
+          terminal.show();
+          return;
+        }
+
+        if (btn === MODE_BG_BTN || btn === MODE_FG_BTN) {
+          internalBackground = !internalBackground;
+          updateUI();
+          return;
+        }
       }),
     );
 
     disposables.push(
       inputBox.onDidHide(() => {
-        done();
+        disposables.forEach((d) => d.dispose());
+        inputBox.dispose();
+        resolve(undefined);
       }),
     );
 
     inputBox.show();
   });
-
-  // Now show the action options
-  const items: PreviewItem[] = [
-    {
-      label: `$(save) ${t('Save')}`,
-      description: t('Save without running'),
-      action: 'save',
-    },
-    {
-      label: `$(debug-start) ${t('Test')}`,
-      description: t('Run command in a terminal and return'),
-      action: 'test',
-    },
-    {
-      label: `$(edit) ${t('Edit')}`,
-      description: t('Back to beginning to edit all fields'),
-      action: 'edit',
-    },
-    {
-      label: `$(close) ${t('Cancel')}`,
-      description: t('Discard this command'),
-      action: 'cancel',
-    },
-  ];
-
-  const selection = (await vscode.window.showQuickPick(items, {
-    title: `${title} — ${t('Choose action')}`,
-    ignoreFocusOut: true,
-  })) as PreviewItem | undefined;
-
-  if (!selection) return undefined;
-
-  // Handle Test action
-  if (selection.action === 'test') {
-    // Execute the command in a terminal
-    const resolvedCwd = resolveWorkspaceCwd(cwd);
-    const terminal = vscode.window.createTerminal({
-      name: `Test Command`,
-      cwd: resolvedCwd,
-    });
-    terminal.sendText(command);
-    terminal.show();
-
-    // Wait a moment then re-show the preview
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    return runPreviewStep(title, previewCommand, command, cwd, background);
-  }
-
-  if (selection.action === 'cancel') return undefined;
-  return selection.action;
-}
-
-// ── Preview command builder ─────────────────────────────────────────────────
-
-function buildPreviewCommand(command: string, cwd?: string): string {
-  return command;
 }
 
 // ── Main wizard flow ────────────────────────────────────────────────────────
@@ -814,13 +846,17 @@ interface CommandFlowResult {
   background: boolean;
 }
 
-async function promptCommandFlow(existing?: {
-  label: string;
-  command: string;
-  cwd?: string;
-  background: boolean;
-}): Promise<CommandFlowResult | undefined> {
-  const TOTAL = 5;
+async function promptCommandFlow(
+  provider: FavoritesTreeDataProvider,
+  existing?: {
+    label: string;
+    command: string;
+    cwd?: string;
+    background: boolean;
+    group?: string;
+  },
+): Promise<CommandFlowResult | undefined> {
+  const TOTAL = 4;
   let step = 1;
 
   // Accumulated state — pre-populated from existing when editing
@@ -829,38 +865,34 @@ async function promptCommandFlow(existing?: {
   let stepCwd: string | null = existing?.cwd ?? null;
   let stepBackground = existing?.background ?? false;
 
-  while (step >= 1 && step <= 5) {
+  while (step >= 1 && step <= 4) {
     switch (step) {
       case 1: {
         const r = await createTextStep({
           title: `${t('Add Command Favorite')} (1/${TOTAL})`,
-          prompt: t('Command name (shown in the list)'),
-          placeholder: t('e.g.: Start backend'),
-          emptyWarning: t('Command name cannot be empty.'),
+          prompt: t('Name as it will appear in the favorites list'),
+          placeholder: t('e.g.: Start Dev Server'),
+          emptyWarning: t('Label cannot be empty.'),
           currentValue: stepLabel,
           showBack: false,
         });
         if (r === undefined) return undefined; // cancelled
-        if (isBack(r)) return undefined; // step 1 has no real back — treat as cancel
+        if (isBack(r)) return undefined; // step 1 has no real back
         stepLabel = r;
         step = 2;
         break;
       }
       case 2: {
-        const r = await createTextStep({
-          title: `${t('Add Command Favorite')} (2/${TOTAL})`,
-          prompt: t('Shell command to execute'),
-          placeholder: t('e.g.: npm run dev'),
-          emptyWarning: t('Command cannot be empty.'),
-          currentValue: stepCommand,
-          showBack: true,
-        });
+        const r = await runModeStep(
+          `${t('Add Command Favorite')} (2/${TOTAL})`,
+          stepBackground,
+        );
         if (r === undefined) return undefined;
         if (isBack(r)) {
           step = 1;
           break;
         }
-        stepCommand = r;
+        stepBackground = r;
         step = 3;
         break;
       }
@@ -868,7 +900,7 @@ async function promptCommandFlow(existing?: {
         const r = await promptCwd(stepCwd ?? undefined, TOTAL, 3);
         if (r === undefined) return undefined;
         if (isBack(r)) {
-          step = 2;
+          step = 2; // Return to Mode selection
           break;
         }
         stepCwd = r; // null = workspace root, string = path
@@ -876,40 +908,31 @@ async function promptCommandFlow(existing?: {
         break;
       }
       case 4: {
-        const r = await runModeStep(
-          `${t('Add Command Favorite')} (4/${TOTAL})`,
-          stepBackground,
-        );
-        if (r === undefined) return undefined;
-        if (isBack(r)) {
-          step = 3;
-          break;
-        }
-        stepBackground = r;
-        step = 5;
-        break;
-      }
-      case 5: {
         const cwd = stepCwd === null ? undefined : stepCwd;
-        const preview = buildPreviewCommand(stepCommand, cwd);
         const r = await runPreviewStep(
-          `${t('Add Command Favorite')} (5/${TOTAL}) — ${t('Preview')}`,
-          preview,
+          `${t('Add Command Favorite')} (4/${TOTAL}) — ${t('Command & Preview')}`,
           stepCommand,
           cwd,
           stepBackground,
         );
+
         if (r === undefined) return undefined; // cancelled
-        if (r === 'edit') {
+        if (isBack(r)) {
+          step = 3; // Return to Directory selection
+          break;
+        }
+
+        if (r.action === 'edit') {
           step = 1;
           break;
-        } // restart from step 1
-        // r === 'save'
+        }
+
+        // action === 'save'
         return {
           label: stepLabel.trim(),
-          command: stepCommand.trim(),
+          command: r.command.trim(),
           cwd,
-          background: stepBackground,
+          background: r.background,
         };
       }
     }
@@ -945,7 +968,7 @@ export function registerCommandFavoritesCommands(
     vscode.commands.registerCommand(
       'anfavorites.addCommandFavorite',
       async () => {
-        const result = await promptCommandFlow();
+        const result = await promptCommandFlow(commandsProvider);
 
         if (result) {
           commandsProvider.addCommand({
@@ -972,7 +995,7 @@ export function registerCommandFavoritesCommands(
       async (item?: CommandItem) => {
         if (!item) return;
 
-        const result = await promptCommandFlow({
+        const result = await promptCommandFlow(commandsProvider, {
           label: item.data.label,
           command: item.data.command,
           cwd: item.data.cwd,
