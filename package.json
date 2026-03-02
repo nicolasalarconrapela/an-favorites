@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "1.1.6",
+  "version": "1.2.0",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -181,11 +181,6 @@
           "id": "anfavorites.favoritesView",
           "name": "%view.favoritesView.name%",
           "icon": "resources/icon_no_bg.svg"
-        },
-        {
-          "id": "anfavorites.commandsView",
-          "name": "%view.commandsView.name%",
-          "icon": "resources/icon_no_bg.svg"
         }
       ]
     },
@@ -235,7 +230,7 @@
         },
         {
           "command": "anfavorites.addCommandFavorite",
-          "when": "view == anfavorites.commandsView",
+          "when": "view == anfavorites.favoritesView",
           "group": "navigation"
         }
       ],
@@ -267,17 +262,17 @@
         },
         {
           "command": "anfavorites.renameGroup",
-          "when": "view == anfavorites.favoritesView && viewItem =~ /groupItem/",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /groupItem:favorites/",
           "group": "inline"
         },
         {
           "command": "anfavorites.removeGroup",
-          "when": "view == anfavorites.favoritesView && viewItem =~ /groupItem/",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /groupItem:favorites/",
           "group": "inline"
         },
         {
           "command": "anfavorites.clearGroup",
-          "when": "view == anfavorites.favoritesView && viewItem == groupItem",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /groupItem:favorites/",
           "group": "inline"
         },
         {
@@ -287,17 +282,17 @@
         },
         {
           "command": "anfavorites.runCommandFavorite",
-          "when": "view == anfavorites.commandsView && viewItem =~ /^commandItem/",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /^commandItem/",
           "group": "inline@0"
         },
         {
           "command": "anfavorites.editCommandFavorite",
-          "when": "view == anfavorites.commandsView && viewItem =~ /^commandItem/",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /^commandItem/",
           "group": "inline@1"
         },
         {
           "command": "anfavorites.removeCommandFavorite",
-          "when": "view == anfavorites.commandsView && viewItem =~ /^commandItem/",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /^commandItem/",
           "group": "inline@2"
         }
       ],

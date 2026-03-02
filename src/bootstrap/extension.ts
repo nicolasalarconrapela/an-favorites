@@ -13,7 +13,6 @@ import { registerQuickOpenCommand } from '../commands/quickOpenCommand';
 import { registerKeyboardShortcutCommand } from '../commands/keyboardShortcutCommand';
 import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
-import { CommandFavoritesTreeDataProvider } from '../views/CommandFavoritesTreeDataProvider';
 import { registerCommandFavoritesCommands } from '../commands/commandFavoritesCommands';
 import { MRUService } from '../services/mruService';
 import { SharedStorageService } from '../services/sharedStorageService';
@@ -63,22 +62,6 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(treeView);
 
-  logger.debug('Registering commands tree provider...');
-
-  const commandsProvider = new CommandFavoritesTreeDataProvider(
-    logger,
-    sharedStorage,
-  );
-  context.subscriptions.push(commandsProvider);
-
-  const commandsTreeView = vscode.window.createTreeView(
-    'anfavorites.commandsView',
-    {
-      treeDataProvider: commandsProvider,
-    },
-  );
-  context.subscriptions.push(commandsTreeView);
-
   logger.debug('Registering favorites commands...');
 
   registerAddToFavoritesCommand(context, favoritesProvider, logger);
@@ -90,10 +73,10 @@ export function activate(context: vscode.ExtensionContext): void {
   registerOpenToSideCommand(context, logger);
   registerKeyboardShortcutCommand(context, logger);
   logger.debug('[activate] registering quickOpen...');
-  registerQuickOpenCommand(context, favoritesProvider, commandsProvider, logger, mruService);
+  registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
   logger.debug('[activate] quickOpen registered.');
 
-  registerCommandFavoritesCommands(context, commandsProvider, logger);
+  registerCommandFavoritesCommands(context, favoritesProvider, logger);
   logger.debug('[activate] commandFavorites commands registered.');
 
   // Register Get Started command

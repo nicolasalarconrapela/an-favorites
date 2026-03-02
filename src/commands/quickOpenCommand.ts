@@ -1,10 +1,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import {
-  CommandFavoritesTreeDataProvider,
+  FavoritesTreeDataProvider,
   CommandItem,
-} from '../views/CommandFavoritesTreeDataProvider';
+} from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
 import { Logger } from '../logging/logger';
 import {
@@ -636,7 +635,6 @@ class FileQuickPickItem implements vscode.QuickPickItem {
 export function registerQuickOpenCommand(
   context: vscode.ExtensionContext,
   favoritesProvider: FavoritesTreeDataProvider,
-  commandsProvider: CommandFavoritesTreeDataProvider,
   logger: Logger,
   mruService: MRUService,
 ): void {
@@ -979,7 +977,7 @@ export function registerQuickOpenCommand(
           let loadMoreItem: ActionQuickPickItem | null = null;
 
           // Commands section
-          const allCommands = commandsProvider.getCommands();
+          const allCommands = favoritesProvider.getCommands();
           if (allCommands.length > 0) {
             const commandQuickPickItems = allCommands
               .sort((a, b) => b.addedAt - a.addedAt)
@@ -1207,17 +1205,6 @@ export function registerQuickOpenCommand(
       );
 
       disposables.push(
-        commandsProvider.onDidChangeTreeData(async () => {
-          logThrottledWithContext(
-            'debug',
-            'quickopen:commands-changed',
-            'Commands changed, rebuilding QuickOpen items',
-          );
-          debouncedExternalRebuild('commands');
-        }),
-      );
-
-      disposables.push(
         vscode.workspace.onDidChangeConfiguration(async (e) => {
           if (
             e.affectsConfiguration('anfavorites.maxItems') ||
@@ -1313,7 +1300,7 @@ export function registerQuickOpenCommand(
               log.info(
                 `[QuickOpen] Executing command: "${selected.commandItemRef.data.label}"`,
               );
-              commandsProvider.runCommand(selected.commandItemRef);
+              favoritesProvider.runCommand(selected.commandItemRef);
               quickPick.hide();
               return;
             }
