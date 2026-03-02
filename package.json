@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -157,6 +157,12 @@
         "title": "%command.removeCommandFavorite.title%",
         "category": "%command.category.anfavorites%",
         "icon": "$(trash)"
+      },
+      {
+        "command": "anfavorites.addVSCodeCommandFavorite",
+        "title": "%command.addVSCodeCommandFavorite.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(symbol-event)"
       }
     ],
     "keybindings": [
@@ -232,6 +238,11 @@
           "command": "anfavorites.addCommandFavorite",
           "when": "view == anfavorites.favoritesView",
           "group": "navigation"
+        },
+        {
+          "command": "anfavorites.addVSCodeCommandFavorite",
+          "when": "view == anfavorites.favoritesView",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -259,6 +270,11 @@
           "command": "anfavorites.moveFavorite",
           "when": "view == anfavorites.favoritesView && viewItem =~ /favoriteItem/",
           "group": "favorites@1"
+        },
+        {
+          "command": "anfavorites.moveFavorite",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /^commandItem/",
+          "group": "inline@3"
         },
         {
           "command": "anfavorites.renameGroup",

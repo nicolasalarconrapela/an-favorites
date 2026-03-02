@@ -131,5 +131,6 @@
   "Run command in a terminal and return": "Run command in a terminal and return",
   "Choose action": "Choose action",
   "Workspace": "Workspace",
-  "Multi-root": "Multi-root"
+  "Multi-root": "Multi-root",
+  "Search and select a VS Code command": "Search and select a VS Code command"
 }

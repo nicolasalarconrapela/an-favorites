@@ -21,6 +21,7 @@
   "command.runCommandFavorite.title": "Run Command",
   "command.editCommandFavorite.title": "Edit Command",
   "command.removeCommandFavorite.title": "Remove Command",
+  "command.addVSCodeCommandFavorite.title": "Add VS Code Command",
   "viewsContainer.anfavorites.title": "AnFavorites",
   "view.favoritesView.name": "Favorites",
   "view.commandsView.name": "Commands",

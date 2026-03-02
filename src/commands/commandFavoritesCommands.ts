@@ -1041,6 +1041,65 @@ export function registerCommandFavoritesCommands(
       },
     ),
   );
+  // ── Add VS Code command as favorite ─────────────────────────────────
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'anfavorites.addVSCodeCommandFavorite',
+      async () => {
+        logger.debug('[commandFavorites] addVSCodeCommandFavorite started');
+
+        // Get all available VS Code commands
+        const allCommands = await vscode.commands.getCommands(true);
+        const filtered = allCommands
+          .filter((cmd) => !cmd.startsWith('_'))
+          .sort();
+
+        const items: vscode.QuickPickItem[] = filtered.map((cmd) => ({
+          label: cmd,
+          description: '',
+        }));
+
+        const selected = await vscode.window.showQuickPick(items, {
+          placeHolder: t('Search and select a VS Code command'),
+          matchOnDescription: true,
+          matchOnDetail: true,
+        });
+
+        if (!selected) return;
+
+        const commandId = selected.label;
+
+        // Ask for a custom label
+        const label = await vscode.window.showInputBox({
+          prompt: t('Command name (shown in the list)'),
+          placeHolder: t('e.g.: Start backend'),
+          value: commandId,
+          validateInput: (value) => {
+            if (!value || value.trim().length === 0) {
+              return t('Command name cannot be empty.');
+            }
+            return null;
+          },
+        });
+
+        if (!label) return;
+
+        commandsProvider.addCommand({
+          label: label.trim(),
+          command: commandId,
+          background: false,
+          type: 'vscode',
+        });
+
+        vscode.window.showInformationMessage(
+          t('Command "{0}" added.', label.trim()),
+        );
+        logger.info(
+          `[commandFavorites] Added VS Code command: "${label.trim()}" (${commandId})`,
+        );
+      },
+    ),
+  );
 
   logger.debug('[commandFavorites] Commands registered');
 }
