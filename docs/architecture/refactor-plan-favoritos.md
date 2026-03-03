@@ -3,6 +3,63 @@
 ## Objetivo
 Unificar las funcionalidades de **favoritos**, **pinned** y **árbol** en un núcleo reutilizable para acelerar la integración de nuevos tipos de objeto (por ejemplo: comandos VS Code, archivos por línea, snippets, URLs internas).
 
+## Arquitectura actual vs nueva
+
+### Vista comparativa rápida
+
+| Dimensión | Arquitectura actual | Nueva arquitectura propuesta |
+|---|---|---|
+| Organización del código | Lógica distribuida entre comandos, `TreeDataProvider`, servicios y utilidades. | Núcleo único (`favorites-core`) con casos de uso reutilizables. |
+| Modelo de favorito | Variaciones implícitas según el flujo (`tree`, `quick open`, comandos). | Modelo canónico `FavoriteItem` con metadatos comunes (`kind`, `pinned`, `groupId`, etc.). |
+| Extensión por tipo | Se agregan condicionales y ajustes en varios puntos para cada nuevo tipo. | Se registra una estrategia (`FavoriteKindStrategy`) por tipo (`file`, `line`, `command`). |
+| Pinned/orden | Reglas repartidas entre capa visual y comandos. | Reglas centralizadas en dominio (`pinned > grupo > orden manual > label`). |
+| Árbol | El provider mezcla adaptación de UI con decisiones de negocio. | Árbol compuesto (`TreeNodeComposite`) y provider como adaptador de presentación. |
+| Acoplamiento con VS Code | Alto: uso directo de APIs en flujos principales. | Bajo: puertos + adaptadores (`StorageAdapter`, `VsCodeCommandAdapter`, etc.). |
+| Testabilidad | Pruebas centradas en integración/extensión. | Pruebas unitarias de dominio + contract tests de adaptadores. |
+| Tiempo para nuevos objetos | Medio/alto por cambios transversales. | Bajo al implementar solo una nueva estrategia y registro. |
+
+### Flujo actual (AS-IS)
+
+```text
+Comandos VS Code / Quick Open / Tree
+        │
+        ├── Lógica de negocio parcial
+        ├── Validaciones por tipo dispersas
+        ├── Reglas de orden/pinned duplicadas
+        └── Acceso directo a storage y APIs VS Code
+```
+
+### Flujo objetivo (TO-BE)
+
+```text
+UI VS Code (Commands, Tree, Quick Open)
+        │
+        ▼
+FavoritesFacade / Application Services
+        │
+        ▼
+Domain Core (favorites-core)
+  ├── Use Cases (add/remove/toggle/move/list)
+  ├── FavoriteKindStrategy registry
+  └── Reglas de orden y consistencia
+        │
+        ▼
+Ports
+  ├── FavoriteRepository
+  ├── CommandExecutor
+  ├── UriResolver
+  └── Telemetry
+        │
+        ▼
+Adapters (VS Code, Storage, Telemetry)
+```
+
+### Qué cambia en la práctica
+
+- **Antes:** al agregar `command` o `line`, había que tocar árbol, quick open, ejecución y validaciones en varios módulos.
+- **Después:** al agregar un nuevo tipo, se implementa una estrategia y se conecta al registro; la UI reutiliza los mismos casos de uso.
+- **Resultado esperado:** menor riesgo de regresión entre `favoritos`, `pinned` y representación en árbol.
+
 ## Patrón de diseño recomendado
 
 Se recomienda una combinación de:

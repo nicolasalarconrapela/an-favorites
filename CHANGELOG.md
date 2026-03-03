@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.4] - 2026-03-03
+
+### Added
+
+- Documentation: Added a clear comparison between current architecture (AS-IS) and proposed architecture (TO-BE), including table, flow diagrams, and practical impact for adding new favorite types.
+
+### Changed
+
+- Maintenance: Bumped extension version to `1.2.4` to track the architecture comparison update.
+
 ## [1.2.3] - 2026-03-03
 
 ### Added
