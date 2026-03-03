@@ -13,6 +13,7 @@ import { registerQuickOpenCommand } from '../commands/quickOpenCommand';
 import { registerKeyboardShortcutCommand } from '../commands/keyboardShortcutCommand';
 import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
+import { registerCommandFavoritesCommands } from '../commands/commandFavoritesCommands';
 import { MRUService } from '../services/mruService';
 import { SharedStorageService } from '../services/sharedStorageService';
 import { disposeCollisionIndex } from '../utils/collisionUtils';
@@ -74,6 +75,9 @@ export function activate(context: vscode.ExtensionContext): void {
   logger.debug('[activate] registering quickOpen...');
   registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
   logger.debug('[activate] quickOpen registered.');
+
+  registerCommandFavoritesCommands(context, favoritesProvider, logger);
+  logger.debug('[activate] commandFavorites commands registered.');
 
   // Register Get Started command
   context.subscriptions.push(

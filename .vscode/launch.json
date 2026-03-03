@@ -10,7 +10,7 @@
         "--profile-temp",
         "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "${workspaceFolder}/.vscode-test/Empty"
+        "${workspaceFolder}/.vscode-test/"
       ],
       "outFiles": [
         "${workspaceFolder}/out/**/*.js"
@@ -27,7 +27,7 @@
         "--profile-temp",
         "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "${workspaceFolder}/.vscode-test/Empty"
+        "${workspaceFolder}/.vscode-test/"
       ],
       "preLaunchTask": "watch",
       "outFiles": [
@@ -50,7 +50,7 @@
       "args": [
         "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "${workspaceFolder}/.vscode-test/Empty"
+        "${workspaceFolder}/.vscode-test/"
       ],
       "outFiles": [
         "${workspaceFolder}/out/**/*.js"
@@ -80,37 +80,6 @@
       "skipFiles": [
         "<node_internals>/**"
       ]
-    },
-    {
-      "name": "Launch Tests",
-      "type": "extensionHost",
-      "request": "launch",
-      "runtimeExecutable": "${execPath}",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceRoot}",
-        "--extensionTestsPath=${workspaceRoot}/out/test"
-      ],
-      "stopOnEntry": false,
-      "sourceMaps": true,
-      "outDir": "${workspaceRoot}/out/test",
-      "preLaunchTask": "npm"
-    },
-    {
-      "name": "Debug Current Test File",
-      "type": "extensionHost",
-      "request": "launch",
-      "runtimeExecutable": "${execPath}",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceRoot}",
-        "--extensionTestsPath=${workspaceRoot}/out/test/suite/index"
-      ],
-      "env": {
-        "ANGITIGNORED_TEST_PATTERN": "${fileBasenameNoExtension}.js"
-      },
-      "stopOnEntry": false,
-      "sourceMaps": true,
-      "outDir": "${workspaceRoot}/out/test/suite",
-      "preLaunchTask": "npm"
     }
   ]
 }
