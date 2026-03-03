@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.3] - 2026-03-03
+
+### Added
+
+- Architecture: Added a refactoring plan to unify favorites, pinned behavior, and tree rendering through a reusable core with Hexagonal + Strategy + Composite patterns.
+
+### Changed
+
+- Maintenance: Bumped extension version to `1.2.3` for the architecture planning update.
+
 ## [1.0.5] - 2026-02-24
 
 ### Changed
