@@ -133,6 +133,12 @@
         "title": "%command.configureKeybindings.title%",
         "category": "%command.category.anfavorites%",
         "icon": "$(keyboard)"
+      },
+      {
+        "command": "anfavorites.manageGitignore",
+        "title": "%command.manageGitignore.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(list-unordered)"
       }
     ],
     "keybindings": [
@@ -340,12 +346,14 @@
               "warn",
               "error"
             ],
-            "description": "%config.logging.level.description%"
+            "description": "%config.logging.level.description%",
+            "scope": "workspace"
           },
           "anfavorites.logging.maxRotatedFiles": {
             "type": "number",
             "default": 5,
-            "description": "%config.logging.maxRotatedFiles.description%"
+            "description": "%config.logging.maxRotatedFiles.description%",
+            "scope": "workspace"
           }
         }
       },
@@ -464,6 +472,32 @@
               "**/.history/**"
             ],
             "description": "%config.search.exclusions.description%"
+          }
+        }
+      },
+      {
+        "title": "%config.gitignore.title%",
+        "properties": {
+          "anfavorites.gitignore.enabled": {
+            "type": "boolean",
+            "scope": "resource",
+            "default": true,
+            "description": "%config.gitignore.enabled.description%"
+          },
+          "anfavorites.gitignore.includeNested": {
+            "type": "boolean",
+            "scope": "resource",
+            "default": false,
+            "description": "%config.gitignore.includeNested.description%"
+          },
+          "anfavorites.gitignore.files": {
+            "type": "object",
+            "scope": "resource",
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "default": {},
+            "description": "%config.gitignore.files.description%"
           }
         }
       },

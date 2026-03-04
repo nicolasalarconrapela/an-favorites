@@ -16,6 +16,10 @@ import {
 import { VscodeQuickOpenConfigService } from '../adapters/vscodeQuickOpenConfigService';
 import { VscodeQuickOpenSearchService } from '../adapters/vscodeQuickOpenSearchService';
 import { t } from '../utils/l10n';
+import {
+  getMergedExclusions,
+  buildExclusionGlobFromPatterns,
+} from '../utils/gitignoreService';
 
 type QuickOpenItem = vscode.QuickPickItem;
 
@@ -241,18 +245,17 @@ async function buildSearchItems(params: {
     searchService,
     token,
   } = params;
-  let exclusionGlob: string | undefined = undefined;
-  if (config.searchExclusions.length === 1) {
-    exclusionGlob = config.searchExclusions[0];
-  } else if (config.searchExclusions.length > 1) {
-    exclusionGlob = `{${config.searchExclusions.join(',')}}`;
-  }
   const cacheKey = normalizedSearch;
   let cacheEntry = searchCache.get(cacheKey);
   let noticeItem: QuickOpenItem | null = null;
   let loadMoreItem: ActionQuickPickItem | null = null;
 
   if (!cacheEntry) {
+    const mergedExclusions = await getMergedExclusions(
+      config.searchExclusions,
+      token,
+    );
+    const exclusionGlob = buildExclusionGlobFromPatterns(mergedExclusions);
     const searchPattern = buildSearchPattern(cacheKey);
     const searchLimit = Math.max(1, config.maxSearchFiles) + 1;
     const foundUris = await searchService.findFiles(

@@ -1,6 +1,11 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { isExcludedPath } from './exclusionUtils';
+import {
+  getMergedExclusions,
+  buildExclusionGlobFromPatterns,
+} from './gitignoreService';
+
 const DEFAULT_INDEX_DEBOUNCE_MS = 300;
 const COLLISION_INDEX_MAX_FILES = 20000;
 
@@ -73,10 +78,17 @@ function ensureWorkspaceIndexWatcher(logger?: any): void {
     logger?.info?.(
       '[collision-index] Workspace folders changed -> clearing index cache',
     );
-    cachedIndex = null;
-    cachedExclusionKey = null;
-    scheduleIndexRebuild('workspace-folders', logger);
+    invalidateCollisionIndex(logger, 'workspace-folders');
   });
+}
+
+export function invalidateCollisionIndex(
+  logger?: any,
+  reason = 'settings / exclusions changed',
+): void {
+  cachedIndex = null;
+  cachedExclusionKey = null;
+  scheduleIndexRebuild(reason, logger);
 }
 
 export function disposeCollisionIndex(): void {
@@ -99,7 +111,8 @@ async function buildWorkspaceIndex(
   token?: vscode.CancellationToken,
   logger?: any,
 ): Promise<Map<string, Set<string>>> {
-  const exclusionGlob = buildExclusionGlob(exclusionPatterns);
+  const mergedExclusions = await getMergedExclusions(exclusionPatterns, token);
+  const exclusionGlob = buildExclusionGlobFromPatterns(mergedExclusions);
   const files = await vscode.workspace.findFiles(
     '**/*',
     exclusionGlob,
