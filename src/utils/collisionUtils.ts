@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-
+import { isExcludedPath } from './exclusionUtils';
 const DEFAULT_INDEX_DEBOUNCE_MS = 300;
 const COLLISION_INDEX_MAX_FILES = 20000;
 
@@ -26,7 +26,13 @@ function exclusionKeyFromPatterns(patterns: string[]): string {
 }
 
 function buildExclusionGlob(patterns: string[]): string | undefined {
-  return patterns.length > 0 ? `{${patterns.join(',')}}` : undefined;
+  if (patterns.length === 0) {
+    return undefined;
+  }
+  if (patterns.length === 1) {
+    return patterns[0];
+  }
+  return `{${patterns.join(',')}}`;
 }
 
 function scheduleIndexRebuild(reason: string, logger?: any): void {
@@ -50,13 +56,16 @@ function ensureWorkspaceIndexWatcher(logger?: any): void {
   }
 
   indexWatcher = vscode.workspace.createFileSystemWatcher('**/*');
-  indexWatcher.onDidCreate(() => {
+  indexWatcher.onDidCreate((uri) => {
+    if (isExcludedPath(uri.fsPath, lastExclusionPatterns)) return;
     scheduleIndexRebuild('create', logger);
   });
-  indexWatcher.onDidDelete(() => {
+  indexWatcher.onDidDelete((uri) => {
+    if (isExcludedPath(uri.fsPath, lastExclusionPatterns)) return;
     scheduleIndexRebuild('delete', logger);
   });
-  indexWatcher.onDidChange(() => {
+  indexWatcher.onDidChange((uri) => {
+    if (isExcludedPath(uri.fsPath, lastExclusionPatterns)) return;
     scheduleIndexRebuild('change', logger);
   });
 

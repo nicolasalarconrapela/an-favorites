@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -464,21 +464,6 @@
               "**/.history/**"
             ],
             "description": "%config.search.exclusions.description%"
-          },
-          "anfavorites.search.maxSearchFiles": {
-            "type": "number",
-            "default": 1000,
-            "description": "%config.search.maxSearchFiles.description%"
-          },
-          "anfavorites.search.maxSearchResults": {
-            "type": "number",
-            "default": 200,
-            "description": "%config.search.maxSearchResults.description%"
-          },
-          "anfavorites.quickOpen.searchCacheSize": {
-            "type": "number",
-            "default": 30,
-            "description": "%config.quickOpen.searchCacheSize.description%"
           }
         }
       },
