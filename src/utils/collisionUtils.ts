@@ -96,22 +96,22 @@ export function disposeCollisionIndex(): void {
 
 async function buildWorkspaceIndex(
   exclusionPatterns: string[],
-  token?: vscode.CancellationToken,
   logger?: any,
 ): Promise<Map<string, Set<string>>> {
   const exclusionGlob = buildExclusionGlob(exclusionPatterns);
+  // NOTE: Do NOT pass a QuickOpen session cancellation token here.
+  // This is a global persistent index and must complete independently
+  // of any individual search session. Passing a session token caused
+  // the index to be cancelled mid-build when the user typed quickly,
+  // leaving cachedIndex=null and causing files to not appear in results.
   const files = await vscode.workspace.findFiles(
     '**/*',
     exclusionGlob,
     COLLISION_INDEX_MAX_FILES,
-    token,
   );
   const index = new Map<string, Set<string>>();
 
   for (const uri of files) {
-    if (token?.isCancellationRequested) {
-      return index;
-    }
     const basename = safeBasenameFromUri(uri);
     const normalized = normalizeFsPath(uri.fsPath);
     const bucket = index.get(basename);
@@ -130,12 +130,11 @@ async function buildWorkspaceIndex(
 
 async function rebuildWorkspaceIndex(
   exclusionPatterns: string[],
-  token?: vscode.CancellationToken,
   logger?: any,
 ): Promise<Map<string, Set<string>>> {
   const key = exclusionKeyFromPatterns(exclusionPatterns);
   cachedExclusionKey = key;
-  buildPromise = buildWorkspaceIndex(exclusionPatterns, token, logger)
+  buildPromise = buildWorkspaceIndex(exclusionPatterns, logger)
     .then((index) => {
       cachedIndex = index;
       buildPromise = null;
@@ -162,10 +161,13 @@ async function getWorkspaceIndex(
   }
 
   if (buildPromise && cachedExclusionKey === key) {
+    // The index is already being built; wait for it regardless of the session token.
     return buildPromise;
   }
 
-  return rebuildWorkspaceIndex(exclusionPatterns, token, logger);
+  // Rebuild without the session token — the index must not be cancelled
+  // by a per-session cancellation signal.
+  return rebuildWorkspaceIndex(exclusionPatterns, logger);
 }
 
 export function safeBasenameFromUri(uri: vscode.Uri): string {
