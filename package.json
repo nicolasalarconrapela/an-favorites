@@ -1,8 +1,8 @@
 {
   "name": "an-favorites",
-  "displayName": "%extension.displayName%",
-  "description": "%extension.description%",
-  "version": "1.1.0",
+  "displayName": "AnFavorites",
+  "description": "Application for managing favorites",
+  "version": "1.1.1",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
