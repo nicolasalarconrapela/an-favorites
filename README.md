@@ -38,6 +38,13 @@ It also allows you to visually manage your pinned items, categorize them into fo
 
 If you work with multiple environments (like Cursor or Windsurf), your favorites will **automatically sync across IDEs** sharing the same workspace—ensuring you never lose track of what's truly important.
 
+## 🆕 Latest Changes (v1.1.5)
+
+- ✅ Search fixes in Quick Open to prevent omitted results.
+- ✅ Improved cancellation handling during search and command execution.
+- ✅ Marketplace/package configuration adjustments for publishing consistency.
+- ✅ Dependency updates focused on maintenance and security hardening.
+
 ## 🚀 Key Features
 
 - **⚡ Quick Open (`Ctrl+Alt+F`)**: A lightning-fast custom picker unifying recent searches, pinned files, and groups in one place.

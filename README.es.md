@@ -38,6 +38,13 @@ Además te permite gestionar visualmente tus elementos anclados, categorízalos 
 
 Si trabajas con varios entornos (como Cursor o Windsurf), tus favoritos se **sincronizarán automáticamente en todos los IDE** que compartan el mismo espacio de trabajo, lo que te garantiza que nunca pierdas de vista lo realmente importante.
 
+## 🆕 Últimos cambios (v1.1.5)
+
+- ✅ Correcciones de búsqueda en Quick Open para evitar resultados omitidos.
+- ✅ Mejora en el manejo de cancelación durante búsqueda y ejecución de comandos.
+- ✅ Ajustes en la configuración de Marketplace/paquete para mantener consistencia en publicación.
+- ✅ Actualización de dependencias enfocada en mantenimiento y seguridad.
+
 ## 🚀 Características principales
 
 - **⚡ Apertura rápida (`Ctrl+Alt+F`)**: Un selector personalizado ultrarrápido que unifica búsquedas recientes, archivos anclados y grupos en un solo lugar.

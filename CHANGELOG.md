@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.5] - 2026-03-05
+
+### Fixed
+
+- Search: Fixed omissions in Quick Open search result aggregation to ensure full result sets are returned.
+- Search: Corrected cancellation token handling during command execution to prevent inconsistent search behavior.
+
+### Changed
+
+- Marketplace: Updated extension package naming and publish-related configuration.
+- Development: Added `.devcontainer/devcontainer.json` to standardize local development environments.
+- Maintenance: Applied dependency updates and security patches via `npm audit fix`.
+
 ## [1.0.5] - 2026-02-24
 
 ### Changed
