@@ -241,9 +241,12 @@ async function buildSearchItems(params: {
     searchService,
     token,
   } = params;
-  const exclusionGlob = config.searchExclusions.length
-    ? `{${config.searchExclusions.join(',')}}`
-    : undefined;
+  let exclusionGlob: string | undefined = undefined;
+  if (config.searchExclusions.length === 1) {
+    exclusionGlob = config.searchExclusions[0];
+  } else if (config.searchExclusions.length > 1) {
+    exclusionGlob = `{${config.searchExclusions.join(',')}}`;
+  }
   const cacheKey = normalizedSearch;
   let cacheEntry = searchCache.get(cacheKey);
   let noticeItem: QuickOpenItem | null = null;
