@@ -1,6 +1,11 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { isExcludedPath } from './exclusionUtils';
+import {
+  getMergedExclusions,
+  buildExclusionGlobFromPatterns,
+} from './gitignoreService';
+
 const DEFAULT_INDEX_DEBOUNCE_MS = 300;
 const COLLISION_INDEX_MAX_FILES = 20000;
 
@@ -23,16 +28,6 @@ export function normalizeFsPath(p: string): string {
 
 function exclusionKeyFromPatterns(patterns: string[]): string {
   return [...patterns].sort().join('|');
-}
-
-function buildExclusionGlob(patterns: string[]): string | undefined {
-  if (patterns.length === 0) {
-    return undefined;
-  }
-  if (patterns.length === 1) {
-    return patterns[0];
-  }
-  return `{${patterns.join(',')}}`;
 }
 
 function scheduleIndexRebuild(reason: string, logger?: any): void {
@@ -73,10 +68,17 @@ function ensureWorkspaceIndexWatcher(logger?: any): void {
     logger?.info?.(
       '[collision-index] Workspace folders changed -> clearing index cache',
     );
-    cachedIndex = null;
-    cachedExclusionKey = null;
-    scheduleIndexRebuild('workspace-folders', logger);
+    invalidateCollisionIndex(logger, 'workspace-folders');
   });
+}
+
+export function invalidateCollisionIndex(
+  logger?: any,
+  reason = 'settings / exclusions changed',
+): void {
+  cachedIndex = null;
+  cachedExclusionKey = null;
+  scheduleIndexRebuild(reason, logger);
 }
 
 export function disposeCollisionIndex(): void {
@@ -98,7 +100,8 @@ async function buildWorkspaceIndex(
   exclusionPatterns: string[],
   logger?: any,
 ): Promise<Map<string, Set<string>>> {
-  const exclusionGlob = buildExclusionGlob(exclusionPatterns);
+  const mergedExclusions = await getMergedExclusions(exclusionPatterns);
+  const exclusionGlob = buildExclusionGlobFromPatterns(mergedExclusions);
   // NOTE: Do NOT pass a QuickOpen session cancellation token here.
   // This is a global persistent index and must complete independently
   // of any individual search session. Passing a session token caused

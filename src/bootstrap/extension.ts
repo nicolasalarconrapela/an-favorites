@@ -11,11 +11,20 @@ import { registerPinCommands } from '../commands/pinCommands';
 import { registerOpenToSideCommand } from '../commands/openToSideCommand';
 import { registerQuickOpenCommand } from '../commands/quickOpenCommand';
 import { registerKeyboardShortcutCommand } from '../commands/keyboardShortcutCommand';
+import { registerManageGitignoreCommand } from '../commands/manageGitignoreCommand';
 import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
 import { SharedStorageService } from '../services/sharedStorageService';
-import { disposeCollisionIndex } from '../utils/collisionUtils';
+import {
+  disposeCollisionIndex,
+  invalidateCollisionIndex,
+} from '../utils/collisionUtils';
+import {
+  disposeGitignoreService,
+  initGitignoreSync,
+  onGitignoreDiscoveryChange,
+} from '../utils/gitignoreService';
 import { initializeL10n, t } from '../utils/l10n';
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -71,6 +80,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerPinCommands(context, favoritesProvider, logger);
   registerOpenToSideCommand(context, logger);
   registerKeyboardShortcutCommand(context, logger);
+  registerManageGitignoreCommand(context);
   logger.debug('[activate] registering quickOpen...');
   registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
   logger.debug('[activate] quickOpen registered.');
@@ -131,6 +141,15 @@ export function activate(context: vscode.ExtensionContext): void {
 
   telemetry.track('activated');
   logger.debug('━━━ Extension activation completed successfully ━━━');
+
+  // Sync .gitignore patterns into workspace settings in the background
+  void initGitignoreSync(logger);
+  onGitignoreDiscoveryChange(() => {
+    logger?.info?.(
+      '[gitignore] Discovery changed -> invalidating collision index',
+    );
+    invalidateCollisionIndex(logger, 'gitignore changed');
+  });
 
   const watchedPaths = new Map<string, vscode.FileSystemWatcher>();
   const pendingValidations = new Set<string>();
@@ -281,6 +300,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push({ dispose: () => sharedStorage.dispose() });
   context.subscriptions.push({ dispose: () => mruService.dispose() });
   context.subscriptions.push({ dispose: () => disposeCollisionIndex() });
+  context.subscriptions.push({ dispose: () => disposeGitignoreService() });
   context.subscriptions.push({ dispose: () => logger.dispose?.() });
 }
 
