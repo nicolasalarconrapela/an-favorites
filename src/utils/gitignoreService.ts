@@ -68,33 +68,38 @@ export function gitignoreRelPath(uri: vscode.Uri): string {
 // Parse helpers
 // ---------------------------------------------------------------------------
 
-function gitignoreLineToGlobs(line: string): string[] {
+function gitignoreLineToGlobs(line: string, dir: string): string[] {
   const trimmed = line.trim();
   if (!trimmed || trimmed.startsWith('#')) return [];
   if (trimmed.startsWith('!')) return [];
 
   const raw = trimmed.startsWith('\\') ? trimmed.slice(1) : trimmed;
+  const prefix = dir && dir !== '.' ? `${dir}/` : '';
 
-  if (raw.includes('**')) return [raw];
+  const isDirOnly = raw.endsWith('/');
+  const patternBody = isDirOnly ? raw.slice(0, -1) : raw;
 
-  const hasSlash = raw.includes('/');
-  const trailingSlash = raw.endsWith('/');
-  const pattern = trailingSlash ? raw.slice(0, -1) : raw;
-
-  if (trailingSlash) {
-    if (hasSlash && !pattern.startsWith('/')) return [`**/${pattern}/**`];
-    if (pattern.startsWith('/')) return [`${pattern.slice(1)}/**`];
-    return [`**/${pattern}/**`];
+  if (patternBody.startsWith('/')) {
+    const cleanRel = patternBody.slice(1);
+    if (isDirOnly) return [`${prefix}${cleanRel}/**`];
+    return [`${prefix}${cleanRel}`, `${prefix}${cleanRel}/**`];
   }
 
-  if (pattern.startsWith('/')) {
-    const rel = pattern.slice(1);
-    return [rel, `${rel}/**`];
+  if (patternBody.includes('**')) {
+    const p = `${prefix}${patternBody}`;
+    return isDirOnly ? [p + '/**'] : [p, p + '/**'];
   }
 
-  if (hasSlash) return [`**/${pattern}`, `**/${pattern}/**`];
+  const hasMultipleSlashes = patternBody.includes('/');
 
-  return [`**/${pattern}`, `**/${pattern}/**`];
+  if (hasMultipleSlashes) {
+    if (isDirOnly) return [`${prefix}${patternBody}/**`];
+    return [`${prefix}${patternBody}`, `${prefix}${patternBody}/**`];
+  } else {
+    // Matches anywhere inside prefix
+    if (isDirOnly) return [`${prefix}**/${patternBody}/**`];
+    return [`${prefix}**/${patternBody}`, `${prefix}**/${patternBody}/**`];
+  }
 }
 
 async function parseGitignoreFile(
@@ -102,12 +107,22 @@ async function parseGitignoreFile(
   token?: vscode.CancellationToken,
 ): Promise<string[]> {
   if (token?.isCancellationRequested) return [];
+
+  let relFile = vscode.workspace.asRelativePath(uri, false).replace(/\\/g, '/');
+  // If it's outside the workspace, ignore the relative path mapping
+  if (/^[a-zA-Z]:/.test(relFile) || relFile.startsWith('/')) {
+    relFile = '';
+  }
+  const dir = relFile.includes('/')
+    ? relFile.substring(0, relFile.lastIndexOf('/'))
+    : '';
+
   try {
     const bytes = await vscode.workspace.fs.readFile(uri);
     const text = Buffer.from(bytes).toString('utf8');
     const patterns: string[] = [];
     for (const line of text.split(/\r?\n/)) {
-      for (const g of gitignoreLineToGlobs(line)) {
+      for (const g of gitignoreLineToGlobs(line, dir)) {
         if (!patterns.includes(g)) patterns.push(g);
       }
     }
