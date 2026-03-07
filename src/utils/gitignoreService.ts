@@ -36,12 +36,12 @@ async function updateGitignoreFilesSettings(
 
 async function syncGitignoreFilesToSettings(
   token?: vscode.CancellationToken,
-): Promise<void> {
+): Promise<boolean> {
   const { enabled, includeNested } = getGitignoreConfig();
-  if (!enabled) return;
+  if (!enabled) return false;
 
   const discovered = await discoverGitignoreFiles(token);
-  if (discovered.length === 0) return;
+  if (discovered.length === 0) return false;
 
   const settings = getGitignoreFilesSettings();
   let changed = false;
@@ -56,7 +56,9 @@ async function syncGitignoreFilesToSettings(
 
   if (changed) {
     await updateGitignoreFilesSettings(settings);
+    return true; // Indicates config was updated
   }
+  return false;
 }
 
 /** Returns the path used to identify/persist a gitignore Uri (relative to workspace). */
@@ -368,9 +370,18 @@ export function onGitignoreDiscoveryChange(cb: () => void): void {
 
 export async function initGitignoreSync(logger?: any): Promise<void> {
   ensureWatcher(logger);
-  await syncGitignoreFilesToSettings();
+  const didUpdate = await syncGitignoreFilesToSettings();
+
+  if (didUpdate) {
+    // If we updated settings, we must await the VS Code config event propagation
+    // to avoid the event listener wiping our freshly warmed cache.
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  // Warm up the cache by doing an initial scan/parse
+  await getGitignorePatterns();
   logger?.info?.(
-    '[gitignore] Service started — watching for .gitignore changes',
+    '[gitignore] Service started — scanning and watching for .gitignore changes',
   );
 }
 
