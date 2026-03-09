@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { t } from '../utils/l10n';
 
 const GITIGNORE_CFG = 'anfavorites.gitignore';
 const FILES_PROP = 'files';
@@ -19,7 +20,8 @@ function getGitignoreFilesSettings(): Record<string, boolean> {
   const cfg = vscode.workspace.getConfiguration(GITIGNORE_CFG);
   const inspect = cfg.inspect<Record<string, boolean>>(FILES_PROP);
   // We strictly use workspace-level settings because files are local to the repo
-  return inspect?.workspaceFolderValue ?? inspect?.workspaceValue ?? {};
+  const val = inspect?.workspaceFolderValue ?? inspect?.workspaceValue ?? {};
+  return { ...val };
 }
 
 async function updateGitignoreFilesSettings(
@@ -38,14 +40,25 @@ async function syncGitignoreFilesToSettings(
   token?: vscode.CancellationToken,
 ): Promise<boolean> {
   const { enabled, includeNested } = getGitignoreConfig();
-  if (!enabled) return false;
-
-  const discovered = await discoverGitignoreFiles(token);
-  if (discovered.length === 0) return false;
-
   const settings = getGitignoreFilesSettings();
   let changed = false;
 
+  if (!enabled) {
+    if (Object.keys(settings).length > 0) {
+      await updateGitignoreFilesSettings({});
+      return true;
+    }
+    return false;
+  }
+
+  _logger?.debug?.(
+    `[gitignore] sync starting. enabled=${enabled}, includeNested=${includeNested}`,
+  );
+
+  const discovered = await discoverGitignoreFiles(token);
+  _logger?.debug?.(`[gitignore] discovered ${discovered.length} files`);
+
+  // 1. Add new discovered files
   for (const uri of discovered) {
     const rel = gitignoreRelPath(uri);
     if (!(rel in settings)) {
@@ -54,9 +67,31 @@ async function syncGitignoreFilesToSettings(
     }
   }
 
+  // 2. Cleanup settings based on current discovery and nesting rules
+  for (const rel of Object.keys(settings)) {
+    const normalizedRel = rel.replace(/\\/g, '/');
+    const isRoot =
+      normalizedRel === '.gitignore' ||
+      /^[^/]+\/\.gitignore$/.test(normalizedRel);
+
+    // If includeNested is false, remove anything that isn't a workspace-root .gitignore
+    if (!includeNested && !isRoot) {
+      delete settings[rel];
+      changed = true;
+      continue;
+    }
+
+    // Remove files that no longer exist on disk
+    const exists = discovered.some((d) => gitignoreRelPath(d) === rel);
+    if (!exists) {
+      delete settings[rel];
+      changed = true;
+    }
+  }
+
   if (changed) {
     await updateGitignoreFilesSettings(settings);
-    return true; // Indicates config was updated
+    return true;
   }
   return false;
 }
@@ -144,6 +179,7 @@ interface GitignoreCache {
   patterns: string[];
 }
 
+let _logger: any | null = null;
 let _cache: GitignoreCache | null = null;
 let _watcher: vscode.FileSystemWatcher | null = null;
 let _folderListener: vscode.Disposable | null = null;
@@ -158,13 +194,47 @@ function currentFolderKey(): string {
     .join('|');
 }
 
-function invalidateCache(): void {
+function invalidateCache(showProgress: boolean = false): void {
   _cache = null;
   if (_debounceTimer) clearTimeout(_debounceTimer);
   _debounceTimer = setTimeout(() => {
     _debounceTimer = null;
-    void syncGitignoreFilesToSettings();
-    _onDiscoveryChange?.();
+
+    if (showProgress) {
+      const { enabled, includeNested } = getGitignoreConfig();
+
+      if (!enabled) {
+        // If disabled, just sync immediately (which will clear the list) without progress
+        void syncGitignoreFilesToSettings().then(() => {
+          _onDiscoveryChange?.();
+        });
+        return;
+      }
+
+      const title = includeNested
+        ? t('Scanning for all .gitignore files...')
+        : t('Scanning workspace roots for .gitignore...');
+
+      void vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title,
+          cancellable: false,
+        },
+        async () => {
+          // Perform the actual work
+          await syncGitignoreFilesToSettings();
+          _onDiscoveryChange?.();
+
+          // Artificially keep the progress visible for at least 5 seconds as requested
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        },
+      );
+    } else {
+      void syncGitignoreFilesToSettings().then(() => {
+        _onDiscoveryChange?.();
+      });
+    }
   }, 400);
 }
 
@@ -192,7 +262,10 @@ function ensureWatcher(logger?: any): void {
   _configListener = vscode.workspace.onDidChangeConfiguration((e) => {
     if (e.affectsConfiguration('anfavorites.gitignore')) {
       logger?.debug?.('[gitignore] Settings changed');
-      invalidateCache();
+      const showProgress =
+        e.affectsConfiguration('anfavorites.gitignore.enabled') ||
+        e.affectsConfiguration('anfavorites.gitignore.includeNested');
+      invalidateCache(showProgress);
     }
   });
 }
@@ -203,7 +276,8 @@ function ensureWatcher(logger?: any): void {
 
 /**
  * Finds all .gitignore files in the workspace.
- * Respects the 'includeNested' setting.
+ * - If 'Enabled' is true, it always looks for the root .gitignore.
+ * - If 'Include Nested' is true, it also scans for .gitignore files in subdirectories.
  */
 export async function discoverGitignoreFiles(
   token?: vscode.CancellationToken,
@@ -213,6 +287,10 @@ export async function discoverGitignoreFiles(
 
   const folders = vscode.workspace.workspaceFolders ?? [];
   const uris: vscode.Uri[] = [];
+  const folderNames = folders.map((f) => f.name).join(', ');
+  _logger?.debug?.(
+    `[gitignore] discoverGitignoreFiles: scanning ${folderNames} folders`,
+  );
 
   if (includeNested) {
     const configSearch =
@@ -224,18 +302,43 @@ export async function discoverGitignoreFiles(
 
       const excludePatterns = [...globalExclusions];
 
-      // Merge root .gitignore to avoid scanning its ignored folders
+      // Always check root .gitignore explicitly
       const rootGitignoreUri = vscode.Uri.joinPath(folder.uri, '.gitignore');
+      _logger?.debug?.(
+        `[gitignore] Checking root file: ${rootGitignoreUri.fsPath}`,
+      );
+      _logger?.debug?.(
+        `[gitignore] Exclude patterns: ${excludePatterns.join(', ')}`,
+      );
+
+      try {
+        await vscode.workspace.fs.stat(rootGitignoreUri);
+        if (!uris.some((u) => u.fsPath === rootGitignoreUri.fsPath)) {
+          uris.push(rootGitignoreUri);
+        }
+        _logger?.debug?.(
+          `[gitignore] Root file exists: ${rootGitignoreUri.fsPath}`,
+        );
+      } catch {
+        _logger?.debug?.(
+          `[gitignore] Root file NOT found: ${rootGitignoreUri.fsPath}`,
+        );
+      }
+
+      // Merge root .gitignore patterns to avoid scanning ignored folders
       const rootPatterns = await parseGitignoreFile(rootGitignoreUri, token);
       for (const p of rootPatterns) {
         if (!excludePatterns.includes(p)) excludePatterns.push(p);
       }
 
-      // Convert array of patterns to a single glob format {a,b,c}
       let excludeGlob: string | undefined;
       if (excludePatterns.length === 1) excludeGlob = excludePatterns[0];
       else if (excludePatterns.length > 1)
         excludeGlob = `{${excludePatterns.join(',')}}`;
+
+      _logger?.debug?.(
+        `[gitignore] Scanning folder ${folder.name} recursively. Excludes: ${excludeGlob}`,
+      );
 
       const found = await vscode.workspace.findFiles(
         new vscode.RelativePattern(folder, '**/.gitignore'),
@@ -243,22 +346,42 @@ export async function discoverGitignoreFiles(
         5000,
         token,
       );
-      uris.push(...found);
+
+      _logger?.debug?.(
+        `[gitignore] Found in ${folder.name}: ${found.length} files`,
+      );
+
+      for (const uri of found) {
+        if (!uris.some((u) => u.fsPath === uri.fsPath)) {
+          uris.push(uri);
+        }
+      }
     }
   } else {
     for (const folder of folders) {
       if (token?.isCancellationRequested) break;
-      const uri = vscode.Uri.joinPath(folder.uri, '.gitignore');
+
+      const rootGitignoreUri = vscode.Uri.joinPath(folder.uri, '.gitignore');
+      _logger?.debug?.(
+        `[gitignore] Checking root file: ${rootGitignoreUri.fsPath}`,
+      );
+
       try {
-        await vscode.workspace.fs.stat(uri);
-        uris.push(uri);
+        await vscode.workspace.fs.stat(rootGitignoreUri);
+        if (!uris.some((u) => u.fsPath === rootGitignoreUri.fsPath)) {
+          uris.push(rootGitignoreUri);
+        }
+        _logger?.debug?.(
+          `[gitignore] Root file exists: ${rootGitignoreUri.fsPath}`,
+        );
       } catch {
-        // does not exist — skip
+        _logger?.debug?.(
+          `[gitignore] Root file NOT found: ${rootGitignoreUri.fsPath}`,
+        );
       }
     }
   }
 
-  // Sort by relative path for stable ordering
   return uris.sort((a, b) =>
     gitignoreRelPath(a).localeCompare(gitignoreRelPath(b)),
   );
@@ -369,6 +492,7 @@ export function onGitignoreDiscoveryChange(cb: () => void): void {
 }
 
 export async function initGitignoreSync(logger?: any): Promise<void> {
+  _logger = logger;
   ensureWatcher(logger);
   const didUpdate = await syncGitignoreFilesToSettings();
 
