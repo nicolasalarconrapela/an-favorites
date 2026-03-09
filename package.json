@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -139,6 +139,12 @@
         "title": "%command.manageGitignore.title%",
         "category": "%command.category.anfavorites%",
         "icon": "$(list-unordered)"
+      },
+      {
+        "command": "anfavorites.clearCache",
+        "title": "Clear Extension Cache",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(trash)"
       }
     ],
     "keybindings": [
@@ -310,10 +316,24 @@
         {
           "command": "anfavorites.configureKeybindings",
           "when": "true"
+        },
+        {
+          "command": "anfavorites.clearCache",
+          "when": "true"
         }
       ]
     },
     "configuration": [
+      {
+        "title": "Advanced (Troubleshooting)",
+        "properties": {
+          "anfavorites.advanced.clearCacheAction": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Click the link below to force clear extension cache, internal search indexes, and legacy data from older versions.\n\n[Clear all cache now](command:anfavorites.clearCache)"
+          }
+        }
+      },
       {
         "title": "%config.general.title%",
         "properties": {

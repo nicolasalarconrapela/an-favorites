@@ -12,6 +12,7 @@ import { registerOpenToSideCommand } from '../commands/openToSideCommand';
 import { registerQuickOpenCommand } from '../commands/quickOpenCommand';
 import { registerKeyboardShortcutCommand } from '../commands/keyboardShortcutCommand';
 import { registerManageGitignoreCommand } from '../commands/manageGitignoreCommand';
+import { registerClearCacheCommand } from '../commands/clearCacheCommand';
 import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
@@ -81,6 +82,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerOpenToSideCommand(context, logger);
   registerKeyboardShortcutCommand(context, logger);
   registerManageGitignoreCommand(context);
+  registerClearCacheCommand(context, logger, favoritesProvider, mruService);
   logger.debug('[activate] registering quickOpen...');
   registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
   logger.debug('[activate] quickOpen registered.');
