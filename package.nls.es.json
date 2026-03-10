@@ -56,9 +56,9 @@
   "config.quickOpen.openInNewWindow.description": "Si está activado, al abrir un archivo desde Quick Open se abrirá automáticamente en una nueva ventana y se ocultará el botón 'Abrir en nueva ventana'.",
   "config.quickOpen.showOpenToSideButton.description": "Mostrar el botón 'Abrir al lado' en los elementos de Quick Open.",
   "config.gitignore.title": ".gitignore",
-  "config.gitignore.enabled.description": "Si está activado, la extensión lee los archivos .gitignore de las raíces del workspace y aplica sus patrones como exclusiones de búsqueda en Quick Open.",
-  "config.gitignore.includeNested.description": "Si está activado, también se leen los archivos .gitignore dentro de subdirectorios, no solo los de la raíz del workspace.",
-  "config.gitignore.files.description": "Lista de archivos .gitignore detectados. Si está marcado, sus reglas se usan como exclusiones de búsqueda. Desmárcalo para ignorar sus reglas.",
+  "config.gitignore.enabled.description": "Si está activado, la extensión lee los archivos .gitignore de las raíces del workspace y aplica sus patrones como exclusiones de búsqueda en Quick Open. [Nota: Esta función está deshabilitada a nivel de Usuario; por favor, actívala en la configuración de tu Workspace].",
+  "config.gitignore.includeNested.description": "Si está activado, también se leen los archivos .gitignore dentro de subdirectorios, no solo los de la raíz del workspace. [Nota: Configura esto en tu configuración de Workspace].",
+  "config.gitignore.files.description": "Lista de archivos .gitignore detectados. Si está marcado, sus reglas se usan como exclusiones de búsqueda. Desmárcalo para ignorar sus reglas. [Nota: Esta función en tu configuración de Workspace].",
   "command.manageGitignore.title": "Gestionar archivos .gitignore",
   "config.quickOpen.showOpenInNewWindowButton.description": "Mostrar el botón 'Abrir en nueva ventana' en los elementos de Quick Open."
 }

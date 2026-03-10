@@ -80,5 +80,7 @@
   "Error moving favorites internally.": "Error moving favorites internally.",
   "Added {0} files to \"{1}\".": "Added {0} files to \"{1}\".",
   "Ignored {0} folders (only files are allowed).": "Ignored {0} folders (only files are allowed).",
-  "Error processing external files.": "Error processing external files."
+  "Error processing external files.": "Error processing external files.",
+  "The .gitignore integration can only be enabled/configured at the Workspace level. Global (User) configuration for this feature is ignored.": "The .gitignore integration can only be enabled/configured at the Workspace level. Global (User) configuration for this feature is ignored.",
+  "The .gitignore management feature is only available within a Workspace. Use Workspace settings to enable it.": "The .gitignore management feature is only available within a Workspace. Use Workspace settings to enable it."
 }
