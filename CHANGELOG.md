@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.2.7] - 2026-03-03
+
+### Added
+
+- Documentation: Added PR title workflow guidance to allow temporary title deactivation in nested PRs and consolidation into a single canonical title before merge.
+
+### Changed
+
+- Documentation: Expanded nested PR rules to include title-collapsing behavior alongside squash/rebase history collapse.
+- Maintenance: Bumped extension version to `1.2.7` for the PR title deactivation/collapse process update.
+
 ## [1.2.6] - 2026-03-03
 
 ### Added

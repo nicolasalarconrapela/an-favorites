@@ -218,8 +218,10 @@ Formato de trabajo por fase:
 - Después: ejecutar compile/test/lint y reportar resultados
 - Si lint falla por configuración del repo, dejar evidencia y continuar
 
-Regla de PRs (permitir colapsar anidación de PRs):
+Regla de PRs (permitir desactivar y colapsar títulos en PRs anidados):
 - Si una fase depende de otra, se puede abrir PR anidado (stacked PR) temporalmente.
+- El título de PR en sub-fases puede marcarse como **desactivado** para revisión (prefijo sugerido: `[HIDDEN-TITLE]`) cuando no se quiera mostrar como título final.
+- Antes del merge final, consolidar títulos temporales y dejar solo el título canónico de fase.
 - Al cerrar una fase, colapsar la anidación mediante **squash/rebase** para dejar un historial lineal y fácil de revisar.
 - Mantener máximo 1 PR activo por fase; si hay sub-PRs técnicos, consolidarlos antes de merge.
 - Cada PR debe incluir: alcance de fase, riesgos, rollback y checklist de pruebas.
