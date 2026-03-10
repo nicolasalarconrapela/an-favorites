@@ -5,20 +5,20 @@
 <br/>
 
 <p align="center">
-  <!-- <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
-    <img src="https://vsmarketplacebadges.dev/installs/AnAppWilos.an-favorites.png?style=for-the-badge" alt="Visual Studio Marketplace Installs">
   </a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
-    <img src="https://vsmarketplacebadges.dev/downloads/AnAppWilos.an-favorites.png?style=for-the-badge" alt="Visual Studio Marketplace Downloads">
-  </a> -->
   <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites&ssr=false#version-history">
     <img src="https://vsmarketplacebadges.dev/version-short/AnAppWilos.an-favorites.png?style=for-the-badge" alt="Visual Studio Marketplace Version">
   </a>
-  <!-- <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
-    <img src="https://vsmarketplacebadges.dev/rating-star/AnAppWilos.an-favorites.png?style=for-the-badge" alt="Visual Studio Marketplace Rating">
-  </a> -->
   <a href="https://open-vsx.org/extension/AnAppWilos/an-favorites">
     <img src="https://img.shields.io/open-vsx/v/AnAppWilos/an-favorites?style=for-the-badge&label=Open%20VSX" alt="Open VSX Version">
+  </a>
+</p>
+<p align="center">
+  <!-- <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
+    <img src="https://img.shields.io/badge/Downloads_Marketplace-x-blue?style=for-the-badge&logo=visualstudiocode" alt="Visual Studio Marketplace Downloads">
+  </a> -->
+  <a href="https://open-vsx.org/extension/AnAppWilos/an-favorites">
+    <img src="https://img.shields.io/open-vsx/dt/AnAppWilos/an-favorites?style=for-the-badge&label=Open%20VSX%20Downloads">
   </a>
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License MIT">
