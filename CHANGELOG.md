@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.6] - 2026-03-03
+
+### Added
+
+- Documentation: Added PR workflow guidance to allow temporary nested PRs per phase and collapse the nesting before merge (stacked PRs with squash/rebase).
+
+### Changed
+
+- Maintenance: Bumped extension version to `1.2.6` for the PR nesting/collapse process update.
+
 ## [1.2.5] - 2026-03-03
 
 ### Added

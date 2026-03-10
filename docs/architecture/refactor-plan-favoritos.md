@@ -218,6 +218,12 @@ Formato de trabajo por fase:
 - Después: ejecutar compile/test/lint y reportar resultados
 - Si lint falla por configuración del repo, dejar evidencia y continuar
 
+Regla de PRs (permitir colapsar anidación de PRs):
+- Si una fase depende de otra, se puede abrir PR anidado (stacked PR) temporalmente.
+- Al cerrar una fase, colapsar la anidación mediante **squash/rebase** para dejar un historial lineal y fácil de revisar.
+- Mantener máximo 1 PR activo por fase; si hay sub-PRs técnicos, consolidarlos antes de merge.
+- Cada PR debe incluir: alcance de fase, riesgos, rollback y checklist de pruebas.
+
 Criterios de aceptación global:
 - Nuevo kind integrable sin modificar casos de uso centrales
 - Reglas pinned/orden en una sola capa de dominio
