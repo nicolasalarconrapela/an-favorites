@@ -170,3 +170,61 @@ Todos implementan puertos del dominio, permitiendo pruebas de dominio sin VS Cod
 
 ## Nota de implementación
 Antes de mover código en bloque, conviene introducir una fachada `FavoritesFacade` para enrutar comandos actuales al nuevo core y migrar por feature flags internas.
+
+## Prompt maestro para comenzar la refactorización por fases
+
+Usa este prompt en una nueva sesión para ejecutar la migración de manera controlada:
+
+```text
+Actúa como arquitecto y desarrollador senior de esta extensión VS Code.
+Objetivo: ejecutar la refactorización por fases para unificar favoritos, pinned y tree en un core reutilizable.
+
+Contexto obligatorio:
+- Documento base: docs/architecture/refactor-plan-favoritos.md
+- Arquitectura objetivo: Hexagonal + Strategy + Composite
+- Regla de compatibilidad: no romper formato actual de storage
+- Regla de entrega: cada fase debe terminar con cambios pequeños, testeables y revertibles
+
+Plan de ejecución (seguir estrictamente):
+1) Fase 1 - Contratos y modelo canónico
+   - Crear modelo FavoriteItem y puertos mínimos
+   - Crear interfaz FavoriteKindStrategy + registro inicial
+   - Agregar mapeadores desde formato actual
+   - Entregables: tipos, interfaces, tests unitarios de mapeo
+
+2) Fase 2 - Casos de uso unificados
+   - Implementar add/remove/togglePin/move/list en dominio
+   - Conectar comandos actuales a través de una fachada (FavoritesFacade)
+   - Entregables: casos de uso + tests de reglas de orden
+
+3) Fase 3 - Refactor de árbol
+   - Introducir TreeNodeComposite y TreeBuilder
+   - Mover lógica de negocio fuera de TreeDataProvider
+   - Entregables: provider adaptador + tests de construcción de árbol
+
+4) Fase 4 - Nuevos tipos piloto
+   - Implementar CommandFavoriteStrategy y LineFavoriteStrategy
+   - Validar alta/edición/ejecución/listado sin tocar core
+   - Entregables: estrategias + tests por tipo
+
+5) Fase 5 - Endurecimiento
+   - Contract tests de adaptadores (storage, VS Code command, URI)
+   - Métricas: tiempo de alta de nuevo kind y regresiones
+   - Entregables: reporte final de cobertura y deuda técnica
+
+Formato de trabajo por fase:
+- Antes de codificar: detalla alcance, archivos a tocar y riesgos
+- Durante: commits atómicos por subpaso
+- Después: ejecutar compile/test/lint y reportar resultados
+- Si lint falla por configuración del repo, dejar evidencia y continuar
+
+Criterios de aceptación global:
+- Nuevo kind integrable sin modificar casos de uso centrales
+- Reglas pinned/orden en una sola capa de dominio
+- Árbol, quick open y comandos consumen el mismo core
+
+Comienza ahora por la Fase 1.
+Primero: propone el árbol de archivos exacto a crear/modificar y espera validación mínima antes de implementar.
+```
+
+Sugerencia: reutiliza el prompt tal cual y solo cambia el objetivo del `kind` piloto cuando quieras priorizar `snippet`, `url` o `task`.

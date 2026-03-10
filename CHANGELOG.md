@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.5] - 2026-03-03
+
+### Added
+
+- Documentation: Added a master prompt in Spanish to start the phased refactor execution with deliverables, acceptance criteria, and workflow rules per phase.
+
+### Changed
+
+- Maintenance: Bumped extension version to `1.2.5` for the phased refactor prompt update.
+
 ## [1.2.4] - 2026-03-03
 
 ### Added
