@@ -145,7 +145,7 @@ export function activate(context: vscode.ExtensionContext): void {
   logger.debug('━━━ Extension activation completed successfully ━━━');
 
   // Sync .gitignore patterns into workspace settings in the background
-  void initGitignoreSync(logger);
+  void initGitignoreSync(context, logger);
   onGitignoreDiscoveryChange(() => {
     logger?.info?.(
       '[gitignore] Discovery changed -> invalidating collision index',

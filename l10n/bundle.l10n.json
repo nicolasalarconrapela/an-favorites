@@ -82,5 +82,6 @@
   "Ignored {0} folders (only files are allowed).": "Ignored {0} folders (only files are allowed).",
   "Error processing external files.": "Error processing external files.",
   "The .gitignore integration can only be enabled/configured at the Workspace level. Global (User) configuration for this feature is ignored.": "The .gitignore integration can only be enabled/configured at the Workspace level. Global (User) configuration for this feature is ignored.",
-  "The .gitignore management feature is only available within a Workspace. Use Workspace settings to enable it.": "The .gitignore management feature is only available within a Workspace. Use Workspace settings to enable it."
+  "The .gitignore management feature is only available within a Workspace. Use Workspace settings to enable it.": "The .gitignore management feature is only available within a Workspace. Use Workspace settings to enable it.",
+  "Scanning workspace for .gitignore files...": "Scanning workspace for .gitignore files..."
 }

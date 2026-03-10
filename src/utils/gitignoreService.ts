@@ -15,13 +15,16 @@ function getGitignoreConfig(): { enabled: boolean; includeNested: boolean } {
 
   // We explicitly ignore global (user) values for these settings
   // because the user wants this to be a workspace-only feature.
+  // We DO fall back to the defaultValue if no workspace value is defined.
   const enabled =
     inspectEnabled?.workspaceFolderValue ??
     inspectEnabled?.workspaceValue ??
-    false;
+    inspectEnabled?.defaultValue ??
+    true;
   const includeNested =
     inspectNested?.workspaceFolderValue ??
     inspectNested?.workspaceValue ??
+    inspectNested?.defaultValue ??
     false;
 
   return { enabled, includeNested };
@@ -554,22 +557,59 @@ export function onGitignoreDiscoveryChange(cb: () => void): void {
   _onDiscoveryChange = cb;
 }
 
-export async function initGitignoreSync(logger?: any): Promise<void> {
+export async function initGitignoreSync(
+  context: vscode.ExtensionContext,
+  logger?: any,
+): Promise<void> {
   _logger = logger;
   ensureWatcher(logger);
-  const didUpdate = await syncGitignoreFilesToSettings();
 
-  if (didUpdate) {
-    // If we updated settings, we must await the VS Code config event propagation
-    // to avoid the event listener wiping our freshly warmed cache.
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
+  const { enabled } = getGitignoreConfig();
+  const hasWorkspaceFolders =
+    (vscode.workspace.workspaceFolders ?? []).length > 0;
 
-  // Warm up the cache by doing an initial scan/parse
-  await getGitignorePatterns();
-  logger?.info?.(
-    '[gitignore] Service started — scanning and watching for .gitignore changes',
+  // Use workspaceState to ensure we only show the "Scanning..." progress
+  // the very first time we open this workspace.
+  const hasScanned = context.workspaceState.get<boolean>(
+    'hasScannedGitignore',
+    false,
   );
+  const isFirstRun = enabled && hasWorkspaceFolders && !hasScanned;
+
+  const doSync = async (): Promise<void> => {
+    // Record that we have completed the initial scan for this workspace
+    await context.workspaceState.update('hasScannedGitignore', true);
+
+    const didUpdate = await syncGitignoreFilesToSettings();
+
+    if (didUpdate) {
+      // If we updated settings, we must await the VS Code config event propagation
+      // to avoid the event listener wiping our freshly warmed cache.
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+
+    // Warm up the cache by doing an initial scan/parse
+    await getGitignorePatterns();
+    logger?.info?.(
+      '[gitignore] Service started — scanning and watching for .gitignore changes',
+    );
+  };
+
+  if (isFirstRun) {
+    void vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Window,
+        title: t('Scanning workspace for .gitignore files...'),
+      },
+      async () => {
+        await doSync();
+        // Keep progress visible for a short moment to ensure the user notices it
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      },
+    );
+  } else {
+    await doSync();
+  }
 }
 
 export function disposeGitignoreService(): void {
