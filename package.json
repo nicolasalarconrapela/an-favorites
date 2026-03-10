@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -325,11 +325,10 @@
     },
     "configuration": [
       {
-        "title": "Advanced (Troubleshooting)",
+        "title": "Troubleshooting",
         "properties": {
           "anfavorites.advanced.clearCacheAction": {
-            "type": "boolean",
-            "default": false,
+
             "markdownDescription": "Click the link below to force clear extension cache, internal search indexes, and legacy data from older versions.\n\n[Clear all cache now](command:anfavorites.clearCache)"
           }
         }
@@ -350,7 +349,7 @@
               "%config.language.enum.en%",
               "%config.language.enum.es%"
             ],
-            "description": "%config.language.description%",
+            "markdownDescription": "%config.language.description%",
             "scope": "application"
           }
         }
