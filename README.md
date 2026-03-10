@@ -1,4 +1,4 @@
-![Logo_&_Banner](https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/banner_logo.png?raw=true)
+![Logo_&_Banner](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/main/resources/banner_logo.png)
 
 <h1 align="left">AnFavorites</h1>
 
@@ -25,7 +25,7 @@
   </a>
 </p>
 
-![img_init](https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/init.png?raw=true)
+![img_init](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/main/resources/init.png)
 
 **AnFavorites** is an extension that optimizes your file workflow by providing instant, centralized access to your most important files with a single keyboard shortcut (`Ctrl+Alt+F`).
 
