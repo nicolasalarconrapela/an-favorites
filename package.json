@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.2.13",
+  "version": "1.2.14",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -753,6 +753,7 @@
     "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/minimatch": "^5.1.2",
     "@types/mocha": "^10.0.6",
     "@types/node": "^25.0.6",
@@ -765,9 +766,11 @@
     "esbuild": "^0.27.2",
     "eslint": "^10.0.1",
     "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.4.0",
     "mocha": "^10.7.5",
     "prettier": "^3.7.4",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.56.1"
   },
   "overrides": {
     "diff": "8.0.3",
