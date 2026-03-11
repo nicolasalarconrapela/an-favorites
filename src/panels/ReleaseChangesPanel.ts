@@ -90,7 +90,19 @@ export class ReleaseChangesPanel {
       );
 
       if (fs.existsSync(releaseNotePath)) {
-        return fs.readFileSync(releaseNotePath, 'utf8');
+        const fullContent = fs.readFileSync(releaseNotePath, 'utf8');
+
+        // Expresión regular para encontrar la sección de la versión más reciente.
+        // Busca desde el primer encabezado de nivel 2 (##) hasta el siguiente encabezado de nivel 2 (##) o el final del archivo.
+        const versionMatch = fullContent.match(
+          /(##\s+[vV\d.]+[\s\S]*?)(?=##\s+[vV\d.]|$)/,
+        );
+
+        if (versionMatch && versionMatch[1]) {
+          return `# RELEASE NOTES\n\n${versionMatch[1].trim()}`;
+        }
+
+        return fullContent; // Fallback al contenido completo si no se detectan secciones
       }
 
       return `# Release Notes\n\nNo se encontró el archivo RELEASE_NOTES.md en el paquete de la extensión.`;
