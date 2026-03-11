@@ -59,6 +59,7 @@
   "config.gitignore.enabled.description": "When enabled, the extension reads .gitignore files from your workspace roots and applies their patterns as search exclusions in Quick Open. [Note: This feature is disabled at the User level; please enable it in your Workspace settings].",
   "config.gitignore.includeNested.description": "When enabled, .gitignore files inside subdirectories are also read, not just the ones at the workspace root. [Note: Please configure this in your Workspace settings].",
   "config.gitignore.files.description": "List of discovered .gitignore files. Checked files are actively used for search exclusions. Uncheck a file to ignore its rules. [Note: Please configure this in your Workspace settings].",
+  "command.openReleaseChanges.title": "View Release Notes",
   "command.manageGitignore.title": "Manage .gitignore Files",
   "config.quickOpen.showOpenInNewWindowButton.description": "Whether to show the 'Open in New Window' button in Quick Open items."
 }

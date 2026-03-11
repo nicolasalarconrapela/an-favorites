@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.2.14",
+  "version": "1.2.15",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -145,6 +145,12 @@
         "title": "Clear Extension Cache",
         "category": "%command.category.anfavorites%",
         "icon": "$(trash)"
+      },
+      {
+        "command": "anfavorites.openReleaseChanges",
+        "title": "%command.openReleaseChanges.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(megaphone)"
       }
     ],
     "keybindings": [
@@ -319,6 +325,10 @@
         },
         {
           "command": "anfavorites.clearCache",
+          "when": "true"
+        },
+        {
+          "command": "anfavorites.openReleaseChanges",
           "when": "true"
         }
       ]
@@ -754,6 +764,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/marked": "^5.0.2",
     "@types/minimatch": "^5.1.2",
     "@types/mocha": "^10.0.6",
     "@types/node": "^25.0.6",
@@ -779,5 +790,8 @@
     "@vscode/vsce": {
       "minimatch": "3.1.2"
     }
+  },
+  "dependencies": {
+    "marked": "^17.0.4"
   }
 }
