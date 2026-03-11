@@ -1,19 +1,29 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
 import { marked } from 'marked';
 
 export class ReleaseChangesPanel {
   public static currentPanel: ReleaseChangesPanel | undefined;
   private readonly _panel: vscode.WebviewPanel;
+  private readonly _extensionUri: vscode.Uri;
   private _disposables: vscode.Disposable[] = [];
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
     this._panel = panel;
+    this._extensionUri = extensionUri;
 
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
+    this._panel.iconPath = vscode.Uri.joinPath(
+      extensionUri,
+      'resources',
+      'icon_no_bg.svg',
+    );
+
     this._panel.webview.html = this._getWebviewContent(
       this._panel.webview,
-      extensionUri,
+      this._extensionUri,
     );
 
     this._panel.webview.onDidReceiveMessage(
@@ -22,7 +32,7 @@ export class ReleaseChangesPanel {
           case 'refresh':
             this._panel.webview.html = this._getWebviewContent(
               this._panel.webview,
-              extensionUri,
+              this._extensionUri,
             );
             vscode.window.showInformationMessage('Release notes refreshed!');
             return;
@@ -73,27 +83,20 @@ export class ReleaseChangesPanel {
   }
 
   private _getMarkdownSource(): string {
-    // Aquí puedes cargar dinámicamente el CHANGELOG.md o RELEASE_NOTES.md
-    // Por ahora usamos un mock con formato real
-    return `
-# Release v1.2.14
+    try {
+      const releaseNotePath = path.join(
+        this._extensionUri.fsPath,
+        'RELEASE_NOTES.md',
+      );
 
-Publicado: 2026-03-10
+      if (fs.existsSync(releaseNotePath)) {
+        return fs.readFileSync(releaseNotePath, 'utf8');
+      }
 
-## Destacados 🚀
-- **Integración \`.gitignore\` más inteligente**: AnFavorites ahora aísla perfectamente su comportamiento con \`.gitignore\`. Aunque actúe globalmente por defecto, su **activación real** recae completamente en la configuración de *Workspace* actual, impidiendo descuidos globales en todos tus futuros proyectos.
-- **Seguridad Reforzada**: Se han solucionado vulnerabilidades de alta gravedad (ReDoS) relacionadas con la librería \`minimatch\`, protegiendo tu entorno de desarrollo.
-
-## Mejoras ✨
-- **Progreso en Segundo Plano sin Interrupciones**: Al entrar en nuevos proyectos por primera vez, verás ahora una animación en la barra de estado de *"Escaneando el workspace en busca de archivos .gitignore..."*.
-- **Claridad Transparente**: Al mover la configuración de los Archivos Ocultos desde la pestaña Global del Usuario observarás mensajes y alertas explicando que las configuraciones Globales "no tienen ningún efecto hasta pasarse a un Workspace", ahorrando mucho tiempo de dudas sobre sus impactos.
-- **Infraestructura Moderna**: Migración completa a la configuración "Flat" de ESLint v10 y actualización de reglas internas de TypeScript.
-
-## Solución de Bugs 🐛
-- Corrección de la lógica de rastreo inicial: la ausencia de archivos \`.gitignore\` se reconoce ahora correctamente, finalizando el proceso de escaneo de forma limpia.
-- Se eliminó un falso disparo del indicador de progreso que ocurría al navegar por las pestañas de ajustes globales sin que existiera un cambio real en el espacio de trabajo.
-- Corrección de la lógica de evaluación y rastreo interno. A partir de ahora, la ausencia real de los ficheros \`.gitignore\` en tu código será catalogada silenciosamente en VS Code, evitando re-intentar iniciar rastreos que rompan o atrofien instalaciones.
-`;
+      return `# Release Notes\n\nNo se encontró el archivo RELEASE_NOTES.md en el paquete de la extensión.`;
+    } catch (error) {
+      return `# Error\n\nNo se pudo leer el archivo de release del VSIX: ${error}`;
+    }
   }
 
   private _getWebviewContent(
