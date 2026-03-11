@@ -83,5 +83,7 @@
   "Error processing external files.": "Error processing external files.",
   "The .gitignore integration can only be enabled/configured at the Workspace level. Global (User) configuration for this feature is ignored.": "The .gitignore integration can only be enabled/configured at the Workspace level. Global (User) configuration for this feature is ignored.",
   "The .gitignore management feature is only available within a Workspace. Use Workspace settings to enable it.": "The .gitignore management feature is only available within a Workspace. Use Workspace settings to enable it.",
-  "Scanning workspace for .gitignore files...": "Scanning workspace for .gitignore files..."
+  "Scanning workspace for .gitignore files...": "Scanning workspace for .gitignore files...",
+  "Ver Notas de Lanzamiento": "View Release Notes",
+  "AnFavorites se ha actualizado a la v{0}. ¿Quieres ver las novedades?": "AnFavorites has been updated to v{0}. Do you want to see what's new?"
 }
