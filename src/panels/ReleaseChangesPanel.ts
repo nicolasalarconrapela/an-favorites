@@ -104,14 +104,14 @@ export class ReleaseChangesPanel {
           content = content.replace(/^(?:#|##)\s+.+\r?\n?/, '');
         }
 
-        // 2. Extraer fecha
+        // 2. Extraer fecha (Busca "Fecha de lanzamiento")
         const dateMatch = content.match(
-          /-\s*\*\*(?:Fecha|Date)\*\*:\s*([\d-]+)/i,
+          /_\s*Fecha de lanzamiento:\s*([^_\n\r]+)_/i,
         );
         if (dateMatch) {
-          this._lastReleaseDate = dateMatch[1];
+          this._lastReleaseDate = dateMatch[1].trim();
           content = content.replace(
-            /-\s*\*\*(?:Fecha|Date)\*\*:\s*[\d-]+\r?\n?/i,
+            /_\s*Fecha de lanzamiento:\s*[^_\n\r]+_\r?\n?/i,
             '',
           );
         }
@@ -166,13 +166,21 @@ export class ReleaseChangesPanel {
     const releaseDateStr =
       this._lastReleaseDate || new Date().toISOString().split('T')[0];
     const dateObj = new Date(releaseDateStr);
-    const monthName = dateObj.toLocaleString('en-US', { month: 'long' });
-    const year = dateObj.getFullYear();
-    const formattedDate = dateObj.toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    });
+
+    // Si la fecha extraída ya es legible (como "29 de marzo, 2027"), usarla directamente.
+    // De lo contrario, intentar formatearla normalmente.
+    const formattedDate = !isNaN(dateObj.getTime())
+      ? dateObj.toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        })
+      : releaseDateStr;
+
+    const monthName = !isNaN(dateObj.getTime())
+      ? dateObj.toLocaleString('en-US', { month: 'long' })
+      : '';
+    const year = !isNaN(dateObj.getTime()) ? dateObj.getFullYear() : '';
 
     return /* html */ `<!DOCTYPE html>
       <html lang="en">
@@ -302,7 +310,7 @@ export class ReleaseChangesPanel {
           <h1 class="release-title">${this._releaseTitle || `${monthName} ${year} (version ${version})`}</h1>
 
           <div class="release-meta">
-            Release date: ${formattedDate}
+            Fecha de lanzamiento: ${formattedDate}
           </div>
 
           <h2>
