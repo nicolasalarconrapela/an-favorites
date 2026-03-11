@@ -82,7 +82,12 @@ export class ReleaseChangesPanel {
     }
   }
 
-  private _getMarkdownSource(): string {
+  private _releaseTitle: string | undefined;
+  private _lastReleaseDate: string | undefined;
+  private _summaryHtml: string = '';
+  private _detailsHtml: string = '';
+
+  private _getMarkdownSource(): void {
     try {
       const releaseNotePath = path.join(
         this._extensionUri.fsPath,
@@ -90,24 +95,47 @@ export class ReleaseChangesPanel {
       );
 
       if (fs.existsSync(releaseNotePath)) {
-        const fullContent = fs.readFileSync(releaseNotePath, 'utf8');
+        let content = fs.readFileSync(releaseNotePath, 'utf8');
 
-        // Expresión regular para encontrar la sección de la versión más reciente.
-        // Busca desde el primer encabezado de nivel 2 (##) hasta el siguiente encabezado de nivel 2 (##) o el final del archivo.
-        const versionMatch = fullContent.match(
-          /(##\s+[vV\d.]+[\s\S]*?)(?=##\s+[vV\d.]|$)/,
-        );
-
-        if (versionMatch && versionMatch[1]) {
-          return `# RELEASE NOTES\n\n${versionMatch[1].trim()}`;
+        // 1. Extraer título
+        const titleMatch = content.match(/^(?:#|##)\s+(.+)$/m);
+        if (titleMatch) {
+          this._releaseTitle = titleMatch[1].trim();
+          content = content.replace(/^(?:#|##)\s+.+\r?\n?/, '');
         }
 
-        return fullContent; // Fallback al contenido completo si no se detectan secciones
-      }
+        // 2. Extraer fecha
+        const dateMatch = content.match(
+          /-\s*\*\*(?:Fecha|Date)\*\*:\s*([\d-]+)/i,
+        );
+        if (dateMatch) {
+          this._lastReleaseDate = dateMatch[1];
+          content = content.replace(
+            /-\s*\*\*(?:Fecha|Date)\*\*:\s*[\d-]+\r?\n?/i,
+            '',
+          );
+        }
 
-      return `# Release Notes\n\nNo se encontró el archivo RELEASE_NOTES.md en el paquete de la extensión.`;
+        // 3. Dividir contenido: Resumen vs Detalles (###)
+        const splitMatch = content.match(/^###\s+/m);
+        if (splitMatch && splitMatch.index !== undefined) {
+          let summaryPart = content.substring(0, splitMatch.index).trim();
+          const detailsPart = content.substring(splitMatch.index).trim();
+
+          // Eliminar específicamente el encabezado "## Resumen" si existe
+          summaryPart = summaryPart.replace(/^##\s+Resumen\r?\n?/i, '');
+
+          this._summaryHtml = marked.parse(summaryPart) as string;
+          this._detailsHtml = marked.parse(detailsPart) as string;
+        } else {
+          // Si no hay división, intentar quitar el encabezado de resumen de todo el contenido
+          const cleanContent = content.replace(/^##\s+Resumen\r?\n?/i, '');
+          this._summaryHtml = marked.parse(cleanContent) as string;
+          this._detailsHtml = '';
+        }
+      }
     } catch (error) {
-      return `# Error\n\nNo se pudo leer el archivo de release del VSIX: ${error}`;
+      this._summaryHtml = `<p>Error: ${error}</p>`;
     }
   }
 
@@ -116,17 +144,42 @@ export class ReleaseChangesPanel {
     _extensionUri: vscode.Uri,
   ): string {
     const nonce = getNonce();
-    const markdownSource = this._getMarkdownSource();
+    this._getMarkdownSource();
 
-    // Renderizar Markdown a HTML de forma segura
-    const rawHtml = marked.parse(markdownSource) as string;
+    // Obtener información de la versión
+    let version = '1.0.0';
+    try {
+      const packagePath = path.join(this._extensionUri.fsPath, 'package.json');
+      const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+      version = pkg.version;
+    } catch (e) {}
+
+    const bannerUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(
+        this._extensionUri,
+        'resources',
+        'banner_logo_v1.png',
+      ),
+    );
+
+    // Formatear la fecha
+    const releaseDateStr =
+      this._lastReleaseDate || new Date().toISOString().split('T')[0];
+    const dateObj = new Date(releaseDateStr);
+    const monthName = dateObj.toLocaleString('en-US', { month: 'long' });
+    const year = dateObj.getFullYear();
+    const formattedDate = dateObj.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
 
     return /* html */ `<!DOCTYPE html>
       <html lang="en">
       <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${webview.cspSource}; script-src 'nonce-${nonce}'; img-src * data: vscode-resource: https:;">
+          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${webview.cspSource}; script-src 'nonce-${nonce}'; img-src * data: vscode-resource: https: ${webview.cspSource};">
           <title>Últimos cambios de la release</title>
           <style>
               body {
@@ -134,112 +187,134 @@ export class ReleaseChangesPanel {
                 font-size: var(--vscode-font-size);
                 color: var(--vscode-editor-foreground);
                 background-color: var(--vscode-editor-background);
-                padding: 20px 40px;
+                padding: 30px 20px;
                 line-height: 1.6;
-                max-width: 800px;
+                max-width: 900px;
                 margin: 0 auto;
               }
 
+              h1.release-title {
+                font-size: 2.3em;
+                font-weight: 300;
+                margin-top: 0;
+                margin-bottom: 20px;
+                color: var(--vscode-editor-foreground);
+              }
+
+              .release-meta {
+                color: var(--vscode-descriptionForeground);
+                font-size: 0.95em;
+                margin-bottom: 20px;
+                font-style: italic;
+              }
+
+              hr {
+                  height: 1px;
+                  border: 0;
+                  background-color: var(--vscode-panel-border);
+                  margin: 20px 0 30px 0;
+              }
+
+              .banner-container {
+                width: 100%;
+                margin: 0 0 40px 0;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+                border: 1px solid var(--vscode-panel-border);
+                position: relative;
+                background-color: #0d1117;
+              }
+
+              .banner-img {
+                width: 100%;
+                display: block;
+                max-height: 350px;
+                object-fit: cover;
+              }
+
+              /* Markdown styles */
               h1, h2, h3, h4, h5, h6 {
                   color: var(--vscode-editor-foreground);
                   font-weight: 600;
-                  margin-top: 24px;
+                  margin-top: 30px;
                   margin-bottom: 16px;
                   line-height: 1.25;
               }
 
-              h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid var(--vscode-panel-border); }
-              h2 { font-size: 1.5em; padding-bottom: 0.3em; border-bottom: 1px solid var(--vscode-panel-border); }
-              h3 { font-size: 1.25em; }
+              h2 {
+                  font-size: 1.6em;
+                  padding-bottom: 0.3em;
+                  border-bottom: 1px solid var(--vscode-panel-border);
+                  margin-top: 25px;
+                  font-weight: 500;
+                  color: var(--vscode-editor-foreground);
+              }
+              h3 { font-size: 1.3em; }
 
               a { color: var(--vscode-textLink-foreground); text-decoration: none; }
               a:hover { text-decoration: underline; color: var(--vscode-textLink-activeForeground); }
 
-              ul, ol { padding-left: 2em; margin-top: 0; margin-bottom: 16px; }
-              li { margin-top: 0.25em; }
+              ul, ol { padding-left: 20px; margin-top: 0; margin-bottom: 20px; }
+              li { margin-top: 0.5em; }
 
               p { margin-top: 0; margin-bottom: 16px; }
-
-              blockquote {
-                  padding: 0 1em;
-                  color: var(--vscode-textBlockQuote-foreground);
-                  border-left: 0.25em solid var(--vscode-textBlockQuote-border);
-                  background: var(--vscode-textBlockQuote-background);
-                  margin: 0;
-                  margin-bottom: 16px;
-              }
 
               code {
                   padding: 0.2em 0.4em;
                   margin: 0;
-                  font-size: 85%;
+                  font-size: 90%;
                   background-color: var(--vscode-textCodeBlock-background);
-                  border-radius: 6px;
+                  border-radius: 4px;
                   font-family: var(--vscode-editor-font-family);
               }
 
-              pre {
-                  padding: 16px;
-                  overflow: auto;
-                  font-size: 85%;
-                  line-height: 1.45;
-                  background-color: var(--vscode-textCodeBlock-background);
-                  border-radius: 6px;
-              }
-
-              pre code {
-                  display: inline;
-                  max-width: auto;
-                  padding: 0;
-                  margin: 0;
-                  overflow: visible;
-                  line-height: inherit;
-                  word-wrap: normal;
-                  background-color: transparent;
-                  border: 0;
-              }
-
-              hr {
-                  height: 0.25em;
-                  padding: 0;
-                  margin: 24px 0;
-                  background-color: var(--vscode-panel-border);
-                  border: 0;
-              }
-
               .header-actions {
-                  display: flex;
-                  justify-content: flex-end;
-                  margin-bottom: 20px;
-                  border-bottom: 1px solid var(--vscode-panel-border);
-                  padding-bottom: 10px;
+                  position: absolute;
+                  top: 35px;
+                  right: 20px;
               }
 
               button {
-                  background-color: var(--vscode-button-background);
-                  color: var(--vscode-button-foreground);
-                  border: none;
-                  padding: 6px 14px;
-                  font-size: var(--vscode-font-size);
+                  background-color: transparent;
+                  color: var(--vscode-button-secondaryForeground);
+                  border: 1px solid var(--vscode-button-secondaryBackground);
+                  padding: 6px 12px;
+                  font-size: 12px;
                   cursor: pointer;
                   border-radius: 4px;
+                  transition: background-color 0.2s;
               }
 
               button:hover {
-                  background-color: var(--vscode-button-hoverBackground);
+                  background-color: var(--vscode-button-secondaryHoverBackground);
               }
           </style>
       </head>
       <body>
+          <div class="banner-container">
+              <img src="${bannerUri}" class="banner-img" alt="AnFavorites Update">
+          </div>
           <div class="header-actions">
-              <button id="refreshBtn">Actualizar</button>
+              <button id="refreshBtn">Refresh Notes</button>
           </div>
+
+          <h1 class="release-title">${this._releaseTitle || `${monthName} ${year} (version ${version})`}</h1>
+
+          <div class="release-meta">
+            Release date: ${formattedDate}
+          </div>
+
+          <h2>
+              ${this._summaryHtml}
+          </h2>
+
           <div class="markdown-body">
-              ${rawHtml}
+              ${this._detailsHtml}
           </div>
+
           <script nonce="${nonce}">
               const vscode = acquireVsCodeApi();
-
               document.getElementById('refreshBtn').addEventListener('click', () => {
                   vscode.postMessage({ command: 'refresh' });
               });

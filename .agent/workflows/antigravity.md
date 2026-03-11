@@ -29,6 +29,18 @@ A partir de los cambios proporcionados, genera dos documentos en Markdown(en ing
 En carpeta 'out/{release...rama_actual}/ddmmyyyy/hhmmss/'
 8.1. CHANGELOG.md:
 
+Estructura principal:
+
+---
+
+# {Linea del feature mas importante} - vX.Z.Y
+
+_Release date: MM dd,yyyy_
+
+## Resumen
+
+## ...etcétera
+
 - Historial técnico completo de la versión.
 - Seguir estructura tipo _Keep a Changelog_.
 - Secciones: `Added`, `Changed`, `Fixed`, `Removed`, `Security`.
