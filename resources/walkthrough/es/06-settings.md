@@ -1,7 +1,5 @@
 # Explora la Configuración ⚙️
 
-![Captura de configuración](../media/settings.png)
-
 AnFavorites es altamente configurable. Aquí están los ajustes más útiles para personalizar tu experiencia.
 
 ## 🔍 Búsqueda
