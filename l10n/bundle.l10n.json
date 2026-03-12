@@ -85,5 +85,12 @@
   "The .gitignore management feature is only available within a Workspace. Use Workspace settings to enable it.": "The .gitignore management feature is only available within a Workspace. Use Workspace settings to enable it.",
   "Scanning workspace for .gitignore files...": "Scanning workspace for .gitignore files...",
   "Ver Notas de Lanzamiento": "View Release Notes",
-  "AnFavorites se ha actualizado a la v{0}. ¿Quieres ver las novedades?": "AnFavorites has been updated to v{0}. Do you want to see what's new?"
+  "AnFavorites se ha actualizado a la v{0}. ¿Quieres ver las novedades?": "AnFavorites has been updated to v{0}. Do you want to see what's new?",
+  "Preview Release": "Preview Release",
+  "Do you like AnFavorites?": "Do you like AnFavorites?",
+  "Rate and Favorite": "Rate and Favorite",
+  "Share on LinkedIn": "Share on LinkedIn",
+  "Share on Reddit": "Share on Reddit",
+  "Share on X": "Share on X",
+  "Hey everyone! I'd like to share this new extension with you!": "Hey everyone! I'd like to share this new extension with you!"
 }

@@ -54,7 +54,7 @@ export class ReleaseChangesPanel {
     } else {
       const panel = vscode.window.createWebviewPanel(
         'releaseChanges',
-        'Últimos cambios de la release',
+        vscode.l10n.t('Preview Release'),
         vscode.ViewColumn.One,
         {
           enableScripts: true,
@@ -182,13 +182,32 @@ export class ReleaseChangesPanel {
       : '';
     const year = !isNaN(dateObj.getTime()) ? dateObj.getFullYear() : '';
 
+    const shareText = vscode.l10n.t(
+      "Hey everyone! I'd like to share this new extension with you!",
+    );
+    const marketplaceUrl =
+      'https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites';
+    const openVsxUrl = 'https://open-vsx.org/extension/AnAppWilos/an-favorites';
+    const hashtags = '#anfavorites #vscode';
+
+    const fullMessage = `${shareText}\n\nMarketplace: ${marketplaceUrl}\nOpen VSX: ${openVsxUrl}\n\n${hashtags}`;
+    const encodedFullMessage = encodeURIComponent(fullMessage);
+    const encodedMarketplaceUrl = encodeURIComponent(marketplaceUrl);
+
+    // X (Twitter)
+    const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodedFullMessage}`;
+    // LinkedIn
+    const linkedinShareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedMarketplaceUrl}`;
+    // Reddit
+    const redditShareUrl = `https://www.reddit.com/submit?url=${encodedMarketplaceUrl}&title=${encodeURIComponent(shareText)}`;
+
     return /* html */ `<!DOCTYPE html>
       <html lang="en">
       <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${webview.cspSource}; script-src 'nonce-${nonce}'; img-src * data: vscode-resource: https: ${webview.cspSource};">
-          <title>Últimos cambios de la release</title>
+          <title>${vscode.l10n.t('Preview Release')}</title>
           <style>
               body {
                 font-family: var(--vscode-font-family);
@@ -372,15 +391,21 @@ export class ReleaseChangesPanel {
           </div>
 
           <div class="cta-container">
-              <h3>¿Te gusta AnFavorites?</h3>
+              <h3>${vscode.l10n.t('Do you like AnFavorites?')}</h3>
               <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites&ssr=false#review-details" class="cta-button">
-                  ⭐ Valorar y Favoritos
+                  ⭐ ${vscode.l10n.t('Rate and Favorite')}
               </a>
-              <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites" class="cta-button secondary">
-                  📢 Compartir
+              <a href="${linkedinShareUrl}" class="cta-button secondary" target="_blank">
+                  🔗 ${vscode.l10n.t('Share on LinkedIn')}
               </a>
-              <a href="https://github.com/nicolasalarconrapela/an-favorites" class="cta-button secondary">
-                  🤝 Contribuir
+              <a href="${redditShareUrl}" class="cta-button secondary" target="_blank">
+                  🤖 ${vscode.l10n.t('Share on Reddit')}
+              </a>
+              <a href="${twitterShareUrl}" class="cta-button secondary" target="_blank">
+                  🐦 ${vscode.l10n.t('Share on X')}
+              </a>
+              <a href="https://github.com/nicolasalarconrapela/an-favorites" class="cta-button secondary" target="_blank">
+                  🤝 ${vscode.l10n.t('Contribute')}
               </a>
           </div>
 
