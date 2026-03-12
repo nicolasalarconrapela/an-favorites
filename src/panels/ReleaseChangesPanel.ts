@@ -350,6 +350,8 @@ export class ReleaseChangesPanel {
                   font-size: 13px;
                   font-weight: 500;
                   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                  width: fit-content;
+                  margin: 0 auto;
               }
 
               .cta-button:hover {
@@ -361,6 +363,7 @@ export class ReleaseChangesPanel {
               .cta-button.secondary {
                   background: var(--vscode-button-secondaryBackground);
                   color: var(--vscode-button-secondaryForeground) !important;
+                  margin: 0;
               }
 
               .cta-button.secondary:hover {
@@ -419,10 +422,17 @@ export class ReleaseChangesPanel {
               <p>${vscode.l10n.t('Sincerely:')}</p>
               <p><strong>${vscode.l10n.t('@anappwilos')}</strong></p>
           </div>
+
           <div class="cta-container">
-              <h3>${vscode.l10n.t('Do you like AnFavorites?')}</h3>
-              <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites&ssr=false#review-details" class="cta-button">
-                  ⭐ ${vscode.l10n.t('Rate and Favorite')}
+              <h4 style="text-align: center; width: 100%; margin-top: 0;">${vscode.l10n.t('Do you like AnFavorites?')}</h4>
+              <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites&ssr=false#review-details" target="_blank" style="text-decoration: none; width: 100%; display: block; text-align: center;">
+                  <div style="display: flex; gap: 6px; justify-content: center; margin-bottom: 15px;">
+                      <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 22px; height: 22px; fill: var(--vscode-editor-background); stroke: var(--vscode-foreground); stroke-width: 1.5;"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279L12 18.896l-7.416 4.517 1.48-8.279-6.064-5.828 8.332-1.151z"/></svg>
+                      <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 22px; height: 22px; fill: var(--vscode-editor-background); stroke: var(--vscode-foreground); stroke-width: 1.5;"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279L12 18.896l-7.416 4.517 1.48-8.279-6.064-5.828 8.332-1.151z"/></svg>
+                      <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 22px; height: 22px; fill: var(--vscode-editor-background); stroke: var(--vscode-foreground); stroke-width: 1.5;"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279L12 18.896l-7.416 4.517 1.48-8.279-6.064-5.828 8.332-1.151z"/></svg>
+                      <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 22px; height: 22px; fill: var(--vscode-editor-background); stroke: var(--vscode-foreground); stroke-width: 1.5;"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279L12 18.896l-7.416 4.517 1.48-8.279-6.064-5.828 8.332-1.151z"/></svg>
+                      <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 22px; height: 22px; fill: var(--vscode-editor-background); stroke: var(--vscode-foreground); stroke-width: 1.5;"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279L12 18.896l-7.416 4.517 1.48-8.279-6.064-5.828 8.332-1.151z"/></svg>
+                  </div>
               </a>
               <a href="${linkedinShareUrl}" class="cta-button secondary" target="_blank">
                   <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>LinkedIn</title><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
