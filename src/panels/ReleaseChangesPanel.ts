@@ -297,6 +297,56 @@ export class ReleaseChangesPanel {
               button:hover {
                   background-color: var(--vscode-button-secondaryHoverBackground);
               }
+
+              .cta-container {
+                  display: flex;
+                  gap: 15px;
+                  margin-top: 50px;
+                  padding: 25px;
+                  background: var(--vscode-welcomePage-tileBackground, rgba(128, 128, 128, 0.1));
+                  border-radius: 12px;
+                  border: 1px solid var(--vscode-panel-border);
+                  justify-content: center;
+                  flex-wrap: wrap;
+                  text-align: center;
+              }
+
+              .cta-container h3 {
+                  width: 100%;
+                  margin-top: 0;
+                  margin-bottom: 15px;
+                  font-size: 1.1em;
+                  opacity: 0.9;
+              }
+
+              .cta-button {
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  padding: 10px 20px;
+                  background: var(--vscode-button-background);
+                  color: var(--vscode-button-foreground) !important;
+                  border-radius: 6px;
+                  text-decoration: none !important;
+                  font-size: 13px;
+                  font-weight: 500;
+                  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+              }
+
+              .cta-button:hover {
+                  background: var(--vscode-button-hoverBackground);
+                  transform: translateY(-2px);
+                  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+              }
+
+              .cta-button.secondary {
+                  background: var(--vscode-button-secondaryBackground);
+                  color: var(--vscode-button-secondaryForeground) !important;
+              }
+
+              .cta-button.secondary:hover {
+                  background: var(--vscode-button-secondaryHoverBackground);
+              }
           </style>
       </head>
       <body>
@@ -319,6 +369,19 @@ export class ReleaseChangesPanel {
 
           <div class="markdown-body">
               ${this._detailsHtml}
+          </div>
+
+          <div class="cta-container">
+              <h3>¿Te gusta AnFavorites?</h3>
+              <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites&ssr=false#review-details" class="cta-button">
+                  ⭐ Valorar y Favoritos
+              </a>
+              <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites" class="cta-button secondary">
+                  📢 Compartir
+              </a>
+              <a href="https://github.com/nicolasalarconrapela/an-favorites" class="cta-button secondary">
+                  🤝 Contribuir
+              </a>
           </div>
 
           <script nonce="${nonce}">
