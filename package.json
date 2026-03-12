@@ -2,13 +2,13 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.2.27",
+  "version": "1.2.28",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
     "theme": "dark"
   },
-  "preview": true,
+  "preview": false,
   "icon": "resources/icon.png",
   "badges": [
     {
