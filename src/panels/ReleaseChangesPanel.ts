@@ -410,7 +410,15 @@ export class ReleaseChangesPanel {
           <div class="markdown-body">
               ${this._detailsHtml}
           </div>
-
+          <div class="release-footer">
+              <p>${vscode.l10n.t('Dear user:')}</p>
+              <p>${vscode.l10n.t('Thank you for trusting this application.')}</p>
+              <p>${vscode.l10n.t('Whether you are one or a thousand: THANK YOU. And thank you for those first 500 downloads :).')}</p>
+              <p>${vscode.l10n.t("I apologize if something doesn't work as it should.")}</p>
+              <p>${vscode.l10n.t('I appreciate feedback (constructive criticism) as this extension is not mine, but yours.')}</p>
+              <p>${vscode.l10n.t('Sincerely:')}</p>
+              <p><strong>${vscode.l10n.t('@anappwilos')}</strong></p>
+          </div>
           <div class="cta-container">
               <h3>${vscode.l10n.t('Do you like AnFavorites?')}</h3>
               <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites&ssr=false#review-details" class="cta-button">
@@ -433,6 +441,8 @@ export class ReleaseChangesPanel {
                   ${vscode.l10n.t('Contribute')}
               </a>
           </div>
+
+
 
           <script nonce="${nonce}">
               const vscode = acquireVsCodeApi();
