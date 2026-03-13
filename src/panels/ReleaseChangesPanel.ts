@@ -73,10 +73,36 @@ export class ReleaseChangesPanel {
 
   private _getMarkdownSource(): void {
     try {
-      const releaseNotePath = path.join(
+      const configLanguage =
+        vscode.workspace
+          .getConfiguration('anfavorites')
+          .get<string>('language') || 'auto';
+      let language = configLanguage.toLowerCase();
+      if (language === 'auto') {
+        language = vscode.env.language.toLowerCase();
+      }
+      const baseLanguage = language.split('-')[0];
+
+      const exactLocalizedPath = path.join(
+        this._extensionUri.fsPath,
+        `RELEASE_NOTES.${language}.md`,
+      );
+      const baseLocalizedPath = path.join(
+        this._extensionUri.fsPath,
+        `RELEASE_NOTES.${baseLanguage}.md`,
+      );
+      const defaultReleaseNotePath = path.join(
         this._extensionUri.fsPath,
         'RELEASE_NOTES.md',
       );
+
+      let releaseNotePath = defaultReleaseNotePath;
+
+      if (fs.existsSync(exactLocalizedPath)) {
+        releaseNotePath = exactLocalizedPath;
+      } else if (fs.existsSync(baseLocalizedPath)) {
+        releaseNotePath = baseLocalizedPath;
+      }
 
       if (fs.existsSync(releaseNotePath)) {
         let content = fs.readFileSync(releaseNotePath, 'utf8');
