@@ -2,7 +2,6 @@
 
 <h1 align="left">AnFavorites</h1>
 
-<br/>
 
 <p align="center">
   </a>
@@ -12,6 +11,8 @@
   <a href="https://open-vsx.org/extension/AnAppWilos/an-favorites">
     <img src="https://img.shields.io/open-vsx/v/AnAppWilos/an-favorites?style=for-the-badge&label=Open%20VSX" alt="Open VSX Version">
   </a>
+
+
 </p>
 <p align="center">
   <!-- <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
@@ -22,6 +23,14 @@
   </a>
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License MIT">
+  </a>
+</p>
+  <p align="center">
+    <a href="https://github.com/nicolasalarconrapela/an-favorites/releases/latest">
+    <img
+      src="https://img.shields.io/github/release/nicolasalarconrapela/an-favorites.svg?style=for-the-badge&logo=github&logoColor=white&colorA=101119&colorB=073642"
+      alt="Release"
+    />
   </a>
 </p>
 
