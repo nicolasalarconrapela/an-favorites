@@ -154,8 +154,17 @@ export class ReleaseChangesPanel {
       version = pkg.version;
     } catch (e) {}
 
+    const tabTitle = `v${version} - AnFavorites`;
+    if (this._panel) {
+      this._panel.title = tabTitle;
+    }
+
     const bannerUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this._extensionUri, 'resources', 'banner_logo.png'),
+    );
+
+    const iconUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, 'resources', 'icon_no_bg.svg'),
     );
 
     const backgroundDarkUri = webview.asWebviewUri(
@@ -219,7 +228,7 @@ export class ReleaseChangesPanel {
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${webview.cspSource}; script-src 'nonce-${nonce}'; img-src * data: vscode-resource: https: ${webview.cspSource};">
-          <title>${vscode.l10n.t('Preview Release')}</title>
+          <title>${tabTitle}</title>
           <style>
               body {
                 font-family: var(--vscode-font-family);
@@ -253,11 +262,21 @@ export class ReleaseChangesPanel {
               }
 
               h1.release-title {
-                font-size: 2.3em;
-                font-weight: 300;
+                font-size: 2.6em;
+                font-weight: 700;
                 margin-top: 0;
-                margin-bottom: 20px;
+                margin-bottom: 8px;
                 color: var(--vscode-editor-foreground);
+                letter-spacing: -0.5px;
+              }
+
+              .summary-content {
+                font-size: 1.4em;
+                line-height: 1.4;
+                color: var(--vscode-foreground);
+                opacity: 0.85;
+                margin-bottom: 35px;
+                font-weight: 400;
               }
 
               .release-meta {
@@ -274,22 +293,24 @@ export class ReleaseChangesPanel {
                   margin: 20px 0 30px 0;
               }
 
-              .banner-container {
-                width: 100%;
-                margin: 0 0 40px 0;
-                border-radius: 8px;
-                overflow: hidden;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.25);
-                border: 1px solid var(--vscode-panel-border);
-                position: relative;
-                background-color: #0d1117;
+              .brand-header {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 35px;
               }
 
-              .banner-img {
-                width: 100%;
-                display: block;
-                max-height: 350px;
-                object-fit: cover;
+              .brand-icon {
+                width: 32px;
+                height: 32px;
+                object-fit: contain;
+              }
+
+              .brand-name {
+                font-size: 1.4em;
+                font-weight: 600;
+                color: var(--vscode-editor-foreground);
+                letter-spacing: -0.2px;
               }
 
               /* Markdown styles */
@@ -427,9 +448,6 @@ export class ReleaseChangesPanel {
       <body>
           <div class="overlay">
           <div class="content-wrapper">
-          <div class="banner-container">
-              <img src="${bannerUri}" class="banner-img" alt="AnFavorites Update">
-          </div>
           <div class="header-actions">
               <button id="refreshBtn">Refresh Notes</button>
           </div>
@@ -440,9 +458,9 @@ export class ReleaseChangesPanel {
             Fecha de lanzamiento: ${formattedDate}
           </div>
 
-          <h2>
+          <div class="summary-content">
               ${this._summaryHtml}
-          </h2>
+          </div>
 
           <div class="markdown-body">
               ${this._detailsHtml}
