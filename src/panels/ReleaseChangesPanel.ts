@@ -25,22 +25,6 @@ export class ReleaseChangesPanel {
       this._panel.webview,
       this._extensionUri,
     );
-
-    this._panel.webview.onDidReceiveMessage(
-      (message) => {
-        switch (message.command) {
-          case 'refresh':
-            this._panel.webview.html = this._getWebviewContent(
-              this._panel.webview,
-              this._extensionUri,
-            );
-            vscode.window.showInformationMessage('Release notes refreshed!');
-            return;
-        }
-      },
-      null,
-      this._disposables,
-    );
   }
 
   public static render(extensionUri: vscode.Uri) {
@@ -349,26 +333,7 @@ export class ReleaseChangesPanel {
                   font-family: var(--vscode-editor-font-family);
               }
 
-              .header-actions {
-                  position: absolute;
-                  top: 35px;
-                  right: 20px;
-              }
 
-              button {
-                  background-color: transparent;
-                  color: var(--vscode-button-secondaryForeground);
-                  border: 1px solid var(--vscode-button-secondaryBackground);
-                  padding: 6px 12px;
-                  font-size: 12px;
-                  cursor: pointer;
-                  border-radius: 4px;
-                  transition: background-color 0.2s;
-              }
-
-              button:hover {
-                  background-color: var(--vscode-button-secondaryHoverBackground);
-              }
 
               .cta-container {
                   display: flex;
@@ -448,9 +413,7 @@ export class ReleaseChangesPanel {
       <body>
           <div class="overlay">
           <div class="content-wrapper">
-          <div class="header-actions">
-              <button id="refreshBtn">Refresh Notes</button>
-          </div>
+
 
           <h1 class="release-title">${this._releaseTitle || `${monthName} ${year} (version ${version})`}</h1>
 
@@ -506,12 +469,6 @@ export class ReleaseChangesPanel {
 
 
 
-          <script nonce="${nonce}">
-              const vscode = acquireVsCodeApi();
-              document.getElementById('refreshBtn').addEventListener('click', () => {
-                  vscode.postMessage({ command: 'refresh' });
-              });
-          </script>
           </div>
           </div>
       </body>
