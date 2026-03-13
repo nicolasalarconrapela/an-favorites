@@ -158,7 +158,15 @@ export class ReleaseChangesPanel {
       vscode.Uri.joinPath(
         this._extensionUri,
         'resources',
-        'banner_logo_v1.png',
+        'banner_logo.png',
+      ),
+    );
+
+    const backgroundUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(
+        this._extensionUri,
+        'resources',
+        'background_mosaic2.png',
       ),
     );
 
@@ -214,10 +222,26 @@ export class ReleaseChangesPanel {
                 font-size: var(--vscode-font-size);
                 color: var(--vscode-editor-foreground);
                 background-color: var(--vscode-editor-background);
-                padding: 30px 20px;
+                background-image: url('${backgroundUri}');
+                background-repeat: repeat;
+                background-size: 400px;
+                padding: 0;
+                margin: 0;
                 line-height: 1.6;
+              }
+
+              .overlay {
+                min-height: 100vh;
+                background-color: var(--vscode-editor-background);
+                opacity: 0.92;
+                padding: 30px 20px;
+              }
+
+              .content-wrapper {
                 max-width: 900px;
                 margin: 0 auto;
+                position: relative;
+                z-index: 1;
               }
 
               h1.release-title {
@@ -393,6 +417,8 @@ export class ReleaseChangesPanel {
           </style>
       </head>
       <body>
+          <div class="overlay">
+          <div class="content-wrapper">
           <div class="banner-container">
               <img src="${bannerUri}" class="banner-img" alt="AnFavorites Update">
           </div>
@@ -460,6 +486,8 @@ export class ReleaseChangesPanel {
                   vscode.postMessage({ command: 'refresh' });
               });
           </script>
+          </div>
+          </div>
       </body>
       </html>`;
   }
