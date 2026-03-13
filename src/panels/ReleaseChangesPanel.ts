@@ -155,18 +155,22 @@ export class ReleaseChangesPanel {
     } catch (e) {}
 
     const bannerUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, 'resources', 'banner_logo.png'),
+    );
+
+    const backgroundDarkUri = webview.asWebviewUri(
       vscode.Uri.joinPath(
         this._extensionUri,
         'resources',
-        'banner_logo.png',
+        'background_mosaic_dark.png',
       ),
     );
 
-    const backgroundUri = webview.asWebviewUri(
+    const backgroundLightUri = webview.asWebviewUri(
       vscode.Uri.joinPath(
         this._extensionUri,
         'resources',
-        'background_mosaic2.png',
+        'background_mosaic_light.png',
       ),
     );
 
@@ -222,12 +226,16 @@ export class ReleaseChangesPanel {
                 font-size: var(--vscode-font-size);
                 color: var(--vscode-editor-foreground);
                 background-color: var(--vscode-editor-background);
-                background-image: url('${backgroundUri}');
+                background-image: url('${backgroundDarkUri}');
                 background-repeat: repeat;
                 background-size: 400px;
                 padding: 0;
                 margin: 0;
                 line-height: 1.6;
+              }
+
+              body.vscode-light {
+                background-image: url('${backgroundLightUri}');
               }
 
               .overlay {
