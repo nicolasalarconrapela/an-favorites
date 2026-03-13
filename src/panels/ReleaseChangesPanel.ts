@@ -235,21 +235,22 @@ export class ReleaseChangesPanel {
                 min-height: 100vh;
                 background-color: var(--vscode-editor-background);
                 opacity: 0.92;
-                padding: 30px 20px;
+                padding: 60px 40px;
               }
 
               .content-wrapper {
-                max-width: 900px;
+                max-width: 800px;
                 margin: 0 auto;
                 position: relative;
                 z-index: 1;
+                padding: 0 20px;
               }
 
               h1.release-title {
                 font-size: 2.6em;
                 font-weight: 700;
                 margin-top: 0;
-                margin-bottom: 8px;
+                margin-bottom: 1em;
                 color: var(--vscode-editor-foreground);
                 letter-spacing: -0.5px;
               }
@@ -414,7 +415,6 @@ export class ReleaseChangesPanel {
           <div class="overlay">
           <div class="content-wrapper">
 
-
           <h1 class="release-title">${this._releaseTitle || `${monthName} ${year} (version ${version})`}</h1>
 
           <div class="release-meta">
@@ -466,9 +466,6 @@ export class ReleaseChangesPanel {
                   ${vscode.l10n.t('Contribute')}
               </a>
           </div>
-
-
-
           </div>
           </div>
       </body>
