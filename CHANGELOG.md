@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.40] - 2026-03-16
+
+### Added
+- **UX**: Added a 4-second delay before showing the release update notification to avoid interrupting the initial extension activation.
+
+### Changed
+- **Reliability**: Refactored the update notification logic to use `async/await` and added `try-catch` blocks for better error handling.
+- **I18n**: Improved character encoding handling for Spanish localized messages in the boot sequence.
+
+### Removed
+- **README**: Removed outdated "Latest Changes" section to keep documentation current.
+
 ## [1.2.38] - 2026-03-16
 
 ### Added
