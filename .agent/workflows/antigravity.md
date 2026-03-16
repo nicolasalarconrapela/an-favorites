@@ -205,6 +205,17 @@ Reglas:
 
 ---
 
+## 5.3. Generar Mensaje de Pull Request y merge commit apartir del diff.txt guardar en :
+
+out_tmp/{release...rama_actual}/DATE/TIME/pr&merge.txt con :
+
+Titulo de PR
+Body de PR
+
+Titulo del merge commit
+Body del merge commit
+
+
 # 6. Revisión de documentación Walkthrough
 
 Revisar las guías de uso del proyecto.
@@ -241,9 +252,7 @@ Instalar la extensión localmente:
 code --install-extension "$MY_VSIX_FILE"
 ```
 
----
-
-# Reglas estrictas
+## Reglas estrictas
 
 1. Nunca inventar cambios.
 2. Siempre usar el diff como fuente única de verdad.
