@@ -42,6 +42,7 @@ export class ReleaseChangesPanel {
         vscode.ViewColumn.One,
         {
           enableScripts: true,
+          enableCommandUris: true,
           localResourceRoots: [extensionUri],
         },
       );
