@@ -2,75 +2,261 @@
 description: CHANGELOG & RELEASE
 ---
 
-This workflow runs all checks to ensure the codebase is in a good state.
+# Flujo de IA – Preparación de Release
 
-1. Lint the codebase
-   // turbo
-2. `npm run lint`
+Este flujo valida el estado del repositorio y genera la documentación de una nueva versión.
 
-3. Compile the code
-   // turbo
-4. `npm run compile`
+El proceso debe ejecutarse **de forma secuencial**.  
+Si algún paso falla, **detener el flujo inmediatamente**.
 
-5. Run unit tests
-   // turbo
-6. `npm run test`
+# 1. Validar el estado del repositorio
 
-Si todo funciono correctamente continuamos a :
+Ejecutar todas las comprobaciones para asegurar que el proyecto está en un estado correcto.
 
-7. ejecutar `git diff` ultima version en release y la rama actual (`git branch --show-current`) > 'out/release...rama_actual}/ddmmyyyy/hhmmss/diffs.txt`
+## 1.1 Ejecutar lint del código
 
-8. Analizar '{release...rama_actual}/ddmmyyyy/hhmmss/diffs.txt' :
+```bash
+npm run lint
+```
 
-Actúa como un mantenedor de proyectos open-source.
+## 1.2 Compilar el proyecto
 
-A partir de los cambios proporcionados, genera dos documentos en Markdown(en inglés, traducido al español en archivos diferentes):
+```bash
+npm run compile
+```
 
-En carpeta 'out/{release...rama_actual}/ddmmyyyy/hhmmss/'
-8.1. CHANGELOG.md:
+## 1.3 Ejecutar tests unitarios
 
-Estructura principal:
+```bash
+npm run test
+```
 
-- Historial técnico completo de la versión.
-- Seguir estructura tipo _Keep a Changelog_.
-- Secciones: `Added`, `Changed`, `Fixed`, `Removed`, `Security`.
-- Lenguaje técnico y conciso.
-- Incluir número de versión y fecha.
-- Formato Markdown
+Si todos los comandos se ejecutan correctamente, continuar al siguiente paso.
 
-  8.2. RELEASE_NOTES.md:
+# 2. Obtener contexto del repositorio
 
-## Plantilla
+Extraer las variables necesarias para generar la release.
 
-# {Linea del feature mas importante} - vX.Z.Y
+## Rama actual
 
-_Fecha de lanzamiento: MM dd,yyyy_
+```bash
+RAMA_ACTUAL=$(git branch --show-current)
+```
 
-## ...etcétera
+## Propietario y repositorio
 
----
+```bash
+REPOWN=$(git remote get-url origin \
+  | sed -E 's#(git@github.com:|https://github.com/)##' \
+  | sed 's/.git$//')
+```
 
-- Resumen claro para usuarios.
-- Explicar las mejoras más importantes de la versión.
-- Usar secciones: `Highlights`, `Improvements`, `Bug Fixes`.
-- Lenguaje más narrativo y fácil de leer.
-- Formato Markdown
+Ejemplo de salida:
+
+```
+owner/repositorio
+```
+
+## Última release publicada :
+
+```bash
+RELEASE_LATEST=$(gh release view --repo "$REPOWN" --json tagName --jq .tagName)
+```
+
+Ejemplo: `v1.4.2`
+
+# 3. Generar el diff
+
+Comparar la última release con la rama actual.
+
+Crear variables de tiempo:
+
+```bash
+DATE=$(date +%d%m%Y)
+TIME=$(date +%H%M%S)
+```
+
+Crear ruta de salida: `out_tmp/{release...rama_actual}/DATE/TIME/`
+
+Ejemplo: `out_tmp/v1.4.2...main/14032026/104512/`
+
+Generar archivo diff:
+
+```bash
+git diff "$RELEASE_LATEST...$RAMA_ACTUAL" > "out_tmp/${RELEASE_LATEST}...${RAMA_ACTUAL}/${DATE}/${TIME}/diffs.txt"
+```
+
+# 4. Analizar cambios
+
+Archivo de entrada: `out_tmp/{release...rama_actual}/DATE/TIME/diffs.txt`
+
+Analizar el diff para identificar:
+
+- nuevas funcionalidades
+- nuevos comandos que eran integrados en RELEASE_notes.md como un link
+- mejoras
+- correcciones de errores
+- funcionalidades eliminadas
+- cambios de seguridad
+
+**Reglas**
+
+- No inventar cambios.
+- Solo utilizar información presente en el diff.
+
+# 5. Generar documentación de la release
+
+Actuar como un **mantenedor de proyectos open-source**.
+
+A partir del análisis del diff, generar **dos documentos en Markdown**.
+
+Directorio de salida:
+
+```txt
+out_tmp/{release...rama_actual}/DATE/TIME/
+```
+
+Ejemplo: `out_tmp/v1.4.2...main/14032026/104512/`
+
+## 5.1 CHANGELOG.md (Inglés y Español)
+
+Si ya existe copiar a la carpeta `out_tmp/{release...rama_actual}/DATE/TIME/` y agregar al principio.
+
+Propósito: **historial técnico de la versión**
+
+Formato: **Keep a Changelog**
+
+Estructura:
+
+```markdown
+# Changelog
+
+## [VERSION] - DATE
+
+### Added
+
+- Nuevas funcionalidades
+
+### Changed
+
+- Cambios en comportamiento existente
+
+### Fixed
+
+- Correcciones de errores
+
+### Removed
+
+- Funcionalidad eliminada o deprecada
+
+### Security
+
+- Cambios relacionados con seguridad
+```
 
 Reglas:
 
-- No inventar cambios.
-- Usar Markdown limpio.
-- Generar ambos documentos completos.
-- Versión: {VERSION}
-- Fecha: {DATE}
+- lenguaje técnico y conciso
+- evitar texto de marketing
+- no inventar cambios
+- formato Markdown limpio
 
-10. Revisar si hay FEATURES necesarias de agregar a los Archivos del Walkthrough (tanto en inglés como en español).
+## 5.2 RELEASE_NOTES.md (Inglés y Español)
 
-11. Creación de VSIX con :
+Propósito: **explicación de la release para usuarios**
 
+El archivo siempre debe comenzar con esta cabecera:
+
+Después incluir las siguientes secciones (inglés y español):
+
+```markdown
+# {Funcionalidad más importante} - vX.Y.Z
+
+_Fecha de lanzamiento: Mes dd, yyyy_
+
+### Resume
+
+En el resumen de las funcionalidades más importante si hubiera alguna comando nuevo agregar un link. Por ejemplo : `nuevo comando [**"Gestionar archivos .gitignore"**](comando de ejecución vscode)
+
+### Highlights
+
+Principales novedades de la versión.
+
+### Improvements
+
+Mejoras sobre funcionalidades existentes.
+
+### Bug Fixes
+
+Errores corregidos.
+
+### Migration Notes (opcional)
+
+Cambios importantes que los usuarios deben conocer.
+```
+
+Reglas:
+
+- lenguaje claro y fácil de leer
+- enfocado en el impacto para el usuario
+- enlazar comandos o funcionalidades si aplica
+- formato Markdown limpio
+- no agregar ningún agradecimiento
+
+---
+
+# 6. Revisión de documentación Walkthrough
+
+Revisar las guías de uso del proyecto.
+
+Si existen **nuevas funcionalidades o comandos** en la versión, actualizar los archivos:
+
+```
+docs/walkthrough_en.md
+docs/walkthrough_es.md
+```
+
+---
+
+# 7. Crear paquete VS Code (VSIX)
+
+Generar el paquete de la extensión.
+
+```bash
 MY_VSIX_FILE="$(vsce package \
   | sed -n 's/^.*Packaged:[[:space:]]*//p' \
   | sed -E 's/(\.vsix).*/\1/' \
-  | tail -n 1)" \
-&& echo "Paquete creado en: $MY_VSIX_FILE" \
-&& code --install-extension "$MY_VSIX_FILE"
+  | tail -n 1)"
+```
+
+Mostrar la ruta del paquete generado:
+
+```bash
+echo "Paquete creado en: $MY_VSIX_FILE"
+```
+
+Instalar la extensión localmente:
+
+```bash
+code --install-extension "$MY_VSIX_FILE"
+```
+
+---
+
+# Reglas estrictas
+
+1. Nunca inventar cambios.
+2. Siempre usar el diff como fuente única de verdad.
+3. Siempre generar ambos archivos:
+   - `CHANGELOG.md`
+   - `RELEASE_NOTES.md`
+
+4. Incluir siempre:
+   - versión `{VERSION}`
+   - fecha `{DATE}`
+
+5. La salida debe ser **Markdown válido**.
+
+```
+
+```
