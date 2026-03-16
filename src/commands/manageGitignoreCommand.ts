@@ -59,6 +59,20 @@ export function registerManageGitignoreCommand(
   const disposable = vscode.commands.registerCommand(
     'anfavorites.manageGitignore',
     async () => {
+      // Ensure we are in a workspace
+      if (
+        !vscode.workspace.workspaceFolders ||
+        vscode.workspace.workspaceFolders.length === 0
+      ) {
+        void vscode.window.showWarningMessage(
+          t(
+            'The .gitignore management feature is only available within a Workspace. Use Workspace settings to enable it.',
+          ),
+          { modal: true },
+        );
+        return;
+      }
+
       const quickPick = vscode.window.createQuickPick<GitignoreItem>();
       quickPick.title = t('.gitignore Files');
       quickPick.placeholder = t('Detected .gitignore files in your workspace');

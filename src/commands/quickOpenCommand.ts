@@ -310,7 +310,6 @@ async function buildSearchItems(params: {
     .filter((item) => {
       const normalizedPath = normalizeFsPath(item.internalUri.fsPath);
       return (
-        !recentNormSet.has(normalizedPath) &&
         !recentFavNormSet.has(normalizedPath) &&
         !pinnedNormSet.has(normalizedPath)
       );
@@ -920,27 +919,27 @@ export function registerQuickOpenCommand(
 
           const hasRecentFiles = recentItems.length > 0;
 
-          items.push({
-            label: hasRecentFiles ? t('Recent') : t('No new recent files'),
-            kind: vscode.QuickPickItemKind.Separator,
-          });
-
-          if (hasRecentFiles) {
-            const clearRecentsItem: ActionQuickPickItem = {
-              label: `$(trash) ${t('Clear all')}`,
-              action: 'clearRecents',
-            };
-
-            if (!isSearching) {
-              items.push(clearRecentsItem);
-            }
-            items.push(...recentItems);
-          } else if (!isSearching) {
+          if (!isSearching) {
             items.push({
-              label: '',
-              description: '',
-              detail: '',
+              label: hasRecentFiles ? t('Recent') : t('No new recent files'),
+              kind: vscode.QuickPickItemKind.Separator,
             });
+
+            if (hasRecentFiles) {
+              const clearRecentsItem: ActionQuickPickItem = {
+                label: `$(trash) ${t('Clear all')}`,
+                action: 'clearRecents',
+              };
+
+              items.push(clearRecentsItem);
+              items.push(...recentItems);
+            } else {
+              items.push({
+                label: '',
+                description: '',
+                detail: '',
+              });
+            }
           }
 
           let otherItems: FileQuickPickItem[] = [];
@@ -969,7 +968,7 @@ export function registerQuickOpenCommand(
           const allFileItems = [
             ...pinnedItems,
             ...recentFavItems,
-            ...recentItems,
+            ...(isSearching ? [] : recentItems),
             ...otherItems,
           ];
 

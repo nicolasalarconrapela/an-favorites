@@ -2,13 +2,13 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.1.5",
+  "version": "1.2.38",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
     "theme": "dark"
   },
-  "preview": true,
+  "preview": false,
   "icon": "resources/icon.png",
   "badges": [
     {
@@ -139,6 +139,18 @@
         "title": "%command.manageGitignore.title%",
         "category": "%command.category.anfavorites%",
         "icon": "$(list-unordered)"
+      },
+      {
+        "command": "anfavorites.clearCache",
+        "title": "Clear Extension Cache",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "anfavorites.openReleaseChanges",
+        "title": "%command.openReleaseChanges.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(megaphone)"
       }
     ],
     "keybindings": [
@@ -310,10 +322,26 @@
         {
           "command": "anfavorites.configureKeybindings",
           "when": "true"
+        },
+        {
+          "command": "anfavorites.clearCache",
+          "when": "true"
+        },
+        {
+          "command": "anfavorites.openReleaseChanges",
+          "when": "true"
         }
       ]
     },
     "configuration": [
+      {
+        "title": "Troubleshooting",
+        "properties": {
+          "anfavorites.advanced.clearCacheAction": {
+            "markdownDescription": "Click the link below to force clear extension cache, internal search indexes, and legacy data from older versions.\n\n[Clear all cache now](command:anfavorites.clearCache)"
+          }
+        }
+      },
       {
         "title": "%config.general.title%",
         "properties": {
@@ -330,7 +358,8 @@
               "%config.language.enum.en%",
               "%config.language.enum.es%"
             ],
-            "description": "%config.language.description%"
+            "markdownDescription": "%config.language.description%",
+            "scope": "application"
           }
         }
       },
@@ -600,6 +629,17 @@
             ]
           },
           {
+            "id": "anfavorites.walkthrough.gitignore",
+            "title": "Manage .gitignore Files",
+            "description": "Control which .gitignore rules are used for search exclusions.\n[Manage .gitignore Files](command:anfavorites.manageGitignore)",
+            "media": {
+              "markdown": "resources/walkthrough/07-gitignore.md"
+            },
+            "completionEvents": [
+              "onCommand:anfavorites.manageGitignore"
+            ]
+          },
+          {
             "id": "anfavorites.walkthrough.syncIdes",
             "title": "Sync Across IDEs",
             "description": "Your favorites sync automatically between VS Code, Cursor, Windsurf and any IDE sharing the same workspace.\n[Open Storage Settings](command:workbench.action.openSettings?%5B%22anfavorites.storage%22%5D)",
@@ -668,6 +708,17 @@
             ]
           },
           {
+            "id": "anfavorites.walkthrough.es.gitignore",
+            "title": "Gestionar archivos .gitignore",
+            "description": "Controla qué reglas de .gitignore se usan para las exclusiones de búsqueda.\n[Gestionar archivos .gitignore](command:anfavorites.manageGitignore)",
+            "media": {
+              "markdown": "resources/walkthrough/es/07-gitignore.md"
+            },
+            "completionEvents": [
+              "onCommand:anfavorites.manageGitignore"
+            ]
+          },
+          {
             "id": "anfavorites.walkthrough.es.syncIdes",
             "title": "Sincronización entre IDEs",
             "description": "Tus favoritos se sincronizan automáticamente entre VS Code, Cursor, Windsurf y cualquier IDE que comparta el mismo workspace.\n[Abrir Configuración de Almacenamiento](command:workbench.action.openSettings?%5B%22anfavorites.storage%22%5D)",
@@ -712,6 +763,9 @@
     "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/marked": "^5.0.2",
+    "@types/minimatch": "^5.1.2",
     "@types/mocha": "^10.0.6",
     "@types/node": "^25.0.6",
     "@types/vscode": "^1.85.0",
@@ -723,9 +777,11 @@
     "esbuild": "^0.27.2",
     "eslint": "^10.0.1",
     "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.4.0",
     "mocha": "^10.7.5",
     "prettier": "^3.7.4",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.56.1"
   },
   "overrides": {
     "diff": "8.0.3",
@@ -734,5 +790,8 @@
     "@vscode/vsce": {
       "minimatch": "3.1.2"
     }
+  },
+  "dependencies": {
+    "marked": "^17.0.4"
   }
 }

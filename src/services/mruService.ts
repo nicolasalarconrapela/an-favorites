@@ -126,6 +126,12 @@ export class MRUService {
     this._onDidChangeRecentFiles.fire();
   }
 
+  public reloadRecentFiles(): void {
+    this.logger.debug('[mru] reloading from state');
+    this.load();
+    this._onDidChangeRecentFiles.fire();
+  }
+
   public async validateFiles(): Promise<void> {
     const originalLength = this.mruList.length;
     const validFiles: string[] = [];

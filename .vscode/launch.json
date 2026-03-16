@@ -10,7 +10,7 @@
         "--profile-temp",
         "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "${workspaceFolder}/.vscode-test/Empty"
+        "${workspaceFolder}/.vscode-test/Adios"
       ],
       "outFiles": [
         "${workspaceFolder}/out/**/*.js"
@@ -27,7 +27,7 @@
         "--profile-temp",
         "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "${workspaceFolder}/.vscode-test/Empty"
+        "${workspaceFolder}/.vscode-test/Adios"
       ],
       "preLaunchTask": "watch",
       "outFiles": [
@@ -50,7 +50,7 @@
       "args": [
         "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "${workspaceFolder}/.vscode-test/Empty"
+        "${workspaceFolder}/.vscode-test/Adios"
       ],
       "outFiles": [
         "${workspaceFolder}/out/**/*.js"
@@ -66,7 +66,7 @@
       "args": [
         "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "${workspaceFolder}/.vscode-test/Empty"
+        "${workspaceFolder}/.vscode-test/Adios"
       ],
       "preLaunchTask": "watch",
       "outFiles": [

@@ -1,31 +1,40 @@
-![Logo_&_Banner](https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/banner_logo.png?raw=true)
+![Logo_&_Banner](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/main/resources/banner_logo.png)
 
 <h1 align="left">AnFavorites</h1>
 
-<br/>
 
 <p align="center">
-  <!-- <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
-    <img src="https://vsmarketplacebadges.dev/installs/AnAppWilos.an-favorites.png?style=for-the-badge" alt="Visual Studio Marketplace Installs">
   </a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
-    <img src="https://vsmarketplacebadges.dev/downloads/AnAppWilos.an-favorites.png?style=for-the-badge" alt="Visual Studio Marketplace Downloads">
-  </a> -->
   <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites&ssr=false#version-history">
     <img src="https://vsmarketplacebadges.dev/version-short/AnAppWilos.an-favorites.png?style=for-the-badge" alt="Visual Studio Marketplace Version">
   </a>
-  <!-- <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
-    <img src="https://vsmarketplacebadges.dev/rating-star/AnAppWilos.an-favorites.png?style=for-the-badge" alt="Visual Studio Marketplace Rating">
-  </a> -->
   <a href="https://open-vsx.org/extension/AnAppWilos/an-favorites">
     <img src="https://img.shields.io/open-vsx/v/AnAppWilos/an-favorites?style=for-the-badge&label=Open%20VSX" alt="Open VSX Version">
+  </a>
+
+
+</p>
+<p align="center">
+  <!-- <a href="https://marketplace.visualstudio.com/items?itemName=AnAppWilos.an-favorites">
+    <img src="https://img.shields.io/badge/Downloads_Marketplace-x-blue?style=for-the-badge&logo=visualstudiocode" alt="Visual Studio Marketplace Downloads">
+  </a> -->
+  <a href="https://open-vsx.org/extension/AnAppWilos/an-favorites">
+    <img src="https://img.shields.io/open-vsx/dt/AnAppWilos/an-favorites?style=for-the-badge&label=Open%20VSX%20Downloads">
   </a>
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License MIT">
   </a>
 </p>
+  <p align="center">
+    <a href="https://github.com/nicolasalarconrapela/an-favorites/releases/latest">
+    <img
+      src="https://img.shields.io/github/release/nicolasalarconrapela/an-favorites.svg?style=for-the-badge&logo=github&logoColor=white&colorA=101119&colorB=073642"
+      alt="Release"
+    />
+  </a>
+</p>
 
-![img_init](https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/init.png?raw=true)
+![img_init](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/main/resources/init.png)
 
 **AnFavorites** is an extension that optimizes your file workflow by providing instant, centralized access to your most important files with a single keyboard shortcut (`Ctrl+Alt+F`).
 

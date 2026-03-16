@@ -5,8 +5,21 @@ AnFavorites is highly configurable. Here are the most useful settings to customi
 ## 🔍 Search
 
 - **Exclusion patterns** (`anfavorites.search.exclusions`): Exclude folders like `node_modules`, `dist`, etc. from Quick Open searches
+- **Gitignore integration** (`anfavorites.gitignore.enabled`): Automatically use `.gitignore` rules to exclude files from search.
+- **Nested gitignores** (`anfavorites.gitignore.includeNested`): Support `.gitignore` files in subdirectories.
 - **Max search files** (`anfavorites.search.maxSearchFiles`): Maximum files retrieved per search before showing a warning (default: 1000)
 - **Max search results** (`anfavorites.search.maxSearchResults`): Maximum results displayed (default: 200)
+
+## 🧿 .gitignore Integration
+
+AnFavorites can automatically respect your repository's `.gitignore` files to exclude files and folders from Quick Open and searches. Key points:
+
+- **Enable / Disable**: Toggle `anfavorites.gitignore.enabled` to turn `.gitignore` support on or off.
+- **Nested `.gitignore` files**: Use `anfavorites.gitignore.includeNested` to include `.gitignore` files located in subdirectories.
+- **Per-file control**: Discovered `.gitignore` files are tracked in the workspace setting `anfavorites.gitignore.files` so you can enable/disable individual `.gitignore` files.
+- **Merged exclusions**: `.gitignore` patterns are merged with your `anfavorites.search.exclusions` and used when scanning for files.
+
+This integration helps keep Quick Open focused on relevant files without manually maintaining exclusion lists.
 
 ## 🎨 Quick Open
 
@@ -33,6 +46,10 @@ Choose between **English**, **Español**, or **Auto** (follows VS Code's languag
 ## 💾 Storage
 
 - **Share across IDEs** (`anfavorites.storage.shareAcrossIdes`): Enable/disable cross-IDE synchronization. This allows sharing favorites between VS Code, Cursor, Windsurf, etc. if they share the same workspace.
+
+## 🛠️ Maintenance
+
+- **Clear cache** (`anfavorites.advanced.clearCacheAction`): Use this setting to manually purge search indexes and troubleshooting data from the extension.
 
 ## Pro Tip 💡
 
