@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.2.40] - 2026-03-16
+
+### Added
+- **UX**: Added a 4-second delay before showing the release update notification to avoid interrupting the initial extension activation.
+
+### Changed
+- **Reliability**: Refactored the update notification logic to use `async/await` and added `try-catch` blocks for better error handling.
+- **I18n**: Improved character encoding handling for Spanish localized messages in the boot sequence.
+
+### Removed
+- **README**: Removed outdated "Latest Changes" section to keep documentation current.
+
+## [1.2.38] - 2026-03-16
+
+### Added
+- **.gitignore Integration**: Automatically apply `.gitignore` rules as search exclusions in Quick Open.
+- **Commands**: New `Manage .gitignore Files`, `Clear Extension Cache`, and `View Release Notes` commands.
+- **Notifications**: Automatic update notifications with quick access to release changes.
+- **Maintenance**: Added `anfavorites.advanced.clearCacheAction` setting for manual index purging.
+
+### Changed
+- **Migration**: Full move to ESLint v10 "Flat Config" and updated `typescript-eslint` rules.
+- **UX**: Improved `.gitignore` scanning with clean status bar feedback.
+- **Docs**: Updated README with Open VSX status and modernized asset URLs.
+
+### Fixed
+- **Collision Index**: Improved invalidation logic when workspace configuration or directory structures change.
+- **Search Reliability**: Corrected tracking and cleanup logic for repositories without `.gitignore` files.
+
 ## [1.1.5] - 2026-03-05
 
 ### Fixed

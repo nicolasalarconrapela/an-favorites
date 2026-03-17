@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { minimatch } from 'minimatch';
+import minimatch = require('minimatch');
 import { isWindows } from './collisionUtils';
 
 function normalizeForMatch(value: string): string {

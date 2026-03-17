@@ -16,6 +16,10 @@ import {
 import { VscodeQuickOpenConfigService } from '../adapters/vscodeQuickOpenConfigService';
 import { VscodeQuickOpenSearchService } from '../adapters/vscodeQuickOpenSearchService';
 import { t } from '../utils/l10n';
+import {
+  getMergedExclusions,
+  buildExclusionGlobFromPatterns,
+} from '../utils/gitignoreService';
 
 type QuickOpenItem = vscode.QuickPickItem;
 
@@ -241,18 +245,17 @@ async function buildSearchItems(params: {
     searchService,
     token,
   } = params;
-  let exclusionGlob: string | undefined = undefined;
-  if (config.searchExclusions.length === 1) {
-    exclusionGlob = config.searchExclusions[0];
-  } else if (config.searchExclusions.length > 1) {
-    exclusionGlob = `{${config.searchExclusions.join(',')}}`;
-  }
   const cacheKey = normalizedSearch;
   let cacheEntry = searchCache.get(cacheKey);
   let noticeItem: QuickOpenItem | null = null;
   let loadMoreItem: ActionQuickPickItem | null = null;
 
   if (!cacheEntry) {
+    const mergedExclusions = await getMergedExclusions(
+      config.searchExclusions,
+      token,
+    );
+    const exclusionGlob = buildExclusionGlobFromPatterns(mergedExclusions);
     const searchPattern = buildSearchPattern(cacheKey);
     const searchLimit = Math.max(1, config.maxSearchFiles) + 1;
     const foundUris = await searchService.findFiles(
@@ -307,7 +310,6 @@ async function buildSearchItems(params: {
     .filter((item) => {
       const normalizedPath = normalizeFsPath(item.internalUri.fsPath);
       return (
-        !recentNormSet.has(normalizedPath) &&
         !recentFavNormSet.has(normalizedPath) &&
         !pinnedNormSet.has(normalizedPath)
       );
@@ -917,27 +919,27 @@ export function registerQuickOpenCommand(
 
           const hasRecentFiles = recentItems.length > 0;
 
-          items.push({
-            label: hasRecentFiles ? t('Recent') : t('No new recent files'),
-            kind: vscode.QuickPickItemKind.Separator,
-          });
-
-          if (hasRecentFiles) {
-            const clearRecentsItem: ActionQuickPickItem = {
-              label: `$(trash) ${t('Clear all')}`,
-              action: 'clearRecents',
-            };
-
-            if (!isSearching) {
-              items.push(clearRecentsItem);
-            }
-            items.push(...recentItems);
-          } else if (!isSearching) {
+          if (!isSearching) {
             items.push({
-              label: '',
-              description: '',
-              detail: '',
+              label: hasRecentFiles ? t('Recent') : t('No new recent files'),
+              kind: vscode.QuickPickItemKind.Separator,
             });
+
+            if (hasRecentFiles) {
+              const clearRecentsItem: ActionQuickPickItem = {
+                label: `$(trash) ${t('Clear all')}`,
+                action: 'clearRecents',
+              };
+
+              items.push(clearRecentsItem);
+              items.push(...recentItems);
+            } else {
+              items.push({
+                label: '',
+                description: '',
+                detail: '',
+              });
+            }
           }
 
           let otherItems: FileQuickPickItem[] = [];
@@ -966,7 +968,7 @@ export function registerQuickOpenCommand(
           const allFileItems = [
             ...pinnedItems,
             ...recentFavItems,
-            ...recentItems,
+            ...(isSearching ? [] : recentItems),
             ...otherItems,
           ];
 

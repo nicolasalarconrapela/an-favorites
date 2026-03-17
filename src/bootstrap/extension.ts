@@ -11,11 +11,22 @@ import { registerPinCommands } from '../commands/pinCommands';
 import { registerOpenToSideCommand } from '../commands/openToSideCommand';
 import { registerQuickOpenCommand } from '../commands/quickOpenCommand';
 import { registerKeyboardShortcutCommand } from '../commands/keyboardShortcutCommand';
+import { registerManageGitignoreCommand } from '../commands/manageGitignoreCommand';
+import { registerClearCacheCommand } from '../commands/clearCacheCommand';
+import { registerOpenReleaseChangesCommand } from '../commands/openReleaseChangesCommand';
 import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
 import { SharedStorageService } from '../services/sharedStorageService';
-import { disposeCollisionIndex } from '../utils/collisionUtils';
+import {
+  disposeCollisionIndex,
+  invalidateCollisionIndex,
+} from '../utils/collisionUtils';
+import {
+  disposeGitignoreService,
+  initGitignoreSync,
+  onGitignoreDiscoveryChange,
+} from '../utils/gitignoreService';
 import { initializeL10n, t } from '../utils/l10n';
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -71,6 +82,9 @@ export function activate(context: vscode.ExtensionContext): void {
   registerPinCommands(context, favoritesProvider, logger);
   registerOpenToSideCommand(context, logger);
   registerKeyboardShortcutCommand(context, logger);
+  registerManageGitignoreCommand(context);
+  registerClearCacheCommand(context, logger, favoritesProvider, mruService);
+  registerOpenReleaseChangesCommand(context);
   logger.debug('[activate] registering quickOpen...');
   registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
   logger.debug('[activate] quickOpen registered.');
@@ -131,6 +145,18 @@ export function activate(context: vscode.ExtensionContext): void {
 
   telemetry.track('activated');
   logger.debug('━━━ Extension activation completed successfully ━━━');
+
+  // Check for new version and show notification
+  void checkReleaseUpdate(context, logger);
+
+  // Sync .gitignore patterns into workspace settings in the background
+  void initGitignoreSync(context, logger);
+  onGitignoreDiscoveryChange(() => {
+    logger?.info?.(
+      '[gitignore] Discovery changed -> invalidating collision index',
+    );
+    invalidateCollisionIndex(logger, 'gitignore changed');
+  });
 
   const watchedPaths = new Map<string, vscode.FileSystemWatcher>();
   const pendingValidations = new Set<string>();
@@ -281,7 +307,61 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push({ dispose: () => sharedStorage.dispose() });
   context.subscriptions.push({ dispose: () => mruService.dispose() });
   context.subscriptions.push({ dispose: () => disposeCollisionIndex() });
+  context.subscriptions.push({ dispose: () => disposeGitignoreService() });
   context.subscriptions.push({ dispose: () => logger.dispose?.() });
 }
 
 export function deactivate(): void {}
+
+const RELEASE_NOTICE_DELAY_MS = 4000;
+
+/**
+ * Comprueba si la versi\u00f3n actual de la extensi\u00f3n es distinta a la \u00faltima que vio el usuario.
+ * Si es as\u00ed, muestra una notificaci\u00f3n para ver los cambios.
+ */
+async function checkReleaseUpdate(
+  context: vscode.ExtensionContext,
+  logger: any,
+): Promise<void> {
+  const currentVersion = context.extension.packageJSON.version;
+  const lastSeenVersion = context.globalState.get<string>(
+    'anfavorites.lastSeenVersion',
+  );
+
+  if (lastSeenVersion !== currentVersion) {
+    logger.info(
+      `[ReleaseNotice] Nueva versi\u00f3n detectada: ${currentVersion} (anterior: ${lastSeenVersion})`,
+    );
+
+    const btnTitle = t('Ver Notas de Lanzamiento');
+    const message = t(
+      'AnFavorites se ha actualizado a la v{0}. \u00bfQuieres ver las novedades?',
+      currentVersion,
+    );
+
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, RELEASE_NOTICE_DELAY_MS);
+    });
+
+    try {
+      const selection = await vscode.window.showInformationMessage(
+        message,
+        btnTitle,
+      );
+
+      if (selection === btnTitle) {
+        await vscode.commands.executeCommand('anfavorites.openReleaseChanges');
+      }
+
+      await context.globalState.update(
+        'anfavorites.lastSeenVersion',
+        currentVersion,
+      );
+    } catch (error) {
+      logger.warn(
+        `[ReleaseNotice] No se pudo mostrar la notificaci\u00f3n de la versi\u00f3n ${currentVersion}`,
+        error,
+      );
+    }
+  }
+}
