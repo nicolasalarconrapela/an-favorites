@@ -40,12 +40,28 @@ function formatGitignoreLabel(uri: vscode.Uri): string {
   const rel = gitignoreRelPath(uri).replace(/\\/g, '/');
   const workspaceFolders = vscode.workspace.workspaceFolders ?? [];
 
+  if (workspaceFolders.length > 1) {
+    const slashIndex = rel.indexOf('/');
+    return slashIndex >= 0 ? rel.slice(slashIndex + 1) : rel;
+  }
+
   if (workspaceFolders.length <= 1 && rel.endsWith('/.gitignore')) {
     const slashIndex = rel.indexOf('/');
     return slashIndex >= 0 ? rel.slice(slashIndex + 1) : rel;
   }
 
   return rel;
+}
+
+function buildWorkspaceHeaderItem(label: string): GitignoreItem {
+  return {
+    uri: vscode.Uri.file(''),
+    isEnabled: false,
+    itemType: 'group',
+    label: `$(folder) ${label}`,
+    description: '',
+    buttons: [],
+  };
 }
 
 function buildItem(uri: vscode.Uri): GitignoreItem {
@@ -65,13 +81,19 @@ function buildItem(uri: vscode.Uri): GitignoreItem {
 function buildGroupItem(label: string, uris: vscode.Uri[]): GitignoreItem {
   const allEnabled = uris.every((uri) => isGitignoreFileEnabled(uri));
   const enabledCount = uris.filter((uri) => isGitignoreFileEnabled(uri)).length;
+  const iconPrefix =
+    enabledCount === 0
+      ? '    '
+      : enabledCount === uris.length
+        ? '$(check) '
+        : '$(dash) ';
 
   return {
     uri: vscode.Uri.file(''),
     isEnabled: allEnabled,
     itemType: 'group',
     groupUris: uris,
-    label: `$(${allEnabled ? 'check' : 'circle-large-outline'}) ${label} ${enabledCount}/${uris.length}`,
+    label: `${iconPrefix}${label} ${enabledCount}/${uris.length}`,
     description: '',
     buttons: [],
   };
@@ -107,6 +129,8 @@ export function registerManageGitignoreCommand(
       async function refresh(): Promise<void> {
         quickPick.busy = true;
         const uris = await discoverGitignoreFiles();
+        const workspaceFolders = vscode.workspace.workspaceFolders ?? [];
+        const isMultiRoot = workspaceFolders.length > 1;
 
         if (uris.length === 0) {
           quickPick.items = [
@@ -119,33 +143,54 @@ export function registerManageGitignoreCommand(
             },
           ];
         } else {
-          const rootItems = uris
-            .filter(isWorkspaceRootGitignore)
-            .map(buildItem);
-          const subdirectoryItems = uris
-            .filter((uri) => !isWorkspaceRootGitignore(uri))
-            .map(buildItem);
-
           const items: GitignoreItem[] = [];
 
-          if (rootItems.length > 0) {
-            items.push(
-              buildGroupItem(
-                t('Workspace Root'),
-                rootItems.map((item) => item.uri),
-              ),
-            );
-            items.push(...rootItems);
-          }
+          const groups = isMultiRoot
+            ? workspaceFolders.map((folder) => ({
+                label: folder.name,
+                uris: uris.filter(
+                  (uri) =>
+                    vscode.workspace.getWorkspaceFolder(uri)?.uri.fsPath ===
+                    folder.uri.fsPath,
+                ),
+              }))
+            : [{ label: '', uris }];
 
-          if (subdirectoryItems.length > 0) {
-            items.push(
-              buildGroupItem(
-                t('Subdirectory'),
-                subdirectoryItems.map((item) => item.uri),
-              ),
-            );
-            items.push(...subdirectoryItems);
+          for (const group of groups) {
+            if (group.uris.length === 0) {
+              continue;
+            }
+
+            if (isMultiRoot) {
+              items.push(buildWorkspaceHeaderItem(group.label));
+            }
+
+            const rootItems = group.uris
+              .filter(isWorkspaceRootGitignore)
+              .map(buildItem);
+            const subdirectoryItems = group.uris
+              .filter((uri) => !isWorkspaceRootGitignore(uri))
+              .map(buildItem);
+
+            if (rootItems.length > 0) {
+              items.push(
+                buildGroupItem(
+                  t('Workspace Root'),
+                  rootItems.map((item) => item.uri),
+                ),
+              );
+              items.push(...rootItems);
+            }
+
+            if (subdirectoryItems.length > 0) {
+              items.push(
+                buildGroupItem(
+                  t('Subdirectory'),
+                  subdirectoryItems.map((item) => item.uri),
+                ),
+              );
+              items.push(...subdirectoryItems);
+            }
           }
 
           quickPick.items = items;
