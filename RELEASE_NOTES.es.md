@@ -1,4 +1,4 @@
-# Exclusiones Inteligentes y Mantenimiento - v1.2.38
+# Exclusiones Inteligentes y Mantenimiento - v1.2.40
 
 _Fecha de lanzamiento: 16 de marzo, 2026_
 
@@ -17,3 +17,5 @@ _Fecha de lanzamiento: 16 de marzo, 2026_
 ### Solución de Bugs 🐛
 - **Optimización de Escaneo**: Corregida la lógica para identificar correctamente y finalizar de forma limpia cuando no hay archivos `.gitignore` presentes.
 - **Refinamiento de UI**: Se eliminó un disparo falso del indicador de progreso al navegar por los ajustes globales sin cambios reales.
+
+- **Documentación**: Se ha limpiado el README eliminando notas de versiones heredadas, simplificando la presentación para los nuevos usuarios.

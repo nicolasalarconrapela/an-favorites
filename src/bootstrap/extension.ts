@@ -313,9 +313,11 @@ export function activate(context: vscode.ExtensionContext): void {
 
 export function deactivate(): void {}
 
+const RELEASE_NOTICE_DELAY_MS = 4000;
+
 /**
- * Comprueba si la versión actual de la extensión es distinta a la última que vio el usuario.
- * Si es así, muestra una notificación para ver los cambios.
+ * Comprueba si la versi\u00f3n actual de la extensi\u00f3n es distinta a la \u00faltima que vio el usuario.
+ * Si es as\u00ed, muestra una notificaci\u00f3n para ver los cambios.
  */
 async function checkReleaseUpdate(
   context: vscode.ExtensionContext,
@@ -328,27 +330,38 @@ async function checkReleaseUpdate(
 
   if (lastSeenVersion !== currentVersion) {
     logger.info(
-      `[ReleaseNotice] Nueva versión detectada: ${currentVersion} (anterior: ${lastSeenVersion})`,
+      `[ReleaseNotice] Nueva versi\u00f3n detectada: ${currentVersion} (anterior: ${lastSeenVersion})`,
     );
 
     const btnTitle = t('Ver Notas de Lanzamiento');
     const message = t(
-      'AnFavorites se ha actualizado a la v{0}. ¿Quieres ver las novedades?',
+      'AnFavorites se ha actualizado a la v{0}. \u00bfQuieres ver las novedades?',
       currentVersion,
     );
 
-    vscode.window
-      .showInformationMessage(message, btnTitle)
-      .then((selection) => {
-        if (selection === btnTitle) {
-          vscode.commands.executeCommand('anfavorites.openReleaseChanges');
-        }
-      });
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, RELEASE_NOTICE_DELAY_MS);
+    });
 
-    // Guardar la versión actual como vista
-    await context.globalState.update(
-      'anfavorites.lastSeenVersion',
-      currentVersion,
-    );
+    try {
+      const selection = await vscode.window.showInformationMessage(
+        message,
+        btnTitle,
+      );
+
+      if (selection === btnTitle) {
+        await vscode.commands.executeCommand('anfavorites.openReleaseChanges');
+      }
+
+      await context.globalState.update(
+        'anfavorites.lastSeenVersion',
+        currentVersion,
+      );
+    } catch (error) {
+      logger.warn(
+        `[ReleaseNotice] No se pudo mostrar la notificaci\u00f3n de la versi\u00f3n ${currentVersion}`,
+        error,
+      );
+    }
   }
 }

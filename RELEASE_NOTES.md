@@ -1,4 +1,4 @@
-# Intelligent Exclusions & Smart Maintenance - v1.2.38
+# Intelligent Exclusions & Smart Maintenance - v1.2.40
 
 _Release Date: March 16, 2026_
 
@@ -17,3 +17,5 @@ Welcome to the latest version of **AnFavorites**! This update brings essential q
 ### Bug Fixes 🐛
 - **Scan Optimization**: Corrected logic to gracefully handle and clean up when no `.gitignore` files are present in the workspace.
 - **UI Refinement**: Fixed false progress indicator triggers when navigating global settings without changes.
+
+- **Documentation**: Cleaned up the README by removing legacy version notes, streamlining the presentation for new users.
