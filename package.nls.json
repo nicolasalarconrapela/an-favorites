@@ -56,9 +56,7 @@
   "config.quickOpen.openInNewWindow.description": "When enabled, opening a file from Quick Open will open it in a new window by default and hide the 'Open in New Window' button.",
   "config.quickOpen.showOpenToSideButton.description": "Whether to show the 'Open to the Side' button in Quick Open items.",
   "config.gitignore.title": ".gitignore",
-  "config.gitignore.enabled.description": "When enabled, the extension reads .gitignore files from your workspace roots and applies their patterns as search exclusions in Quick Open. [Note: This feature is disabled at the User level; please enable it in your Workspace settings].",
-  "config.gitignore.includeNested.description": "When enabled, .gitignore files inside subdirectories are also read, not just the ones at the workspace root. [Note: Please configure this in your Workspace settings].",
-  "config.gitignore.files.description": "List of discovered .gitignore files. Checked files are actively used for search exclusions. Uncheck a file to ignore its rules. [Note: Please configure this in your Workspace settings].",
+  "config.gitignore.files.description": "Select and manage which `.gitignore` files should be active from the internal manager.\n\nUse [Manage .gitignore Files](command:anfavorites.manageGitignore) to choose the active `.gitignore` files for this workspace.",
   "command.openReleaseChanges.title": "View Release Notes",
   "command.manageGitignore.title": "Manage .gitignore Files",
   "config.quickOpen.showOpenInNewWindowButton.description": "Whether to show the 'Open in New Window' button in Quick Open items."

@@ -3,14 +3,11 @@ import {
   discoverGitignoreFiles,
   isGitignoreFileEnabled,
   setGitignoreFileEnabled,
+  setGitignoreFilesEnabled,
   gitignoreRelPath,
   onGitignoreDiscoveryChange,
 } from '../utils/gitignoreService';
 import { t } from '../utils/l10n';
-
-// ---------------------------------------------------------------------------
-// Buttons used in the QuickPick items
-// ---------------------------------------------------------------------------
 
 const BTN_OPEN: vscode.QuickInputButton = {
   iconPath: new vscode.ThemeIcon('go-to-file'),
@@ -27,31 +24,58 @@ const BTN_ENABLE: vscode.QuickInputButton = {
   tooltip: 'Enable (include in search)',
 };
 
-// ---------------------------------------------------------------------------
-// QuickPickItem for a single .gitignore file
-// ---------------------------------------------------------------------------
-
 interface GitignoreItem extends vscode.QuickPickItem {
   uri: vscode.Uri;
   isEnabled: boolean;
+  itemType?: 'file' | 'group';
+  groupUris?: vscode.Uri[];
+}
+
+function isWorkspaceRootGitignore(uri: vscode.Uri): boolean {
+  const rel = gitignoreRelPath(uri).replace(/\\/g, '/');
+  return rel === '.gitignore' || /^[^/]+\/\.gitignore$/.test(rel);
+}
+
+function formatGitignoreLabel(uri: vscode.Uri): string {
+  const rel = gitignoreRelPath(uri).replace(/\\/g, '/');
+  const workspaceFolders = vscode.workspace.workspaceFolders ?? [];
+
+  if (workspaceFolders.length <= 1 && rel.endsWith('/.gitignore')) {
+    const slashIndex = rel.indexOf('/');
+    return slashIndex >= 0 ? rel.slice(slashIndex + 1) : rel;
+  }
+
+  return rel;
 }
 
 function buildItem(uri: vscode.Uri): GitignoreItem {
   const enabled = isGitignoreFileEnabled(uri);
-  const rel = gitignoreRelPath(uri);
+  const rel = formatGitignoreLabel(uri);
 
   return {
     uri,
     isEnabled: enabled,
-    label: `$(${enabled ? 'check' : 'circle-slash'}) ${rel}`,
+    itemType: 'file',
+    label: `   ${enabled ? '$(check) ' : '$(blank) '}${rel}`,
     description: enabled ? t('Active') : t('Disabled'),
     buttons: [BTN_OPEN, enabled ? BTN_DISABLE : BTN_ENABLE],
   };
 }
 
-// ---------------------------------------------------------------------------
-// The command
-// ---------------------------------------------------------------------------
+function buildGroupItem(label: string, uris: vscode.Uri[]): GitignoreItem {
+  const allEnabled = uris.every((uri) => isGitignoreFileEnabled(uri));
+  const enabledCount = uris.filter((uri) => isGitignoreFileEnabled(uri)).length;
+
+  return {
+    uri: vscode.Uri.file(''),
+    isEnabled: allEnabled,
+    itemType: 'group',
+    groupUris: uris,
+    label: `$(${allEnabled ? 'check' : 'circle-large-outline'}) ${label} ${enabledCount}/${uris.length}`,
+    description: '',
+    buttons: [],
+  };
+}
 
 export function registerManageGitignoreCommand(
   context: vscode.ExtensionContext,
@@ -59,7 +83,6 @@ export function registerManageGitignoreCommand(
   const disposable = vscode.commands.registerCommand(
     'anfavorites.manageGitignore',
     async () => {
-      // Ensure we are in a workspace
       if (
         !vscode.workspace.workspaceFolders ||
         vscode.workspace.workspaceFolders.length === 0
@@ -81,9 +104,6 @@ export function registerManageGitignoreCommand(
       quickPick.busy = true;
       quickPick.show();
 
-      // -----------------------------------------------------------------------
-      // Refresh helper — rebuilds items from current state
-      // -----------------------------------------------------------------------
       async function refresh(): Promise<void> {
         quickPick.busy = true;
         const uris = await discoverGitignoreFiles();
@@ -99,32 +119,65 @@ export function registerManageGitignoreCommand(
             },
           ];
         } else {
-          quickPick.items = uris.map(buildItem);
+          const rootItems = uris
+            .filter(isWorkspaceRootGitignore)
+            .map(buildItem);
+          const subdirectoryItems = uris
+            .filter((uri) => !isWorkspaceRootGitignore(uri))
+            .map(buildItem);
+
+          const items: GitignoreItem[] = [];
+
+          if (rootItems.length > 0) {
+            items.push(
+              buildGroupItem(
+                t('Workspace Root'),
+                rootItems.map((item) => item.uri),
+              ),
+            );
+            items.push(...rootItems);
+          }
+
+          if (subdirectoryItems.length > 0) {
+            items.push(
+              buildGroupItem(
+                t('Subdirectory'),
+                subdirectoryItems.map((item) => item.uri),
+              ),
+            );
+            items.push(...subdirectoryItems);
+          }
+
+          quickPick.items = items;
         }
+
         quickPick.busy = false;
       }
 
       await refresh();
 
-      // Re-refresh when .gitignore files appear / disappear on disk
       onGitignoreDiscoveryChange(() => {
         void refresh();
       });
 
-      // -----------------------------------------------------------------------
-      // Item selection → toggle enable/disable
-      // -----------------------------------------------------------------------
       quickPick.onDidAccept(async () => {
         const [selected] = quickPick.selectedItems;
-        if (!selected || !selected.uri.fsPath) return;
+        if (!selected) return;
 
+        if (selected.itemType === 'group' && selected.groupUris) {
+          await setGitignoreFilesEnabled(
+            selected.groupUris,
+            !selected.isEnabled,
+          );
+          await refresh();
+          return;
+        }
+
+        if (!selected.uri.fsPath) return;
         await setGitignoreFileEnabled(selected.uri, !selected.isEnabled);
         await refresh();
       });
 
-      // -----------------------------------------------------------------------
-      // Button clicks
-      // -----------------------------------------------------------------------
       quickPick.onDidTriggerItemButton(async (e) => {
         const item = e.item as GitignoreItem;
         if (!item.uri.fsPath) return;
