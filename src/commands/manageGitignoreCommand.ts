@@ -83,7 +83,7 @@ function buildGroupItem(label: string, uris: vscode.Uri[]): GitignoreItem {
   const enabledCount = uris.filter((uri) => isGitignoreFileEnabled(uri)).length;
   const iconPrefix =
     enabledCount === 0
-      ? '    '
+      ? '$(blank) '
       : enabledCount === uris.length
         ? '$(check) '
         : '$(dash) ';
