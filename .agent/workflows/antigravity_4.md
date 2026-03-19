@@ -1,21 +1,27 @@
 ---
-description: CHANGELOG Y RELEASE
+description: Documentación
 ---
 
 ## 5 Generar documentación
 
-## 5.1 Variables de tiempo
+En este paso nos encargaremos de la generación de la documentación.
 
-`DATE=$(date +%d%m%Y)`
-`TIME=$(date +%H%M%S)`
+A partir de "$VAR_S1_FILE".
 
 Actuar como mantenedor open-source.
 
-Directorio: `"$OUTPUT_DIR"`
+Directorio de salida: `"$OUTPUT_DIR"`
+
+Fuente única de verdad para toda la documentación:
+`"$DIFF_FILE"`
+
+---
 
 ## 5.1 CHANGELOG.md
 
-Si ya existe, copiarlo a `"$OUTPUT_DIR"` y agregar la nueva entrada al principio.
+Si ya existe un `CHANGELOG.md` en la raíz del proyecto, copiarlo a `"$OUTPUT_DIR/CHANGELOG.md"` y agregar la nueva entrada al principio.
+Si no existe, crear uno nuevo en `"$OUTPUT_DIR/CHANGELOG.md"`.
+Recuerda que el CHANGELOG 
 
 Propósito:
 historial técnico de la versión
@@ -39,88 +45,3 @@ Estructura:
 ### Removed
 
 ### Security
-```
-
-Reglas:
-
-- lenguaje técnico y conciso
-- evitar texto de marketing
-- no inventar cambios
-- mantener Markdown limpio
-
----
-
-## 5.2 RELEASE_NOTES.md
-
-Propósito:
-explicación de la release para usuarios
-
-Estructura:
-
-```markdown
-# {Funcionalidad más importante} - vX.Y.Z
-
-_Fecha de lanzamiento: Mes dd, yyyy_
-
-### Resume
-
-En el resumen, si existe algún comando nuevo, incluir un enlace.  
-Ejemplo: `nuevo comando [**"Gestionar archivos .gitignore"**](comando de ejecución vscode)`
-
-### Highlights
-
-### Improvements
-
-### Bug Fixes
-
-### Migration Notes
-```
-
-Reglas:
-
-- lenguaje claro y fácil de leer
-- enfocado en impacto para el usuario
-- enlazar comandos o funcionalidades si aplica
-- no agregar agradecimientos
-- mantener Markdown limpio
-
----
-
-## 5.3 PR y merge commit
-
-Generar archivo:
-
-`"$OUTPUT_DIR/pr&merge.txt"`
-
-Contenido: Título del PR,Body del PR, Título de merge commit y Body de merge commit
-
-Fuente única:
-
-`"$OUTPUT_DIR/diffs.txt"`
-
----
-
-# 6 Walkthrough
-
-Si existen nuevas funcionalidades o comandos en la versión, actualizar:
-
-`docs/walkthrough_en.md`
-`docs/walkthrough_es.md`
-
----
-
-# Reglas estrictas
-
-1. No inventar cambios
-
-2. Usar solo el diff como fuente única de verdad
-
-3. Generar siempre:
-   - `CHANGELOG.md`
-   - `RELEASE_NOTES.md`
-
-4. Incluir siempre:
-   - `{VERSION}`
-   - `{DATE}`
-
-5. La salida debe ser Markdown válido
