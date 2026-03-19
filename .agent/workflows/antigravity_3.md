@@ -2,27 +2,25 @@
 description: DIFF
 ---
 
-## 3 Generar diff
+## 3 Generaricón del diff
 
-Un diff va a ser único y por tanto esta seccion va a estar en un unico subdirectorio.
+El diff generado en esta ejecución será la fuente única de verdad para todo el análisis posterior.
 
 ## 3.1 Crear directorio de salida
 
-`mkdir -p "$OUTPUT_DIR_DIFF"`
+`mkdir -p "$OUTPUT_DIR"`
 
 ## 3.2 Generar diff
 
-`git diff "$RELEASE_RANGE" > "$OUTPUT_DIR/diffs_$RELEASE_RANGE.txt"`
+`git diff "$RELEASE_RANGE" > "$DIFF_FILE"`
 
-El archivo generado en este paso será la fuente única de verdad para todo el análisis posterior.
-
-Si no se genera correctamente `"$OUTPUT_DIR/diffs_$RELEASE_RANGE.txt"`, detener el flujo inmediatamente.
+Si no se genera correctamente `"$DIFF_FILE"`, detener el flujo inmediatamente.
 
 ---
 
-## 4 Analizar cambios
+## 4 Análisis de los cambios
 
-Archivo: `"$OUTPUT_DIR/diffs.txt"`
+Archivo fuente: `"$DIFF_FILE"`
 
 Identificar:
 
@@ -36,11 +34,11 @@ Identificar:
 Reglas:
 
 - no inventar cambios
-- usar solo el $OUTPUT_DIR/diff.txt
+- usar solo `"$DIFF_FILE"`
 
 Guardar:
 
-Archivo: `$OUTPUT_DIR/Analisis.txt`
-Archivo: `$OUTPUT_DIR/Var_S1.txt` -> Variables actuales
+- Archivo: `"$ANALYSIS_FILE"`
+- Archivo: `"$VAR_S1_FILE"` -> Variables actuales
 
-Preguntar a usuario si el analisis es el correcto y esperar respuesta.
+Preguntar al usuario si el análisis es correcto y esperar respuesta.
