@@ -50,6 +50,7 @@ export async function quickClear(
     // Clear unused/old workspace states
     await context.workspaceState.update('anfavorites.favorites', undefined);
     await context.workspaceState.update('anfavorites.groups', undefined);
+    await context.workspaceState.update('anfavorites.gitignore.filesState', undefined);
 
     // 2. Invalidate search patterns and collision caches
     logger.debug('[cache] Invalidating collision cache...');
