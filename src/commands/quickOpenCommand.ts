@@ -144,6 +144,26 @@ function debounce<T extends (...args: any[]) => any>(
   };
 }
 
+async function openUriInEditor(
+  uri: vscode.Uri,
+  options?: {
+    viewColumn?: vscode.ViewColumn;
+  },
+): Promise<void> {
+  await vscode.commands.executeCommand('vscode.open', uri, {
+    preview: false,
+    preserveFocus: false,
+    viewColumn: options?.viewColumn,
+  });
+}
+
+async function openUriInNewWindow(uri: vscode.Uri): Promise<void> {
+  await openUriInEditor(uri);
+  await vscode.commands.executeCommand(
+    'workbench.action.moveEditorToNewWindow',
+  );
+}
+
 function buildPinnedItems(
   uris: vscode.Uri[],
   favoritesProvider: FavoritesTreeDataProvider,
@@ -1283,7 +1303,7 @@ export function registerQuickOpenCommand(
             log.warn('[QuickOpen] Failed to add MRU item', e);
           }
 
-          log.info('[QuickOpen] Showing text document...');
+          log.info('[QuickOpen] Opening resource...');
 
           const openToSide = vscode.workspace
             .getConfiguration('anfavorites.quickOpen')
@@ -1296,43 +1316,11 @@ export function registerQuickOpenCommand(
             log.info(
               `[QuickOpen] Opening in new window: ${selected.internalUri.fsPath}`,
             );
-            // Reuse existing tab if the file is already open
-            const existingEditor = vscode.window.visibleTextEditors.find(
-              (editor) =>
-                editor.document.uri.toString() ===
-                selected.internalUri.toString(),
-            );
-            if (existingEditor) {
-              await vscode.window.showTextDocument(existingEditor.document, {
-                preview: false,
-                viewColumn: existingEditor.viewColumn,
-              });
-            } else {
-              await vscode.window.showTextDocument(selected.internalUri, {
-                preview: false,
-              });
-              await vscode.commands.executeCommand(
-                'workbench.action.moveEditorToNewWindow',
-              );
-            }
+            await openUriInNewWindow(selected.internalUri);
           } else {
-            // Reuse existing tab if the file is already open
-            const existingEditor = vscode.window.visibleTextEditors.find(
-              (editor) =>
-                editor.document.uri.toString() ===
-                selected.internalUri.toString(),
-            );
-            if (existingEditor) {
-              await vscode.window.showTextDocument(existingEditor.document, {
-                preview: false,
-                viewColumn: existingEditor.viewColumn,
-              });
-            } else {
-              await vscode.window.showTextDocument(selected.internalUri, {
-                preview: false,
-                viewColumn: openToSide ? vscode.ViewColumn.Beside : undefined,
-              });
-            }
+            await openUriInEditor(selected.internalUri, {
+              viewColumn: openToSide ? vscode.ViewColumn.Beside : undefined,
+            });
           }
           log.info('[QuickOpen] ✓ File opened successfully, hiding QuickPick');
           quickPick.hide();
@@ -1355,22 +1343,9 @@ export function registerQuickOpenCommand(
             log.info(`[QuickOpen] Opening to side: ${uri.fsPath}`);
             try {
               mruService.add(uri.fsPath);
-
-              // Reuse existing tab if the file is already open
-              const existingEditor = vscode.window.visibleTextEditors.find(
-                (editor) => editor.document.uri.toString() === uri.toString(),
-              );
-              if (existingEditor) {
-                await vscode.window.showTextDocument(existingEditor.document, {
-                  preview: false,
-                  viewColumn: existingEditor.viewColumn,
-                });
-              } else {
-                await vscode.window.showTextDocument(uri, {
-                  viewColumn: vscode.ViewColumn.Beside,
-                  preview: false,
-                });
-              }
+              await openUriInEditor(uri, {
+                viewColumn: vscode.ViewColumn.Beside,
+              });
 
               quickPick.hide();
             } catch (err) {
@@ -1383,24 +1358,7 @@ export function registerQuickOpenCommand(
             log.info(`[QuickOpen] Opening in new window: ${uri.fsPath}`);
             try {
               mruService.add(uri.fsPath);
-
-              // Reuse existing tab if the file is already open
-              const existingEditor = vscode.window.visibleTextEditors.find(
-                (editor) => editor.document.uri.toString() === uri.toString(),
-              );
-              if (existingEditor) {
-                await vscode.window.showTextDocument(existingEditor.document, {
-                  preview: false,
-                  viewColumn: existingEditor.viewColumn,
-                });
-              } else {
-                await vscode.window.showTextDocument(uri, {
-                  preview: false,
-                });
-                await vscode.commands.executeCommand(
-                  'workbench.action.moveEditorToNewWindow',
-                );
-              }
+              await openUriInNewWindow(uri);
 
               quickPick.hide();
             } catch (err) {
@@ -1413,21 +1371,7 @@ export function registerQuickOpenCommand(
             log.info(`[QuickOpen] Opening in active editor: ${uri.fsPath}`);
             try {
               mruService.add(uri.fsPath);
-
-              // Reuse existing tab if the file is already open
-              const existingEditor = vscode.window.visibleTextEditors.find(
-                (editor) => editor.document.uri.toString() === uri.toString(),
-              );
-              if (existingEditor) {
-                await vscode.window.showTextDocument(existingEditor.document, {
-                  preview: false,
-                  viewColumn: existingEditor.viewColumn,
-                });
-              } else {
-                await vscode.window.showTextDocument(uri, {
-                  preview: false,
-                });
-              }
+              await openUriInEditor(uri);
 
               quickPick.hide();
             } catch (err) {
