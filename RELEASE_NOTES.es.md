@@ -1,4 +1,6 @@
-# Exclusiones Inteligentes y Mantenimiento - v1.2.40
+# Notas de la versión
+
+## v1.2.40 - Exclusiones Inteligentes y Mantenimiento
 
 _Fecha de lanzamiento: 16 de marzo, 2026_
 
