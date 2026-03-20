@@ -328,6 +328,17 @@ async function checkReleaseUpdate(
     'anfavorites.lastSeenVersion',
   );
 
+  if (!lastSeenVersion) {
+    logger.info(
+      `[ReleaseNotice] Primera instalación detectada. Guardando versión actual sin mostrar notificación: ${currentVersion}`,
+    );
+    await context.globalState.update(
+      'anfavorites.lastSeenVersion',
+      currentVersion,
+    );
+    return;
+  }
+
   if (lastSeenVersion !== currentVersion) {
     logger.info(
       `[ReleaseNotice] Nueva versi\u00f3n detectada: ${currentVersion} (anterior: ${lastSeenVersion})`,
@@ -363,5 +374,11 @@ async function checkReleaseUpdate(
         error,
       );
     }
+
+    return;
   }
+
+  logger.debug(
+    `[ReleaseNotice] Sin cambios de versión. current=${currentVersion}, lastSeen=${lastSeenVersion}`,
+  );
 }
