@@ -4,6 +4,7 @@ description: DIFF - Ejecución de comando [1/2]
 
 # Reglas globales del workflow
 
+- la única fuente válida para localizar el contenido requerido es la ruta explícitamente indicada en este workflow; cualquier otra fuente debe ignorarse.
 - Este workflow debe ejecutarse en contexto aislado.
 - Ignorar por completo el historial anterior de la conversación, salvo que este fichero indique explícitamente que forma parte de un flujo continuo.
 - La única fuente de verdad para este workflow es este fichero y los archivos explícitamente referenciados en él.

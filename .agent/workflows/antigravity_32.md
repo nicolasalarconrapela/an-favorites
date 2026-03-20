@@ -20,12 +20,18 @@ Reglas:
 - usar solo `"$DIFF_FILE"`
 - no inventar cambios
 - no inventar variables
+- Está prohibido usar el editor, el IDE, archivos abiertos, pestañas, buffers, árbol del proyecto o cualquier contexto lateral para localizar, inferir o recuperar archivos o variables.
 - no usar historial de conversación ni contexto previo, salvo que este workflow indique continuidad explícita
 - no analizar otros archivos distintos de `"$DIFF_FILE"`
 - no asumir valores, rutas o resultados no definidos explícitamente
-- si un cambio no puede determinarse con claridad desde `"$DIFF_FILE"`, indicarlo como ambiguo y guardar par preguntar al final
+- no buscar archivos, no listar directorios, no reconstruir rutas y no intentar localizar archivos alternativos por cuenta propia
+- no corregir automáticamente rutas, variables o resultados aunque parezcan inconsistentes
+- si un cambio no puede determinarse con claridad desde `"$DIFF_FILE"`, indicarlo como ambiguo o no incluirlo
 - si `"$DIFF_FILE"` no existe, está vacío o no puede leerse, detener el flujo y preguntar al usuario qué desea hacer
 - si `"$ANALYSIS_FILE"` o `"$VAR_S1_FILE"` no están definidos, detener el flujo y preguntar al usuario qué desea hacer
+- si cualquier archivo o variable requerida no existe o no está disponible, está prohibido buscarla manualmente, listar carpetas, deducir su ubicación o intentar corregir el problema automáticamente
+- ante la ausencia de un archivo o variable requerida, la única acción permitida es detener el flujo, informar del problema y preguntar al usuario qué desea hacer
+- antes de leer `"$DIFF_FILE"` para analizarlo o de guardar resultados, pedir confirmación explícita al usuario
 
 Guardar:
 
