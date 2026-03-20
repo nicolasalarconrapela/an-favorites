@@ -76,7 +76,7 @@ Reglas para este paso:
 
 Antes de ejecutar, verificar únicamente si existe exactamente este archivo:
 
-`.agent/workflows/03rrr.sh`
+`.agent/workflows/03.sh`
 
 Si el archivo no existe:
 
@@ -88,7 +88,7 @@ Si el archivo existe:
 
 Ejecutar exactamente este comando y ningún otro:
 
-`bash .agent/workflows/03rrr.sh`
+`bash .agent/workflows/03.sh`
 
 ## 4 Comportamiento esperado ante error
 
