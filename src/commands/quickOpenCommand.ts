@@ -1065,9 +1065,6 @@ export function registerQuickOpenCommand(
               isFileItem(i),
             ) as FileQuickPickItem[];
             if (fileItems.length > 0) {
-              const hasPinned = pinnedItems.length > 0;
-              const indexToSelect = hasPinned ? 0 : 1;
-
               const isAnGravityEnv =
                 vscode.env.appName.includes('angravity') ||
                 vscode.env.uriScheme.includes('angravity');
@@ -1075,11 +1072,19 @@ export function registerQuickOpenCommand(
                 vscode.env.appName.includes('cursor') ||
                 vscode.env.uriScheme.includes('cursor');
 
-              const forceIndexOne = isAnGravityEnv || isCursor;
+              const forceIndexOneFallback = isAnGravityEnv || isCursor;
+              const fallbackItem = forceIndexOneFallback
+                ? fileItems[1] ?? fileItems[0]
+                : fileItems[0];
+              const initialItem =
+                pinnedItems[0] ??
+                recentFavItems[0] ??
+                recentItems[0] ??
+                fallbackItem;
 
-              const finalIndex = forceIndexOne ? 1 : indexToSelect;
-
-              quickPick.activeItems = [fileItems[finalIndex]];
+              if (initialItem) {
+                quickPick.activeItems = [initialItem];
+              }
             }
           }
         } catch (error) {
