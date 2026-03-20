@@ -86,6 +86,8 @@
   "Scanning workspace for .gitignore files...": "Escaneando el workspace en busca de archivos .gitignore...",
   "Workspace Root": "Raíz del Workspace",
   "Subdirectory": "Subdirectorio",
+  "No mostrar hasta la próxima actualización": "No mostrar hasta la próxima actualización",
+  "No volver a mostrar": "No volver a mostrar",
   "Ver Notas de Lanzamiento": "Ver Notas de Lanzamiento",
   "AnFavorites se ha actualizado a la v{0}. ¿Quieres ver las novedades?": "AnFavorites se ha actualizado a la v{0}. ¿Quieres ver las novedades?",
   "Preview Release": "Notas de Lanzamiento",

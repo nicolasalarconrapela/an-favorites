@@ -314,6 +314,9 @@ export function activate(context: vscode.ExtensionContext): void {
 export function deactivate(): void {}
 
 const RELEASE_NOTICE_DELAY_MS = 4000;
+const RELEASE_NOTICE_LAST_SEEN_VERSION_KEY = 'anfavorites.lastSeenVersion';
+const RELEASE_NOTICE_DISABLED_FOREVER_KEY =
+  'anfavorites.releaseNoticeDisabledForever';
 
 /**
  * Comprueba si la versi\u00f3n actual de la extensi\u00f3n es distinta a la \u00faltima que vio el usuario.
@@ -325,7 +328,11 @@ async function checkReleaseUpdate(
 ): Promise<void> {
   const currentVersion = context.extension.packageJSON.version;
   const lastSeenVersion = context.globalState.get<string>(
-    'anfavorites.lastSeenVersion',
+    RELEASE_NOTICE_LAST_SEEN_VERSION_KEY,
+  );
+  const releaseNoticeDisabledForever = context.globalState.get<boolean>(
+    RELEASE_NOTICE_DISABLED_FOREVER_KEY,
+    false,
   );
 
   if (!lastSeenVersion) {
@@ -333,9 +340,22 @@ async function checkReleaseUpdate(
       `[ReleaseNotice] Primera instalación detectada. Guardando versión actual sin mostrar notificación: ${currentVersion}`,
     );
     await context.globalState.update(
-      'anfavorites.lastSeenVersion',
+      RELEASE_NOTICE_LAST_SEEN_VERSION_KEY,
       currentVersion,
     );
+    return;
+  }
+
+  if (releaseNoticeDisabledForever) {
+    logger.info(
+      `[ReleaseNotice] Notificaciones deshabilitadas permanentemente. Guardando versión actual sin mostrar notificación: ${currentVersion}`,
+    );
+    if (lastSeenVersion !== currentVersion) {
+      await context.globalState.update(
+        RELEASE_NOTICE_LAST_SEEN_VERSION_KEY,
+        currentVersion,
+      );
+    }
     return;
   }
 
@@ -345,6 +365,10 @@ async function checkReleaseUpdate(
     );
 
     const btnTitle = t('Ver Notas de Lanzamiento');
+    const btnSkipUntilNextUpdate = t(
+      'No mostrar hasta la próxima actualización',
+    );
+    const btnDisableForever = t('No volver a mostrar');
     const message = t(
       'AnFavorites se ha actualizado a la v{0}. \u00bfQuieres ver las novedades?',
       currentVersion,
@@ -358,14 +382,32 @@ async function checkReleaseUpdate(
       const selection = await vscode.window.showInformationMessage(
         message,
         btnTitle,
+        btnSkipUntilNextUpdate,
+        btnDisableForever,
       );
 
       if (selection === btnTitle) {
         await vscode.commands.executeCommand('anfavorites.openReleaseChanges');
       }
 
+      if (selection === btnDisableForever) {
+        await context.globalState.update(
+          RELEASE_NOTICE_DISABLED_FOREVER_KEY,
+          true,
+        );
+        logger.info(
+          `[ReleaseNotice] El usuario deshabilitó permanentemente las notificaciones de novedades.`,
+        );
+      }
+
+      if (selection === btnSkipUntilNextUpdate) {
+        logger.info(
+          `[ReleaseNotice] El usuario ocultó la notificación hasta la próxima actualización.`,
+        );
+      }
+
       await context.globalState.update(
-        'anfavorites.lastSeenVersion',
+        RELEASE_NOTICE_LAST_SEEN_VERSION_KEY,
         currentVersion,
       );
     } catch (error) {
