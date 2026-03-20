@@ -4,7 +4,7 @@ description: DIFF - Ejecución de comando [1/2]
 
 # Reglas globales del workflow
 
-- Este workflow debe ejecutarse en **contexto aislado**.
+- Este workflow debe ejecutarse en contexto aislado.
 - Ignorar por completo el historial anterior de la conversación, salvo que este fichero indique explícitamente que forma parte de un flujo continuo.
 - La única fuente de verdad para este workflow es este fichero y los archivos explícitamente referenciados en él.
 - No reutilizar contexto, variables, rutas, nombres de archivo, resultados ni interpretaciones de mensajes anteriores.
