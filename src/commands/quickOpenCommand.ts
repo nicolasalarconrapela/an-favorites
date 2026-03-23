@@ -27,6 +27,8 @@ interface SearchCacheEntry {
   uris: vscode.Uri[];
   exceededMaxFiles: boolean;
   workspaceSearchDeferred: boolean;
+  mutationVersion: number;
+  exclusionSignature: string;
 }
 
 class LruCache<K, V> {
@@ -81,6 +83,7 @@ const MIN_WORKSPACE_SEARCH_QUERY_LENGTH = 3;
 const HYBRID_PREFIX_STAGE_LIMIT = 1200;
 const HYBRID_FALLBACK_STAGE_LIMIT = 400;
 const MAX_QUICKOPEN_EXCLUSION_GLOB_LENGTH = 12000;
+const MAX_INCREMENTAL_SEARCH_CHANGES = 100;
 
 function dedupeUrisByFsPath(uris: vscode.Uri[]): vscode.Uri[] {
   const seen = new Set<string>();
@@ -211,6 +214,49 @@ function getSafeQuickOpenExclusionGlob(
     `[QuickOpen] Exclusion glob too large (${glob.length}). Falling back to base search exclusions only.`,
   );
   return undefined;
+}
+
+function buildSearchExclusionSignature(exclusionGlob: string | undefined): string {
+  return exclusionGlob ?? '';
+}
+
+async function applyIncrementalSearchUpdates(params: {
+  cacheEntry: SearchCacheEntry;
+  normalizedSearch: string;
+  changedPaths: string[];
+  maxSearchFiles: number;
+}): Promise<SearchCacheEntry> {
+  const { cacheEntry, normalizedSearch, changedPaths, maxSearchFiles } = params;
+  const changedPathSet = new Set(changedPaths.map((value) => normalizeFsPath(value)));
+  let nextUris = cacheEntry.uris.filter(
+    (uri) => !changedPathSet.has(normalizeFsPath(uri.fsPath)),
+  );
+
+  for (const changedPath of changedPaths) {
+    try {
+      const uri = vscode.Uri.file(changedPath);
+      await vscode.workspace.fs.stat(uri);
+      if (
+        vscode.workspace.getWorkspaceFolder(uri) &&
+        matchesSearchText(uri, normalizedSearch)
+      ) {
+        nextUris.push(uri);
+      }
+    } catch {
+      // File no longer exists or is inaccessible; removing it from the cached set is enough.
+    }
+  }
+
+  nextUris = prioritizeDistinctBasenames(
+    dedupeUrisByFsPath(nextUris),
+    normalizedSearch,
+  ).slice(0, maxSearchFiles);
+
+  return {
+    ...cacheEntry,
+    uris: nextUris,
+    exceededMaxFiles: cacheEntry.exceededMaxFiles || nextUris.length >= maxSearchFiles,
+  };
 }
 
 async function runHybridWorkspaceSearch(params: {
@@ -479,6 +525,8 @@ async function buildSearchItems(params: {
   normalizedSearch: string;
   localCandidateUris: vscode.Uri[];
   searchCache: LruCache<string, SearchCacheEntry>;
+  currentSearchMutationVersion: number;
+  pendingSearchChangedPaths: Set<string>;
   config: QuickOpenConfig;
   favoritesProvider: FavoritesTreeDataProvider;
   logger?: Logger;
@@ -496,6 +544,8 @@ async function buildSearchItems(params: {
     normalizedSearch,
     localCandidateUris,
     searchCache,
+    currentSearchMutationVersion,
+    pendingSearchChangedPaths,
     config,
     favoritesProvider,
     logger,
@@ -510,18 +560,41 @@ async function buildSearchItems(params: {
   let noticeItem: QuickOpenItem | null = null;
   let loadMoreItem: ActionQuickPickItem | null = null;
 
-  if (!cacheEntry) {
-    const mergedExclusions = await getMergedExclusions(
+  const mergedExclusions = await getMergedExclusions(
+    config.searchExclusions,
+    token,
+  );
+  let exclusionGlob = getSafeQuickOpenExclusionGlob(mergedExclusions);
+  if (!exclusionGlob && config.searchExclusions.length > 0) {
+    exclusionGlob = getSafeQuickOpenExclusionGlob(
       config.searchExclusions,
-      token,
+      logger,
     );
-    let exclusionGlob = getSafeQuickOpenExclusionGlob(mergedExclusions);
-    if (!exclusionGlob && config.searchExclusions.length > 0) {
-      exclusionGlob = getSafeQuickOpenExclusionGlob(
-        config.searchExclusions,
-        logger,
-      );
-    }
+  }
+  const exclusionSignature = buildSearchExclusionSignature(exclusionGlob);
+
+  if (
+    cacheEntry &&
+    cacheEntry.exclusionSignature === exclusionSignature &&
+    cacheEntry.mutationVersion !== currentSearchMutationVersion &&
+    pendingSearchChangedPaths.size > 0 &&
+    pendingSearchChangedPaths.size <= MAX_INCREMENTAL_SEARCH_CHANGES
+  ) {
+    cacheEntry = await applyIncrementalSearchUpdates({
+      cacheEntry,
+      normalizedSearch: cacheKey,
+      changedPaths: Array.from(pendingSearchChangedPaths),
+      maxSearchFiles: config.maxSearchFiles,
+    });
+    cacheEntry.mutationVersion = currentSearchMutationVersion;
+    searchCache.set(cacheKey, cacheEntry);
+  }
+
+  if (
+    !cacheEntry ||
+    cacheEntry.exclusionSignature !== exclusionSignature ||
+    cacheEntry.mutationVersion !== currentSearchMutationVersion
+  ) {
     cacheEntry = await runHybridWorkspaceSearch({
       normalizedSearch: cacheKey,
       localCandidateUris,
@@ -530,6 +603,8 @@ async function buildSearchItems(params: {
       searchService,
       token,
     });
+    cacheEntry.mutationVersion = currentSearchMutationVersion;
+    cacheEntry.exclusionSignature = exclusionSignature;
     searchCache.set(cacheKey, cacheEntry);
   }
 
@@ -968,6 +1043,14 @@ export function registerQuickOpenCommand(
       let searchPage = 1;
       let previousSearchValue = '';
       let lastFavoriteSectionItems: QuickOpenItem[] = [];
+      let currentSearchMutationVersion = 0;
+      const pendingSearchChangedPaths = new Set<string>();
+      const markSearchPathsDirty = (paths: string[]): void => {
+        currentSearchMutationVersion += 1;
+        for (const fsPath of paths) {
+          pendingSearchChangedPaths.add(fsPath);
+        }
+      };
 
       const buildItems = async (
         searchQuery: string = quickPick.value,
@@ -1249,6 +1332,8 @@ export function registerQuickOpenCommand(
               normalizedSearch,
               localCandidateUris: allUrisToDisplay,
               searchCache,
+              currentSearchMutationVersion,
+              pendingSearchChangedPaths,
               config,
               favoritesProvider,
               logger: log,
@@ -1261,6 +1346,7 @@ export function registerQuickOpenCommand(
             otherItems = searchResult.items;
             searchNoticeItem = searchResult.noticeItem;
             loadMoreItem = searchResult.loadMoreItem;
+            pendingSearchChangedPaths.clear();
           } else if (isSearching) {
             quickPick.busy = false;
           }
@@ -1498,6 +1584,8 @@ export function registerQuickOpenCommand(
             );
 
             searchCache.clear();
+            currentSearchMutationVersion += 1;
+            pendingSearchChangedPaths.clear();
             await buildItems(quickPick.value);
           }
         }),
@@ -1516,6 +1604,9 @@ export function registerQuickOpenCommand(
 
       disposables.push(
         vscode.workspace.onDidRenameFiles((event) => {
+          markSearchPathsDirty(
+            event.files.flatMap((file) => [file.oldUri.fsPath, file.newUri.fsPath]),
+          );
           logThrottledWithContext(
             'debug',
             'quickopen:fs-renamed',
@@ -1527,6 +1618,7 @@ export function registerQuickOpenCommand(
 
       disposables.push(
         vscode.workspace.onDidDeleteFiles((event) => {
+          markSearchPathsDirty(event.files.map((file) => file.fsPath));
           logThrottledWithContext(
             'debug',
             'quickopen:fs-deleted',
@@ -1538,6 +1630,7 @@ export function registerQuickOpenCommand(
 
       disposables.push(
         vscode.workspace.onDidCreateFiles((event) => {
+          markSearchPathsDirty(event.files.map((file) => file.fsPath));
           logThrottledWithContext(
             'debug',
             'quickopen:fs-created',
