@@ -10,7 +10,7 @@
         "--profile-temp",
         "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "${workspaceFolder}/.vscode-test/Nueva2"
+        "${workspaceFolder}/.vscode-test/Hola"
       ],
       "outFiles": [
         "${workspaceFolder}/out/**/*.js"

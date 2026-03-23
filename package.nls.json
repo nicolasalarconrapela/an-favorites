@@ -49,7 +49,6 @@
   "config.search.maxSearchFiles.description": "Maximum number of files Quick Open can retrieve per search before showing a warning.",
   "config.search.maxSearchResults.description": "Maximum number of results shown when searching for files in Quick Open.",
   "config.quickOpen.searchCacheSize.description": "Maximum size of the LRU cache for Quick Open searches.",
-  "config.quickOpen.showIcons.description": "Show file icons in the Quick Open list. If disabled, only stars and buttons are shown.",
   "config.quickOpen.pathDetailLocation.description": "Controls where the file path detail is shown (especially in multi-root).",
   "config.quickOpen.pathDetailLocation.enum.description": "Shows path information after the file name.",
   "config.quickOpen.pathDetailLocation.enum.detail": "Shows path information below the file name.",
