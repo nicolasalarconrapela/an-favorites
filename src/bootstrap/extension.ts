@@ -314,6 +314,11 @@ export function activate(context: vscode.ExtensionContext): void {
 export function deactivate(): void {}
 
 const RELEASE_NOTICE_DELAY_MS = 4000;
+const RELEASE_NOTICE_LAST_SEEN_VERSION_KEY = 'anfavorites.lastSeenVersion';
+const RELEASE_NOTICE_PREFERENCE_CONFIG_KEY =
+  'releaseNotifications.preference';
+
+type ReleaseNoticePreference = 'show' | 'skip' | 'never';
 
 /**
  * Comprueba si la versi\u00f3n actual de la extensi\u00f3n es distinta a la \u00faltima que vio el usuario.
@@ -325,8 +330,58 @@ async function checkReleaseUpdate(
 ): Promise<void> {
   const currentVersion = context.extension.packageJSON.version;
   const lastSeenVersion = context.globalState.get<string>(
-    'anfavorites.lastSeenVersion',
+    RELEASE_NOTICE_LAST_SEEN_VERSION_KEY,
   );
+  const releaseNoticePreference = vscode.workspace
+    .getConfiguration('anfavorites')
+    .get<ReleaseNoticePreference>(
+      RELEASE_NOTICE_PREFERENCE_CONFIG_KEY,
+      'show',
+    );
+
+  if (!lastSeenVersion) {
+    logger.info(
+      `[ReleaseNotice] Primera instalación detectada. Guardando versión actual sin mostrar notificación: ${currentVersion}`,
+    );
+    await context.globalState.update(
+      RELEASE_NOTICE_LAST_SEEN_VERSION_KEY,
+      currentVersion,
+    );
+    return;
+  }
+
+  if (releaseNoticePreference === 'never') {
+    logger.info(
+      `[ReleaseNotice] Notificaciones deshabilitadas desde configuración. Guardando versión actual sin mostrar notificación: ${currentVersion}`,
+    );
+    if (lastSeenVersion !== currentVersion) {
+      await context.globalState.update(
+        RELEASE_NOTICE_LAST_SEEN_VERSION_KEY,
+        currentVersion,
+      );
+    }
+    return;
+  }
+
+  if (releaseNoticePreference === 'skip') {
+    logger.info(
+      `[ReleaseNotice] Notificación omitida por configuración para la versión ${currentVersion}.`,
+    );
+    if (lastSeenVersion !== currentVersion) {
+      await context.globalState.update(
+        RELEASE_NOTICE_LAST_SEEN_VERSION_KEY,
+        currentVersion,
+      );
+    }
+    await vscode.workspace
+      .getConfiguration('anfavorites')
+      .update(
+        RELEASE_NOTICE_PREFERENCE_CONFIG_KEY,
+        'show',
+        vscode.ConfigurationTarget.Global,
+      );
+    return;
+  }
 
   if (lastSeenVersion !== currentVersion) {
     logger.info(
@@ -334,6 +389,9 @@ async function checkReleaseUpdate(
     );
 
     const btnTitle = t('Ver Notas de Lanzamiento');
+    const btnSkip = t('Skip');
+    const btnLater = t('Más tarde');
+    const btnNever = t('Nunca');
     const message = t(
       'AnFavorites se ha actualizado a la v{0}. \u00bfQuieres ver las novedades?',
       currentVersion,
@@ -347,15 +405,58 @@ async function checkReleaseUpdate(
       const selection = await vscode.window.showInformationMessage(
         message,
         btnTitle,
+        btnSkip,
+        btnLater,
+        btnNever,
       );
 
       if (selection === btnTitle) {
         await vscode.commands.executeCommand('anfavorites.openReleaseChanges');
+        await context.globalState.update(
+          RELEASE_NOTICE_LAST_SEEN_VERSION_KEY,
+          currentVersion,
+        );
+        return;
       }
 
-      await context.globalState.update(
-        'anfavorites.lastSeenVersion',
-        currentVersion,
+      if (selection === btnSkip) {
+        logger.info(
+          `[ReleaseNotice] El usuario omitió la notificación de la versión ${currentVersion}.`,
+        );
+        await context.globalState.update(
+          RELEASE_NOTICE_LAST_SEEN_VERSION_KEY,
+          currentVersion,
+        );
+        return;
+      }
+
+      if (selection === btnNever) {
+        await vscode.workspace
+          .getConfiguration('anfavorites')
+          .update(
+            RELEASE_NOTICE_PREFERENCE_CONFIG_KEY,
+            'never',
+            vscode.ConfigurationTarget.Global,
+          );
+        logger.info(
+          `[ReleaseNotice] El usuario deshabilitó permanentemente las notificaciones de novedades.`,
+        );
+        await context.globalState.update(
+          RELEASE_NOTICE_LAST_SEEN_VERSION_KEY,
+          currentVersion,
+        );
+        return;
+      }
+
+      if (selection === btnLater) {
+        logger.info(
+          `[ReleaseNotice] El usuario pospuso la notificación de la versión ${currentVersion}.`,
+        );
+        return;
+      }
+
+      logger.info(
+        `[ReleaseNotice] Notificación cerrada sin selección para la versión ${currentVersion}.`,
       );
     } catch (error) {
       logger.warn(
@@ -363,5 +464,11 @@ async function checkReleaseUpdate(
         error,
       );
     }
+
+    return;
   }
+
+  logger.debug(
+    `[ReleaseNotice] Sin cambios de versión. current=${currentVersion}, lastSeen=${lastSeenVersion}`,
+  );
 }

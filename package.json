@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.3.6",
+  "version": "1.3.9",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -360,6 +360,25 @@
             ],
             "markdownDescription": "%config.language.description%",
             "scope": "application"
+          }
+        }
+      },
+      {
+        "title": "%config.notifications.title%",
+        "properties": {
+          "anfavorites.releaseNotifications.preference": {
+            "type": "string",
+            "scope": "application",
+            "default": "show",
+            "enum": [
+              "show",
+              "never"
+            ],
+            "enumDescriptions": [
+              "%config.releaseNotifications.preference.enum.show%",
+              "%config.releaseNotifications.preference.enum.never%"
+            ],
+            "description": "%config.releaseNotifications.preference.description%"
           }
         }
       },
