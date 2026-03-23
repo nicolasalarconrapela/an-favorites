@@ -12,3 +12,5 @@ resources/media/*.mp4
 resources/*.mp4
 resources/banner_logo_v1.png
 resources/init.png
+out
+out_tmp
