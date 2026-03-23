@@ -226,21 +226,9 @@ export class ReleaseChangesPanel {
       this._panel.title = tabTitle;
     }
 
-    const backgroundDarkUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(
-        this._extensionUri,
-        'resources',
-        'background_mosaic_dark.png',
-      ),
-    );
-
-    const backgroundLightUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(
-        this._extensionUri,
-        'resources',
-        'background_mosaic_light.png',
-      ),
-    );
+    const urlGithub = 'https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/1.3.x/chore/general/';
+    const backgroundDarkUri = urlGithub + 'resources/background_mosaic_dark.webp';
+    const backgroundLightUri = urlGithub + 'resources/background_mosaic_light.webp';
 
     const releaseDateStr =
       this._lastReleaseDate || new Date().toISOString().split('T')[0];
