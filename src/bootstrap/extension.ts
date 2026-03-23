@@ -149,14 +149,21 @@ export function activate(context: vscode.ExtensionContext): void {
   // Check for new version and show notification
   void checkReleaseUpdate(context, logger);
 
-  // Sync .gitignore patterns into workspace settings in the background
-  void initGitignoreSync(context, logger);
+  // Delay the .gitignore scan so startup-critical work finishes first.
+  let gitignoreInitTimer: NodeJS.Timeout | undefined;
   onGitignoreDiscoveryChange(() => {
     logger?.info?.(
       '[gitignore] Discovery changed -> invalidating collision index',
     );
     invalidateCollisionIndex(logger, 'gitignore changed');
   });
+  gitignoreInitTimer = setTimeout(() => {
+    gitignoreInitTimer = undefined;
+    logger.debug(
+      `[activate] Starting deferred .gitignore sync after ${GITIGNORE_INIT_DELAY_MS}ms`,
+    );
+    void initGitignoreSync(context, logger);
+  }, GITIGNORE_INIT_DELAY_MS);
 
   const watchedPaths = new Map<string, vscode.FileSystemWatcher>();
   const pendingValidations = new Set<string>();
@@ -294,6 +301,9 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(renameListener);
   context.subscriptions.push({
     dispose: () => {
+      if (gitignoreInitTimer) {
+        clearTimeout(gitignoreInitTimer);
+      }
       if (validationTimer) {
         clearTimeout(validationTimer);
       }
@@ -314,6 +324,7 @@ export function activate(context: vscode.ExtensionContext): void {
 export function deactivate(): void {}
 
 const RELEASE_NOTICE_DELAY_MS = 4000;
+const GITIGNORE_INIT_DELAY_MS = 5000;
 const RELEASE_NOTICE_LAST_SEEN_VERSION_KEY = 'anfavorites.lastSeenVersion';
 const RELEASE_NOTICE_PREFERENCE_CONFIG_KEY =
   'releaseNotifications.preference';
