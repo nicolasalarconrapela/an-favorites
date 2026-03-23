@@ -23,7 +23,6 @@ Esta integración mantiene Quick Open enfocado en los archivos relevantes sin ne
 
 ## 🎨 Quick Open
 
-- **Mostrar iconos** (`anfavorites.quickOpen.showIcons`): Activa/desactiva los iconos de archivo en la lista de Quick Open
 - **Ubicación del detalle** (`anfavorites.quickOpen.pathDetailLocation`): Muestra las rutas debajo (**detail**) o al lado (**description**) del nombre del archivo
 - **Cuándo mostrar la ruta** (`anfavorites.quickOpen.showPathWhen`): Mostrar siempre la ruta o solo cuando haya conflictos de nombre
 - **Abrir al lado** (`anfavorites.quickOpen.actions.openToSide`): Abre automáticamente archivos en el editor lateral

@@ -23,7 +23,6 @@ This integration helps keep Quick Open focused on relevant files without manuall
 
 ## 🎨 Quick Open
 
-- **Show icons** (`anfavorites.quickOpen.showIcons`): Toggle file icons in the Quick Open list
 - **Path detail location** (`anfavorites.quickOpen.pathDetailLocation`): Show file paths below (**detail**) or beside (**description**) the file name
 - **Show path when** (`anfavorites.quickOpen.showPathWhen`): Always show paths or only on name conflicts
 - **Open to side** (`anfavorites.quickOpen.actions.openToSide`): Automatically open files in a side editor

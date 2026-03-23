@@ -49,7 +49,6 @@
   "config.search.maxSearchFiles.description": "Umbral máximo de archivos que Quick Open puede recuperar por búsqueda antes de mostrar un aviso.",
   "config.search.maxSearchResults.description": "Límite máximo de resultados mostrados al buscar archivos en Quick Open.",
   "config.quickOpen.searchCacheSize.description": "Tamaño máximo del caché LRU de búsquedas en Quick Open.",
-  "config.quickOpen.showIcons.description": "Mostrar iconos de archivo en la lista de Quick Open. Si está desactivado, solo se mostrarán las estrellas y botones.",
   "config.quickOpen.pathDetailLocation.description": "Controla dónde se muestra la información detallada de la ruta del archivo (especialmente en multi-root).",
   "config.quickOpen.pathDetailLocation.enum.description": "Muestra la información de la ruta seguida del nombre del archivo.",
   "config.quickOpen.pathDetailLocation.enum.detail": "Muestra la información de la ruta debajo del nombre del archivo.",

@@ -181,7 +181,6 @@ function buildPinnedItems(
       showOpenToSideButton: config.showOpenToSideButton,
       showOpenInNewWindowButton: config.showOpenInNewWindowButton,
       isIndividualPinned: isIndividual,
-      showIcons: config.showIcons,
       pathDetailLocation: config.pathDetailLocation,
       showPathWhen: config.showPathWhen,
     });
@@ -205,7 +204,6 @@ function buildRecentFavoriteItems(
       openInNewWindow: config.openInNewWindow,
       showOpenToSideButton: config.showOpenToSideButton,
       showOpenInNewWindowButton: config.showOpenInNewWindowButton,
-      showIcons: config.showIcons,
       pathDetailLocation: config.pathDetailLocation,
       showPathWhen: config.showPathWhen,
     });
@@ -230,7 +228,6 @@ function buildRecentItems(
       openInNewWindow: config.openInNewWindow,
       showOpenToSideButton: config.showOpenToSideButton,
       showOpenInNewWindowButton: config.showOpenInNewWindowButton,
-      showIcons: config.showIcons,
       pathDetailLocation: config.pathDetailLocation,
       showPathWhen: config.showPathWhen,
     });
@@ -322,7 +319,6 @@ async function buildSearchItems(params: {
         openInNewWindow: config.openInNewWindow,
         showOpenToSideButton: config.showOpenToSideButton,
         showOpenInNewWindowButton: config.showOpenInNewWindowButton,
-        showIcons: config.showIcons,
         pathDetailLocation: config.pathDetailLocation,
         showPathWhen: config.showPathWhen,
       });
@@ -335,14 +331,14 @@ async function buildSearchItems(params: {
       );
     })
     .slice(0, displayLimit)
-    .map((item) => {
-      const isFav = favoritesProvider.hasFavorite(item.internalUri);
-      if (item.isFavorite !== isFav) {
-        item.isFavorite = isFav;
-        item.updateIcon(config.showIcons);
-      }
-      return item;
-    });
+      .map((item) => {
+        const isFav = favoritesProvider.hasFavorite(item.internalUri);
+        if (item.isFavorite !== isFav) {
+          item.isFavorite = isFav;
+          item.updateIcon();
+        }
+        return item;
+      });
 
   if (cacheEntry.uris.length > displayLimit) {
     loadMoreItem = {
@@ -386,17 +382,6 @@ async function validateFilesExistence(
     }),
   );
   return results;
-}
-
-function createIconWithFallback(
-  primaryIconId: string,
-  fallbackIconId: string = 'file',
-): vscode.ThemeIcon {
-  try {
-    return new vscode.ThemeIcon(primaryIconId);
-  } catch {
-    return new vscode.ThemeIcon(fallbackIconId);
-  }
 }
 
 function createButtonIcon(
@@ -455,7 +440,6 @@ class FileQuickPickItem implements vscode.QuickPickItem {
   private _openInNewWindow: boolean;
   private _showOpenToSideButton: boolean;
   private _showOpenInNewWindowButton: boolean;
-  public showIcons: boolean;
   private pathDetailLocation: 'description' | 'detail';
   private showPathWhen: 'always' | 'onConflict';
 
@@ -469,7 +453,6 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     showOpenToSideButton?: boolean;
     showOpenInNewWindowButton?: boolean;
     isIndividualPinned?: boolean;
-    showIcons?: boolean;
     pathDetailLocation?: 'description' | 'detail';
     showPathWhen?: 'always' | 'onConflict';
   }) {
@@ -483,7 +466,6 @@ class FileQuickPickItem implements vscode.QuickPickItem {
       showOpenToSideButton = true,
       showOpenInNewWindowButton = true,
       isIndividualPinned = false,
-      showIcons = true,
       pathDetailLocation = 'detail',
       showPathWhen = 'onConflict',
     } = params;
@@ -497,7 +479,6 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     this._showOpenToSideButton = showOpenToSideButton;
     this._showOpenInNewWindowButton = showOpenInNewWindowButton;
     this.isIndividualPinned = isIndividualPinned;
-    this.showIcons = showIcons;
     this.pathDetailLocation = pathDetailLocation;
     this.showPathWhen = showPathWhen;
 
@@ -536,7 +517,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
       this.description = '';
     }
 
-    this.updateIcon(this.showIcons);
+    this.updateIcon();
 
     this.setShowDescription(false);
   }
@@ -558,12 +539,8 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     this.detail = undefined;
   }
 
-  updateIcon(showIcons: boolean = true): void {
-    if (showIcons) {
-      this.iconPath = createIconWithFallback('file', 'symbol-file');
-    } else {
-      this.iconPath = undefined;
-    }
+  updateIcon(): void {
+    this.iconPath = undefined;
 
     const baseName = safeBasenameFromUri(this.internalUri);
     let iconPrefix = this.isFavorite ? '$(star-full) ' : '     ';
@@ -801,7 +778,7 @@ export function registerQuickOpenCommand(
           searchCache.setLimit(config.searchCacheSize);
 
           log.debug(
-            `[QuickOpen] Config: maxRecentFav=${config.maxRecentFavorites}, maxPinned=${config.maxPinned}, maxRecentFiles=${config.maxRecentFiles}, showIcons=${config.showIcons}, exclusions=${config.searchExclusions.length}`,
+            `[QuickOpen] Config: maxRecentFav=${config.maxRecentFavorites}, maxPinned=${config.maxPinned}, maxRecentFiles=${config.maxRecentFiles}, exclusions=${config.searchExclusions.length}`,
           );
 
           log.debug('[QuickOpen] Fetching recent files from MRU...');
@@ -1398,7 +1375,7 @@ export function registerQuickOpenCommand(
             item.isFavorite = false;
             item.isPinned = false;
             item.isIndividualPinned = false;
-            item.updateIcon(item.showIcons);
+            item.updateIcon();
             const currentItems = quickPick.items;
             const index = currentItems.indexOf(item);
             if (index !== -1) {
@@ -1429,7 +1406,7 @@ export function registerQuickOpenCommand(
             }
 
             item.isFavorite = true;
-            item.updateIcon(item.showIcons);
+            item.updateIcon();
 
             const currentItems = quickPick.items;
             const index = currentItems.indexOf(item);
@@ -1457,7 +1434,7 @@ export function registerQuickOpenCommand(
               item.isFavorite = true;
             }
 
-            item.updateIcon(item.showIcons);
+            item.updateIcon();
             log.debug('[QuickOpen] Favorite toggled successfully');
 
             const currentItems = quickPick.items;
