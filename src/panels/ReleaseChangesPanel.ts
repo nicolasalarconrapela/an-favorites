@@ -3,11 +3,23 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { marked } from 'marked';
 
+type ReleaseSection = {
+  version: string;
+  feature: string;
+  body: string;
+};
+
 export class ReleaseChangesPanel {
   public static currentPanel: ReleaseChangesPanel | undefined;
   private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionUri: vscode.Uri;
   private _disposables: vscode.Disposable[] = [];
+
+  private _releaseTitle: string | undefined;
+  private _releaseVersion: string | undefined;
+  private _lastReleaseDate: string | undefined;
+  private _summaryHtml = '';
+  private _detailsHtml = '';
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
     this._panel = panel;
@@ -67,11 +79,6 @@ export class ReleaseChangesPanel {
     }
   }
 
-  private _releaseTitle: string | undefined;
-  private _lastReleaseDate: string | undefined;
-  private _summaryHtml: string = '';
-  private _detailsHtml: string = '';
-
   private _getMarkdownSource(): void {
     try {
       const configLanguage =
@@ -106,48 +113,97 @@ export class ReleaseChangesPanel {
       }
 
       if (fs.existsSync(releaseNotePath)) {
-        let content = fs.readFileSync(releaseNotePath, 'utf8');
-
-        // 1. Extraer título
-        const titleMatch = content.match(/^(?:#|##)\s+(.+)$/m);
-        if (titleMatch) {
-          this._releaseTitle = titleMatch[1].trim();
-          content = content.replace(/^(?:#|##)\s+.+\r?\n?/, '');
-        }
-
-        // 2. Extraer fecha (Busca "Fecha de lanzamiento")
-        const dateMatch = content.match(
-          /_\s*Fecha de lanzamiento:\s*([^_\n\r]+)_/i,
-        );
-        if (dateMatch) {
-          this._lastReleaseDate = dateMatch[1].trim();
-          content = content.replace(
-            /_\s*Fecha de lanzamiento:\s*[^_\n\r]+_\r?\n?/i,
-            '',
-          );
-        }
-
-        // 3. Dividir contenido: Resumen vs Detalles (###)
-        const splitMatch = content.match(/^###\s+/m);
-        if (splitMatch && splitMatch.index !== undefined) {
-          let summaryPart = content.substring(0, splitMatch.index).trim();
-          const detailsPart = content.substring(splitMatch.index).trim();
-
-          // Eliminar específicamente el encabezado "## Resumen" si existe
-          summaryPart = summaryPart.replace(/^##\s+Resumen\r?\n?/i, '');
-
-          this._summaryHtml = marked.parse(summaryPart) as string;
-          this._detailsHtml = marked.parse(detailsPart) as string;
-        } else {
-          // Si no hay división, intentar quitar el encabezado de resumen de todo el contenido
-          const cleanContent = content.replace(/^##\s+Resumen\r?\n?/i, '');
-          this._summaryHtml = marked.parse(cleanContent) as string;
-          this._detailsHtml = '';
-        }
+        const content = fs.readFileSync(releaseNotePath, 'utf8');
+        this._parseReleaseNotes(content);
       }
     } catch (error) {
       this._summaryHtml = `<p>Error: ${error}</p>`;
+      this._detailsHtml = '';
     }
+  }
+
+  private _parseReleaseNotes(content: string): void {
+    this._releaseTitle = undefined;
+    this._releaseVersion = undefined;
+    this._lastReleaseDate = undefined;
+    this._summaryHtml = '';
+    this._detailsHtml = '';
+
+    const sections = this._extractVersionSections(content);
+    if (sections.length > 0) {
+      const latestSection = sections.sort((a, b) =>
+        compareVersions(b.version, a.version),
+      )[0];
+
+      this._releaseVersion = latestSection.version;
+      this._releaseTitle = `v${latestSection.version} - ${latestSection.feature}`;
+      this._lastReleaseDate = this._extractReleaseDate(latestSection.body);
+
+      const cleanBody = this._removeReleaseDateLine(latestSection.body).trim();
+      this._setHtmlFromBody(cleanBody);
+      return;
+    }
+
+    const legacyTitleMatch = content.match(/^(?:#|##)\s+(.+)$/m);
+    let legacyContent = content;
+    if (legacyTitleMatch) {
+      this._releaseTitle = legacyTitleMatch[1].trim();
+      legacyContent = legacyContent.replace(/^(?:#|##)\s+.+\r?\n?/, '');
+    }
+
+    this._lastReleaseDate = this._extractReleaseDate(legacyContent);
+    const cleanLegacyContent = this._removeReleaseDateLine(legacyContent).trim();
+    this._setHtmlFromBody(cleanLegacyContent);
+  }
+
+  private _setHtmlFromBody(content: string): void {
+    const splitMatch = content.match(/^###\s+/m);
+    if (splitMatch && splitMatch.index !== undefined) {
+      const summaryPart = content.substring(0, splitMatch.index).trim();
+      const detailsPart = content.substring(splitMatch.index).trim();
+
+      this._summaryHtml = summaryPart ? (marked.parse(summaryPart) as string) : '';
+      this._detailsHtml = detailsPart ? (marked.parse(detailsPart) as string) : '';
+      return;
+    }
+
+    this._summaryHtml = content ? (marked.parse(content) as string) : '';
+    this._detailsHtml = '';
+  }
+
+  private _extractVersionSections(content: string): ReleaseSection[] {
+    const normalized = content.replace(/^\uFEFF/, '');
+    const sectionRegex = /^##\s+v(\d+(?:\.\d+){1,3})\s*-\s*(.+?)\s*$/gm;
+    const matches = Array.from(normalized.matchAll(sectionRegex));
+
+    return matches.map((match, index) => {
+      const start = match.index ?? 0;
+      const bodyStart = start + match[0].length;
+      const bodyEnd =
+        index + 1 < matches.length
+          ? (matches[index + 1].index ?? normalized.length)
+          : normalized.length;
+
+      return {
+        version: match[1].trim(),
+        feature: match[2].trim(),
+        body: normalized.substring(bodyStart, bodyEnd).trim(),
+      };
+    });
+  }
+
+  private _extractReleaseDate(content: string): string | undefined {
+    const dateMatch = content.match(
+      /_\s*(?:Release date|Fecha de lanzamiento):\s*([^_\n\r]+)_/i,
+    );
+    return dateMatch?.[1].trim();
+  }
+
+  private _removeReleaseDateLine(content: string): string {
+    return content.replace(
+      /_\s*(?:Release date|Fecha de lanzamiento):\s*[^_\n\r]+_\r?\n?/i,
+      '',
+    );
   }
 
   private _getWebviewContent(
@@ -157,26 +213,18 @@ export class ReleaseChangesPanel {
     const nonce = getNonce();
     this._getMarkdownSource();
 
-    // Obtener información de la versión
-    let version = '1.0.0';
+    let packageVersion = '1.0.0';
     try {
       const packagePath = path.join(this._extensionUri.fsPath, 'package.json');
       const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-      version = pkg.version;
-    } catch (e) {}
+      packageVersion = pkg.version;
+    } catch {}
 
-    const tabTitle = `v${version} - AnFavorites`;
+    const displayVersion = this._releaseVersion || packageVersion;
+    const tabTitle = `v${displayVersion} - AnFavorites`;
     if (this._panel) {
       this._panel.title = tabTitle;
     }
-
-    const bannerUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'resources', 'banner_logo.png'),
-    );
-
-    const iconUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'resources', 'icon_no_bg.svg'),
-    );
 
     const backgroundDarkUri = webview.asWebviewUri(
       vscode.Uri.joinPath(
@@ -194,13 +242,9 @@ export class ReleaseChangesPanel {
       ),
     );
 
-    // Formatear la fecha
     const releaseDateStr =
       this._lastReleaseDate || new Date().toISOString().split('T')[0];
     const dateObj = new Date(releaseDateStr);
-
-    // Si la fecha extraída ya es legible (como "29 de marzo, 2027"), usarla directamente.
-    // De lo contrario, intentar formatearla normalmente.
     const formattedDate = !isNaN(dateObj.getTime())
       ? dateObj.toLocaleDateString('en-US', {
           month: 'long',
@@ -226,11 +270,8 @@ export class ReleaseChangesPanel {
     const encodedFullMessage = encodeURIComponent(fullMessage);
     const encodedMarketplaceUrl = encodeURIComponent(marketplaceUrl);
 
-    // X (Twitter)
     const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodedFullMessage}`;
-    // LinkedIn
     const linkedinShareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedMarketplaceUrl}`;
-    // Reddit
     const redditShareUrl = `https://www.reddit.com/submit?url=${encodedMarketplaceUrl}&title=${encodeURIComponent(shareText)}`;
 
     return /* html */ `<!DOCTYPE html>
@@ -325,7 +366,6 @@ export class ReleaseChangesPanel {
                 letter-spacing: -0.2px;
               }
 
-              /* Markdown styles */
               h1, h2, h3, h4, h5, h6 {
                   color: var(--vscode-editor-foreground);
                   font-weight: 600;
@@ -342,14 +382,12 @@ export class ReleaseChangesPanel {
                   font-weight: 500;
                   color: var(--vscode-editor-foreground);
               }
-              h3 { font-size: 1.3em; }
 
+              h3 { font-size: 1.3em; }
               a { color: var(--vscode-textLink-foreground); text-decoration: none; }
               a:hover { text-decoration: underline; color: var(--vscode-textLink-activeForeground); }
-
               ul, ol { padding-left: 20px; margin-top: 0; margin-bottom: 20px; }
               li { margin-top: 0.5em; }
-
               p { margin-top: 0; margin-bottom: 16px; }
 
               code {
@@ -360,8 +398,6 @@ export class ReleaseChangesPanel {
                   border-radius: 4px;
                   font-family: var(--vscode-editor-font-family);
               }
-
-
 
               .cta-container {
                   display: flex;
@@ -442,10 +478,10 @@ export class ReleaseChangesPanel {
           <div class="overlay">
           <div class="content-wrapper">
 
-          <h1 class="release-title">${this._releaseTitle || `${monthName} ${year} (version ${version})`}</h1>
+          <h1 class="release-title">${this._releaseTitle || `${monthName} ${year} (version ${displayVersion})`}</h1>
 
           <div class="release-meta">
-            Fecha de lanzamiento: ${formattedDate}
+            ${vscode.l10n.t('Release date')}: ${formattedDate}
           </div>
 
           <div class="summary-content">
@@ -498,6 +534,23 @@ export class ReleaseChangesPanel {
       </body>
       </html>`;
   }
+}
+
+function compareVersions(left: string, right: string): number {
+  const leftParts = left.split('.').map((part) => Number.parseInt(part, 10));
+  const rightParts = right.split('.').map((part) => Number.parseInt(part, 10));
+  const maxLength = Math.max(leftParts.length, rightParts.length);
+
+  for (let index = 0; index < maxLength; index += 1) {
+    const leftValue = leftParts[index] ?? 0;
+    const rightValue = rightParts[index] ?? 0;
+
+    if (leftValue !== rightValue) {
+      return leftValue - rightValue;
+    }
+  }
+
+  return 0;
 }
 
 function getNonce() {
