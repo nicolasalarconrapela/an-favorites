@@ -15,3 +15,7 @@ resources/init.png
 out
 out_tmp
 *.mp4
+
+.agent/
+.devcontainer/
+*.zip
