@@ -80,6 +80,7 @@ function buildSearchPattern(searchValue: string): string {
 const MIN_WORKSPACE_SEARCH_QUERY_LENGTH = 3;
 const HYBRID_PREFIX_STAGE_LIMIT = 1200;
 const HYBRID_FALLBACK_STAGE_LIMIT = 400;
+const MAX_QUICKOPEN_EXCLUSION_GLOB_LENGTH = 12000;
 
 function dedupeUrisByFsPath(uris: vscode.Uri[]): vscode.Uri[] {
   const seen = new Set<string>();
@@ -113,6 +114,103 @@ function matchesSearchText(uri: vscode.Uri, searchValue: string): boolean {
     .replace(/\\/g, '/')
     .toLowerCase();
   return relative.includes(normalizedSearch);
+}
+
+function rankSearchBasename(uri: vscode.Uri, searchValue: string): number {
+  const normalizedSearch = searchValue.trim().toLowerCase();
+  const basename = safeBasenameFromUri(uri).toLowerCase();
+
+  if (!normalizedSearch) {
+    return 4;
+  }
+
+  if (basename === normalizedSearch) {
+    return 0;
+  }
+
+  if (basename.startsWith(`${normalizedSearch}.`)) {
+    return 1;
+  }
+
+  if (basename.startsWith(`${normalizedSearch}_`)) {
+    return 2;
+  }
+
+  if (basename.startsWith(normalizedSearch)) {
+    return 3;
+  }
+
+  if (basename.includes(normalizedSearch)) {
+    return 4;
+  }
+
+  return 5;
+}
+
+function compareSearchUris(
+  left: vscode.Uri,
+  right: vscode.Uri,
+  searchValue: string,
+): number {
+  const leftRank = rankSearchBasename(left, searchValue);
+  const rightRank = rankSearchBasename(right, searchValue);
+  if (leftRank !== rightRank) {
+    return leftRank - rightRank;
+  }
+
+  const leftName = safeBasenameFromUri(left);
+  const rightName = safeBasenameFromUri(right);
+  const byName = leftName.localeCompare(rightName, undefined, {
+    sensitivity: 'base',
+  });
+  if (byName !== 0) {
+    return byName;
+  }
+
+  return left.fsPath.localeCompare(right.fsPath, undefined, {
+    sensitivity: 'base',
+  });
+}
+
+function prioritizeDistinctBasenames(
+  uris: vscode.Uri[],
+  searchValue: string,
+): vscode.Uri[] {
+  const sorted = [...uris].sort((left, right) =>
+    compareSearchUris(left, right, searchValue),
+  );
+  const firstByBasename = new Map<string, vscode.Uri>();
+  const repeated: vscode.Uri[] = [];
+
+  for (const uri of sorted) {
+    const basenameKey = safeBasenameFromUri(uri).toLowerCase();
+    if (!firstByBasename.has(basenameKey)) {
+      firstByBasename.set(basenameKey, uri);
+      continue;
+    }
+    repeated.push(uri);
+  }
+
+  return [...firstByBasename.values(), ...repeated];
+}
+
+function getSafeQuickOpenExclusionGlob(
+  patterns: string[],
+  logger?: Logger,
+): string | undefined {
+  const glob = buildExclusionGlobFromPatterns(patterns);
+  if (!glob) {
+    return undefined;
+  }
+
+  if (glob.length <= MAX_QUICKOPEN_EXCLUSION_GLOB_LENGTH) {
+    return glob;
+  }
+
+  logger?.warn?.(
+    `[QuickOpen] Exclusion glob too large (${glob.length}). Falling back to base search exclusions only.`,
+  );
+  return undefined;
 }
 
 async function runHybridWorkspaceSearch(params: {
@@ -174,7 +272,10 @@ async function runHybridWorkspaceSearch(params: {
       exceededMaxFiles = true;
     }
 
-    mergedUris = dedupeUrisByFsPath([...mergedUris, ...foundUris]);
+    mergedUris = prioritizeDistinctBasenames(
+      dedupeUrisByFsPath([...mergedUris, ...foundUris]),
+      normalizedSearch,
+    );
   }
 
   return {
@@ -192,6 +293,17 @@ type FavoritesAction = 'clearRecents' | 'loadMore';
 
 interface ActionQuickPickItem extends vscode.QuickPickItem {
   action: FavoritesAction;
+}
+
+function createFavoritesOnlySearchButton(
+  enabled: boolean,
+): vscode.QuickInputButton {
+  return {
+    iconPath: new vscode.ThemeIcon(enabled ? 'star-full' : 'star-empty'),
+    tooltip: enabled
+      ? t('Show only favorites is enabled')
+      : t('Show only favorites'),
+  };
 }
 
 function toSafeFileUri(value: unknown, logger?: Logger): vscode.Uri | null {
@@ -292,7 +404,7 @@ function buildPinnedItems(
       pathDetailLocation: config.pathDetailLocation,
       showPathWhen: config.showPathWhen,
     });
-  });
+  }).sort(compareQuickPickFileItemsAlphabetically);
 }
 
 function buildRecentFavoriteItems(
@@ -315,7 +427,28 @@ function buildRecentFavoriteItems(
       pathDetailLocation: config.pathDetailLocation,
       showPathWhen: config.showPathWhen,
     });
-  });
+  }).sort(compareQuickPickFileItemsAlphabetically);
+}
+
+function compareQuickPickFileItemsAlphabetically(
+  left: FileQuickPickItem,
+  right: FileQuickPickItem,
+): number {
+  const byName = safeBasenameFromUri(left.internalUri).localeCompare(
+    safeBasenameFromUri(right.internalUri),
+    undefined,
+    { sensitivity: 'base' },
+  );
+
+  if (byName !== 0) {
+    return byName;
+  }
+
+  return left.internalUri.fsPath.localeCompare(
+    right.internalUri.fsPath,
+    undefined,
+    { sensitivity: 'base' },
+  );
 }
 
 function buildRecentItems(
@@ -348,9 +481,9 @@ async function buildSearchItems(params: {
   searchCache: LruCache<string, SearchCacheEntry>;
   config: QuickOpenConfig;
   favoritesProvider: FavoritesTreeDataProvider;
+  logger?: Logger;
   recentNormSet: Set<string>;
-  recentFavNormSet: Set<string>;
-  pinnedNormSet: Set<string>;
+  favoriteMatchNormSet: Set<string>;
   searchPage: number;
   searchService: QuickOpenSearchService;
   token: vscode.CancellationToken;
@@ -365,9 +498,9 @@ async function buildSearchItems(params: {
     searchCache,
     config,
     favoritesProvider,
+    logger,
     recentNormSet,
-    recentFavNormSet,
-    pinnedNormSet,
+    favoriteMatchNormSet,
     searchPage,
     searchService,
     token,
@@ -382,7 +515,13 @@ async function buildSearchItems(params: {
       config.searchExclusions,
       token,
     );
-    const exclusionGlob = buildExclusionGlobFromPatterns(mergedExclusions);
+    let exclusionGlob = getSafeQuickOpenExclusionGlob(mergedExclusions);
+    if (!exclusionGlob && config.searchExclusions.length > 0) {
+      exclusionGlob = getSafeQuickOpenExclusionGlob(
+        config.searchExclusions,
+        logger,
+      );
+    }
     cacheEntry = await runHybridWorkspaceSearch({
       normalizedSearch: cacheKey,
       localCandidateUris,
@@ -438,10 +577,7 @@ async function buildSearchItems(params: {
     })
     .filter((item) => {
       const normalizedPath = normalizeFsPath(item.internalUri.fsPath);
-      return (
-        !recentFavNormSet.has(normalizedPath) &&
-        !pinnedNormSet.has(normalizedPath)
-      );
+      return !favoriteMatchNormSet.has(normalizedPath);
     })
     .slice(0, displayLimit)
       .map((item) => {
@@ -773,6 +909,8 @@ export function registerQuickOpenCommand(
       quickPick.matchOnDescription = true;
       quickPick.matchOnDetail = true;
       quickPick.canSelectMany = false;
+      let favoritesOnlySearch = false;
+      quickPick.buttons = [createFavoritesOnlySearchButton(favoritesOnlySearch)];
 
       quickPick.ignoreFocusOut = true;
       log.debug('[QuickOpen] ignoreFocusOut set to true (hardcoded)');
@@ -829,6 +967,7 @@ export function registerQuickOpenCommand(
       let buildTokenSource: vscode.CancellationTokenSource | null = null;
       let searchPage = 1;
       let previousSearchValue = '';
+      let lastFavoriteSectionItems: QuickOpenItem[] = [];
 
       const buildItems = async (
         searchQuery: string = quickPick.value,
@@ -912,9 +1051,26 @@ export function registerQuickOpenCommand(
             recentUris.map((u) => normalizeFsPath(u.fsPath)),
           );
 
-          const pinnedFavUris = favoritesProvider
-            .getPinnedFavorites()
-            .slice(0, config.maxPinned);
+          const allFavoriteUris = favoritesProvider
+            .getFavoritePaths()
+            .map((favoritePath) => vscode.Uri.file(favoritePath))
+            .filter((uri) => {
+              return (
+                uri.scheme === 'file' && !!vscode.workspace.getWorkspaceFolder(uri)
+              );
+            });
+
+          const matchingFavoriteUris = isSearching
+            ? dedupeUrisByFsPath(
+                allFavoriteUris.filter((uri) =>
+                  matchesSearchText(uri, normalizedSearch),
+                ),
+              )
+            : [];
+
+          const pinnedFavUris = isSearching
+            ? matchingFavoriteUris.filter((uri) => favoritesProvider.isPinned(uri))
+            : favoritesProvider.getPinnedFavorites().slice(0, config.maxPinned);
 
           const allPinnedUrisUnsafe = [...pinnedFavUris];
 
@@ -937,34 +1093,39 @@ export function registerQuickOpenCommand(
             allPinnedUris.map((u) => normalizeFsPath(u.fsPath)),
           );
 
-          const recentFavUris = favoritesProvider
-            .getRecentFavorites(20)
-            .filter((uri) => {
-              return (
-                uri.scheme === 'file' &&
-                !!vscode.workspace.getWorkspaceFolder(uri)
-              );
-            })
-            .filter((uri, index, list) => {
-              const norm = normalizeFsPath(uri.fsPath);
-              return (
-                (!isSearching || !pinnedNormSet.has(norm)) &&
-                list.findIndex(
-                  (candidate) =>
-                    normalizeFsPath(candidate.fsPath) === norm,
-                ) === index
-              );
-            })
-            .slice(0, config.maxRecentFavorites);
+          const recentFavUris = isSearching
+            ? matchingFavoriteUris.filter((uri) => {
+                const norm = normalizeFsPath(uri.fsPath);
+                return !pinnedNormSet.has(norm);
+              })
+            : favoritesProvider
+                .getRecentFavorites(20)
+                .filter((uri) => {
+                  return (
+                    uri.scheme === 'file' &&
+                    !!vscode.workspace.getWorkspaceFolder(uri)
+                  );
+                })
+                .filter((uri, index, list) => {
+                  const norm = normalizeFsPath(uri.fsPath);
+                  return (
+                    !pinnedNormSet.has(norm) &&
+                    list.findIndex(
+                      (candidate) =>
+                        normalizeFsPath(candidate.fsPath) === norm,
+                    ) === index
+                  );
+                })
+                .slice(0, config.maxRecentFavorites);
           const recentFavNormSet = new Set(
             recentFavUris.map((u) => normalizeFsPath(u.fsPath)),
           );
 
-          const allUrisToDisplay = [
+          const allUrisToDisplay = dedupeUrisByFsPath([
             ...allPinnedUris,
             ...recentFavUris,
             ...recentUris,
-          ];
+          ]);
           const existenceMap = await validateFilesExistence(
             allUrisToDisplay,
             token,
@@ -984,6 +1145,11 @@ export function registerQuickOpenCommand(
             }
             return exists;
           });
+          const favoriteMatchNormSet = new Set(
+            [...validPinnedUris, ...validRecentFavUris].map((uri) =>
+              normalizeFsPath(uri.fsPath),
+            ),
+          );
 
           const validRecentUris = recentUris.filter((uri) => {
             const exists = existenceMap.get(uri.fsPath) ?? false;
@@ -1013,22 +1179,23 @@ export function registerQuickOpenCommand(
           );
 
           const items: QuickOpenItem[] = [];
+          const favoriteSectionItems: QuickOpenItem[] = [];
 
           if (pinnedItems.length > 0) {
-            items.push(...pinnedItems);
+            favoriteSectionItems.push(...pinnedItems);
           }
 
           const hasFavoriteItems = recentFavItems.length > 0;
-          items.push({
+          favoriteSectionItems.push({
             label: hasFavoriteItems ? t('Favorites') : t('No favorites yet'),
             kind: vscode.QuickPickItemKind.Separator,
           });
-          items.push({ label: ' ', alwaysShow: false });
+          favoriteSectionItems.push({ label: ' ', alwaysShow: false });
 
           if (hasFavoriteItems) {
-            items.push(...recentFavItems);
+            favoriteSectionItems.push(...recentFavItems);
           } else if (!isSearching) {
-            items.push({
+            favoriteSectionItems.push({
               label: t(
                 'Search for a file and add it to favorites using the icon on the right',
               ),
@@ -1036,6 +1203,9 @@ export function registerQuickOpenCommand(
               detail: '',
             });
           }
+
+          items.push(...favoriteSectionItems);
+          lastFavoriteSectionItems = [...favoriteSectionItems];
 
           const hasRecentFiles = recentItems.length > 0;
 
@@ -1066,17 +1236,24 @@ export function registerQuickOpenCommand(
           let searchNoticeItem: QuickOpenItem | null = null;
           let loadMoreItem: ActionQuickPickItem | null = null;
 
-          if (isSearching) {
+          if (isSearching && !favoritesOnlySearch) {
             quickPick.busy = true;
+            const loadingItems: QuickOpenItem[] = [...favoriteSectionItems];
+            loadingItems.push({
+              label: `$(loading~spin) ${t('Searching...')}`,
+              description: '',
+              detail: '',
+            });
+            quickPick.items = loadingItems;
             const searchResult = await buildSearchItems({
               normalizedSearch,
               localCandidateUris: allUrisToDisplay,
               searchCache,
               config,
               favoritesProvider,
+              logger: log,
               recentNormSet,
-              recentFavNormSet,
-              pinnedNormSet,
+              favoriteMatchNormSet,
               searchPage,
               searchService,
               token,
@@ -1084,6 +1261,8 @@ export function registerQuickOpenCommand(
             otherItems = searchResult.items;
             searchNoticeItem = searchResult.noticeItem;
             loadMoreItem = searchResult.loadMoreItem;
+          } else if (isSearching) {
+            quickPick.busy = false;
           }
 
           const allFileItems = [
@@ -1226,6 +1405,32 @@ export function registerQuickOpenCommand(
         );
         await buildItems(quickPick.value);
       }, 150);
+
+      disposables.push(
+        quickPick.onDidTriggerButton(() => {
+          favoritesOnlySearch = !favoritesOnlySearch;
+          buildTokenSource?.cancel();
+          buildTokenSource?.dispose();
+          buildTokenSource = null;
+          quickPick.busy = false;
+          quickPick.buttons = [
+            createFavoritesOnlySearchButton(favoritesOnlySearch),
+          ];
+          if (favoritesOnlySearch) {
+            quickPick.items = [...lastFavoriteSectionItems];
+          }
+          log.info(
+            `[QuickOpen] Favorites-only search toggled: ${favoritesOnlySearch}`,
+          );
+          searchPage = 1;
+          setTimeout(() => {
+            if (isDisposed) {
+              return;
+            }
+            void buildItems(quickPick.value);
+          }, 0);
+        }),
+      );
 
       disposables.push(
         quickPick.onDidChangeValue(async (value) => {
