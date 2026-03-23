@@ -832,6 +832,16 @@ export function registerQuickOpenCommand(
                 !!vscode.workspace.getWorkspaceFolder(uri)
               );
             })
+            .filter((uri, index, list) => {
+              const norm = normalizeFsPath(uri.fsPath);
+              return (
+                (!isSearching || !pinnedNormSet.has(norm)) &&
+                list.findIndex(
+                  (candidate) =>
+                    normalizeFsPath(candidate.fsPath) === norm,
+                ) === index
+              );
+            })
             .slice(0, config.maxRecentFavorites);
           const recentFavNormSet = new Set(
             recentFavUris.map((u) => normalizeFsPath(u.fsPath)),
