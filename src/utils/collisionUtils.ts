@@ -16,6 +16,7 @@ let rebuildTimer: NodeJS.Timeout | null = null;
 let indexWatcher: vscode.FileSystemWatcher | null = null;
 let workspaceFolderListener: vscode.Disposable | null = null;
 let lastExclusionPatterns: string[] = [];
+let indexWarmupInFlight = false;
 
 export function isWindows(): boolean {
   return process.platform === 'win32';
@@ -94,6 +95,7 @@ export function disposeCollisionIndex(): void {
   cachedExclusionKey = null;
   buildPromise = null;
   lastExclusionPatterns = [];
+  indexWarmupInFlight = false;
 }
 
 async function buildWorkspaceIndex(
@@ -135,26 +137,28 @@ async function rebuildWorkspaceIndex(
   exclusionPatterns: string[],
   logger?: any,
 ): Promise<Map<string, Set<string>>> {
+  indexWarmupInFlight = true;
   const key = exclusionKeyFromPatterns(exclusionPatterns);
   cachedExclusionKey = key;
   buildPromise = buildWorkspaceIndex(exclusionPatterns, logger)
     .then((index) => {
       cachedIndex = index;
       buildPromise = null;
+      indexWarmupInFlight = false;
       return index;
     })
     .catch((error) => {
       buildPromise = null;
+      indexWarmupInFlight = false;
       throw error;
     });
   return buildPromise;
 }
 
-async function getWorkspaceIndex(
+function getWorkspaceIndexIfReady(
   exclusionPatterns: string[],
-  token?: vscode.CancellationToken,
   logger?: any,
-): Promise<Map<string, Set<string>>> {
+): Map<string, Set<string>> | null {
   const key = exclusionKeyFromPatterns(exclusionPatterns);
   lastExclusionPatterns = exclusionPatterns;
   ensureWorkspaceIndexWatcher(logger);
@@ -163,14 +167,18 @@ async function getWorkspaceIndex(
     return cachedIndex;
   }
 
-  if (buildPromise && cachedExclusionKey === key) {
-    // The index is already being built; wait for it regardless of the session token.
-    return buildPromise;
+  if (!buildPromise || cachedExclusionKey !== key) {
+    logger?.debug?.(
+      '[collision-index] Index not ready, starting background warmup',
+    );
+    void rebuildWorkspaceIndex(exclusionPatterns, logger).catch((error) => {
+      logger?.warn?.('[collision-index] Background warmup failed', error);
+    });
   }
 
   // Rebuild without the session token — the index must not be cancelled
   // by a per-session cancellation signal.
-  return rebuildWorkspaceIndex(exclusionPatterns, logger);
+  return null;
 }
 
 export function safeBasenameFromUri(uri: vscode.Uri): string {
@@ -187,16 +195,42 @@ export function safeBasenameFromUri(uri: vscode.Uri): string {
   return '(sin nombre)';
 }
 
+function detectVisibleListCollisions(uris: vscode.Uri[]): Set<string> {
+  const collisions = new Set<string>();
+  const counts = new Map<string, number>();
+
+  for (const uri of uris) {
+    const basename = safeBasenameFromUri(uri);
+    counts.set(basename, (counts.get(basename) ?? 0) + 1);
+  }
+
+  for (const [basename, count] of counts.entries()) {
+    if (count > 1) {
+      collisions.add(basename);
+    }
+  }
+
+  return collisions;
+}
+
 export async function detectCollisions(
   uris: vscode.Uri[],
   exclusionPatterns: string[],
   token?: vscode.CancellationToken,
   logger?: any,
 ): Promise<Set<string>> {
-  const collisions = new Set<string>();
+  const collisions = detectVisibleListCollisions(uris);
   if (uris.length === 0) return collisions;
 
-  const index = await getWorkspaceIndex(exclusionPatterns, token, logger);
+  const index = getWorkspaceIndexIfReady(exclusionPatterns, logger);
+  if (!index) {
+    if (!indexWarmupInFlight) {
+      logger?.debug?.(
+        '[collision] Returning visible-list collisions while index warms up',
+      );
+    }
+    return collisions;
+  }
 
   const byBasename = new Map<string, vscode.Uri[]>();
   for (const uri of uris) {
@@ -218,7 +252,6 @@ export async function detectCollisions(
       logger?.debug(
         `[collision] ${basename}: múltiples en display list (${urisWithName.length})`,
       );
-      collisions.add(basename);
       continue;
     }
 
