@@ -43,7 +43,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const maxRotatedFiles = loggingConfig.get<number>('maxRotatedFiles', 5);
 
   const logger = createAppLogger(context, {
-    channelName: t('AnFavorites Logs'),
+    channelName: t('AnFavorites'),
     level: logLevel,
     maxFileSizeBytes: 5 * 1024 * 1024,
     maxRotatedFiles,

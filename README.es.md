@@ -1,4 +1,4 @@
-![Logotipo y banner](https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/banner_logo.png?raw=true)
+![Logotipo y banner](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/1.3.x/chore/general/resources/banner_logo.webp)
 
 <h1 align="left">AnFavorites</h1>
 
@@ -25,7 +25,7 @@
 </a>
 </p>
 
-![img_init](https://github.com/nicolasalarconrapela/an-favorites/blob/main/resources/init.png?raw=true)
+![img_init](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/1.3.x/chore/general/resources/init.webp)
 
 **AnFavorites** es una extensión que optimiza tu flujo de archivos mas utilizar al ofrecer acceso instantáneo y centralizado a lo más importante con un solo atajo de teclado (`Ctrl+Alt+F`).
 

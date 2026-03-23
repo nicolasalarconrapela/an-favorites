@@ -177,8 +177,6 @@ function invalidateCache(showProgress: boolean = false): void {
           await syncGitignoreFilesToSettings();
           _onDiscoveryChange?.();
 
-          // Artificially keep the progress visible for at least 5 seconds as requested
-          await new Promise((resolve) => setTimeout(resolve, 5000));
         },
       );
     } else {

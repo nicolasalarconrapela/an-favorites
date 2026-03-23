@@ -125,10 +125,10 @@ export class LoggingModule implements Logger {
     context: vscode.ExtensionContext,
     options: LoggingModuleOptions = {},
   ): LoggingModule {
-    const channelName = options.channelName ?? 'AnFavorites Logs';
+    const channelName = options.channelName ?? 'AnFavorites';
     const channel = vscode.window.createOutputChannel(channelName);
 
-    channel.append('\uFEFF');
+    // channel.append('\uFEFF');
 
     const baseLogDir = path.join(context.logUri.fsPath, 'anfavorites');
     const logFileNameBase = options.logFileName ?? 'extension';

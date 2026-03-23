@@ -75,7 +75,7 @@
   "Group: {0}": "Grupo: {0}",
   "Open File": "Abrir Archivo",
   "Ungrouped": "Sin Grupo",
-  "AnFavorites Logs": "Logs de AnFavorites",
+  "AnFavorites Logs": "AnFavorites",
   "Moved {0} favorites to group \"{1}\"": "Se movieron {0} favoritos al grupo \"{1}\"",
   "Error moving favorites internally.": "Error al mover favoritos internamente.",
   "Added {0} files to \"{1}\".": "Se añadieron {0} archivos a \"{1}\".",
