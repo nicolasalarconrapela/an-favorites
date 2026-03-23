@@ -11,6 +11,14 @@ En este paso nos encargaremos de la generación de la documentación de la relea
 - Eliminar cualquier lógica externa derivada de la lectura de archivos distintos de los explícitamente permitidos en este paso.
 - Siempre ejecutar el workflow desde cero, sin revisar ni reutilizar flujos anteriores.
 - Si leiste esta linea indicar con 'Lei esta linea'
+- Ejecutar este paso de forma autónoma y determinista.
+- No pedir confirmación al usuario para leer archivos permitidos, revisar contenido permitido, generar documentación ni escribir en los archivos de destino permitidos.
+- Solo se permite preguntar al usuario si existe un bloqueo real que impida continuar de forma determinista.
+- Se considera bloqueo real únicamente alguno de estos casos:
+  - `"$VAR_S1_FILE"` no existe, no puede leerse o no contiene las variables obligatorias
+  - `"$DIFF_FILE"` no existe, no puede leerse o no contiene información utilizable
+  - una ruta explícitamente indicada en este workflow no existe o no es accesible
+  - falta una variable obligatoria que este workflow exige y no puede inferirse ni recuperarse desde `"$VAR_S1_FILE"`
 
 ---
 
@@ -18,10 +26,8 @@ En este paso nos encargaremos de la generación de la documentación de la relea
 
 Está permitido y autorizado leer `"$VAR_S1_FILE"` únicamente para obtener las variables necesarias de este paso.
 
-`"$VAR_S1_FILE"` es una fuente permitida y autorizada en este paso solo para obtener variables.
-`"$DIFF_FILE"` es la fuente única de verdad para el contenido documental.
-
-Si `"$VAR_S1_FILE"` o `"$DIFF_FILE"` no existen, no pueden leerse o no contienen la información necesaria, detener inmediatamente el flujo, informar del problema y preguntar al usuario qué desea hacer.
+`"$VAR_S1_FILE"` es la única fuente válida para variables de este paso.  
+`"$DIFF_FILE"` es la única fuente válida para el contenido documental.
 
 Actuar como mantenedor open-source.
 
@@ -29,7 +35,8 @@ Fuentes permitidas en este paso:
 
 - `"$VAR_S1_FILE"` para obtener variables
 - `"$DIFF_FILE"` para obtener el contenido a documentar
-- los archivos de documentación de destino únicamente para insertar o actualizar el contenido correspondiente
+- los archivos de documentación de destino únicamente para insertar, anteponer o actualizar el contenido correspondiente
+- `resources\walkthrough` únicamente para validar consistencia documental respecto a `"$DIFF_FILE"`
 
 Reglas generales:
 
@@ -43,7 +50,11 @@ Reglas generales:
 - no corregir automáticamente variables, rutas o resultados aunque parezcan inconsistentes
 - mantener redacción profesional, clara y orientada a proyecto open-source
 - toda la documentación generada en este paso debe escribirse directamente en los archivos de documentación del root del proyecto
-- antes de leer `"$VAR_S1_FILE"` o `"$DIFF_FILE"`, y antes de escribir en cualquier archivo de documentación, pedir confirmación explícita al usuario
+- queda explícitamente autorizado leer `"$VAR_S1_FILE"` y `"$DIFF_FILE"` sin solicitar confirmación adicional al usuario
+- queda explícitamente autorizado leer, crear si no existen, y actualizar `CHANGELOG.md`, `RELEASE_NOTES.md` y `RELEASE_NOTES.es.md` sin solicitar confirmación adicional al usuario
+- queda explícitamente autorizado revisar y actualizar archivos dentro de `resources\walkthrough` sin solicitar confirmación adicional al usuario, siempre que los cambios estén directamente justificados por `"$DIFF_FILE"`
+- no preguntar al usuario si desea continuar entre subpasos; ejecutar todo este paso completo de principio a fin
+- al finalizar, mostrar el resultado generado o el resumen de cambios aplicados, pero sin pedir permiso previo para haberlo hecho
 
 ---
 
@@ -59,54 +70,13 @@ Reglas:
 
 - agregar la nueva entrada al principio, justo después del título principal del archivo
 - nunca sustituir ni eliminar el contenido histórico existente
-- si el archivo no existe, informar al usuario y pedir confirmación antes de crearlo
+- si el archivo no existe, crearlo directamente
 - el contenido nuevo debe construirse únicamente a partir de `"$DIFF_FILE"`
 - la versión a documentar debe obtenerse exclusivamente desde `"$VAR_S1_FILE"` mediante `"$VERSION_ACTUAL"`
-- si `"$VERSION_ACTUAL"` no existe, no está definida o no es accesible desde `"$VAR_S1_FILE"`, detener el flujo y preguntar al usuario qué desea hacer
+- si `"$VERSION_ACTUAL"` no existe, no está definida o no es accesible desde `"$VAR_S1_FILE"`, detener el flujo e informar del bloqueo
 - la fecha a usar debe corresponder a la ejecución actual
 
 Formato obligatorio: Keep a Changelog
-
-Estructura obligatoria si existe alguna de las secciones:
-
-```markdown
-# Changelog
-
-## [VERSION] - DATE
-
-### Added
-
-(Nuevas funcionalidades incorporadas)
-
-### Changed
-
-(Cambios de comportamiento, mejoras o ajustes relevantes)
-
-### Fixed
-
-(Correcciones de errores)
-
-### Removed
-
-(Eliminaciones o retiradas de funcionalidades, comandos o comportamientos)
-
-### Security
-
-(Cambios relacionados con seguridad)
-```
-
-Reglas de redacción:
-
-- escribir entradas breves, técnicas y verificables
-- no duplicar el mismo cambio en varias categorías salvo que sea estrictamente necesario
-- si una categoría no tiene cambios reales, omitirla
-- no incluir secciones vacías
-- no inventar tickets, issues, decisiones ni impactos que no estén visibles en el diff
-- si un cambio no es claramente deducible desde `"$DIFF_FILE"`, no incluirlo
-
-Guardar resultado en:
-
-- `CHANGELOG.md`
 
 ---
 
@@ -115,12 +85,6 @@ Guardar resultado en:
 Objetivo: generar documentación orientada al usuario final y a la publicación de la release.
 
 Idiomas: inglés y español
-
-Fuente única de verdad para el contenido: `"$DIFF_FILE"`
-
-Fuente obligatoria para la versión y demás variables necesarias: `"$VAR_S1_FILE"`
-
-Enfoque: actuar como mantenedor open-source explicando de forma clara qué trae la versión, destacando las nuevas funcionalidades.
 
 Archivos de destino en la raíz del proyecto:
 
@@ -131,20 +95,9 @@ Reglas previas:
 
 - agregar la nueva entrada al principio
 - nunca eliminar entradas anteriores
-- si el archivo no existe, informar al usuario y pedir confirmación antes de crearlo
+- si el archivo no existe, crearlo directamente
 - todo el contenido debe salir exclusivamente de `"$DIFF_FILE"`
 - toda variable necesaria debe obtenerse exclusivamente desde `"$VAR_S1_FILE"`
-
-Contenido esperado:
-
-- resumen general de la release
-- nuevas funcionalidades destacadas
-- mejoras relevantes
-- correcciones importantes
-- comandos nuevos enlazables en `RELEASE_NOTES.md`, si existen realmente en el diff
-- cambios que afecten al uso del usuario
-- eliminaciones importantes, si aplican
-- cambios de seguridad visibles en el diff, si aplican
 
 Reglas:
 
@@ -155,85 +108,7 @@ Reglas:
 - si existen comandos nuevos visibles en el diff, incluirlos en una sección específica
 - si no existen comandos nuevos, no crear esa sección
 - si no hay evidencia clara en `"$DIFF_FILE"`, no incluir el cambio
-
-Estructura sugerida para `RELEASE_NOTES.md`:
-
-```markdown
-# Release Notes
-
-## vX.Y.Z - {Most important feature}
-
-_Release date: Month dd, yyyy_
-
-### Highlights
-
-Debe resumir lo más importante de la release.
-Si hubiera algún comando nuevo agregar un link.
-Por ejemplo:
-nuevo comando [Gestionar archivos .gitignore](comando de ejecución vscode)
-
-## Commands
-
-Solo si se han creado nuevos comandos
-
-### New Features
-
-### Improvements
-
-### Fixes
-
-### Breaking Changes
-
-Solo debe aparecer si el diff evidencia un cambio rompedor
-
-### Security
-
-Solo debe aparecer si hay cambios reales de seguridad
-```
-
-Estructura sugerida para `RELEASE_NOTES.es.md`:
-
-```markdown
-# Notas de la versión
-
-## vX.Y.Z - {Funcionalidad más importante}
-
-_Fecha de lanzamiento: dd de Mes de yyyy_
-
-### Novedades destacadas
-
-Debe resumir lo más importante de la release.
-Si hubiera algún comando nuevo agregar un link.
-Por ejemplo:
-nuevo comando [Gestionar archivos .gitignore](comando de ejecución vscode)
-
-## Comandos
-
-Solo si se han creado nuevos comandos
-
-### Nuevas funcionalidades
-
-### Mejoras
-
-### Correcciones
-
-### Cambios rompientes
-
-Solo debe aparecer si el diff evidencia un cambio rompedor
-
-### Seguridad
-
-Solo debe aparecer si hay cambios reales de seguridad
-```
-
-Reglas de secciones:
-
 - omitir secciones vacías
-
-Guardar resultado en:
-
-- `RELEASE_NOTES.md`
-- `RELEASE_NOTES.es.md`
 
 ---
 
@@ -252,21 +127,20 @@ Reglas:
 - revisar únicamente consistencia documental frente a los cambios visibles en el diff
 - no inventar inconsistencias
 - no modificar contenido no relacionado con cambios reales de la release
-- si no hay inconsistencias verificables, indicarlo explícitamente
-- si la ruta no existe o no es accesible, detener el flujo y preguntar al usuario qué desea hacer
+- si la ruta no existe o no es accesible, detener el flujo e informar del bloqueo
 - no buscar rutas alternativas ni listar directorios por cuenta propia
-- antes de revisar estos archivos o proponer modificaciones, pedir confirmación explícita al usuario
+- aplicar directamente las correcciones documentales verificables sin pedir confirmación adicional al usuario
 
 ---
 
 ## 7 Validación con el usuario
 
-Antes de continuar con cualquier paso posterior:
+Al finalizar este paso:
 
 - mostrar al usuario el resultado generado o el resumen de cambios aplicados en:
   - `CHANGELOG.md`
   - `RELEASE_NOTES.md`
   - `RELEASE_NOTES.es.md`
 
-- preguntar si la documentación generada es correcta
-- no continuar con pasos posteriores hasta recibir confirmación explícita del usuario
+- preguntar únicamente si el resultado le parece correcto para pasos posteriores
+- esta validación ocurre solo después de haber ejecutado completamente este workflo
