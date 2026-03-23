@@ -19,3 +19,7 @@ out_tmp
 .agent/
 .devcontainer/
 *.zip
+resources/icon.svg
+resources/banner_logo.png
+resources/banner_logo_v1.png
+resources/init.png
