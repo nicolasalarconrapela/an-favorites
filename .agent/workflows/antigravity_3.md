@@ -78,6 +78,50 @@ Reglas:
 
 Formato obligatorio: Keep a Changelog
 
+Formato obligatorio: Keep a Changelog
+
+Estructura obligatoria si existe alguna de las secciones:
+
+```markdown
+# Changelog
+
+## [VERSION] - DATE
+
+### Added
+
+(Nuevas funcionalidades incorporadas)
+
+### Changed
+
+(Cambios de comportamiento, mejoras o ajustes relevantes)
+
+### Fixed
+
+(Correcciones de errores)
+
+### Removed
+
+(Eliminaciones o retiradas de funcionalidades, comandos o comportamientos)
+
+### Security
+
+(Cambios relacionados con seguridad)
+```
+
+Reglas de redacción:
+
+- escribir entradas breves, técnicas y verificables
+- no duplicar el mismo cambio en varias categorías salvo que sea estrictamente necesario
+- si una categoría no tiene cambios reales, omitirla
+- no incluir secciones vacías
+- no inventar tickets, issues, decisiones ni impactos que no estén visibles en el diff
+- si un cambio no es claramente deducible desde `"$DIFF_FILE"`, no incluirlo
+
+Guardar resultado en:
+
+- `CHANGELOG.md`
+- si el archivo no existe, crearlo directamente
+
 ---
 
 ### 5.2 RELEASE_NOTES.md
@@ -99,6 +143,17 @@ Reglas previas:
 - todo el contenido debe salir exclusivamente de `"$DIFF_FILE"`
 - toda variable necesaria debe obtenerse exclusivamente desde `"$VAR_S1_FILE"`
 
+Contenido esperado:
+
+- resumen general de la release
+- nuevas funcionalidades destacadas
+- mejoras relevantes
+- correcciones importantes
+- comandos nuevos enlazables en `RELEASE_NOTES.md`, si existen realmente en el diff
+- cambios que afecten al uso del usuario
+- eliminaciones importantes, si aplican
+- cambios de seguridad visibles en el diff, si aplican
+
 Reglas:
 
 - no inventar funcionalidades ni beneficios
@@ -108,6 +163,78 @@ Reglas:
 - si existen comandos nuevos visibles en el diff, incluirlos en una sección específica
 - si no existen comandos nuevos, no crear esa sección
 - si no hay evidencia clara en `"$DIFF_FILE"`, no incluir el cambio
+- Estructura sugerida para `RELEASE_NOTES.md`:
+
+```markdown
+# Release Notes
+
+## vX.Y.Z - {Most important feature}
+
+_Release date: Month dd, yyyy_
+
+### Highlights
+
+Debe resumir lo más importante de la release.
+Si hubiera algún comando nuevo agregar un link.
+Por ejemplo:
+nuevo comando [Gestionar archivos .gitignore](comando de ejecución vscode)
+
+## Commands
+
+Solo si se han creado nuevos comandos
+
+### New Features
+
+### Improvements
+
+### Fixes
+
+### Breaking Changes
+
+Solo debe aparecer si el diff evidencia un cambio rompedor
+
+### Security
+
+Solo debe aparecer si hay cambios reales de seguridad
+```
+
+Estructura sugerida para `RELEASE_NOTES.es.md`:
+
+```markdown
+# Notas de la versión
+
+## vX.Y.Z - {Funcionalidad más importante}
+
+_Fecha de lanzamiento: dd de Mes de yyyy_
+
+### Novedades destacadas
+
+Debe resumir lo más importante de la release.
+Si hubiera algún comando nuevo agregar un link.
+Por ejemplo:
+nuevo comando [Gestionar archivos .gitignore](comando de ejecución vscode)
+
+## Comandos
+
+Solo si se han creado nuevos comandos
+
+### Nuevas funcionalidades
+
+### Mejoras
+
+### Correcciones
+
+### Cambios rompientes
+
+Solo debe aparecer si el diff evidencia un cambio rompedor
+
+### Seguridad
+
+Solo debe aparecer si hay cambios reales de seguridad
+```
+
+Reglas de secciones:
+
 - omitir secciones vacías
 
 ---
