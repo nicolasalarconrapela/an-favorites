@@ -26,6 +26,7 @@ type QuickOpenItem = vscode.QuickPickItem;
 interface SearchCacheEntry {
   uris: vscode.Uri[];
   exceededMaxFiles: boolean;
+  workspaceSearchDeferred: boolean;
 }
 
 class LruCache<K, V> {
@@ -74,6 +75,113 @@ function buildSearchPattern(searchValue: string): string {
   const normalized = searchValue.trim();
   if (!normalized) return '**/*';
   return `**/*${normalized}*`;
+}
+
+const MIN_WORKSPACE_SEARCH_QUERY_LENGTH = 3;
+const HYBRID_PREFIX_STAGE_LIMIT = 1200;
+const HYBRID_FALLBACK_STAGE_LIMIT = 400;
+
+function dedupeUrisByFsPath(uris: vscode.Uri[]): vscode.Uri[] {
+  const seen = new Set<string>();
+  const unique: vscode.Uri[] = [];
+
+  for (const uri of uris) {
+    const key = normalizeFsPath(uri.fsPath);
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    unique.push(uri);
+  }
+
+  return unique;
+}
+
+function matchesSearchText(uri: vscode.Uri, searchValue: string): boolean {
+  const normalizedSearch = searchValue.trim().toLowerCase();
+  if (!normalizedSearch) {
+    return true;
+  }
+
+  const basename = safeBasenameFromUri(uri).toLowerCase();
+  if (basename.includes(normalizedSearch)) {
+    return true;
+  }
+
+  const relative = vscode.workspace
+    .asRelativePath(uri, false)
+    .replace(/\\/g, '/')
+    .toLowerCase();
+  return relative.includes(normalizedSearch);
+}
+
+async function runHybridWorkspaceSearch(params: {
+  normalizedSearch: string;
+  localCandidateUris: vscode.Uri[];
+  exclusionGlob: string | undefined;
+  maxSearchFiles: number;
+  searchService: QuickOpenSearchService;
+  token: vscode.CancellationToken;
+}): Promise<SearchCacheEntry> {
+  const {
+    normalizedSearch,
+    localCandidateUris,
+    exclusionGlob,
+    maxSearchFiles,
+    searchService,
+    token,
+  } = params;
+
+  const localMatches = dedupeUrisByFsPath(
+    localCandidateUris.filter((uri) => matchesSearchText(uri, normalizedSearch)),
+  );
+
+  if (normalizedSearch.length < MIN_WORKSPACE_SEARCH_QUERY_LENGTH) {
+    return {
+      uris: localMatches.slice(0, maxSearchFiles),
+      exceededMaxFiles: localMatches.length > maxSearchFiles,
+      workspaceSearchDeferred: true,
+    };
+  }
+
+  const stagePatterns = [
+    `**/${normalizedSearch}*`,
+    buildSearchPattern(normalizedSearch),
+  ];
+  const stageLimits = [
+    Math.min(maxSearchFiles, HYBRID_PREFIX_STAGE_LIMIT),
+    Math.min(maxSearchFiles, HYBRID_FALLBACK_STAGE_LIMIT),
+  ];
+
+  let mergedUris = [...localMatches];
+  let exceededMaxFiles = localMatches.length > maxSearchFiles;
+
+  for (let i = 0; i < stagePatterns.length; i += 1) {
+    if (token.isCancellationRequested || mergedUris.length >= maxSearchFiles) {
+      break;
+    }
+
+    const remaining = Math.max(1, maxSearchFiles - mergedUris.length);
+    const stageLimit = Math.min(stageLimits[i], remaining) + 1;
+    const foundUris = await searchService.findFiles(
+      stagePatterns[i],
+      exclusionGlob,
+      stageLimit,
+      token,
+    );
+
+    if (foundUris.length >= stageLimit) {
+      exceededMaxFiles = true;
+    }
+
+    mergedUris = dedupeUrisByFsPath([...mergedUris, ...foundUris]);
+  }
+
+  return {
+    uris: mergedUris.slice(0, maxSearchFiles),
+    exceededMaxFiles,
+    workspaceSearchDeferred: false,
+  };
 }
 
 function isFileItem(item: vscode.QuickPickItem): item is FileQuickPickItem {
@@ -236,6 +344,7 @@ function buildRecentItems(
 
 async function buildSearchItems(params: {
   normalizedSearch: string;
+  localCandidateUris: vscode.Uri[];
   searchCache: LruCache<string, SearchCacheEntry>;
   config: QuickOpenConfig;
   favoritesProvider: FavoritesTreeDataProvider;
@@ -252,6 +361,7 @@ async function buildSearchItems(params: {
 }> {
   const {
     normalizedSearch,
+    localCandidateUris,
     searchCache,
     config,
     favoritesProvider,
@@ -273,23 +383,26 @@ async function buildSearchItems(params: {
       token,
     );
     const exclusionGlob = buildExclusionGlobFromPatterns(mergedExclusions);
-    const searchPattern = buildSearchPattern(cacheKey);
-    const searchLimit = Math.max(1, config.maxSearchFiles) + 1;
-    const foundUris = await searchService.findFiles(
-      searchPattern,
+    cacheEntry = await runHybridWorkspaceSearch({
+      normalizedSearch: cacheKey,
+      localCandidateUris,
       exclusionGlob,
-      searchLimit,
+      maxSearchFiles: config.maxSearchFiles,
+      searchService,
       token,
-    );
-    const exceededMaxFiles = foundUris.length > config.maxSearchFiles;
-    cacheEntry = {
-      uris: foundUris.slice(0, config.maxSearchFiles),
-      exceededMaxFiles,
-    };
+    });
     searchCache.set(cacheKey, cacheEntry);
   }
 
-  if (cacheEntry.exceededMaxFiles) {
+  if (cacheEntry.workspaceSearchDeferred) {
+    noticeItem = {
+      label: t(
+        'Showing local matches first. Type {0}+ characters to search the workspace.',
+        MIN_WORKSPACE_SEARCH_QUERY_LENGTH,
+      ),
+      detail: '',
+    };
+  } else if (cacheEntry.exceededMaxFiles) {
     noticeItem = {
       label: t(
         'Reached the maximum of {0} files. Refine your search.',
@@ -957,6 +1070,7 @@ export function registerQuickOpenCommand(
             quickPick.busy = true;
             const searchResult = await buildSearchItems({
               normalizedSearch,
+              localCandidateUris: allUrisToDisplay,
               searchCache,
               config,
               favoritesProvider,
