@@ -1541,15 +1541,6 @@ export function registerQuickOpenCommand(
 
       disposables.push(
         favoritesProvider.onDidChangeTreeData(async () => {
-          const isSearching = quickPick.value.trim().length > 0;
-          if (isSearching) {
-            logThrottledWithContext(
-              'debug',
-              'quickopen:favorites-changed',
-              'Favorites changed while searching, skipping rebuild',
-            );
-            return;
-          }
           logThrottledWithContext(
             'debug',
             'quickopen:favorites-changed',
@@ -1598,7 +1589,6 @@ export function registerQuickOpenCommand(
           'File system changed (debounced), rebuilding QuickOpen items',
         );
 
-        searchCache.clear();
         await buildItems(quickPick.value);
       }, 200);
 
