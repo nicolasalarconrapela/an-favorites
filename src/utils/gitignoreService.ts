@@ -244,6 +244,7 @@ interface GitignoreMatcher {
 let _logger: any | null = null;
 let _context: vscode.ExtensionContext | null = null;
 let _cache: GitignoreCache | null = null;
+let _gitignoredPathCache = new Map<string, boolean>();
 let _watcher: vscode.FileSystemWatcher | null = null;
 let _folderListener: vscode.Disposable | null = null;
 let _debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -275,6 +276,7 @@ function invalidateCache(
 ): void {
   _logger?.info?.(`[gitignore] cache invalidated (${reason})`);
   _cache = null;
+  _gitignoredPathCache.clear();
   _mergedExclusionsCache = null;
   if (_debounceTimer) clearTimeout(_debounceTimer);
   _debounceTimer = setTimeout(() => {
@@ -434,6 +436,7 @@ export async function getGitignorePatterns(
   }
 
   const signature = buildPatternsSignature(allPatterns);
+  _gitignoredPathCache.clear();
   _cache = {
     folderKey,
     discovered: [...discovered],
@@ -461,6 +464,17 @@ export async function isGitignored(
   uri: vscode.Uri,
   token?: vscode.CancellationToken,
 ): Promise<boolean> {
+  return isGitignoredFast(uri) ?? (await isGitignoredSlow(uri, token));
+}
+
+function buildGitignoredCacheKey(
+  signature: string,
+  fsPath: string,
+): string {
+  return `${signature}::${fsPath.toLowerCase()}`;
+}
+
+function isGitignoredFast(uri: vscode.Uri): boolean | null {
   if (uri.scheme !== 'file') {
     return false;
   }
@@ -470,15 +484,13 @@ export async function isGitignored(
     return false;
   }
 
-  const cache = _cache ?? {
-    ...(await (async () => {
-      await getGitignorePatterns(token);
-      return _cache;
-    })()),
-  };
+  const cache = _cache;
+  if (!cache) return null;
 
-  if (!cache) {
-    return false;
+  const cacheKey = buildGitignoredCacheKey(cache.signature, uri.fsPath);
+  const memoized = _gitignoredPathCache.get(cacheKey);
+  if (memoized !== undefined) {
+    return memoized;
   }
 
   let ignored = false;
@@ -502,13 +514,45 @@ export async function isGitignored(
     }
   }
 
+  _gitignoredPathCache.set(cacheKey, ignored);
   return ignored;
+}
+
+async function isGitignoredSlow(
+  uri: vscode.Uri,
+  token?: vscode.CancellationToken,
+): Promise<boolean> {
+  if (!_cache) {
+    await getGitignorePatterns(token);
+  }
+
+  return isGitignoredFast(uri) ?? false;
+}
+
+export function filterGitignoredUrisFast(uris: vscode.Uri[]): vscode.Uri[] | null {
+  if (!_cache) {
+    return null;
+  }
+
+  const accepted: vscode.Uri[] = [];
+  for (const uri of uris) {
+    const ignored = isGitignoredFast(uri);
+    if (ignored !== true) {
+      accepted.push(uri);
+    }
+  }
+  return accepted;
 }
 
 export async function filterGitignoredUris(
   uris: vscode.Uri[],
   token?: vscode.CancellationToken,
 ): Promise<vscode.Uri[]> {
+  const fastAccepted = filterGitignoredUrisFast(uris);
+  if (fastAccepted) {
+    return fastAccepted;
+  }
+
   const accepted: vscode.Uri[] = [];
   for (const uri of uris) {
     if (token?.isCancellationRequested) {
@@ -692,6 +736,7 @@ export function disposeGitignoreService(): void {
   _folderListener?.dispose();
   _folderListener = null;
   _cache = null;
+  _gitignoredPathCache.clear();
   _mergedExclusionsCache = null;
   _onDiscoveryChange = undefined;
 }
