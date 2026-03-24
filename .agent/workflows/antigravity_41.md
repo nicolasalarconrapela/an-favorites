@@ -1,5 +1,5 @@
 ---
-description: Crear paquete VSIX de la release
+description: Release - VSIX
 ---
 
 # Creación de VSIX
