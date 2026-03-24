@@ -288,6 +288,33 @@ function deserializeSearchCacheEntries(
   return restored;
 }
 
+function getBestSearchPrefixSeed(
+  normalizedSearch: string,
+  searchCache: LruCache<string, SearchCacheEntry>,
+  exclusionSignature: string,
+  mutationVersion: number,
+): vscode.Uri[] {
+  let bestSeed: vscode.Uri[] = [];
+  let bestLength = 0;
+
+  for (const [query, entry] of searchCache.entries()) {
+    if (
+      query.length >= normalizedSearch.length ||
+      bestLength >= query.length ||
+      !normalizedSearch.startsWith(query) ||
+      entry.exclusionSignature !== exclusionSignature ||
+      entry.mutationVersion !== mutationVersion
+    ) {
+      continue;
+    }
+
+    bestSeed = entry.uris;
+    bestLength = query.length;
+  }
+
+  return bestSeed;
+}
+
 async function applyIncrementalSearchUpdates(params: {
   cacheEntry: SearchCacheEntry;
   normalizedSearch: string;
@@ -330,6 +357,7 @@ async function applyIncrementalSearchUpdates(params: {
 async function runHybridWorkspaceSearch(params: {
   normalizedSearch: string;
   localCandidateUris: vscode.Uri[];
+  seedUris?: vscode.Uri[];
   exclusionGlob: string | undefined;
   maxSearchFiles: number;
   searchService: QuickOpenSearchService;
@@ -338,6 +366,7 @@ async function runHybridWorkspaceSearch(params: {
   const {
     normalizedSearch,
     localCandidateUris,
+    seedUris = [],
     exclusionGlob,
     maxSearchFiles,
     searchService,
@@ -347,11 +376,18 @@ async function runHybridWorkspaceSearch(params: {
   const localMatches = dedupeUrisByFsPath(
     localCandidateUris.filter((uri) => matchesSearchText(uri, normalizedSearch)),
   );
+  const seededMatches = dedupeUrisByFsPath(
+    seedUris.filter((uri) => matchesSearchText(uri, normalizedSearch)),
+  );
 
   if (normalizedSearch.length < MIN_WORKSPACE_SEARCH_QUERY_LENGTH) {
     return {
-      uris: localMatches.slice(0, maxSearchFiles),
-      exceededMaxFiles: localMatches.length > maxSearchFiles,
+      uris: dedupeUrisByFsPath([...localMatches, ...seededMatches]).slice(
+        0,
+        maxSearchFiles,
+      ),
+      exceededMaxFiles:
+        localMatches.length + seededMatches.length > maxSearchFiles,
       workspaceSearchDeferred: true,
       mutationVersion: 0,
       exclusionSignature: '',
@@ -367,8 +403,11 @@ async function runHybridWorkspaceSearch(params: {
     Math.min(maxSearchFiles, HYBRID_FALLBACK_STAGE_LIMIT),
   ];
 
-  let mergedUris = [...localMatches];
-  let exceededMaxFiles = localMatches.length > maxSearchFiles;
+  let mergedUris = prioritizeDistinctBasenames(
+    dedupeUrisByFsPath([...localMatches, ...seededMatches]),
+    normalizedSearch,
+  );
+  let exceededMaxFiles = mergedUris.length > maxSearchFiles;
 
   for (let i = 0; i < stagePatterns.length; i += 1) {
     if (token.isCancellationRequested || mergedUris.length >= maxSearchFiles) {
@@ -659,9 +698,16 @@ async function buildSearchItems(params: {
     cacheEntry.exclusionSignature !== exclusionSignature ||
     cacheEntry.mutationVersion !== currentSearchMutationVersion
   ) {
+    const prefixSeedUris = getBestSearchPrefixSeed(
+      cacheKey,
+      searchCache,
+      exclusionSignature,
+      currentSearchMutationVersion,
+    );
     cacheEntry = await runHybridWorkspaceSearch({
       normalizedSearch: cacheKey,
       localCandidateUris,
+      seedUris: prefixSeedUris,
       exclusionGlob,
       maxSearchFiles: config.maxSearchFiles,
       searchService,
@@ -1286,10 +1332,10 @@ export function registerQuickOpenCommand(
             ...recentFavUris,
             ...recentUris,
           ]);
-          const existenceMap = await validateFilesExistence(
-            allUrisToDisplay,
-            token,
-          );
+          const urisToValidate = isSearching
+            ? dedupeUrisByFsPath([...allPinnedUris, ...recentFavUris])
+            : allUrisToDisplay;
+          const existenceMap = await validateFilesExistence(urisToValidate, token);
           if (isDisposed) return;
 
           const validPinnedUris = allPinnedUris.filter((uri) => {
@@ -1312,6 +1358,10 @@ export function registerQuickOpenCommand(
           );
 
           const validRecentUris = recentUris.filter((uri) => {
+            if (isSearching) {
+              const norm = normalizeFsPath(uri.fsPath);
+              return !pinnedNormSet.has(norm) && !recentFavNormSet.has(norm);
+            }
             const exists = existenceMap.get(uri.fsPath) ?? false;
             if (!exists) {
               mruService.remove(uri.fsPath);
