@@ -103,8 +103,10 @@ const HYBRID_FALLBACK_STAGE_LIMIT = 400;
 const MAX_QUICKOPEN_EXCLUSION_GLOB_LENGTH = 12000;
 const MAX_INCREMENTAL_SEARCH_CHANGES = 100;
 const QUICKOPEN_SEARCH_CACHE_STATE_KEY = 'anfavorites.quickOpen.searchCache';
-const PERSISTED_SEARCH_CACHE_ENTRIES = 10;
-const PERSISTED_SEARCH_CACHE_URIS_PER_QUERY = 200;
+const PERSISTED_SEARCH_CACHE_ENTRIES = 25;
+const PERSISTED_SEARCH_CACHE_URIS_PER_QUERY = 600;
+const MAX_PREFIX_SEED_QUERIES = 3;
+const MAX_PREFIX_SEED_URIS = 1200;
 
 function dedupeUrisByFsPath(uris: vscode.Uri[]): vscode.Uri[] {
   const seen = new Set<string>();
@@ -288,31 +290,28 @@ function deserializeSearchCacheEntries(
   return restored;
 }
 
-function getBestSearchPrefixSeed(
+function getSearchPrefixSeeds(
   normalizedSearch: string,
   searchCache: LruCache<string, SearchCacheEntry>,
   exclusionSignature: string,
   mutationVersion: number,
 ): vscode.Uri[] {
-  let bestSeed: vscode.Uri[] = [];
-  let bestLength = 0;
+  const seedQueries = searchCache
+    .entries()
+    .filter(([query, entry]) => {
+      return (
+        query.length < normalizedSearch.length &&
+        normalizedSearch.startsWith(query) &&
+        entry.exclusionSignature === exclusionSignature &&
+        entry.mutationVersion === mutationVersion
+      );
+    })
+    .sort((left, right) => right[0].length - left[0].length)
+    .slice(0, MAX_PREFIX_SEED_QUERIES);
 
-  for (const [query, entry] of searchCache.entries()) {
-    if (
-      query.length >= normalizedSearch.length ||
-      bestLength >= query.length ||
-      !normalizedSearch.startsWith(query) ||
-      entry.exclusionSignature !== exclusionSignature ||
-      entry.mutationVersion !== mutationVersion
-    ) {
-      continue;
-    }
-
-    bestSeed = entry.uris;
-    bestLength = query.length;
-  }
-
-  return bestSeed;
+  return dedupeUrisByFsPath(
+    seedQueries.flatMap(([_, entry]) => entry.uris),
+  ).slice(0, MAX_PREFIX_SEED_URIS);
 }
 
 async function applyIncrementalSearchUpdates(params: {
@@ -698,7 +697,7 @@ async function buildSearchItems(params: {
     cacheEntry.exclusionSignature !== exclusionSignature ||
     cacheEntry.mutationVersion !== currentSearchMutationVersion
   ) {
-    const prefixSeedUris = getBestSearchPrefixSeed(
+    const prefixSeedUris = getSearchPrefixSeeds(
       cacheKey,
       searchCache,
       exclusionSignature,
