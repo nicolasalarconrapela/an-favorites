@@ -141,6 +141,13 @@ interface GitignoreCache {
   folderKey: string;
   discovered: vscode.Uri[];
   patterns: string[];
+  signature: string;
+}
+
+interface MergedExclusionsCache {
+  userSignature: string;
+  gitignoreSignature: string;
+  merged: string[];
 }
 
 let _logger: any | null = null;
@@ -151,6 +158,7 @@ let _folderListener: vscode.Disposable | null = null;
 let _debounceTimer: ReturnType<typeof setTimeout> | null = null;
 let _onDiscoveryChange: (() => void) | undefined;
 let _gitignoreFilesState: Record<string, boolean> = {};
+let _mergedExclusionsCache: MergedExclusionsCache | null = null;
 
 function currentFolderKey(): string {
   return (vscode.workspace.workspaceFolders ?? [])
@@ -166,8 +174,17 @@ function workspaceScanStateKey(): string {
     : 'hasScannedGitignore:no-workspace';
 }
 
-function invalidateCache(showProgress: boolean = false): void {
+function buildPatternsSignature(patterns: string[]): string {
+  return [...patterns].sort().join('|');
+}
+
+function invalidateCache(
+  showProgress: boolean = false,
+  reason: string = 'unknown',
+): void {
+  _logger?.info?.(`[gitignore] cache invalidated (${reason})`);
   _cache = null;
+  _mergedExclusionsCache = null;
   if (_debounceTimer) clearTimeout(_debounceTimer);
   _debounceTimer = setTimeout(() => {
     _debounceTimer = null;
@@ -200,19 +217,19 @@ function ensureWatcher(logger?: any): void {
   _watcher = vscode.workspace.createFileSystemWatcher('**/.gitignore');
   _watcher.onDidChange(() => {
     logger?.debug?.('[gitignore] .gitignore changed');
-    invalidateCache();
+    invalidateCache(false, 'gitignore-changed');
   });
   _watcher.onDidCreate(() => {
     logger?.debug?.('[gitignore] .gitignore created');
-    invalidateCache();
+    invalidateCache(false, 'gitignore-created');
   });
   _watcher.onDidDelete(() => {
     logger?.debug?.('[gitignore] .gitignore deleted');
-    invalidateCache();
+    invalidateCache(false, 'gitignore-deleted');
   });
 
   _folderListener = vscode.workspace.onDidChangeWorkspaceFolders(() =>
-    invalidateCache(),
+    invalidateCache(false, 'workspace-folders-changed'),
   );
 }
 
@@ -301,7 +318,10 @@ export async function getGitignorePatterns(
 ): Promise<string[]> {
   const folderKey = currentFolderKey();
   if (_cache && _cache.folderKey === folderKey) {
-    return _cache.patterns;
+    _logger?.debug?.(
+      `[gitignore] patterns cache hit. files=${_cache.discovered.length} patterns=${_cache.patterns.length}`,
+    );
+    return [..._cache.patterns];
   }
 
   const settings = getGitignoreFilesSettings();
@@ -321,8 +341,17 @@ export async function getGitignorePatterns(
     }
   }
 
-  _cache = { folderKey, discovered, patterns: allPatterns };
-  return allPatterns;
+  const signature = buildPatternsSignature(allPatterns);
+  _cache = {
+    folderKey,
+    discovered: [...discovered],
+    patterns: [...allPatterns],
+    signature,
+  };
+  _logger?.info?.(
+    `[gitignore] patterns cache refreshed. files=${discovered.length} patterns=${allPatterns.length}`,
+  );
+  return [...allPatterns];
 }
 
 /**
@@ -334,6 +363,20 @@ export async function getMergedExclusions(
   token?: vscode.CancellationToken,
 ): Promise<string[]> {
   const gitignorePatterns = await getGitignorePatterns(token);
+  const userSignature = buildPatternsSignature(userExclusions);
+  const gitignoreSignature = _cache?.signature ?? buildPatternsSignature(gitignorePatterns);
+
+  if (
+    _mergedExclusionsCache &&
+    _mergedExclusionsCache.userSignature === userSignature &&
+    _mergedExclusionsCache.gitignoreSignature === gitignoreSignature
+  ) {
+    _logger?.debug?.(
+      `[gitignore] merged exclusions cache hit. total=${_mergedExclusionsCache.merged.length}`,
+    );
+    return [..._mergedExclusionsCache.merged];
+  }
+
   const seen = new Set<string>(userExclusions);
   const merged = [...userExclusions];
   for (const p of gitignorePatterns) {
@@ -342,6 +385,14 @@ export async function getMergedExclusions(
       merged.push(p);
     }
   }
+  _mergedExclusionsCache = {
+    userSignature,
+    gitignoreSignature,
+    merged: [...merged],
+  };
+  _logger?.info?.(
+    `[gitignore] merged exclusions cache refreshed. user=${userExclusions.length} gitignore=${gitignorePatterns.length} merged=${merged.length}`,
+  );
   return merged;
 }
 
@@ -368,7 +419,7 @@ export async function setGitignoreFileEnabled(
   settings[rel] = enabled;
 
   await updateGitignoreFilesSettings(settings);
-  invalidateCache(); // force re-read on next search
+  invalidateCache(false, 'gitignore-file-enabled-changed'); // force re-read on next search
 }
 
 export async function setGitignoreFilesEnabled(
@@ -382,7 +433,7 @@ export async function setGitignoreFilesEnabled(
   }
 
   await updateGitignoreFilesSettings(settings);
-  invalidateCache();
+  invalidateCache(false, 'gitignore-files-enabled-changed');
 }
 
 export function isGitignoreFileEnabled(uri: vscode.Uri): boolean {
@@ -425,8 +476,12 @@ export async function initGitignoreSync(
     false,
   );
   const isFirstRun = hasWorkspaceFolders && !hasScanned;
+  logger?.info?.(
+    `[gitignore] init requested. folders=${(vscode.workspace.workspaceFolders ?? []).length} firstRun=${isFirstRun}`,
+  );
 
   const doSync = async (): Promise<void> => {
+    logger?.debug?.('[gitignore] initial sync starting');
     // Record that we have completed the initial scan for this workspace
     await context.workspaceState.update(workspaceScanStateKey(), true);
 
@@ -440,9 +495,7 @@ export async function initGitignoreSync(
 
     // Warm up the cache by doing an initial scan/parse
     await getGitignorePatterns();
-    logger?.info?.(
-      '[gitignore] Service started — scanning and watching for .gitignore changes',
-    );
+    logger?.info?.('[gitignore] service started, cache warmed and watcher active');
   };
 
   if (isFirstRun) {
@@ -472,5 +525,6 @@ export function disposeGitignoreService(): void {
   _folderListener?.dispose();
   _folderListener = null;
   _cache = null;
+  _mergedExclusionsCache = null;
   _onDiscoveryChange = undefined;
 }
