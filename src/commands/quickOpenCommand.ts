@@ -17,8 +17,9 @@ import { VscodeQuickOpenConfigService } from '../adapters/vscodeQuickOpenConfigS
 import { VscodeQuickOpenSearchService } from '../adapters/vscodeQuickOpenSearchService';
 import { t } from '../utils/l10n';
 import {
-  getMergedExclusions,
   buildExclusionGlobFromPatterns,
+  filterGitignoredUris,
+  getGitignoreSignature,
 } from '../utils/gitignoreService';
 
 type QuickOpenItem = vscode.QuickPickItem;
@@ -101,6 +102,7 @@ const HYBRID_PREFIX_STAGE_LIMIT = 1200;
 const HYBRID_FALLBACK_STAGE_LIMIT = 400;
 const MAX_QUICKOPEN_EXCLUSION_GLOB_LENGTH = 12000;
 const MAX_INCREMENTAL_SEARCH_CHANGES = 100;
+const QUICKOPEN_GITIGNORE_OVERSCAN_FACTOR = 4;
 const QUICKOPEN_SEARCH_CACHE_STATE_KEY = 'anfavorites.quickOpen.searchCache';
 const PERSISTED_SEARCH_CACHE_ENTRIES = 25;
 const PERSISTED_SEARCH_CACHE_URIS_PER_QUERY = 600;
@@ -238,8 +240,11 @@ function getSafeQuickOpenExclusionGlob(
   return undefined;
 }
 
-function buildSearchExclusionSignature(exclusionGlob: string | undefined): string {
-  return exclusionGlob ?? '';
+function buildSearchExclusionSignature(
+  exclusionGlob: string | undefined,
+  gitignoreSignature: string,
+): string {
+  return `${exclusionGlob ?? ''}::${gitignoreSignature}`;
 }
 
 function serializeSearchCacheEntry(
@@ -372,10 +377,16 @@ async function runHybridWorkspaceSearch(params: {
   } = params;
 
   const localMatches = dedupeUrisByFsPath(
-    localCandidateUris.filter((uri) => matchesSearchText(uri, normalizedSearch)),
+    await filterGitignoredUris(
+      localCandidateUris.filter((uri) => matchesSearchText(uri, normalizedSearch)),
+      token,
+    ),
   );
   const seededMatches = dedupeUrisByFsPath(
-    seedUris.filter((uri) => matchesSearchText(uri, normalizedSearch)),
+    await filterGitignoredUris(
+      seedUris.filter((uri) => matchesSearchText(uri, normalizedSearch)),
+      token,
+    ),
   );
 
   const stagePatterns = [
@@ -400,19 +411,24 @@ async function runHybridWorkspaceSearch(params: {
 
     const remaining = Math.max(1, maxSearchFiles - mergedUris.length);
     const stageLimit = Math.min(stageLimits[i], remaining) + 1;
+    const rawStageLimit = Math.max(
+      stageLimit,
+      Math.min(maxSearchFiles, stageLimit * QUICKOPEN_GITIGNORE_OVERSCAN_FACTOR),
+    );
     const foundUris = await searchService.findFiles(
       stagePatterns[i],
       exclusionGlob,
-      stageLimit,
+      rawStageLimit,
       token,
     );
+    const filteredFoundUris = await filterGitignoredUris(foundUris, token);
 
-    if (foundUris.length >= stageLimit) {
+    if (foundUris.length >= rawStageLimit || filteredFoundUris.length >= stageLimit) {
       exceededMaxFiles = true;
     }
 
     mergedUris = prioritizeDistinctBasenames(
-      dedupeUrisByFsPath([...mergedUris, ...foundUris]),
+      dedupeUrisByFsPath([...mergedUris, ...filteredFoundUris]),
       normalizedSearch,
     );
   }
@@ -649,18 +665,15 @@ async function buildSearchItems(params: {
     `[QuickOpen] search cache ${cacheEntry ? 'hit' : 'miss'} for "${cacheKey}"`,
   );
 
-  const mergedExclusions = await getMergedExclusions(
+  const exclusionGlob = getSafeQuickOpenExclusionGlob(
     config.searchExclusions,
-    token,
+    logger,
   );
-  let exclusionGlob = getSafeQuickOpenExclusionGlob(mergedExclusions);
-  if (!exclusionGlob && config.searchExclusions.length > 0) {
-    exclusionGlob = getSafeQuickOpenExclusionGlob(
-      config.searchExclusions,
-      logger,
-    );
-  }
-  const exclusionSignature = buildSearchExclusionSignature(exclusionGlob);
+  const gitignoreSignature = await getGitignoreSignature(token);
+  const exclusionSignature = buildSearchExclusionSignature(
+    exclusionGlob,
+    gitignoreSignature,
+  );
   const maxDisplayResults = Math.max(
     1,
     Math.min(config.maxSearchResults, config.maxSearchFiles),

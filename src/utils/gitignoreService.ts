@@ -1,3 +1,5 @@
+import ignore, { type Ignore } from 'ignore';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { t } from '../utils/l10n';
 
@@ -133,6 +135,89 @@ async function parseGitignoreFile(
   }
 }
 
+async function readGitignoreLines(
+  uri: vscode.Uri,
+  token?: vscode.CancellationToken,
+): Promise<string[]> {
+  if (token?.isCancellationRequested) return [];
+
+  try {
+    const bytes = await vscode.workspace.fs.readFile(uri);
+    return Buffer.from(bytes)
+      .toString('utf8')
+      .split(/\r?\n/);
+  } catch {
+    return [];
+  }
+}
+
+function workspaceRelativePathParts(uri: vscode.Uri): {
+  folder: vscode.WorkspaceFolder | null;
+  relativePath: string;
+} {
+  const folder = vscode.workspace.getWorkspaceFolder(uri) ?? null;
+  if (!folder) {
+    return { folder: null, relativePath: '' };
+  }
+
+  return {
+    folder,
+    relativePath: path
+      .relative(folder.uri.fsPath, uri.fsPath)
+      .replace(/\\/g, '/'),
+  };
+}
+
+function isPathUnderBase(relativePath: string, baseDir: string): boolean {
+  if (!baseDir) {
+    return true;
+  }
+
+  return relativePath === baseDir || relativePath.startsWith(`${baseDir}/`);
+}
+
+function toMatcherRelativePath(relativePath: string, baseDir: string): string {
+  if (!baseDir) {
+    return relativePath;
+  }
+
+  if (relativePath === baseDir) {
+    return '';
+  }
+
+  return relativePath.startsWith(`${baseDir}/`)
+    ? relativePath.slice(baseDir.length + 1)
+    : relativePath;
+}
+
+async function buildGitignoreMatchers(
+  discovered: vscode.Uri[],
+  settings: Record<string, boolean>,
+  token?: vscode.CancellationToken,
+): Promise<GitignoreMatcher[]> {
+  const matchers: GitignoreMatcher[] = [];
+
+  for (const uri of discovered) {
+    if (token?.isCancellationRequested) break;
+
+    const rel = gitignoreRelPath(uri);
+    if (settings[rel] === false) {
+      continue;
+    }
+
+    const { relativePath } = workspaceRelativePathParts(uri);
+    const baseDir = relativePath.includes('/')
+      ? relativePath.substring(0, relativePath.lastIndexOf('/'))
+      : '';
+    matchers.push({
+      baseDir,
+      matcher: ignore().add(await readGitignoreLines(uri, token)),
+    });
+  }
+
+  return matchers.sort((left, right) => left.baseDir.length - right.baseDir.length);
+}
+
 // ---------------------------------------------------------------------------
 // Cache
 // ---------------------------------------------------------------------------
@@ -142,12 +227,18 @@ interface GitignoreCache {
   discovered: vscode.Uri[];
   patterns: string[];
   signature: string;
+  matchers: GitignoreMatcher[];
 }
 
 interface MergedExclusionsCache {
   userSignature: string;
   gitignoreSignature: string;
   merged: string[];
+}
+
+interface GitignoreMatcher {
+  baseDir: string;
+  matcher: Ignore;
 }
 
 let _logger: any | null = null;
@@ -327,6 +418,7 @@ export async function getGitignorePatterns(
   const settings = getGitignoreFilesSettings();
   const discovered = await discoverGitignoreFiles(token);
   const allPatterns: string[] = [];
+  const matchers = await buildGitignoreMatchers(discovered, settings, token);
 
   for (const uri of discovered) {
     if (token?.isCancellationRequested) break;
@@ -347,11 +439,86 @@ export async function getGitignorePatterns(
     discovered: [...discovered],
     patterns: [...allPatterns],
     signature,
+    matchers,
   };
   _logger?.info?.(
     `[gitignore] patterns cache refreshed. files=${discovered.length} patterns=${allPatterns.length}`,
   );
   return [...allPatterns];
+}
+
+export async function getGitignoreSignature(
+  token?: vscode.CancellationToken,
+): Promise<string> {
+  if (!_cache) {
+    await getGitignorePatterns(token);
+  }
+
+  return _cache?.signature ?? '';
+}
+
+export async function isGitignored(
+  uri: vscode.Uri,
+  token?: vscode.CancellationToken,
+): Promise<boolean> {
+  if (uri.scheme !== 'file') {
+    return false;
+  }
+
+  const { folder, relativePath } = workspaceRelativePathParts(uri);
+  if (!folder || !relativePath) {
+    return false;
+  }
+
+  const cache = _cache ?? {
+    ...(await (async () => {
+      await getGitignorePatterns(token);
+      return _cache;
+    })()),
+  };
+
+  if (!cache) {
+    return false;
+  }
+
+  let ignored = false;
+  for (const entry of cache.matchers) {
+    if (!isPathUnderBase(relativePath, entry.baseDir)) {
+      continue;
+    }
+
+    const candidatePath = toMatcherRelativePath(relativePath, entry.baseDir);
+    if (!candidatePath) {
+      continue;
+    }
+
+    const result = entry.matcher.test(candidatePath);
+    if (result.unignored) {
+      ignored = false;
+      continue;
+    }
+    if (result.ignored) {
+      ignored = true;
+    }
+  }
+
+  return ignored;
+}
+
+export async function filterGitignoredUris(
+  uris: vscode.Uri[],
+  token?: vscode.CancellationToken,
+): Promise<vscode.Uri[]> {
+  const accepted: vscode.Uri[] = [];
+  for (const uri of uris) {
+    if (token?.isCancellationRequested) {
+      break;
+    }
+    if (!(await isGitignored(uri, token))) {
+      accepted.push(uri);
+    }
+  }
+  return accepted;
 }
 
 /**
