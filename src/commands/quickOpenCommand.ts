@@ -413,17 +413,6 @@ interface ActionQuickPickItem extends vscode.QuickPickItem {
   action: FavoritesAction;
 }
 
-function createFavoritesOnlySearchButton(
-  enabled: boolean,
-): vscode.QuickInputButton {
-  return {
-    iconPath: new vscode.ThemeIcon(enabled ? 'star-full' : 'star-empty'),
-    tooltip: enabled
-      ? t('Show only favorites is enabled')
-      : t('Show only favorites'),
-  };
-}
-
 function toSafeFileUri(value: unknown, logger?: Logger): vscode.Uri | null {
   if (typeof value !== 'string') {
     logger?.warn?.('MRU entry is not a string', { value });
@@ -1060,8 +1049,6 @@ export function registerQuickOpenCommand(
       quickPick.matchOnDescription = true;
       quickPick.matchOnDetail = true;
       quickPick.canSelectMany = false;
-      let favoritesOnlySearch = false;
-      quickPick.buttons = [createFavoritesOnlySearchButton(favoritesOnlySearch)];
 
       quickPick.ignoreFocusOut = true;
       log.debug('[QuickOpen] ignoreFocusOut set to true (hardcoded)');
@@ -1123,7 +1110,6 @@ export function registerQuickOpenCommand(
       let buildTokenSource: vscode.CancellationTokenSource | null = null;
       let searchPage = 1;
       let previousSearchValue = '';
-      let lastFavoriteSectionItems: QuickOpenItem[] = [];
       let currentSearchMutationVersion = 0;
       const pendingSearchChangedPaths = new Set<string>();
       const persistSearchCache = (): void => {
@@ -1379,7 +1365,6 @@ export function registerQuickOpenCommand(
           }
 
           items.push(...favoriteSectionItems);
-          lastFavoriteSectionItems = [...favoriteSectionItems];
 
           const hasRecentFiles = recentItems.length > 0;
 
@@ -1410,7 +1395,7 @@ export function registerQuickOpenCommand(
           let searchNoticeItem: QuickOpenItem | null = null;
           let loadMoreItem: ActionQuickPickItem | null = null;
 
-          if (isSearching && !favoritesOnlySearch) {
+          if (isSearching) {
             quickPick.busy = true;
             const loadingItems: QuickOpenItem[] = [...favoriteSectionItems];
             loadingItems.push({
@@ -1439,8 +1424,6 @@ export function registerQuickOpenCommand(
             searchNoticeItem = searchResult.noticeItem;
             loadMoreItem = searchResult.loadMoreItem;
             pendingSearchChangedPaths.clear();
-          } else if (isSearching) {
-            quickPick.busy = false;
           }
 
           const allFileItems = [
@@ -1583,32 +1566,6 @@ export function registerQuickOpenCommand(
         );
         await buildItems(quickPick.value);
       }, 150);
-
-      disposables.push(
-        quickPick.onDidTriggerButton(() => {
-          favoritesOnlySearch = !favoritesOnlySearch;
-          buildTokenSource?.cancel();
-          buildTokenSource?.dispose();
-          buildTokenSource = null;
-          quickPick.busy = false;
-          quickPick.buttons = [
-            createFavoritesOnlySearchButton(favoritesOnlySearch),
-          ];
-          if (favoritesOnlySearch) {
-            quickPick.items = [...lastFavoriteSectionItems];
-          }
-          log.info(
-            `[QuickOpen] Favorites-only search toggled: ${favoritesOnlySearch}`,
-          );
-          searchPage = 1;
-          setTimeout(() => {
-            if (isDisposed) {
-              return;
-            }
-            void buildItems(quickPick.value);
-          }, 0);
-        }),
-      );
 
       disposables.push(
         quickPick.onDidChangeValue(async (value) => {
