@@ -31,6 +31,13 @@ interface SearchCacheEntry {
   exclusionSignature: string;
 }
 
+interface PersistedSearchCacheEntry {
+  uris: string[];
+  exceededMaxFiles: boolean;
+  workspaceSearchDeferred: boolean;
+  exclusionSignature: string;
+}
+
 class LruCache<K, V> {
   private readonly map = new Map<K, V>();
   private maxEntries: number;
@@ -64,6 +71,17 @@ class LruCache<K, V> {
     this.evictIfNeeded();
   }
 
+  entries(): Array<[K, V]> {
+    return Array.from(this.map.entries()).reverse();
+  }
+
+  load(entries: Array<[K, V]>): void {
+    this.map.clear();
+    for (const [key, value] of entries.slice(0, this.maxEntries).reverse()) {
+      this.map.set(key, value);
+    }
+  }
+
   private evictIfNeeded(): void {
     while (this.map.size > this.maxEntries) {
       const oldestKey = this.map.keys().next().value;
@@ -84,6 +102,9 @@ const HYBRID_PREFIX_STAGE_LIMIT = 1200;
 const HYBRID_FALLBACK_STAGE_LIMIT = 400;
 const MAX_QUICKOPEN_EXCLUSION_GLOB_LENGTH = 12000;
 const MAX_INCREMENTAL_SEARCH_CHANGES = 100;
+const QUICKOPEN_SEARCH_CACHE_STATE_KEY = 'anfavorites.quickOpen.searchCache';
+const PERSISTED_SEARCH_CACHE_ENTRIES = 10;
+const PERSISTED_SEARCH_CACHE_URIS_PER_QUERY = 200;
 
 function dedupeUrisByFsPath(uris: vscode.Uri[]): vscode.Uri[] {
   const seen = new Set<string>();
@@ -220,6 +241,53 @@ function buildSearchExclusionSignature(exclusionGlob: string | undefined): strin
   return exclusionGlob ?? '';
 }
 
+function serializeSearchCacheEntry(
+  entry: SearchCacheEntry,
+): PersistedSearchCacheEntry {
+  return {
+    uris: entry.uris
+      .slice(0, PERSISTED_SEARCH_CACHE_URIS_PER_QUERY)
+      .map((uri) => uri.fsPath),
+    exceededMaxFiles: entry.exceededMaxFiles,
+    workspaceSearchDeferred: entry.workspaceSearchDeferred,
+    exclusionSignature: entry.exclusionSignature,
+  };
+}
+
+function deserializeSearchCacheEntries(
+  raw: unknown,
+): Array<[string, SearchCacheEntry]> {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  const restored: Array<[string, SearchCacheEntry]> = [];
+  for (const item of raw) {
+    if (!Array.isArray(item) || item.length !== 2 || typeof item[0] !== 'string') {
+      continue;
+    }
+    const value = item[1] as Partial<PersistedSearchCacheEntry>;
+    if (!value || !Array.isArray(value.uris)) {
+      continue;
+    }
+    restored.push([
+      item[0],
+      {
+        uris: value.uris.map((fsPath) => vscode.Uri.file(fsPath)),
+        exceededMaxFiles: value.exceededMaxFiles === true,
+        workspaceSearchDeferred: value.workspaceSearchDeferred === true,
+        mutationVersion: 0,
+        exclusionSignature:
+          typeof value.exclusionSignature === 'string'
+            ? value.exclusionSignature
+            : '',
+      },
+    ]);
+  }
+
+  return restored;
+}
+
 async function applyIncrementalSearchUpdates(params: {
   cacheEntry: SearchCacheEntry;
   normalizedSearch: string;
@@ -285,6 +353,8 @@ async function runHybridWorkspaceSearch(params: {
       uris: localMatches.slice(0, maxSearchFiles),
       exceededMaxFiles: localMatches.length > maxSearchFiles,
       workspaceSearchDeferred: true,
+      mutationVersion: 0,
+      exclusionSignature: '',
     };
   }
 
@@ -328,6 +398,8 @@ async function runHybridWorkspaceSearch(params: {
     uris: mergedUris.slice(0, maxSearchFiles),
     exceededMaxFiles,
     workspaceSearchDeferred: false,
+    mutationVersion: 0,
+    exclusionSignature: '',
   };
 }
 
@@ -525,6 +597,7 @@ async function buildSearchItems(params: {
   normalizedSearch: string;
   localCandidateUris: vscode.Uri[];
   searchCache: LruCache<string, SearchCacheEntry>;
+  persistSearchCache: () => void;
   currentSearchMutationVersion: number;
   pendingSearchChangedPaths: Set<string>;
   config: QuickOpenConfig;
@@ -544,6 +617,7 @@ async function buildSearchItems(params: {
     normalizedSearch,
     localCandidateUris,
     searchCache,
+    persistSearchCache,
     currentSearchMutationVersion,
     pendingSearchChangedPaths,
     config,
@@ -588,6 +662,7 @@ async function buildSearchItems(params: {
     });
     cacheEntry.mutationVersion = currentSearchMutationVersion;
     searchCache.set(cacheKey, cacheEntry);
+    persistSearchCache();
   }
 
   if (
@@ -606,6 +681,7 @@ async function buildSearchItems(params: {
     cacheEntry.mutationVersion = currentSearchMutationVersion;
     cacheEntry.exclusionSignature = exclusionSignature;
     searchCache.set(cacheKey, cacheEntry);
+    persistSearchCache();
   }
 
   if (cacheEntry.workspaceSearchDeferred) {
@@ -1039,12 +1115,27 @@ export function registerQuickOpenCommand(
       log.debug('[QuickOpen] onDidHide listener registered');
 
       const searchCache = new LruCache<string, SearchCacheEntry>(30);
+      searchCache.load(
+        deserializeSearchCacheEntries(
+          context.workspaceState.get(QUICKOPEN_SEARCH_CACHE_STATE_KEY, []),
+        ),
+      );
       let buildTokenSource: vscode.CancellationTokenSource | null = null;
       let searchPage = 1;
       let previousSearchValue = '';
       let lastFavoriteSectionItems: QuickOpenItem[] = [];
       let currentSearchMutationVersion = 0;
       const pendingSearchChangedPaths = new Set<string>();
+      const persistSearchCache = (): void => {
+        const payload = searchCache
+          .entries()
+          .slice(0, PERSISTED_SEARCH_CACHE_ENTRIES)
+          .map(([key, value]) => [key, serializeSearchCacheEntry(value)]);
+        void context.workspaceState.update(
+          QUICKOPEN_SEARCH_CACHE_STATE_KEY,
+          payload,
+        );
+      };
       const markSearchPathsDirty = (paths: string[]): void => {
         currentSearchMutationVersion += 1;
         for (const fsPath of paths) {
@@ -1332,6 +1423,7 @@ export function registerQuickOpenCommand(
               normalizedSearch,
               localCandidateUris: allUrisToDisplay,
               searchCache,
+              persistSearchCache,
               currentSearchMutationVersion,
               pendingSearchChangedPaths,
               config,
@@ -1575,6 +1667,7 @@ export function registerQuickOpenCommand(
             );
 
             searchCache.clear();
+            persistSearchCache();
             currentSearchMutationVersion += 1;
             pendingSearchChangedPaths.clear();
             await buildItems(quickPick.value);
