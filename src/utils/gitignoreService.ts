@@ -159,6 +159,13 @@ function currentFolderKey(): string {
     .join('|');
 }
 
+function workspaceScanStateKey(): string {
+  const folderKey = currentFolderKey();
+  return folderKey
+    ? `hasScannedGitignore:${folderKey}`
+    : 'hasScannedGitignore:no-workspace';
+}
+
 function invalidateCache(showProgress: boolean = false): void {
   _cache = null;
   if (_debounceTimer) clearTimeout(_debounceTimer);
@@ -414,14 +421,14 @@ export async function initGitignoreSync(
   // Use workspaceState to ensure we only show the "Scanning..." progress
   // the very first time we open this workspace.
   const hasScanned = context.workspaceState.get<boolean>(
-    'hasScannedGitignore',
+    workspaceScanStateKey(),
     false,
   );
   const isFirstRun = hasWorkspaceFolders && !hasScanned;
 
   const doSync = async (): Promise<void> => {
     // Record that we have completed the initial scan for this workspace
-    await context.workspaceState.update('hasScannedGitignore', true);
+    await context.workspaceState.update(workspaceScanStateKey(), true);
 
     const didUpdate = await syncGitignoreFilesToSettings();
 

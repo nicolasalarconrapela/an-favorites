@@ -151,6 +151,26 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // Delay the .gitignore scan so startup-critical work finishes first.
   let gitignoreInitTimer: NodeJS.Timeout | undefined;
+  let gitignoreInitStarted = false;
+  const startGitignoreSync = (): void => {
+    if (gitignoreInitStarted) {
+      return;
+    }
+
+    if ((vscode.workspace.workspaceFolders ?? []).length === 0) {
+      logger.debug(
+        '[activate] Deferred .gitignore sync skipped for now: no workspace folders yet',
+      );
+      return;
+    }
+
+    gitignoreInitStarted = true;
+    logger.debug('[activate] Starting deferred .gitignore sync');
+    void initGitignoreSync(context, logger).catch((error) => {
+      gitignoreInitStarted = false;
+      logger.warn('[activate] Deferred .gitignore sync failed', error);
+    });
+  };
   onGitignoreDiscoveryChange(() => {
     logger?.info?.(
       '[gitignore] Discovery changed -> invalidating collision index',
@@ -160,10 +180,15 @@ export function activate(context: vscode.ExtensionContext): void {
   gitignoreInitTimer = setTimeout(() => {
     gitignoreInitTimer = undefined;
     logger.debug(
-      `[activate] Starting deferred .gitignore sync after ${GITIGNORE_INIT_DELAY_MS}ms`,
+      `[activate] Deferred .gitignore sync timer elapsed after ${GITIGNORE_INIT_DELAY_MS}ms`,
     );
-    void initGitignoreSync(context, logger);
+    startGitignoreSync();
   }, GITIGNORE_INIT_DELAY_MS);
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeWorkspaceFolders(() => {
+      startGitignoreSync();
+    }),
+  );
 
   const watchedPaths = new Map<string, vscode.FileSystemWatcher>();
   const pendingValidations = new Set<string>();
