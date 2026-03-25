@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.2.507",
+  "version": "1.2.61",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -789,6 +789,7 @@
     }
   },
   "dependencies": {
+    "fuse.js": "^7.1.0",
     "ignore": "^7.0.5",
     "marked": "^17.0.4"
   }

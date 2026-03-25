@@ -604,6 +604,10 @@ export async function getGitignoreSignature(
   return _cache?.signature ?? '';
 }
 
+export function isGitignoreCacheReady(): boolean {
+  return _cache !== null;
+}
+
 export async function isGitignored(
   uri: vscode.Uri,
   token?: vscode.CancellationToken,
