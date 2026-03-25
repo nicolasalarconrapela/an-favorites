@@ -283,7 +283,13 @@ export class SharedStorageService {
       );
       this.fileWatcher = vscode.workspace.createFileSystemWatcher(pattern);
 
-      const fireChange = () => this.handleExternalChange('VS Code Watcher');
+      const fireChange = () => {
+        try {
+          this.handleExternalChange('VS Code Watcher');
+        } catch (error) {
+          this.logger.error('[SharedStorage] File watcher callback failed', error);
+        }
+      };
 
       this.fileWatcher.onDidChange(fireChange);
       this.fileWatcher.onDidCreate(fireChange);
@@ -296,7 +302,11 @@ export class SharedStorageService {
       if (fs.existsSync(this.sharedFilePath)) {
         this.nodeFileWatcher = fs.watch(this.sharedFilePath, (eventType) => {
           if (eventType === 'change' || eventType === 'rename') {
-            this.handleExternalChange('Node fs.watch');
+            try {
+              this.handleExternalChange('Node fs.watch');
+            } catch (error) {
+              this.logger.error('[SharedStorage] Node watcher callback failed', error);
+            }
           }
         });
       }
@@ -314,11 +324,19 @@ export class SharedStorageService {
       clearTimeout(this.debounceTimer);
     }
     this.debounceTimer = setTimeout(() => {
-      this.logger.info(
-        `[SharedStorage] Cambio externo detectado (${source}). Recargando.`,
-      );
-      this._onDidChange.fire(undefined);
-      this.debounceTimer = null;
+      try {
+        this.logger.info(
+          `[SharedStorage] Cambio externo detectado (${source}). Recargando.`,
+        );
+        this._onDidChange.fire(undefined);
+      } catch (error) {
+        this.logger.error('[SharedStorage] External change notification failed', {
+          source,
+          error,
+        });
+      } finally {
+        this.debounceTimer = null;
+      }
     }, 100);
   }
 

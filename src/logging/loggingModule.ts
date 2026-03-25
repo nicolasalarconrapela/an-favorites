@@ -146,6 +146,8 @@ export class LoggingModule implements Logger {
     const logFileNameBase = options.logFileName ?? 'extension';
     const logFilePathTxt = path.join(baseLogDir, `${logFileNameBase}.txt`);
     const logFilePathJson = path.join(baseLogDir, `${logFileNameBase}.json`);
+    const version = String(context.extension.packageJSON.version ?? 'unknown');
+    const workspaceName = LoggingModule.getStartupWorkspaceLabel();
 
     const logger = new LoggingModule(
       channel,
@@ -165,12 +167,20 @@ export class LoggingModule implements Logger {
 
     logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     logger.info('📋 Canal de logs AnFavorites iniciado');
-    logger.info('📁 Archivos de log inicializados', {
-      txtLogPath: logFilePathTxt,
-      jsonLogPath: logFilePathJson,
-    });
     logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
+    logger.info(
+      `Archivos de log inicializados | version=${version} | carpeta=${workspaceName} | txt=${logFilePathTxt} | json=${logFilePathJson}`,
+      {
+        version,
+        workspaceName,
+        txtLogPath: logFilePathTxt,
+        jsonLogPath: logFilePathJson,
+      },
+    );
+    channel.appendLine(
+      `[log-paths] version=${version} | carpeta=${workspaceName} | txt=${logFilePathTxt} | json=${logFilePathJson}`,
+    );
     return logger;
   }
 
@@ -188,6 +198,24 @@ export class LoggingModule implements Logger {
     )}`;
 
     return path.join(context.logUri.fsPath, 'anfavorites', version, ddmmyy, hhmmss);
+  }
+
+  private static getStartupWorkspaceLabel(): string {
+    const workspaceFile = vscode.workspace.workspaceFile;
+    if (workspaceFile) {
+      return path.basename(workspaceFile.fsPath);
+    }
+
+    const folders = vscode.workspace.workspaceFolders ?? [];
+    if (folders.length === 0) {
+      return 'no-workspace';
+    }
+
+    if (folders.length === 1) {
+      return folders[0].name;
+    }
+
+    return folders.map((folder) => folder.name).join(', ');
   }
 
   setLevel(level: LogLevel): void {

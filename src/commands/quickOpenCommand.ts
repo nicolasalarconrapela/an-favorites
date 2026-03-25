@@ -20,7 +20,6 @@ import {
   buildExclusionGlobFromPatterns,
   filterGitignoredUrisFast,
   filterGitignoredUris,
-  getMergedExclusions,
   getGitignoreSignature,
   subscribeGitignoreDiscoveryChange,
 } from '../utils/gitignoreService';
@@ -105,6 +104,19 @@ const MAX_PREFIX_SEED_URIS = 1200;
 const QUICKOPEN_TRACE_WARN_MS = 1500;
 const QUICKOPEN_FIND_FILES_TIMEOUT_MS = 2500;
 const QUICKOPEN_STAGE_MAX_RESULTS = 1500;
+const QUICKOPEN_SEARCH_TIMEOUT_ERROR = 'QuickOpenSearchTimeoutError';
+const QUICKOPEN_MAX_HEAP_BYTES = 550 * 1024 * 1024;
+const QUICKOPEN_MAX_RSS_BYTES = 800 * 1024 * 1024;
+const QUICKOPEN_MAX_HEAP_DELTA_BYTES = 128 * 1024 * 1024;
+const QUICKOPEN_MAX_RSS_DELTA_BYTES = 192 * 1024 * 1024;
+const QUICKOPEN_MAX_SEARCH_STAGE_MS = 5000;
+const QUICKOPEN_MIN_GLOBAL_SEARCH_LENGTH = 5;
+const QUICKOPEN_COMMAND_COOLDOWN_MS = 750;
+
+let activeQuickOpenSession:
+  | { dispose: () => void; createdAt: number; sessionId: string }
+  | null = null;
+let lastQuickOpenCommandAt = 0;
 
 function logQuickOpenTrace(
   logger: Logger | undefined,
@@ -145,6 +157,94 @@ function startQuickOpenWatchdog(
   };
 }
 
+function createQuickOpenSearchTimeoutError(metadata?: Record<string, unknown>): Error {
+  const error = new Error('QuickOpen search timed out');
+  error.name = QUICKOPEN_SEARCH_TIMEOUT_ERROR;
+  Object.assign(error, metadata);
+  return error;
+}
+
+function isQuickOpenSearchTimeoutError(error: unknown): boolean {
+  return error instanceof Error && error.name === QUICKOPEN_SEARCH_TIMEOUT_ERROR;
+}
+
+function assertQuickOpenSearchHealth(
+  logger: Logger | undefined,
+  label: string,
+  metadata?: Record<string, unknown>,
+): void {
+  const memory = process.memoryUsage();
+  const baselineHeap =
+    typeof metadata?.baselineHeapUsedBytes === 'number'
+      ? metadata.baselineHeapUsedBytes
+      : memory.heapUsed;
+  const baselineRss =
+    typeof metadata?.baselineRssBytes === 'number'
+      ? metadata.baselineRssBytes
+      : memory.rss;
+  const heapDelta = memory.heapUsed - baselineHeap;
+  const rssDelta = memory.rss - baselineRss;
+  if (
+    memory.heapUsed < QUICKOPEN_MAX_HEAP_BYTES &&
+    memory.rss < QUICKOPEN_MAX_RSS_BYTES
+  ) {
+    return;
+  }
+  if (
+    heapDelta < QUICKOPEN_MAX_HEAP_DELTA_BYTES &&
+    rssDelta < QUICKOPEN_MAX_RSS_DELTA_BYTES
+  ) {
+    logger?.warn?.(`[QuickOpen][trace] High baseline memory detected but growth is within tolerance: ${label}`, {
+      ...metadata,
+      baselineHeapUsedBytes: baselineHeap,
+      baselineRssBytes: baselineRss,
+      currentHeapUsedBytes: memory.heapUsed,
+      currentRssBytes: memory.rss,
+      heapDeltaBytes: heapDelta,
+      rssDeltaBytes: rssDelta,
+      heapDeltaLimitBytes: QUICKOPEN_MAX_HEAP_DELTA_BYTES,
+      rssDeltaLimitBytes: QUICKOPEN_MAX_RSS_DELTA_BYTES,
+      heapLimitBytes: QUICKOPEN_MAX_HEAP_BYTES,
+      rssLimitBytes: QUICKOPEN_MAX_RSS_BYTES,
+    });
+    return;
+  }
+
+  logQuickOpenTrace(logger, `[QuickOpen][trace] Memory guard triggered: ${label}`, {
+    ...metadata,
+    baselineHeapUsedBytes: baselineHeap,
+    baselineRssBytes: baselineRss,
+    heapDeltaBytes: heapDelta,
+    rssDeltaBytes: rssDelta,
+    heapLimitBytes: QUICKOPEN_MAX_HEAP_BYTES,
+    rssLimitBytes: QUICKOPEN_MAX_RSS_BYTES,
+    heapDeltaLimitBytes: QUICKOPEN_MAX_HEAP_DELTA_BYTES,
+    rssDeltaLimitBytes: QUICKOPEN_MAX_RSS_DELTA_BYTES,
+  });
+  throw createQuickOpenSearchTimeoutError({
+    reason: 'memory-guard',
+    label,
+    ...metadata,
+  });
+}
+
+function wrapQuickOpenCallback<TArgs extends unknown[]>(
+  logger: Logger,
+  label: string,
+  handler: (...args: TArgs) => void | Promise<void>,
+): (...args: TArgs) => void {
+  return (...args: TArgs) => {
+    void Promise.resolve()
+      .then(() => handler(...args))
+      .catch((error) => {
+        logger.error(`[QuickOpen] Unhandled callback failure: ${label}`, error);
+        void vscode.window.showErrorMessage(
+          t('Quick Open failed unexpectedly. See logs for details.'),
+        );
+      });
+  };
+}
+
 async function findFilesWithTimeout(params: {
   searchService: QuickOpenSearchService;
   pattern: string;
@@ -175,20 +275,27 @@ async function findFilesWithTimeout(params: {
   try {
     return await Promise.race([
       searchService.findFiles(pattern, exclude, limit, localTokenSource.token),
-      new Promise<vscode.Uri[]>((resolve) => {
+      new Promise<vscode.Uri[]>((_, reject) => {
         timeoutHandle = setTimeout(() => {
           localTokenSource.cancel();
           logQuickOpenTrace(
-          logger,
-          '[QuickOpen][trace] findFiles timed out; returning partial empty result',
-          {
+            logger,
+            '[QuickOpen][trace] findFiles timed out; closing QuickOpen',
+            {
               pattern,
               limit,
               timeoutMs,
               ...metadata,
             },
           );
-          resolve([]);
+          reject(
+            createQuickOpenSearchTimeoutError({
+              pattern,
+              limit,
+              timeoutMs,
+              ...metadata,
+            }),
+          );
         }, timeoutMs);
       }),
     ]);
@@ -233,6 +340,15 @@ function matchesSearchText(uri: vscode.Uri, searchValue: string): boolean {
     .replace(/\\/g, '/')
     .toLowerCase();
   return relative.includes(normalizedSearch);
+}
+
+function shouldUseProtectedLocalOnlySearch(searchValue: string): boolean {
+  const normalizedSearch = searchValue.trim();
+  if (!normalizedSearch) {
+    return false;
+  }
+
+  return normalizedSearch.length < QUICKOPEN_MIN_GLOBAL_SEARCH_LENGTH;
 }
 
 function rankSearchBasename(uri: vscode.Uri, searchValue: string): number {
@@ -411,6 +527,8 @@ async function runHybridWorkspaceSearch(params: {
   searchService: QuickOpenSearchService;
   logger?: Logger;
   token: vscode.CancellationToken;
+  baselineHeapUsedBytes?: number;
+  baselineRssBytes?: number;
 }): Promise<SearchCacheEntry> {
   const {
     normalizedSearch,
@@ -421,7 +539,36 @@ async function runHybridWorkspaceSearch(params: {
     searchService,
     logger,
     token,
+    baselineHeapUsedBytes,
+    baselineRssBytes,
   } = params;
+  const searchStartedAt = Date.now();
+  const assertSearchStillHealthy = (
+    label: string,
+    metadata?: Record<string, unknown>,
+  ): void => {
+    assertQuickOpenSearchHealth(logger, label, {
+      normalizedSearch,
+      elapsedMs: Date.now() - searchStartedAt,
+      baselineHeapUsedBytes,
+      baselineRssBytes,
+      ...metadata,
+    });
+    if (Date.now() - searchStartedAt > QUICKOPEN_MAX_SEARCH_STAGE_MS) {
+      logQuickOpenTrace(logger, `[QuickOpen][trace] Search duration guard triggered: ${label}`, {
+        normalizedSearch,
+        elapsedMs: Date.now() - searchStartedAt,
+        ...metadata,
+      });
+      throw createQuickOpenSearchTimeoutError({
+        reason: 'duration-guard',
+        label,
+        normalizedSearch,
+        elapsedMs: Date.now() - searchStartedAt,
+        ...metadata,
+      });
+    }
+  };
 
   const finishLocalFilterStage = startQuickOpenWatchdog(
     logger,
@@ -439,6 +586,9 @@ async function runHybridWorkspaceSearch(params: {
     ),
   );
   finishLocalFilterStage();
+  assertSearchStillHealthy('runHybridWorkspaceSearch:local-filter', {
+    localMatchCount: localMatches.length,
+  });
 
   const finishSeedFilterStage = startQuickOpenWatchdog(
     logger,
@@ -455,6 +605,9 @@ async function runHybridWorkspaceSearch(params: {
     ),
   );
   finishSeedFilterStage();
+  assertSearchStillHealthy('runHybridWorkspaceSearch:seed-filter', {
+    seededMatchCount: seededMatches.length,
+  });
 
   const stagePatterns = [
     `**/${normalizedSearch}*`,
@@ -489,6 +642,10 @@ async function runHybridWorkspaceSearch(params: {
       });
       break;
     }
+    assertSearchStillHealthy(`runHybridWorkspaceSearch:before-stage:${i}`, {
+      stageIndex: i,
+      mergedCount: mergedUris.length,
+    });
 
     const remaining = Math.max(1, maxSearchFiles - mergedUris.length);
     const stageLimit = Math.min(stageLimits[i], remaining) + 1;
@@ -527,6 +684,10 @@ async function runHybridWorkspaceSearch(params: {
       },
     });
     finishFindFilesStage();
+    assertSearchStillHealthy(`runHybridWorkspaceSearch:after-findFiles:${i}`, {
+      stageIndex: i,
+      foundCount: foundUris.length,
+    });
     const finishFilterStage = startQuickOpenWatchdog(
       logger,
       `runHybridWorkspaceSearch:filterGitignoredUris:${i}`,
@@ -538,6 +699,11 @@ async function runHybridWorkspaceSearch(params: {
     );
     const filteredFoundUris = await filterGitignoredUris(foundUris, token);
     finishFilterStage();
+    assertSearchStillHealthy(`runHybridWorkspaceSearch:after-filterGitignoredUris:${i}`, {
+      stageIndex: i,
+      foundCount: foundUris.length,
+      filteredCount: filteredFoundUris.length,
+    });
 
     if (foundUris.length >= rawStageLimit || filteredFoundUris.length >= stageLimit) {
       exceededMaxFiles = true;
@@ -552,6 +718,11 @@ async function runHybridWorkspaceSearch(params: {
       stageIndex: i,
       foundCount: foundUris.length,
       filteredCount: filteredFoundUris.length,
+      mergedCount: mergedUris.length,
+      exceededMaxFiles,
+    });
+    assertSearchStillHealthy(`runHybridWorkspaceSearch:after-merge:${i}`, {
+      stageIndex: i,
       mergedCount: mergedUris.length,
       exceededMaxFiles,
     });
@@ -830,6 +1001,9 @@ async function buildSearchItems(params: {
   searchPage: number;
   searchService: QuickOpenSearchService;
   token: vscode.CancellationToken;
+  isBuildCurrent?: () => boolean;
+  baselineHeapUsedBytes?: number;
+  baselineRssBytes?: number;
 }): Promise<{
   items: FileQuickPickItem[];
   noticeItem: QuickOpenItem | null;
@@ -850,7 +1024,12 @@ async function buildSearchItems(params: {
     searchPage,
     searchService,
     token,
+    isBuildCurrent,
+    baselineHeapUsedBytes,
+    baselineRssBytes,
   } = params;
+  const shouldRetainResults = (): boolean =>
+    !token.isCancellationRequested && (isBuildCurrent?.() ?? true);
   const cacheKey = normalizedSearch;
   let cacheEntry = searchCache.get(cacheKey);
   let noticeItem: QuickOpenItem | null = null;
@@ -870,12 +1049,8 @@ async function buildSearchItems(params: {
     `[QuickOpen] search cache ${cacheEntry ? 'hit' : 'miss'} for "${cacheKey}"`,
   );
 
-  const mergedExclusions = await getMergedExclusions(
-    config.searchExclusions,
-    token,
-  );
   const exclusionGlob = getSafeQuickOpenExclusionGlob(
-    mergedExclusions,
+    config.searchExclusions,
     logger,
   );
   const finishGitignoreSignatureStage = startQuickOpenWatchdog(
@@ -893,6 +1068,7 @@ async function buildSearchItems(params: {
     1,
     Math.min(config.maxSearchResults, config.maxSearchFiles),
   );
+  const protectedLocalOnlySearch = shouldUseProtectedLocalOnlySearch(cacheKey);
   const effectiveMaxSearchFiles = Math.max(
     config.maxSearchFiles,
     maxDisplayResults * searchPage,
@@ -927,9 +1103,19 @@ async function buildSearchItems(params: {
       changedPaths: Array.from(pendingSearchChangedPaths),
       maxSearchFiles: effectiveMaxSearchFiles,
     });
+    if (!shouldRetainResults()) {
+      finishBuildSearchWatchdog();
+      return {
+        items: [],
+        noticeItem: null,
+        loadMoreItem: null,
+      };
+    }
     cacheEntry.mutationVersion = currentSearchMutationVersion;
-    searchCache.set(cacheKey, cacheEntry);
-    persistSearchCache();
+    if (cacheEntry.uris.length > 0 || cacheEntry.exceededMaxFiles) {
+      searchCache.set(cacheKey, cacheEntry);
+      persistSearchCache();
+    }
   }
 
   if (
@@ -939,49 +1125,97 @@ async function buildSearchItems(params: {
     cacheEntry.exclusionSignature !== exclusionSignature ||
     cacheEntry.mutationVersion !== currentSearchMutationVersion
   ) {
-    const prefixSeedUris = getSearchPrefixSeeds(
-      cacheKey,
-      searchCache,
-      exclusionSignature,
-      currentSearchMutationVersion,
-    );
-    logger?.info?.(
-      `[QuickOpen] rebuilding query index for "${cacheKey}" reason=${needsFullRebuildReason} (prefix seeds=${prefixSeedUris.length})`,
-    );
-    logQuickOpenTrace(logger, '[QuickOpen][trace] Query index rebuild started', {
-      cacheKey,
-      needsFullRebuildReason,
-      prefixSeedCount: prefixSeedUris.length,
-      effectiveMaxSearchFiles,
-      mergedExclusionCount: mergedExclusions.length,
-      exclusionGlobApplied: Boolean(exclusionGlob),
-    });
-    cacheEntry = await runHybridWorkspaceSearch({
-      normalizedSearch: cacheKey,
-      localCandidateUris,
-      seedUris: prefixSeedUris,
-      exclusionGlob,
-      maxSearchFiles: effectiveMaxSearchFiles,
-      searchService,
-      logger,
-      token,
-    });
-    cacheEntry.mutationVersion = currentSearchMutationVersion;
-    cacheEntry.exclusionSignature = exclusionSignature;
-    searchCache.set(cacheKey, cacheEntry);
-    persistSearchCache();
-    logger?.debug?.(
-      `[QuickOpen] query index stored for "${cacheKey}". results=${cacheEntry.uris.length}`,
-    );
-    logQuickOpenTrace(
-      logger,
-      '[QuickOpen][trace] Query index rebuild completed',
-      {
+    if (protectedLocalOnlySearch) {
+      logger?.warn?.('[QuickOpen][trace] Protected local-only search mode activated', {
         cacheKey,
-        resultCount: cacheEntry.uris.length,
-        exceededMaxFiles: cacheEntry.exceededMaxFiles,
-      },
-    );
+        minGlobalSearchLength: QUICKOPEN_MIN_GLOBAL_SEARCH_LENGTH,
+      });
+      cacheEntry = {
+        uris: prioritizeDistinctBasenames(
+          dedupeUrisByFsPath(
+            await filterGitignoredUris(
+              localCandidateUris.filter((uri) =>
+                matchesSearchText(uri, cacheKey),
+              ),
+              token,
+            ),
+          ),
+          cacheKey,
+        ).slice(0, maxDisplayResults * searchPage),
+        exceededMaxFiles: false,
+        workspaceSearchDeferred: true,
+        mutationVersion: currentSearchMutationVersion,
+        exclusionSignature,
+      };
+    } else {
+      const prefixSeedUris = getSearchPrefixSeeds(
+        cacheKey,
+        searchCache,
+        exclusionSignature,
+        currentSearchMutationVersion,
+      );
+      logger?.info?.(
+        `[QuickOpen] rebuilding query index for "${cacheKey}" reason=${needsFullRebuildReason} (prefix seeds=${prefixSeedUris.length})`,
+      );
+      logQuickOpenTrace(logger, '[QuickOpen][trace] Query index rebuild started', {
+        cacheKey,
+        needsFullRebuildReason,
+        prefixSeedCount: prefixSeedUris.length,
+        effectiveMaxSearchFiles,
+        mergedExclusionCount: config.searchExclusions.length,
+        exclusionGlobApplied: Boolean(exclusionGlob),
+      });
+      cacheEntry = await runHybridWorkspaceSearch({
+        normalizedSearch: cacheKey,
+        localCandidateUris,
+        seedUris: prefixSeedUris,
+        exclusionGlob,
+        maxSearchFiles: effectiveMaxSearchFiles,
+        searchService,
+        logger,
+        token,
+        baselineHeapUsedBytes,
+        baselineRssBytes,
+      });
+      if (!shouldRetainResults()) {
+        finishBuildSearchWatchdog();
+        return {
+          items: [],
+          noticeItem: null,
+          loadMoreItem: null,
+        };
+      }
+      cacheEntry.mutationVersion = currentSearchMutationVersion;
+      cacheEntry.exclusionSignature = exclusionSignature;
+      if (cacheEntry.uris.length > 0 || cacheEntry.exceededMaxFiles) {
+        searchCache.set(cacheKey, cacheEntry);
+        persistSearchCache();
+        logger?.debug?.(
+          `[QuickOpen] query index stored for "${cacheKey}". results=${cacheEntry.uris.length}`,
+        );
+      }
+      if (cacheEntry.uris.length > 0 || cacheEntry.exceededMaxFiles) {
+        logQuickOpenTrace(
+          logger,
+          '[QuickOpen][trace] Query index rebuild completed',
+          {
+            cacheKey,
+            resultCount: cacheEntry.uris.length,
+            exceededMaxFiles: cacheEntry.exceededMaxFiles,
+          },
+        );
+      }
+    }
+  }
+
+  if (protectedLocalOnlySearch) {
+    noticeItem = {
+      label: t(
+        'Search is running in safe mode. Type at least {0} characters to search the full workspace.',
+        QUICKOPEN_MIN_GLOBAL_SEARCH_LENGTH,
+      ),
+      detail: '',
+    };
   }
 
   if (cacheEntry.exceededMaxFiles) {
@@ -1307,10 +1541,27 @@ export function registerQuickOpenCommand(
   const disposable = vscode.commands.registerCommand(
     'anfavorites.quickOpen',
     async () => {
+      const commandStartedAt = Date.now();
+      if (commandStartedAt - lastQuickOpenCommandAt < QUICKOPEN_COMMAND_COOLDOWN_MS) {
+        logger.warn('[QuickOpen] Command ignored due to cooldown', {
+          cooldownMs: QUICKOPEN_COMMAND_COOLDOWN_MS,
+          elapsedMs: commandStartedAt - lastQuickOpenCommandAt,
+        });
+        return;
+      }
+      lastQuickOpenCommandAt = commandStartedAt;
       const sessionId = `quickopen-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
       const log = logger?.withContext
         ? logger.withContext({ scope: 'QuickOpen', correlationId: sessionId })
         : logger;
+      if (activeQuickOpenSession) {
+        log.warn('[QuickOpen] Existing session detected, disposing it before opening a new one', {
+          previousSessionId: activeQuickOpenSession.sessionId,
+          previousSessionAgeMs: commandStartedAt - activeQuickOpenSession.createdAt,
+        });
+        activeQuickOpenSession.dispose();
+        activeQuickOpenSession = null;
+      }
       const logThrottledWithContext = (
         level: 'debug' | 'info' | 'warn' | 'error',
         key: string,
@@ -1366,28 +1617,45 @@ export function registerQuickOpenCommand(
           return;
         }
         isDisposed = true;
-        buildTokenSource?.cancel();
-        buildTokenSource?.dispose();
-        buildTokenSource = null;
-        if (persistSearchCacheTimer) {
-          clearTimeout(persistSearchCacheTimer);
-          persistSearchCacheTimer = null;
+        if (activeQuickOpenSession?.sessionId === sessionId) {
+          activeQuickOpenSession = null;
         }
-        log.debug('[QuickOpen] Disposing QuickPick and listeners...');
         try {
+          buildTokenSource?.cancel();
+          buildTokenSource?.dispose();
+          buildTokenSource = null;
+          if (persistSearchCacheTimer) {
+            clearTimeout(persistSearchCacheTimer);
+            persistSearchCacheTimer = null;
+          }
+          log.debug('[QuickOpen] Disposing QuickPick and listeners...');
           disposables.forEach((d) => d.dispose());
           log.debug(`[QuickOpen] Disposed ${disposables.length} listeners`);
+        } catch (error) {
+          log.error('[QuickOpen] safeDispose failed', error);
         } finally {
-          quickPick.dispose();
+          try {
+            quickPick.dispose();
+          } catch (error) {
+            log.error('[QuickOpen] QuickPick dispose failed', error);
+          }
           log.debug('[QuickOpen] QuickPick disposed');
         }
       };
 
+      activeQuickOpenSession = {
+        dispose: safeDispose,
+        createdAt: commandStartedAt,
+        sessionId,
+      };
+
       disposables.push(
-        quickPick.onDidHide(() => {
-          log.debug('[QuickOpen] onDidHide triggered');
-          safeDispose();
-        }),
+        quickPick.onDidHide(
+          wrapQuickOpenCallback(log, 'onDidHide', () => {
+            log.debug('[QuickOpen] onDidHide triggered');
+            safeDispose();
+          }),
+        ),
       );
       log.debug('[QuickOpen] onDidHide listener registered');
 
@@ -1397,6 +1665,8 @@ export function registerQuickOpenCommand(
       let searchPage = 1;
       let previousSearchValue = '';
       let currentSearchMutationVersion = 0;
+      let buildSequence = 0;
+      let latestScheduledBuild = 0;
       const pendingSearchChangedPaths = new Set<string>();
       const persistSearchCache = (): void => {
         if (persistSearchCacheTimer) {
@@ -1422,12 +1692,27 @@ export function registerQuickOpenCommand(
       const buildItems = async (
         searchQuery: string = quickPick.value,
       ): Promise<void> => {
+        const buildId = ++buildSequence;
+        latestScheduledBuild = buildId;
+        if (buildTokenSource) {
+          log.debug('[QuickOpen][trace] Cancelling previous build before starting next one', {
+            buildId,
+            searchQuery,
+          });
+        }
         buildTokenSource?.cancel();
         buildTokenSource?.dispose();
         buildTokenSource = new vscode.CancellationTokenSource();
         const token = buildTokenSource.token;
+        token.onCancellationRequested(() => {
+          log.debug('[QuickOpen][trace] Build token cancelled', {
+            buildId,
+            searchQuery,
+          });
+        });
         log.debug(
           `[QuickOpen] ▶ buildItems() called - searchQuery: "${searchQuery}"`,
+          { buildId },
         );
 
         if (isDisposed) {
@@ -1437,6 +1722,7 @@ export function registerQuickOpenCommand(
 
         const normalizedSearch = searchQuery.trim();
         const isSearching = normalizedSearch.length > 0;
+        const buildStartMemory = process.memoryUsage();
         if (normalizedSearch !== previousSearchValue) {
           searchPage = 1;
           previousSearchValue = normalizedSearch;
@@ -1450,6 +1736,10 @@ export function registerQuickOpenCommand(
               ).internalUri.toString()
             : null;
         let handoffBusyToBackgroundSearch = false;
+        const isBuildCurrent = () =>
+          buildId === latestScheduledBuild &&
+          !token.isCancellationRequested &&
+          !isDisposed;
 
         try {
           const isSearchValueCurrent = () =>
@@ -1458,10 +1748,14 @@ export function registerQuickOpenCommand(
           log.debug(
             `[QuickOpen] Current search value: "${normalizedSearch}" (isSearching: ${isSearching})`,
           );
-
-          log.debug('[QuickOpen] Reloading favorites from storage...');
-          favoritesProvider.reloadFavorites();
-          log.debug('[QuickOpen] Favorites reloaded');
+          logQuickOpenTrace(log, '[QuickOpen][trace] Build search cycle started', {
+            buildId,
+            normalizedSearch,
+            isSearching,
+            protectedLocalOnlySearch: shouldUseProtectedLocalOnlySearch(normalizedSearch),
+            baselineHeapUsedBytes: buildStartMemory.heapUsed,
+            baselineRssBytes: buildStartMemory.rss,
+          });
 
           const config = configService.getConfig();
 
@@ -1658,7 +1952,7 @@ export function registerQuickOpenCommand(
             ? dedupeUrisByFsPath([...allPinnedUris, ...recentFavUris])
             : allUrisToDisplay;
           const existenceMap = await validateFilesExistence(urisToValidate, token);
-          if (isDisposed) return;
+          if (!isBuildCurrent()) return;
 
           const validPinnedUris = allPinnedUris.filter((uri) => {
             const exists = existenceMap.get(uri.fsPath) ?? false;
@@ -1823,8 +2117,11 @@ export function registerQuickOpenCommand(
                   searchPage,
                   searchService,
                   token,
+                  isBuildCurrent,
+                  baselineHeapUsedBytes: buildStartMemory.heapUsed,
+                  baselineRssBytes: buildStartMemory.rss,
                 });
-                if (isDisposed || token.isCancellationRequested || !isSearchValueCurrent()) {
+                if (!isBuildCurrent() || !isSearchValueCurrent()) {
                   return;
                 }
 
@@ -1836,23 +2133,47 @@ export function registerQuickOpenCommand(
                   ...searchFileItems,
                 ];
 
-                log.debug(
-                  `[QuickOpen] Checking collisions for ${collisionItems.length} search items...`,
-                );
-                await applyCollisionLabels(
-                  collisionItems,
-                  (item) => item.internalUri,
-                  (item) => {
-                    item.setShowDescription(true);
-                  },
-                  (item) => {
-                    item.setShowDescription(false);
-                  },
-                  config.searchExclusions,
-                  token,
-                  logger,
-                );
-                if (isDisposed || token.isCancellationRequested || !isSearchValueCurrent()) {
+                if (shouldUseProtectedLocalOnlySearch(normalizedSearch)) {
+                  log.warn('[QuickOpen][trace] Skipping collision labels in protected local-only mode', {
+                    buildId,
+                    normalizedSearch,
+                    collisionItemCount: collisionItems.length,
+                  });
+                } else {
+                  assertQuickOpenSearchHealth(log, 'buildItems:before-applyCollisionLabels', {
+                    buildId,
+                    normalizedSearch,
+                    collisionItemCount: collisionItems.length,
+                    searchFileItemCount: searchFileItems.length,
+                    baselineHeapUsedBytes: buildStartMemory.heapUsed,
+                    baselineRssBytes: buildStartMemory.rss,
+                  });
+                  log.debug(
+                    `[QuickOpen] Checking collisions for ${collisionItems.length} search items...`,
+                  );
+                  await applyCollisionLabels(
+                    collisionItems,
+                    (item) => item.internalUri,
+                    (item) => {
+                      item.setShowDescription(true);
+                    },
+                    (item) => {
+                      item.setShowDescription(false);
+                    },
+                    config.searchExclusions,
+                    token,
+                    logger,
+                  );
+                  assertQuickOpenSearchHealth(log, 'buildItems:after-applyCollisionLabels', {
+                    buildId,
+                    normalizedSearch,
+                    collisionItemCount: collisionItems.length,
+                    searchFileItemCount: searchFileItems.length,
+                    baselineHeapUsedBytes: buildStartMemory.heapUsed,
+                    baselineRssBytes: buildStartMemory.rss,
+                  });
+                }
+                if (!isBuildCurrent() || !isSearchValueCurrent()) {
                   return;
                 }
 
@@ -1875,6 +2196,12 @@ export function registerQuickOpenCommand(
                 }
 
                 quickPick.items = resolvedItems;
+                log.debug('[QuickOpen][trace] Search results applied to QuickPick', {
+                  buildId,
+                  normalizedSearch,
+                  resolvedItemCount: resolvedItems.length,
+                  searchFileItemCount: searchFileItems.length,
+                });
                 pendingSearchChangedPaths.clear();
 
                 if (currentActiveUri) {
@@ -1892,7 +2219,15 @@ export function registerQuickOpenCommand(
                   quickPick.activeItems = firstFileItem ? [firstFileItem] : [];
                 }
               } catch (error) {
-                if (isDisposed || token.isCancellationRequested) {
+                if (!isBuildCurrent()) {
+                  return;
+                }
+                if (isQuickOpenSearchTimeoutError(error)) {
+                  log.error('[QuickOpen] Search timed out, closing QuickOpen', error);
+                  quickPick.hide();
+                  void vscode.window.showErrorMessage(
+                    t('Quick Open search timed out. Please refine your search.'),
+                  );
                   return;
                 }
                 log.error('Error loading files for QuickOpen', error);
@@ -1904,7 +2239,7 @@ export function registerQuickOpenCommand(
                   },
                 ];
               } finally {
-                if (!isDisposed && isSearchValueCurrent() && !token.isCancellationRequested) {
+                if (isBuildCurrent() && isSearchValueCurrent()) {
                   quickPick.busy = false;
                 }
               }
@@ -1939,6 +2274,9 @@ export function registerQuickOpenCommand(
             log.debug(
               '[QuickOpen] Search value changed while building items, skipping update',
             );
+            return;
+          }
+          if (!isBuildCurrent()) {
             return;
           }
 
@@ -2015,7 +2353,15 @@ export function registerQuickOpenCommand(
             }
           }
         } catch (error) {
-          if (isDisposed) return;
+          if (!isBuildCurrent() && !isQuickOpenSearchTimeoutError(error)) return;
+          if (isQuickOpenSearchTimeoutError(error)) {
+            log.error('[QuickOpen] Search timed out, closing QuickOpen', error);
+            quickPick.hide();
+            void vscode.window.showErrorMessage(
+              t('Quick Open search timed out. Please refine your search.'),
+            );
+            return;
+          }
           log.error('Error loading files for QuickOpen', error);
           quickPick.items = [
             {
@@ -2024,7 +2370,7 @@ export function registerQuickOpenCommand(
             },
           ];
         } finally {
-          if (!isDisposed && !handoffBusyToBackgroundSearch) {
+          if (isBuildCurrent() && !handoffBusyToBackgroundSearch) {
             quickPick.busy = false;
           }
         }
@@ -2062,7 +2408,7 @@ export function registerQuickOpenCommand(
       }, 150);
 
       disposables.push(
-        subscribeGitignoreDiscoveryChange(() => {
+        subscribeGitignoreDiscoveryChange(wrapQuickOpenCallback(log, 'gitignoreDiscoveryChange', () => {
           if (!hasOpenGitignoreDocument()) {
             return;
           }
@@ -2075,11 +2421,16 @@ export function registerQuickOpenCommand(
           currentSearchMutationVersion += 1;
           pendingSearchChangedPaths.clear();
           debouncedExternalRebuild('gitignore');
-        }),
+        })),
       );
 
       disposables.push(
-        quickPick.onDidChangeValue(async (value) => {
+        quickPick.onDidChangeValue(wrapQuickOpenCallback(log, 'onDidChangeValue', async (value) => {
+          log.debug('[QuickOpen][trace] onDidChangeValue received', {
+            value,
+            length: value.length,
+            protectedLocalOnlySearch: shouldUseProtectedLocalOnlySearch(value),
+          });
           const wasEmpty = previousValue.length === 0;
           const isEmpty = value.length === 0;
           previousValue = value;
@@ -2096,33 +2447,33 @@ export function registerQuickOpenCommand(
           if (!isEmpty) {
             debouncedSearchRebuild(value);
           }
-        }),
+        })),
       );
 
       disposables.push(
-        favoritesProvider.onDidChangeTreeData(async () => {
+        favoritesProvider.onDidChangeTreeData(wrapQuickOpenCallback(log, 'favoritesTreeChange', async () => {
           logThrottledWithContext(
             'debug',
             'quickopen:favorites-changed',
             'Favorites changed, rebuilding QuickOpen items',
           );
           debouncedExternalRebuild('favorites');
-        }),
+        })),
       );
 
       disposables.push(
-        mruService.onDidChangeRecentFiles(async () => {
+        mruService.onDidChangeRecentFiles(wrapQuickOpenCallback(log, 'mruChange', async () => {
           logThrottledWithContext(
             'debug',
             'quickopen:mru-changed',
             'MRU list changed, rebuilding QuickOpen items',
           );
           debouncedExternalRebuild('mru');
-        }),
+        })),
       );
 
       disposables.push(
-        vscode.workspace.onDidChangeConfiguration(async (e) => {
+        vscode.workspace.onDidChangeConfiguration(wrapQuickOpenCallback(log, 'configurationChange', async (e) => {
           if (
             e.affectsConfiguration('anfavorites.maxItems') ||
             e.affectsConfiguration('anfavorites.quickOpen') ||
@@ -2140,7 +2491,7 @@ export function registerQuickOpenCommand(
             pendingSearchChangedPaths.clear();
             await buildItems(quickPick.value);
           }
-        }),
+        })),
       );
 
       const debouncedRebuild = debounce(async () => {
@@ -2154,7 +2505,7 @@ export function registerQuickOpenCommand(
       }, 200);
 
       disposables.push(
-        vscode.workspace.onDidRenameFiles((event) => {
+        vscode.workspace.onDidRenameFiles(wrapQuickOpenCallback(log, 'onDidRenameFiles', async (event) => {
           markSearchPathsDirty(
             event.files.flatMap((file) => [file.oldUri.fsPath, file.newUri.fsPath]),
           );
@@ -2164,11 +2515,11 @@ export function registerQuickOpenCommand(
             `Files renamed: ${event.files.length} file(s)`,
           );
           debouncedRebuild();
-        }),
+        })),
       );
 
       disposables.push(
-        vscode.workspace.onDidDeleteFiles((event) => {
+        vscode.workspace.onDidDeleteFiles(wrapQuickOpenCallback(log, 'onDidDeleteFiles', async (event) => {
           markSearchPathsDirty(event.files.map((file) => file.fsPath));
           logThrottledWithContext(
             'debug',
@@ -2176,11 +2527,11 @@ export function registerQuickOpenCommand(
             `Files deleted: ${event.files.length} file(s)`,
           );
           debouncedRebuild();
-        }),
+        })),
       );
 
       disposables.push(
-        vscode.workspace.onDidCreateFiles((event) => {
+        vscode.workspace.onDidCreateFiles(wrapQuickOpenCallback(log, 'onDidCreateFiles', async (event) => {
           markSearchPathsDirty(event.files.map((file) => file.fsPath));
           logThrottledWithContext(
             'debug',
@@ -2188,11 +2539,11 @@ export function registerQuickOpenCommand(
             `Files created: ${event.files.length} file(s)`,
           );
           debouncedRebuild();
-        }),
+        })),
       );
 
       disposables.push(
-        quickPick.onDidAccept(async () => {
+        quickPick.onDidAccept(wrapQuickOpenCallback(log, 'onDidAccept', async () => {
           log.info('[QuickOpen] onDidAccept triggered');
           const selected = quickPick.selectedItems[0];
           if (!selected) {
@@ -2280,11 +2631,11 @@ export function registerQuickOpenCommand(
           }
           log.info('[QuickOpen] ✓ File opened successfully, hiding QuickPick');
           quickPick.hide();
-        }),
+        })),
       );
 
       disposables.push(
-        quickPick.onDidTriggerItemButton(async (e) => {
+        quickPick.onDidTriggerItemButton(wrapQuickOpenCallback(log, 'onDidTriggerItemButton', async (e) => {
           log.debug('[QuickOpen] onDidTriggerItemButton triggered');
           const item = e.item;
           if (!isFileItem(item)) {
@@ -2426,7 +2777,7 @@ export function registerQuickOpenCommand(
           } catch (error) {
             log.error('[QuickOpen] ❌ Error toggling favorite', error);
           }
-        }),
+        })),
       );
     },
   );

@@ -6,6 +6,20 @@ import { Logger } from '../logging/logger';
 import { t } from '../utils/l10n';
 
 const INTERNAL_FILES_STATE_KEY = 'anfavorites.gitignore.filesState';
+const GITIGNORE_DISCOVERY_LIMIT = 4000;
+const GITIGNORE_DISCOVERY_DEFAULT_EXCLUSIONS = [
+  '**/.git/**',
+  '**/node_modules/**',
+  '**/dist/**',
+  '**/build/**',
+  '**/out/**',
+  '**/coverage/**',
+  '**/.next/**',
+  '**/.nuxt/**',
+  '**/vendor/**',
+  '**/bin/**',
+  '**/obj/**',
+];
 
 function getGitignoreFilesSettings(): Record<string, boolean> {
   return { ..._gitignoreFilesState };
@@ -29,14 +43,16 @@ async function updateGitignoreFilesSettings(
 }
 
 async function syncGitignoreFilesToSettings(
+  discoveredOverride?: vscode.Uri[],
   token?: vscode.CancellationToken,
 ): Promise<boolean> {
   const settings = getGitignoreFilesSettings();
   let changed = false;
   _logger?.debug?.('[gitignore] sync starting');
 
-  const discovered = await discoverGitignoreFiles(token);
+  const discovered = discoveredOverride ?? (await discoverGitignoreFiles(token));
   _logger?.debug?.(`[gitignore] discovered ${discovered.length} files`);
+  const discoveredRelPaths = new Set(discovered.map((uri) => gitignoreRelPath(uri)));
 
   // 1. Add new discovered files
   for (const uri of discovered) {
@@ -49,9 +65,7 @@ async function syncGitignoreFilesToSettings(
 
   // 2. Cleanup settings based on current discovery
   for (const rel of Object.keys(settings)) {
-    // Remove files that no longer exist on disk
-    const exists = discovered.some((d) => gitignoreRelPath(d) === rel);
-    if (!exists) {
+    if (!discoveredRelPaths.has(rel)) {
       delete settings[rel];
       changed = true;
     }
@@ -111,10 +125,25 @@ async function parseGitignoreFile(
   uri: vscode.Uri,
   token?: vscode.CancellationToken,
 ): Promise<string[]> {
-  if (token?.isCancellationRequested) return [];
+  return (await readParsedGitignoreFile(uri, token)).patterns;
+}
+
+async function readGitignoreLines(
+  uri: vscode.Uri,
+  token?: vscode.CancellationToken,
+): Promise<string[]> {
+  return (await readParsedGitignoreFile(uri, token)).lines;
+}
+
+async function readParsedGitignoreFile(
+  uri: vscode.Uri,
+  token?: vscode.CancellationToken,
+): Promise<{ lines: string[]; patterns: string[] }> {
+  if (token?.isCancellationRequested) {
+    return { lines: [], patterns: [] };
+  }
 
   let relFile = vscode.workspace.asRelativePath(uri, false).replace(/\\/g, '/');
-  // If it's outside the workspace, ignore the relative path mapping
   if (/^[a-zA-Z]:/.test(relFile) || relFile.startsWith('/')) {
     relFile = '';
   }
@@ -124,32 +153,23 @@ async function parseGitignoreFile(
 
   try {
     const bytes = await vscode.workspace.fs.readFile(uri);
-    const text = Buffer.from(bytes).toString('utf8');
-    const patterns: string[] = [];
-    for (const line of text.split(/\r?\n/)) {
-      for (const g of gitignoreLineToGlobs(line, dir)) {
-        if (!patterns.includes(g)) patterns.push(g);
-      }
-    }
-    return patterns;
-  } catch {
-    return [];
-  }
-}
-
-async function readGitignoreLines(
-  uri: vscode.Uri,
-  token?: vscode.CancellationToken,
-): Promise<string[]> {
-  if (token?.isCancellationRequested) return [];
-
-  try {
-    const bytes = await vscode.workspace.fs.readFile(uri);
-    return Buffer.from(bytes)
+    const lines = Buffer.from(bytes)
       .toString('utf8')
       .split(/\r?\n/);
+    const seen = new Set<string>();
+    const patterns: string[] = [];
+    for (const line of lines) {
+      for (const glob of gitignoreLineToGlobs(line, dir)) {
+        if (seen.has(glob)) {
+          continue;
+        }
+        seen.add(glob);
+        patterns.push(glob);
+      }
+    }
+    return { lines, patterns };
   } catch {
-    return [];
+    return { lines: [], patterns: [] };
   }
 }
 
@@ -196,8 +216,9 @@ async function buildGitignoreMatchers(
   discovered: vscode.Uri[],
   settings: Record<string, boolean>,
   token?: vscode.CancellationToken,
-): Promise<GitignoreMatcher[]> {
+): Promise<{ matchers: GitignoreMatcher[]; patternsByRel: Map<string, string[]> }> {
   const matchers: GitignoreMatcher[] = [];
+  const patternsByRel = new Map<string, string[]>();
 
   for (const uri of discovered) {
     if (token?.isCancellationRequested) break;
@@ -211,13 +232,18 @@ async function buildGitignoreMatchers(
     const baseDir = relativePath.includes('/')
       ? relativePath.substring(0, relativePath.lastIndexOf('/'))
       : '';
+    const parsed = await readParsedGitignoreFile(uri, token);
+    patternsByRel.set(rel, parsed.patterns);
     matchers.push({
       baseDir,
-      matcher: ignore().add(await readGitignoreLines(uri, token)),
+      matcher: ignore().add(parsed.lines),
     });
   }
 
-  return matchers.sort((left, right) => left.baseDir.length - right.baseDir.length);
+  return {
+    matchers: matchers.sort((left, right) => left.baseDir.length - right.baseDir.length),
+    patternsByRel,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -253,6 +279,8 @@ let _debounceTimer: ReturnType<typeof setTimeout> | null = null;
 let _onDiscoveryChange = new Set<() => void>();
 let _gitignoreFilesState: Record<string, boolean> = {};
 let _mergedExclusionsCache: MergedExclusionsCache | null = null;
+let _discoveryPromise: Promise<vscode.Uri[]> | null = null;
+let _patternsPromise: Promise<string[]> | null = null;
 
 function emitDiscoveryChange(): void {
   for (const cb of _onDiscoveryChange) {
@@ -282,12 +310,41 @@ function buildPatternsSignature(patterns: string[]): string {
   return [...patterns].sort().join('|');
 }
 
+function buildGitignoreDiscoveryExcludeGlob(
+  userExclusions: string[],
+): string | undefined {
+  const seen = new Set<string>();
+  const merged: string[] = [];
+
+  for (const pattern of [
+    ...GITIGNORE_DISCOVERY_DEFAULT_EXCLUSIONS,
+    ...userExclusions,
+  ]) {
+    const normalized = pattern.trim();
+    if (!normalized || seen.has(normalized)) {
+      continue;
+    }
+    seen.add(normalized);
+    merged.push(normalized);
+  }
+
+  if (merged.length === 0) {
+    return undefined;
+  }
+  if (merged.length === 1) {
+    return merged[0];
+  }
+  return `{${merged.join(',')}}`;
+}
+
 function invalidateCache(
   showProgress: boolean = false,
   reason: string = 'unknown',
 ): void {
   _logger?.info?.(`[gitignore] cache invalidated (${reason})`);
   _cache = null;
+  _discoveryPromise = null;
+  _patternsPromise = null;
   _gitignoredPathCache.clear();
   _mergedExclusionsCache = null;
   if (_debounceTimer) clearTimeout(_debounceTimer);
@@ -361,66 +418,87 @@ function ensureWatcher(logger?: Logger): void {
 export async function discoverGitignoreFiles(
   token?: vscode.CancellationToken,
 ): Promise<vscode.Uri[]> {
-  const folders = vscode.workspace.workspaceFolders ?? [];
-  const uris: vscode.Uri[] = [];
-  const folderNames = folders.map((f) => f.name).join(', ');
-  _logger?.debug?.(
-    `[gitignore] discoverGitignoreFiles: scanning ${folderNames} folders`,
-  );
-
-  const configSearch = vscode.workspace.getConfiguration('anfavorites.search');
-  const globalExclusions = configSearch.get<string[]>('exclusions', []);
-
-  for (const folder of folders) {
-    if (token?.isCancellationRequested) break;
-
-    const excludePatterns = [...globalExclusions];
-    const rootGitignoreUri = vscode.Uri.joinPath(folder.uri, '.gitignore');
-    _logger?.debug?.(`[gitignore] Checking root file: ${rootGitignoreUri.fsPath}`);
-
-    try {
-      await vscode.workspace.fs.stat(rootGitignoreUri);
-      if (!uris.some((u) => u.fsPath === rootGitignoreUri.fsPath)) {
-        uris.push(rootGitignoreUri);
-      }
-      _logger?.debug?.(`[gitignore] Root file exists: ${rootGitignoreUri.fsPath}`);
-    } catch {
-      _logger?.debug?.(`[gitignore] Root file NOT found: ${rootGitignoreUri.fsPath}`);
-    }
-
-    const rootPatterns = await parseGitignoreFile(rootGitignoreUri, token);
-    for (const p of rootPatterns) {
-      if (!excludePatterns.includes(p)) excludePatterns.push(p);
-    }
-
-    let excludeGlob: string | undefined;
-    if (excludePatterns.length === 1) excludeGlob = excludePatterns[0];
-    else if (excludePatterns.length > 1)
-      excludeGlob = `{${excludePatterns.join(',')}}`;
-
-    _logger?.debug?.(
-      `[gitignore] Scanning folder ${folder.name} recursively. Excludes: ${excludeGlob}`,
-    );
-
-    const found = await vscode.workspace.findFiles(
-      new vscode.RelativePattern(folder, '**/.gitignore'),
-      excludeGlob,
-      5000,
-      token,
-    );
-
-    _logger?.debug?.(`[gitignore] Found in ${folder.name}: ${found.length} files`);
-
-    for (const uri of found) {
-      if (!uris.some((u) => u.fsPath === uri.fsPath)) {
-        uris.push(uri);
-      }
-    }
+  if (!token?.isCancellationRequested && _discoveryPromise) {
+    _logger?.debug?.('[gitignore] discovery promise hit');
+    return _discoveryPromise;
   }
 
-  return uris.sort((a, b) =>
-    gitignoreRelPath(a).localeCompare(gitignoreRelPath(b)),
-  );
+  const discoveryPromise = (async (): Promise<vscode.Uri[]> => {
+    const folders = vscode.workspace.workspaceFolders ?? [];
+    const startedAt = Date.now();
+    const byPath = new Map<string, vscode.Uri>();
+    const folderNames = folders.map((f) => f.name).join(', ');
+    _logger?.debug?.(
+      `[gitignore] discoverGitignoreFiles: scanning ${folderNames} folders`,
+    );
+
+    const configSearch = vscode.workspace.getConfiguration('anfavorites.search');
+    const globalExclusions = configSearch.get<string[]>('exclusions', []);
+    const excludeGlob = buildGitignoreDiscoveryExcludeGlob(globalExclusions);
+
+    _logger?.debug?.('[gitignore] discoverGitignoreFiles: global scan started', {
+      folderCount: folders.length,
+      excludeGlob,
+      userExclusionCount: globalExclusions.length,
+      discoveryLimit: GITIGNORE_DISCOVERY_LIMIT,
+    });
+
+    const [rootChecks, found] = await Promise.all([
+      Promise.all(
+        folders.map(async (folder) => {
+          const rootGitignoreUri = vscode.Uri.joinPath(folder.uri, '.gitignore');
+          try {
+            await vscode.workspace.fs.stat(rootGitignoreUri);
+            return rootGitignoreUri;
+          } catch {
+            return null;
+          }
+        }),
+      ),
+      vscode.workspace.findFiles(
+        '**/.gitignore',
+        excludeGlob,
+        GITIGNORE_DISCOVERY_LIMIT,
+        token,
+      ),
+    ]);
+
+    for (const uri of rootChecks) {
+      if (uri) {
+        byPath.set(uri.fsPath.toLowerCase(), uri);
+      }
+    }
+    for (const uri of found) {
+      byPath.set(uri.fsPath.toLowerCase(), uri);
+    }
+
+    const uris = Array.from(byPath.values()).sort((a, b) =>
+      gitignoreRelPath(a).localeCompare(gitignoreRelPath(b)),
+    );
+    _logger?.info?.(
+      `[gitignore] discovery completed. folders=${folders.length} files=${uris.length} durationMs=${Date.now() - startedAt}`,
+      {
+        folderCount: folders.length,
+        discoveredCount: uris.length,
+        durationMs: Date.now() - startedAt,
+        excludeGlob,
+        discoveryLimit: GITIGNORE_DISCOVERY_LIMIT,
+      },
+    );
+    return uris;
+  })();
+
+  if (!token?.isCancellationRequested) {
+    _discoveryPromise = discoveryPromise;
+  }
+
+  try {
+    return await discoveryPromise;
+  } finally {
+    if (_discoveryPromise === discoveryPromise) {
+      _discoveryPromise = null;
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -432,8 +510,19 @@ export async function discoverGitignoreFiles(
  * Results are cached and invalidated when any .gitignore changes.
  */
 export async function getGitignorePatterns(
-  token?: vscode.CancellationToken,
+  tokenOrDiscovered?: vscode.CancellationToken | vscode.Uri[],
+  maybeDiscovered?: vscode.Uri[],
 ): Promise<string[]> {
+  if (!Array.isArray(tokenOrDiscovered) && !maybeDiscovered && _patternsPromise) {
+    _logger?.debug?.('[gitignore] patterns promise hit');
+    return _patternsPromise;
+  }
+
+  const computePatterns = async (): Promise<string[]> => {
+  const token = Array.isArray(tokenOrDiscovered) ? undefined : tokenOrDiscovered;
+  const discoveredOverride = Array.isArray(tokenOrDiscovered)
+    ? tokenOrDiscovered
+    : maybeDiscovered;
   const folderKey = currentFolderKey();
   if (_cache && _cache.folderKey === folderKey) {
     _logger?.debug?.(
@@ -443,9 +532,14 @@ export async function getGitignorePatterns(
   }
 
   const settings = getGitignoreFilesSettings();
-  const discovered = await discoverGitignoreFiles(token);
+  const discovered = discoveredOverride ?? (await discoverGitignoreFiles(token));
   const allPatterns: string[] = [];
-  const matchers = await buildGitignoreMatchers(discovered, settings, token);
+  const seenPatterns = new Set<string>();
+  const { matchers, patternsByRel } = await buildGitignoreMatchers(
+    discovered,
+    settings,
+    token,
+  );
 
   for (const uri of discovered) {
     if (token?.isCancellationRequested) break;
@@ -454,9 +548,11 @@ export async function getGitignorePatterns(
     // Explicitly check for === false to skip disabled files
     if (settings[rel] === false) continue;
 
-    const filePatterns = await parseGitignoreFile(uri, token);
+    const filePatterns = patternsByRel.get(rel) ?? [];
     for (const p of filePatterns) {
-      if (!allPatterns.includes(p)) allPatterns.push(p);
+      if (seenPatterns.has(p)) continue;
+      seenPatterns.add(p);
+      allPatterns.push(p);
     }
   }
 
@@ -473,11 +569,34 @@ export async function getGitignorePatterns(
     `[gitignore] patterns cache refreshed. files=${discovered.length} patterns=${allPatterns.length}`,
   );
   return [...allPatterns];
+  };
+
+  const promise = computePatterns();
+  if (!Array.isArray(tokenOrDiscovered) && !maybeDiscovered) {
+    _patternsPromise = promise;
+  }
+
+  try {
+    return await promise;
+  } finally {
+    if (_patternsPromise === promise) {
+      _patternsPromise = null;
+    }
+  }
 }
 
 export async function getGitignoreSignature(
   token?: vscode.CancellationToken,
 ): Promise<string> {
+  if (_cache?.signature) {
+    return _cache.signature;
+  }
+  if (_patternsPromise) {
+    _logger?.debug?.(
+      '[gitignore] signature requested while patterns warmup is in progress; returning current empty signature',
+    );
+    return '';
+  }
   if (!_cache) {
     await getGitignorePatterns(token);
   }
@@ -733,18 +852,21 @@ export async function initGitignoreSync(
       // Record that we have completed the initial scan for this workspace
       await context.workspaceState.update(workspaceScanStateKey(), true);
 
+      initTrace?.step('descubriendo archivos gitignore');
+      const discovered = await discoverGitignoreFiles();
+
       initTrace?.step('sincronizando archivos gitignore detectados');
-      const didUpdate = await syncGitignoreFilesToSettings();
+      const didUpdate = await syncGitignoreFilesToSettings(discovered);
 
       if (didUpdate) {
         // If we updated settings, we must await the VS Code config event propagation
         // to avoid the event listener wiping our freshly warmed cache.
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Warm up the cache by doing an initial scan/parse
       initTrace?.step('calentando cache de patrones');
-      await getGitignorePatterns();
+      await getGitignorePatterns(discovered);
       logger?.info?.('[gitignore] service started, cache warmed and watcher active');
       initTrace?.success();
     } catch (error) {
@@ -761,8 +883,6 @@ export async function initGitignoreSync(
       },
       async () => {
         await doSync();
-        // Keep progress visible for a short moment to ensure the user notices it
-        await new Promise((resolve) => setTimeout(resolve, 2000));
       },
     );
   } else {
@@ -780,6 +900,8 @@ export function disposeGitignoreService(): void {
   _folderListener?.dispose();
   _folderListener = null;
   _cache = null;
+  _discoveryPromise = null;
+  _patternsPromise = null;
   _gitignoredPathCache.clear();
   _mergedExclusionsCache = null;
   _onDiscoveryChange.clear();

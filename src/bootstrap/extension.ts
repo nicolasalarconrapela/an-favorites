@@ -479,7 +479,7 @@ function getCurrentWindowLabel(): string {
 }
 
 const RELEASE_NOTICE_DELAY_MS = 4000;
-const GITIGNORE_INIT_DELAY_MS = 5000;
+const GITIGNORE_INIT_DELAY_MS = 750;
 const RELEASE_NOTICE_LAST_SEEN_VERSION_KEY = 'anfavorites.lastSeenVersion';
 const RELEASE_NOTICE_PREFERENCE_CONFIG_KEY =
   'releaseNotifications.preference';
