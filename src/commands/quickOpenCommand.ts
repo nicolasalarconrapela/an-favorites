@@ -98,6 +98,7 @@ const HYBRID_FALLBACK_STAGE_LIMIT = 400;
 const MAX_QUICKOPEN_EXCLUSION_GLOB_LENGTH = 12000;
 const MAX_INCREMENTAL_SEARCH_CHANGES = 100;
 const QUICKOPEN_GITIGNORE_OVERSCAN_FACTOR = 4;
+const SEARCH_CACHE_PERSIST_DEBOUNCE_MS = 500;
 const MAX_PREFIX_SEED_QUERIES = 3;
 const MAX_PREFIX_SEED_URIS = 1200;
 
@@ -1122,6 +1123,10 @@ export function registerQuickOpenCommand(
         buildTokenSource?.cancel();
         buildTokenSource?.dispose();
         buildTokenSource = null;
+        if (persistSearchCacheTimer) {
+          clearTimeout(persistSearchCacheTimer);
+          persistSearchCacheTimer = null;
+        }
         log.debug('[QuickOpen] Disposing QuickPick and listeners...');
         try {
           disposables.forEach((d) => d.dispose());
@@ -1142,14 +1147,24 @@ export function registerQuickOpenCommand(
 
       const searchCache = new LruCache<string, SearchCacheEntry>(30);
       let buildTokenSource: vscode.CancellationTokenSource | null = null;
+      let persistSearchCacheTimer: NodeJS.Timeout | null = null;
       let searchPage = 1;
       let previousSearchValue = '';
       let currentSearchMutationVersion = 0;
       const pendingSearchChangedPaths = new Set<string>();
       const persistSearchCache = (): void => {
-        log.debug(
-          `[QuickOpen] session query index updated (${searchCache.entries().length} entry/entries in memory)`,
-        );
+        if (persistSearchCacheTimer) {
+          clearTimeout(persistSearchCacheTimer);
+        }
+        persistSearchCacheTimer = setTimeout(() => {
+          persistSearchCacheTimer = null;
+          if (isDisposed) {
+            return;
+          }
+          log.debug(
+            `[QuickOpen] session query index settled (${searchCache.entries().length} entry/entries in memory)`,
+          );
+        }, SEARCH_CACHE_PERSIST_DEBOUNCE_MS);
       };
       const markSearchPathsDirty = (paths: string[]): void => {
         currentSearchMutationVersion += 1;
