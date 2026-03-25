@@ -25,7 +25,7 @@ import {
 import {
   disposeGitignoreService,
   initGitignoreSync,
-  onGitignoreDiscoveryChange,
+  subscribeGitignoreDiscoveryChange,
 } from '../utils/gitignoreService';
 import { initializeL10n, t } from '../utils/l10n';
 
@@ -171,12 +171,14 @@ export function activate(context: vscode.ExtensionContext): void {
       logger.warn('[activate] Deferred .gitignore sync failed', error);
     });
   };
-  onGitignoreDiscoveryChange(() => {
-    logger?.info?.(
-      '[gitignore] Discovery changed -> invalidating collision index',
-    );
-    invalidateCollisionIndex(logger, 'gitignore changed');
-  });
+  context.subscriptions.push(
+    subscribeGitignoreDiscoveryChange(() => {
+      logger?.info?.(
+        '[gitignore] Discovery changed -> invalidating collision index',
+      );
+      invalidateCollisionIndex(logger, 'gitignore changed');
+    }),
+  );
   gitignoreInitTimer = setTimeout(() => {
     gitignoreInitTimer = undefined;
     logger.debug(

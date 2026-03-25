@@ -248,7 +248,7 @@ let _gitignoredPathCache = new Map<string, boolean>();
 let _watcher: vscode.FileSystemWatcher | null = null;
 let _folderListener: vscode.Disposable | null = null;
 let _debounceTimer: ReturnType<typeof setTimeout> | null = null;
-let _onDiscoveryChange: (() => void) | undefined;
+let _onDiscoveryChange = new Set<() => void>();
 let _gitignoreFilesState: Record<string, boolean> = {};
 let _mergedExclusionsCache: MergedExclusionsCache | null = null;
 
@@ -292,13 +292,13 @@ function invalidateCache(
         async () => {
           // Perform the actual work
           await syncGitignoreFilesToSettings();
-          _onDiscoveryChange?.();
+          _onDiscoveryChange.forEach((cb) => cb());
 
         },
       );
     } else {
       void syncGitignoreFilesToSettings().then(() => {
-        _onDiscoveryChange?.();
+        _onDiscoveryChange.forEach((cb) => cb());
       });
     }
   }, 400);
@@ -662,7 +662,16 @@ export function isGitignoreFileEnabled(uri: vscode.Uri): boolean {
  * (file created, deleted, or workspace folders changed).
  */
 export function onGitignoreDiscoveryChange(cb: () => void): void {
-  _onDiscoveryChange = cb;
+  _onDiscoveryChange.add(cb);
+}
+
+export function subscribeGitignoreDiscoveryChange(
+  cb: () => void,
+): vscode.Disposable {
+  _onDiscoveryChange.add(cb);
+  return new vscode.Disposable(() => {
+    _onDiscoveryChange.delete(cb);
+  });
 }
 
 export async function initGitignoreSync(
@@ -738,5 +747,5 @@ export function disposeGitignoreService(): void {
   _cache = null;
   _gitignoredPathCache.clear();
   _mergedExclusionsCache = null;
-  _onDiscoveryChange = undefined;
+  _onDiscoveryChange.clear();
 }

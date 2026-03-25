@@ -21,6 +21,7 @@ import {
   filterGitignoredUrisFast,
   filterGitignoredUris,
   getGitignoreSignature,
+  subscribeGitignoreDiscoveryChange,
 } from '../utils/gitignoreService';
 
 type QuickOpenItem = vscode.QuickPickItem;
@@ -452,6 +453,21 @@ function debounce<T extends (...args: any[]) => any>(
       func(...args);
     }, waitMs);
   };
+}
+
+function isGitignoreDocument(document: vscode.TextDocument): boolean {
+  return (
+    document.uri.scheme === 'file' &&
+    document.uri.fsPath.toLowerCase().endsWith(`${path.sep}.gitignore`)
+  );
+}
+
+function hasOpenGitignoreDocument(): boolean {
+  return (
+    vscode.window.visibleTextEditors.some((editor) =>
+      isGitignoreDocument(editor.document),
+    ) || vscode.workspace.textDocuments.some((document) => isGitignoreDocument(document))
+  );
 }
 
 async function openUriInEditor(
@@ -1318,7 +1334,8 @@ export function registerQuickOpenCommand(
               ),
             );
             const cachedPreviewUris =
-              searchCache.get(normalizedSearch)?.uris ?? [];
+              filterGitignoredUrisFast(searchCache.get(normalizedSearch)?.uris ?? []) ??
+              [];
             const immediatePreviewUris = prioritizeDistinctBasenames(
               dedupeUrisByFsPath([
                 ...(filterGitignoredUrisFast(
@@ -1782,6 +1799,23 @@ export function registerQuickOpenCommand(
         );
         await buildItems(quickPick.value);
       }, 150);
+
+      disposables.push(
+        subscribeGitignoreDiscoveryChange(() => {
+          if (!hasOpenGitignoreDocument()) {
+            return;
+          }
+          logThrottledWithContext(
+            'debug',
+            'quickopen:gitignore-changed',
+            'Gitignore changed while a .gitignore document is open, rebuilding QuickOpen items',
+          );
+          searchCache.clear();
+          currentSearchMutationVersion += 1;
+          pendingSearchChangedPaths.clear();
+          debouncedExternalRebuild('gitignore');
+        }),
+      );
 
       disposables.push(
         quickPick.onDidChangeValue(async (value) => {

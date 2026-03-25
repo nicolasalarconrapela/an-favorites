@@ -5,7 +5,7 @@ import {
   setGitignoreFileEnabled,
   setGitignoreFilesEnabled,
   gitignoreRelPath,
-  onGitignoreDiscoveryChange,
+  subscribeGitignoreDiscoveryChange,
 } from '../utils/gitignoreService';
 import { t } from '../utils/l10n';
 
@@ -201,7 +201,7 @@ export function registerManageGitignoreCommand(
 
       await refresh();
 
-      onGitignoreDiscoveryChange(() => {
+      const discoverySubscription = subscribeGitignoreDiscoveryChange(() => {
         void refresh();
       });
 
@@ -238,7 +238,10 @@ export function registerManageGitignoreCommand(
         }
       });
 
-      quickPick.onDidHide(() => quickPick.dispose());
+      quickPick.onDidHide(() => {
+        discoverySubscription.dispose();
+        quickPick.dispose();
+      });
     },
   );
 
