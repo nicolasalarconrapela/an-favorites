@@ -9,10 +9,13 @@ export function registerKeyboardShortcutCommand(
   context: vscode.ExtensionContext,
   logger: Logger,
 ): void {
+  const log = logger.withContext?.({ scope: 'KeyboardShortcutCommand' }) ?? logger;
   const disposable = vscode.commands.registerCommand(
     'anfavorites.configureKeybindings',
     () => {
-      logger.info('Opening keyboard shortcuts editor for anfavorites');
+      log.info('Opening keyboard shortcuts editor', {
+        query: 'anfavorites',
+      });
 
       // Opens the global keybindings editor with the extension's name as a filter
       vscode.commands.executeCommand(

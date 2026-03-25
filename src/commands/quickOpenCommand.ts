@@ -101,6 +101,46 @@ const QUICKOPEN_GITIGNORE_OVERSCAN_FACTOR = 4;
 const SEARCH_CACHE_PERSIST_DEBOUNCE_MS = 500;
 const MAX_PREFIX_SEED_QUERIES = 3;
 const MAX_PREFIX_SEED_URIS = 1200;
+const QUICKOPEN_TRACE_WARN_MS = 1500;
+
+function logQuickOpenTrace(
+  logger: Logger | undefined,
+  message: string,
+  metadata?: Record<string, unknown>,
+): void {
+  const memory = process.memoryUsage();
+  logger?.info?.(message, {
+    ...metadata,
+    heapUsedBytes: memory.heapUsed,
+    rssBytes: memory.rss,
+  });
+}
+
+function startQuickOpenWatchdog(
+  logger: Logger | undefined,
+  label: string,
+  metadata?: Record<string, unknown>,
+): () => void {
+  const startedAt = Date.now();
+  const timer = setTimeout(() => {
+    logQuickOpenTrace(
+      logger,
+      `[QuickOpen][trace] Slow stage detected: ${label}`,
+      {
+        durationMs: Date.now() - startedAt,
+        ...metadata,
+      },
+    );
+  }, QUICKOPEN_TRACE_WARN_MS);
+
+  return () => {
+    clearTimeout(timer);
+    logger?.debug?.(`[QuickOpen][trace] Stage completed: ${label}`, {
+      durationMs: Date.now() - startedAt,
+      ...metadata,
+    });
+  };
+}
 
 function dedupeUrisByFsPath(uris: vscode.Uri[]): vscode.Uri[] {
   const seen = new Set<string>();
@@ -310,6 +350,7 @@ async function runHybridWorkspaceSearch(params: {
   exclusionGlob: string | undefined;
   maxSearchFiles: number;
   searchService: QuickOpenSearchService;
+  logger?: Logger;
   token: vscode.CancellationToken;
 }): Promise<SearchCacheEntry> {
   const {
@@ -319,14 +360,34 @@ async function runHybridWorkspaceSearch(params: {
     exclusionGlob,
     maxSearchFiles,
     searchService,
+    logger,
     token,
   } = params;
 
+  const finishLocalFilterStage = startQuickOpenWatchdog(
+    logger,
+    'runHybridWorkspaceSearch:local-filter',
+    {
+      normalizedSearch,
+      localCandidateCount: localCandidateUris.length,
+      seedCount: seedUris.length,
+    },
+  );
   const localMatches = dedupeUrisByFsPath(
     await filterGitignoredUris(
       localCandidateUris.filter((uri) => matchesSearchText(uri, normalizedSearch)),
       token,
     ),
+  );
+  finishLocalFilterStage();
+
+  const finishSeedFilterStage = startQuickOpenWatchdog(
+    logger,
+    'runHybridWorkspaceSearch:seed-filter',
+    {
+      normalizedSearch,
+      seedCount: seedUris.length,
+    },
   );
   const seededMatches = dedupeUrisByFsPath(
     await filterGitignoredUris(
@@ -334,6 +395,7 @@ async function runHybridWorkspaceSearch(params: {
       token,
     ),
   );
+  finishSeedFilterStage();
 
   const stagePatterns = [
     `**/${normalizedSearch}*`,
@@ -352,6 +414,13 @@ async function runHybridWorkspaceSearch(params: {
 
   for (let i = 0; i < stagePatterns.length; i += 1) {
     if (token.isCancellationRequested || mergedUris.length >= maxSearchFiles) {
+      logger?.debug?.('[QuickOpen][trace] Hybrid search loop stopped early', {
+        normalizedSearch,
+        stageIndex: i,
+        isCancelled: token.isCancellationRequested,
+        mergedCount: mergedUris.length,
+        maxSearchFiles,
+      });
       break;
     }
 
@@ -361,13 +430,34 @@ async function runHybridWorkspaceSearch(params: {
       stageLimit,
       Math.min(maxSearchFiles, stageLimit * QUICKOPEN_GITIGNORE_OVERSCAN_FACTOR),
     );
+    const finishFindFilesStage = startQuickOpenWatchdog(
+      logger,
+      `runHybridWorkspaceSearch:findFiles:${i}`,
+      {
+        normalizedSearch,
+        stageIndex: i,
+        pattern: stagePatterns[i],
+        rawStageLimit,
+      },
+    );
     const foundUris = await searchService.findFiles(
       stagePatterns[i],
       exclusionGlob,
       rawStageLimit,
       token,
     );
+    finishFindFilesStage();
+    const finishFilterStage = startQuickOpenWatchdog(
+      logger,
+      `runHybridWorkspaceSearch:filterGitignoredUris:${i}`,
+      {
+        normalizedSearch,
+        stageIndex: i,
+        foundCount: foundUris.length,
+      },
+    );
     const filteredFoundUris = await filterGitignoredUris(foundUris, token);
+    finishFilterStage();
 
     if (foundUris.length >= rawStageLimit || filteredFoundUris.length >= stageLimit) {
       exceededMaxFiles = true;
@@ -377,6 +467,14 @@ async function runHybridWorkspaceSearch(params: {
       dedupeUrisByFsPath([...mergedUris, ...filteredFoundUris]),
       normalizedSearch,
     );
+    logger?.info?.('[QuickOpen][trace] Hybrid search stage merged', {
+      normalizedSearch,
+      stageIndex: i,
+      foundCount: foundUris.length,
+      filteredCount: filteredFoundUris.length,
+      mergedCount: mergedUris.length,
+      exceededMaxFiles,
+    });
   }
 
   return {
@@ -441,6 +539,24 @@ function workspaceRelativeLabel(uri: vscode.Uri): {
   return { rel };
 }
 
+function getCurrentWindowLabel(): string {
+  const workspaceFile = vscode.workspace.workspaceFile;
+  if (workspaceFile) {
+    return path.basename(workspaceFile.fsPath);
+  }
+
+  const folders = vscode.workspace.workspaceFolders ?? [];
+  if (folders.length === 0) {
+    return 'no-workspace';
+  }
+
+  if (folders.length === 1) {
+    return folders[0].name;
+  }
+
+  return folders.map((folder) => folder.name).join(', ');
+}
+
 function debounce<T extends (...args: any[]) => any>(
   func: T,
   waitMs: number,
@@ -475,8 +591,14 @@ async function openUriInEditor(
   uri: vscode.Uri,
   options?: {
     viewColumn?: vscode.ViewColumn;
+    logger?: Logger;
   },
 ): Promise<void> {
+  options?.logger?.info?.('[QuickOpen] Opening resource in editor window', {
+    filePath: uri.fsPath,
+    windowName: getCurrentWindowLabel(),
+    targetViewColumn: options.viewColumn,
+  });
   await vscode.commands.executeCommand('vscode.open', uri, {
     preview: false,
     preserveFocus: false,
@@ -484,8 +606,12 @@ async function openUriInEditor(
   });
 }
 
-async function openUriInNewWindow(uri: vscode.Uri): Promise<void> {
-  await openUriInEditor(uri);
+async function openUriInNewWindow(uri: vscode.Uri, logger?: Logger): Promise<void> {
+  logger?.info?.('[QuickOpen] Opening resource in new window', {
+    filePath: uri.fsPath,
+    sourceWindowName: getCurrentWindowLabel(),
+  });
+  await openUriInEditor(uri, { logger });
   await vscode.commands.executeCommand(
     'workbench.action.moveEditorToNewWindow',
   );
@@ -649,6 +775,17 @@ async function buildSearchItems(params: {
   let cacheEntry = searchCache.get(cacheKey);
   let noticeItem: QuickOpenItem | null = null;
   let loadMoreItem: ActionQuickPickItem | null = null;
+  const finishBuildSearchWatchdog = startQuickOpenWatchdog(
+    logger,
+    'buildSearchItems',
+    {
+      cacheKey,
+      currentSearchMutationVersion,
+      pendingChangedPathCount: pendingSearchChangedPaths.size,
+      localCandidateCount: localCandidateUris.length,
+      searchPage,
+    },
+  );
   logger?.debug?.(
     `[QuickOpen] search cache ${cacheEntry ? 'hit' : 'miss'} for "${cacheKey}"`,
   );
@@ -657,7 +794,13 @@ async function buildSearchItems(params: {
     config.searchExclusions,
     logger,
   );
+  const finishGitignoreSignatureStage = startQuickOpenWatchdog(
+    logger,
+    'buildSearchItems:getGitignoreSignature',
+    { cacheKey },
+  );
   const gitignoreSignature = await getGitignoreSignature(token);
+  finishGitignoreSignatureStage();
   const exclusionSignature = buildSearchExclusionSignature(
     exclusionGlob,
     gitignoreSignature,
@@ -721,6 +864,12 @@ async function buildSearchItems(params: {
     logger?.info?.(
       `[QuickOpen] rebuilding query index for "${cacheKey}" reason=${needsFullRebuildReason} (prefix seeds=${prefixSeedUris.length})`,
     );
+    logQuickOpenTrace(logger, '[QuickOpen][trace] Query index rebuild started', {
+      cacheKey,
+      needsFullRebuildReason,
+      prefixSeedCount: prefixSeedUris.length,
+      effectiveMaxSearchFiles,
+    });
     cacheEntry = await runHybridWorkspaceSearch({
       normalizedSearch: cacheKey,
       localCandidateUris,
@@ -728,6 +877,7 @@ async function buildSearchItems(params: {
       exclusionGlob,
       maxSearchFiles: effectiveMaxSearchFiles,
       searchService,
+      logger,
       token,
     });
     cacheEntry.mutationVersion = currentSearchMutationVersion;
@@ -736,6 +886,15 @@ async function buildSearchItems(params: {
     persistSearchCache();
     logger?.debug?.(
       `[QuickOpen] query index stored for "${cacheKey}". results=${cacheEntry.uris.length}`,
+    );
+    logQuickOpenTrace(
+      logger,
+      '[QuickOpen][trace] Query index rebuild completed',
+      {
+        cacheKey,
+        resultCount: cacheEntry.uris.length,
+        exceededMaxFiles: cacheEntry.exceededMaxFiles,
+      },
     );
   }
 
@@ -781,6 +940,7 @@ async function buildSearchItems(params: {
     };
   }
 
+  finishBuildSearchWatchdog();
   return {
     items,
     noticeItem,
@@ -2025,10 +2185,11 @@ export function registerQuickOpenCommand(
             log.info(
               `[QuickOpen] Opening in new window: ${selected.internalUri.fsPath}`,
             );
-            await openUriInNewWindow(selected.internalUri);
+            await openUriInNewWindow(selected.internalUri, log);
           } else {
             await openUriInEditor(selected.internalUri, {
               viewColumn: openToSide ? vscode.ViewColumn.Beside : undefined,
+              logger: log,
             });
           }
           log.info('[QuickOpen] ✓ File opened successfully, hiding QuickPick');
@@ -2054,6 +2215,7 @@ export function registerQuickOpenCommand(
               mruService.add(uri.fsPath);
               await openUriInEditor(uri, {
                 viewColumn: vscode.ViewColumn.Beside,
+                logger: log,
               });
 
               quickPick.hide();
@@ -2067,7 +2229,7 @@ export function registerQuickOpenCommand(
             log.info(`[QuickOpen] Opening in new window: ${uri.fsPath}`);
             try {
               mruService.add(uri.fsPath);
-              await openUriInNewWindow(uri);
+              await openUriInNewWindow(uri, log);
 
               quickPick.hide();
             } catch (err) {
@@ -2080,7 +2242,7 @@ export function registerQuickOpenCommand(
             log.info(`[QuickOpen] Opening in active editor: ${uri.fsPath}`);
             try {
               mruService.add(uri.fsPath);
-              await openUriInEditor(uri);
+              await openUriInEditor(uri, { logger: log });
 
               quickPick.hide();
             } catch (err) {

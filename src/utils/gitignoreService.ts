@@ -1,6 +1,8 @@
 import ignore, { type Ignore } from 'ignore';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { startLoggedAction } from '../logging/loggingModule';
+import { Logger } from '../logging/logger';
 import { t } from '../utils/l10n';
 
 const INTERNAL_FILES_STATE_KEY = 'anfavorites.gitignore.filesState';
@@ -241,7 +243,7 @@ interface GitignoreMatcher {
   matcher: Ignore;
 }
 
-let _logger: any | null = null;
+let _logger: Logger | null = null;
 let _context: vscode.ExtensionContext | null = null;
 let _cache: GitignoreCache | null = null;
 let _gitignoredPathCache = new Map<string, boolean>();
@@ -251,6 +253,16 @@ let _debounceTimer: ReturnType<typeof setTimeout> | null = null;
 let _onDiscoveryChange = new Set<() => void>();
 let _gitignoreFilesState: Record<string, boolean> = {};
 let _mergedExclusionsCache: MergedExclusionsCache | null = null;
+
+function emitDiscoveryChange(): void {
+  for (const cb of _onDiscoveryChange) {
+    try {
+      cb();
+    } catch (error) {
+      _logger?.warn?.('[gitignore] discovery listener failed', { error });
+    }
+  }
+}
 
 function currentFolderKey(): string {
   return (vscode.workspace.workspaceFolders ?? [])
@@ -291,20 +303,33 @@ function invalidateCache(
         },
         async () => {
           // Perform the actual work
-          await syncGitignoreFilesToSettings();
-          _onDiscoveryChange.forEach((cb) => cb());
-
+          try {
+            await syncGitignoreFilesToSettings();
+            emitDiscoveryChange();
+          } catch (error) {
+            _logger?.error?.('[gitignore] cache refresh crashed (progress)', {
+              reason,
+              error,
+            });
+          }
         },
       );
     } else {
-      void syncGitignoreFilesToSettings().then(() => {
-        _onDiscoveryChange.forEach((cb) => cb());
-      });
+      void syncGitignoreFilesToSettings()
+        .then(() => {
+          emitDiscoveryChange();
+        })
+        .catch((error) => {
+          _logger?.error?.('[gitignore] cache refresh crashed', {
+            reason,
+            error,
+          });
+        });
     }
   }, 400);
 }
 
-function ensureWatcher(logger?: any): void {
+function ensureWatcher(logger?: Logger): void {
   if (_watcher) return;
 
   _watcher = vscode.workspace.createFileSystemWatcher('**/.gitignore');
@@ -676,7 +701,7 @@ export function subscribeGitignoreDiscoveryChange(
 
 export async function initGitignoreSync(
   context: vscode.ExtensionContext,
-  logger?: any,
+  logger?: Logger,
 ): Promise<void> {
   _context = context;
   _logger = logger;
@@ -699,23 +724,33 @@ export async function initGitignoreSync(
   logger?.info?.(
     `[gitignore] init requested. folders=${(vscode.workspace.workspaceFolders ?? []).length} firstRun=${isFirstRun}`,
   );
+  const initTrace = logger ? startLoggedAction(logger, 'sincronizacion gitignore') : null;
 
   const doSync = async (): Promise<void> => {
-    logger?.debug?.('[gitignore] initial sync starting');
-    // Record that we have completed the initial scan for this workspace
-    await context.workspaceState.update(workspaceScanStateKey(), true);
+    try {
+      logger?.debug?.('[gitignore] initial sync starting');
+      initTrace?.step('marcando workspace como escaneado');
+      // Record that we have completed the initial scan for this workspace
+      await context.workspaceState.update(workspaceScanStateKey(), true);
 
-    const didUpdate = await syncGitignoreFilesToSettings();
+      initTrace?.step('sincronizando archivos gitignore detectados');
+      const didUpdate = await syncGitignoreFilesToSettings();
 
-    if (didUpdate) {
-      // If we updated settings, we must await the VS Code config event propagation
-      // to avoid the event listener wiping our freshly warmed cache.
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (didUpdate) {
+        // If we updated settings, we must await the VS Code config event propagation
+        // to avoid the event listener wiping our freshly warmed cache.
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+
+      // Warm up the cache by doing an initial scan/parse
+      initTrace?.step('calentando cache de patrones');
+      await getGitignorePatterns();
+      logger?.info?.('[gitignore] service started, cache warmed and watcher active');
+      initTrace?.success();
+    } catch (error) {
+      initTrace?.fail(error);
+      throw error;
     }
-
-    // Warm up the cache by doing an initial scan/parse
-    await getGitignorePatterns();
-    logger?.info?.('[gitignore] service started, cache warmed and watcher active');
   };
 
   if (isFirstRun) {
