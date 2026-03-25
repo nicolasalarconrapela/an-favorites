@@ -10,10 +10,19 @@ REPOWN="$(printf '%s\n' "$GIT_REMOTE_URL" | sed -E 's#(git@github.com:|https://g
 RELEASE_LATEST="$(gh release view --repo "$REPOWN" --json tagName --jq .tagName)"
 
 RAMA_ACTUAL="$(git branch --show-current)"
+CURRENT_BRANCH="$RAMA_ACTUAL"
+TARGET_BRANCH="develop"
 VERSION_ACTUAL="$(sed -nE 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' package.json | head -n 1)"
+RELEASE_VERSION="$VERSION_ACTUAL"
 
 if [[ -z "${VERSION_ACTUAL}" ]]; then
   echo "Error: no se pudo obtener VERSION_ACTUAL desde package.json"
+  exit 1
+fi
+
+# Validar que la rama actual es release/1.X.x (Caso A: release/1.3.y -> develop)
+if ! echo "$CURRENT_BRANCH" | grep -qE '^release/1\.[0-9]+\.x$'; then
+  echo "Error: la rama actual ($CURRENT_BRANCH) no cumple el patron esperado ^release/1.[0-9]+.x$ para el Caso A"
   exit 1
 fi
 
@@ -35,10 +44,13 @@ mkdir -p "$OUTPUT_DIR"
 
 cat > "$VAR_S1_FILE" <<EOF
 RAMA_ACTUAL=$RAMA_ACTUAL
+CURRENT_BRANCH=$CURRENT_BRANCH
+TARGET_BRANCH=$TARGET_BRANCH
 GIT_REMOTE_URL=$GIT_REMOTE_URL
 REPOWN=$REPOWN
 RELEASE_LATEST=$RELEASE_LATEST
 VERSION_ACTUAL=$VERSION_ACTUAL
+RELEASE_VERSION=$RELEASE_VERSION
 RELEASE_RANGE_BRANCH=$RELEASE_RANGE_BRANCH
 RELEASE_RANGE_VERSION=$RELEASE_RANGE_VERSION
 RELEASE_RANGE=$RELEASE_RANGE
