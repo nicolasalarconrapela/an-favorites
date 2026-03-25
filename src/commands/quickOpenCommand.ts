@@ -20,6 +20,7 @@ import {
   buildExclusionGlobFromPatterns,
   filterGitignoredUrisFast,
   filterGitignoredUris,
+  getMergedExclusions,
   getGitignoreSignature,
   subscribeGitignoreDiscoveryChange,
 } from '../utils/gitignoreService';
@@ -102,6 +103,8 @@ const SEARCH_CACHE_PERSIST_DEBOUNCE_MS = 500;
 const MAX_PREFIX_SEED_QUERIES = 3;
 const MAX_PREFIX_SEED_URIS = 1200;
 const QUICKOPEN_TRACE_WARN_MS = 1500;
+const QUICKOPEN_FIND_FILES_TIMEOUT_MS = 2500;
+const QUICKOPEN_STAGE_MAX_RESULTS = 1500;
 
 function logQuickOpenTrace(
   logger: Logger | undefined,
@@ -140,6 +143,52 @@ function startQuickOpenWatchdog(
       ...metadata,
     });
   };
+}
+
+async function findFilesWithTimeout(params: {
+  searchService: QuickOpenSearchService;
+  pattern: string;
+  exclude: string | undefined;
+  limit: number;
+  token: vscode.CancellationToken;
+  logger?: Logger;
+  metadata?: Record<string, unknown>;
+}): Promise<vscode.Uri[]> {
+  const { searchService, pattern, exclude, limit, token, logger, metadata } = params;
+
+  const localTokenSource = new vscode.CancellationTokenSource();
+  const relay = token.onCancellationRequested(() => {
+    localTokenSource.cancel();
+  });
+
+  let timeoutHandle: NodeJS.Timeout | undefined;
+  try {
+    return await Promise.race([
+      searchService.findFiles(pattern, exclude, limit, localTokenSource.token),
+      new Promise<vscode.Uri[]>((resolve) => {
+        timeoutHandle = setTimeout(() => {
+          localTokenSource.cancel();
+          logQuickOpenTrace(
+            logger,
+            '[QuickOpen][trace] findFiles timed out; returning partial empty result',
+            {
+              pattern,
+              limit,
+              timeoutMs: QUICKOPEN_FIND_FILES_TIMEOUT_MS,
+              ...metadata,
+            },
+          );
+          resolve([]);
+        }, QUICKOPEN_FIND_FILES_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    relay.dispose();
+    localTokenSource.dispose();
+    if (timeoutHandle) {
+      clearTimeout(timeoutHandle);
+    }
+  }
 }
 
 function dedupeUrisByFsPath(uris: vscode.Uri[]): vscode.Uri[] {
@@ -426,9 +475,12 @@ async function runHybridWorkspaceSearch(params: {
 
     const remaining = Math.max(1, maxSearchFiles - mergedUris.length);
     const stageLimit = Math.min(stageLimits[i], remaining) + 1;
-    const rawStageLimit = Math.max(
+    const rawStageLimit = Math.min(
+      QUICKOPEN_STAGE_MAX_RESULTS,
+      Math.max(
       stageLimit,
       Math.min(maxSearchFiles, stageLimit * QUICKOPEN_GITIGNORE_OVERSCAN_FACTOR),
+      ),
     );
     const finishFindFilesStage = startQuickOpenWatchdog(
       logger,
@@ -440,12 +492,18 @@ async function runHybridWorkspaceSearch(params: {
         rawStageLimit,
       },
     );
-    const foundUris = await searchService.findFiles(
-      stagePatterns[i],
-      exclusionGlob,
-      rawStageLimit,
+    const foundUris = await findFilesWithTimeout({
+      searchService,
+      pattern: stagePatterns[i],
+      exclude: exclusionGlob,
+      limit: rawStageLimit,
       token,
-    );
+      logger,
+      metadata: {
+        normalizedSearch,
+        stageIndex: i,
+      },
+    });
     finishFindFilesStage();
     const finishFilterStage = startQuickOpenWatchdog(
       logger,
@@ -790,8 +848,12 @@ async function buildSearchItems(params: {
     `[QuickOpen] search cache ${cacheEntry ? 'hit' : 'miss'} for "${cacheKey}"`,
   );
 
-  const exclusionGlob = getSafeQuickOpenExclusionGlob(
+  const mergedExclusions = await getMergedExclusions(
     config.searchExclusions,
+    token,
+  );
+  const exclusionGlob = getSafeQuickOpenExclusionGlob(
+    mergedExclusions,
     logger,
   );
   const finishGitignoreSignatureStage = startQuickOpenWatchdog(
@@ -869,6 +931,8 @@ async function buildSearchItems(params: {
       needsFullRebuildReason,
       prefixSeedCount: prefixSeedUris.length,
       effectiveMaxSearchFiles,
+      mergedExclusionCount: mergedExclusions.length,
+      exclusionGlobApplied: Boolean(exclusionGlob),
     });
     cacheEntry = await runHybridWorkspaceSearch({
       normalizedSearch: cacheKey,
