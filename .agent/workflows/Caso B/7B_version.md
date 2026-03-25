@@ -59,7 +59,7 @@ Acción (solo lectura, sin ejecutar nada):
 
 Mostrar la previsualización:
 
-```
+```text
 Operación prevista:
   - Rama actual:        develop
   - Versión actual:     <VERSION_ACTUAL>
@@ -193,3 +193,13 @@ Abortar si:
 - el commit no existe en el log
 
 Esperar confirmación explícita del usuario antes de continuar con el siguiente paso.
+
+---
+
+## Paso anterior
+
+- [7. Generación de textos de Merge](file:///c:/Users/Developer/Desktop/@anappwilos/afav_TEST/.agent/workflows/Caso%20B/7.md)
+
+## Siguiente paso
+
+- [8. Creación de PR](file:///c:/Users/Developer/Desktop/@anappwilos/afav_TEST/.agent/workflows/Caso%20B/8.md)
