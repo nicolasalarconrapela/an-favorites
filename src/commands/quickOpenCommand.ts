@@ -150,11 +150,21 @@ async function findFilesWithTimeout(params: {
   pattern: string;
   exclude: string | undefined;
   limit: number;
+  timeoutMs: number;
   token: vscode.CancellationToken;
   logger?: Logger;
   metadata?: Record<string, unknown>;
 }): Promise<vscode.Uri[]> {
-  const { searchService, pattern, exclude, limit, token, logger, metadata } = params;
+  const {
+    searchService,
+    pattern,
+    exclude,
+    limit,
+    timeoutMs,
+    token,
+    logger,
+    metadata,
+  } = params;
 
   const localTokenSource = new vscode.CancellationTokenSource();
   const relay = token.onCancellationRequested(() => {
@@ -169,17 +179,17 @@ async function findFilesWithTimeout(params: {
         timeoutHandle = setTimeout(() => {
           localTokenSource.cancel();
           logQuickOpenTrace(
-            logger,
-            '[QuickOpen][trace] findFiles timed out; returning partial empty result',
-            {
+          logger,
+          '[QuickOpen][trace] findFiles timed out; returning partial empty result',
+          {
               pattern,
               limit,
-              timeoutMs: QUICKOPEN_FIND_FILES_TIMEOUT_MS,
+              timeoutMs,
               ...metadata,
             },
           );
           resolve([]);
-        }, QUICKOPEN_FIND_FILES_TIMEOUT_MS);
+        }, timeoutMs);
       }),
     ]);
   } finally {
@@ -460,6 +470,13 @@ async function runHybridWorkspaceSearch(params: {
     normalizedSearch,
   );
   let exceededMaxFiles = mergedUris.length > maxSearchFiles;
+  const exclusionGlobApplied = Boolean(exclusionGlob);
+  const stageResultCap = exclusionGlobApplied
+    ? maxSearchFiles
+    : QUICKOPEN_STAGE_MAX_RESULTS;
+  const findFilesTimeoutMs = exclusionGlobApplied
+    ? QUICKOPEN_FIND_FILES_TIMEOUT_MS * 2
+    : QUICKOPEN_FIND_FILES_TIMEOUT_MS;
 
   for (let i = 0; i < stagePatterns.length; i += 1) {
     if (token.isCancellationRequested || mergedUris.length >= maxSearchFiles) {
@@ -476,10 +493,13 @@ async function runHybridWorkspaceSearch(params: {
     const remaining = Math.max(1, maxSearchFiles - mergedUris.length);
     const stageLimit = Math.min(stageLimits[i], remaining) + 1;
     const rawStageLimit = Math.min(
-      QUICKOPEN_STAGE_MAX_RESULTS,
+      stageResultCap,
       Math.max(
-      stageLimit,
-      Math.min(maxSearchFiles, stageLimit * QUICKOPEN_GITIGNORE_OVERSCAN_FACTOR),
+        stageLimit,
+        Math.min(
+          maxSearchFiles,
+          stageLimit * QUICKOPEN_GITIGNORE_OVERSCAN_FACTOR,
+        ),
       ),
     );
     const finishFindFilesStage = startQuickOpenWatchdog(
@@ -497,11 +517,13 @@ async function runHybridWorkspaceSearch(params: {
       pattern: stagePatterns[i],
       exclude: exclusionGlob,
       limit: rawStageLimit,
+      timeoutMs: findFilesTimeoutMs,
       token,
       logger,
       metadata: {
         normalizedSearch,
         stageIndex: i,
+        exclusionGlobApplied,
       },
     });
     finishFindFilesStage();

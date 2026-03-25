@@ -147,6 +147,7 @@ export class SharedStorageService {
 
     if (shouldShare && this.sharedFilePath) {
       this.ensureStorageFile();
+      this.seedSharedStorageFromWorkspaceStateIfNeeded();
       this.startFileWatcher();
       this.useSharedFile = true;
       this.logger.info('[SharedStorage] Modo Cross-IDE ACTIVADO.', {
@@ -232,6 +233,40 @@ export class SharedStorageService {
         );
       }
     }
+  }
+
+  private seedSharedStorageFromWorkspaceStateIfNeeded(): void {
+    if (!this.sharedFilePath) {
+      return;
+    }
+
+    const sharedData = this.readSharedData();
+    if (Object.keys(sharedData).length > 0) {
+      return;
+    }
+
+    const favorites = this.context.workspaceState.get(
+      'anfavorites.favorites.v2',
+    );
+    const groups = this.context.workspaceState.get('anfavorites.groups');
+
+    if (favorites === undefined && groups === undefined) {
+      return;
+    }
+
+    const hydratedData: Record<string, unknown> = {};
+    if (favorites !== undefined) {
+      hydratedData['anfavorites.favorites.v2'] = favorites;
+    }
+    if (groups !== undefined) {
+      hydratedData['anfavorites.groups'] = groups;
+    }
+
+    this.writeSharedData(hydratedData);
+    this.logger.info('[SharedStorage] WorkspaceState migrado a almacenamiento compartido.', {
+      path: this.sharedFilePath,
+      keys: Object.keys(hydratedData),
+    });
   }
 
   private startFileWatcher(): void {
