@@ -1,8 +1,8 @@
 ---
-description: Version bump y commit · Caso B (develop → releases/1.X.0)
+description: Version bump, rama y commit · Caso B (develop → releases/1.X.0)
 ---
 
-# Version bump y commit
+# Version bump, rama y commit
 
 Este paso continúa el flujo anterior.
 Usar el contexto generado en el workflow previo.
@@ -44,11 +44,11 @@ Leer de `"$VAR_S1_FILE"`:
 
 ---
 
-## B.1 Previsualización del bump de versión
+## B.1 Previsualización de operaciones
 
 Objetivo:
 
-Mostrar al usuario la operación exacta que se realizará antes de ejecutarla.
+Mostrar al usuario la secuencia exacta de operaciones que se realizarán antes de ejecutar ninguna.
 
 Acción (solo lectura, sin ejecutar nada):
 
@@ -60,13 +60,20 @@ Acción (solo lectura, sin ejecutar nada):
 Mostrar la previsualización:
 
 ```text
-Operación prevista:
-  - Rama actual:        develop
-  - Versión actual:     <VERSION_ACTUAL>
-  - Versión objetivo:   <RELEASE_VERSION>
-  - Rama destino:       <TARGET_BRANCH>
-  - Cambio en package.json: "version": "<VERSION_ACTUAL>" → "version": "<RELEASE_VERSION>"
-  - Commit previsto:    chore: bump version to <RELEASE_VERSION>
+Operaciones previstas (en este orden):
+  1. Bump de versión en package.json:
+       "version": "<VERSION_ACTUAL>" → "version": "<RELEASE_VERSION>"
+  2. Commit del bump:
+       chore: bump version to <RELEASE_VERSION>
+  3. Crear rama de release:
+       git branch <TARGET_BRANCH>
+  4. Publicar rama en origin:
+       git push -u origin <TARGET_BRANCH>
+
+  - Rama actual:     develop
+  - Versión actual:  <VERSION_ACTUAL>
+  - Versión nueva:   <RELEASE_VERSION>
+  - Rama destino:    <TARGET_BRANCH>
 ```
 
 Abortar si:
@@ -74,18 +81,18 @@ Abortar si:
 - `CURRENT_BRANCH` no es exactamente `develop`
 - `VERSION_ACTUAL` está vacía o no sigue el patrón `X.Y.Z`
 - `RELEASE_VERSION` está vacía o no sigue el patrón `X.Y.Z`
-- `TARGET_BRANCH` está vacío
+- `TARGET_BRANCH` está vacío o no cumple `^releases/1\.[0-9]+\.0$`
 
 Salida requerida:
 
 - mostrar la previsualización completa
 - indicar explícitamente que no se ha ejecutado ningún comando
-- preguntar al usuario si confirma el bump de versión y el commit
+- preguntar al usuario si confirma todas las operaciones
 - esperar autorización explícita antes de continuar
 
 ---
 
-## B.2 Actualizar version en package.json
+## B.2 Actualizar versión en package.json
 
 Objetivo:
 
@@ -96,7 +103,6 @@ Reglas:
 - solo está permitido modificar el campo `"version"` en `package.json`
 - no modificar ningún otro archivo
 - no ejecutar este paso sin autorización explícita del usuario obtenida en B.1
-- la modificación debe hacerse con el comando exacto mostrado a continuación
 
 Comando permitido:
 
@@ -122,7 +128,6 @@ Salida requerida:
 
 - mostrar el resultado de la verificación
 - confirmar que `package.json` contiene la versión correcta
-- indicar que no se ha ejecutado ningún otro archivo
 - preguntar al usuario si confirma el commit
 
 ---
@@ -140,7 +145,7 @@ Reglas:
 - no ejecutar este paso sin autorización explícita del usuario
 - el mensaje de commit es fijo y no puede modificarse
 
-Comandos permitidos (en este orden exacto, uno por vez, cada uno con autorización):
+Comandos permitidos (uno por vez, cada uno con autorización previa):
 
 ```bash
 git add package.json
@@ -150,47 +155,113 @@ git add package.json
 git commit -m "chore: bump version to <RELEASE_VERSION>"
 ```
 
-Reglas de ejecución:
-
-- mostrar cada comando antes de ejecutarlo
-- preguntar autorización para cada comando por separado
-- no encadenar los dos comandos en una sola ejecución
-- si cualquier comando falla, detener el flujo inmediatamente
-- no corregir automáticamente ni reintentar
-
 Abortar si:
 
 - `git add` falla
 - `git commit` falla
 - el commit no aparece en `git log --oneline -1`
-- se intenta ejecutar más de un comando a la vez
+- se intenta encadenar más de un comando a la vez
 - se intenta ejecutar sin autorización explícita
 
 Salida requerida:
 
 - tras `git add`: confirmar que `package.json` está en stage
-- tras `git commit`: mostrar la salida del commit
-- mostrar `git log --oneline -1` para confirmar que el commit existe
+- tras `git commit`: mostrar la salida del commit y `git log --oneline -1`
+- preguntar al usuario si desea continuar con la creación de la rama
+
+---
+
+## B.4 Crear rama de release
+
+Objetivo:
+
+Crear la rama `TARGET_BRANCH` localmente a partir del estado actual de `develop`, **después** de que el commit del bump haya sido confirmado.
+
+Regla crítica:
+
+- no ejecutar este paso si el commit de B.3 no existe en el log
+- no ejecutar sin autorización explícita del usuario
+
+Comando permitido:
+
+```bash
+git branch <TARGET_BRANCH>
+```
+
+Verificación requerida:
+
+```bash
+git branch --list <TARGET_BRANCH>
+```
+
+La salida debe confirmar que la rama `<TARGET_BRANCH>` existe.
+
+Abortar si:
+
+- el commit de B.3 no existe en el log
+- el comando `git branch` falla
+- la rama no aparece en `git branch --list` tras la ejecución
+
+Salida requerida:
+
+- mostrar confirmación de que la rama fue creada
+- preguntar al usuario si desea publicar la rama en origin
+
+---
+
+## B.5 Publicar rama en origin
+
+Objetivo:
+
+Publicar la rama `TARGET_BRANCH` en el repositorio remoto y configurar el tracking.
+
+Regla crítica:
+
+- no ejecutar sin autorización explícita del usuario
+- solo ejecutar si B.4 completó correctamente
+
+Comando permitido:
+
+```bash
+git push -u origin <TARGET_BRANCH>
+```
+
+Verificación requerida:
+
+- la salida del comando debe confirmar que la rama fue publicada en origin con tracking configurado
+
+Abortar si:
+
+- el comando falla
+- la salida no confirma la publicación en origin
+- se intenta modificar ningún otro comando ni agregar argumentos adicionales
+
+Salida requerida:
+
+- mostrar la salida del push
+- confirmar que la rama `TARGET_BRANCH` está en origin con tracking configurado
 - preguntar al usuario si desea continuar al siguiente paso
 
 ---
 
-## B.4 Resultado del bump
+## B.6 Resultado
 
 Mostrar:
 
-- `CURRENT_BRANCH`
+- `CURRENT_BRANCH` (rama de trabajo)
 - `VERSION_ACTUAL` (versión anterior)
 - `RELEASE_VERSION` (versión nueva)
-- `TARGET_BRANCH` (rama destino del PR)
+- `TARGET_BRANCH` (rama creada y publicada)
 - confirmación de que `package.json` contiene la nueva versión
 - confirmación de que el commit fue creado correctamente
-- resumen del commit realizado
+- confirmación de que la rama `TARGET_BRANCH` existe localmente y en origin
+- resumen de comandos ejecutados
 
 Abortar si:
 
 - `package.json` no contiene `RELEASE_VERSION`
 - el commit no existe en el log
+- la rama `TARGET_BRANCH` no existe localmente o no está en origin
 
 Esperar confirmación explícita del usuario antes de continuar con el siguiente paso.
 
