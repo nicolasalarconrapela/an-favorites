@@ -6,6 +6,7 @@ import {
   setGitignoreFilesEnabled,
   gitignoreRelPath,
   subscribeGitignoreDiscoveryChange,
+  subscribeGitignoreRulesChange,
 } from '../utils/gitignoreService';
 import { t } from '../utils/l10n';
 
@@ -204,6 +205,9 @@ export function registerManageGitignoreCommand(
       const discoverySubscription = subscribeGitignoreDiscoveryChange(() => {
         void refresh();
       });
+      const rulesSubscription = subscribeGitignoreRulesChange(() => {
+        void refresh();
+      });
 
       quickPick.onDidAccept(async () => {
         const [selected] = quickPick.selectedItems;
@@ -240,6 +244,7 @@ export function registerManageGitignoreCommand(
 
       quickPick.onDidHide(() => {
         discoverySubscription.dispose();
+        rulesSubscription.dispose();
         quickPick.dispose();
       });
     },

@@ -26,6 +26,7 @@ import {
   disposeGitignoreService,
   initGitignoreSync,
   subscribeGitignoreDiscoveryChange,
+  subscribeGitignoreRulesChange,
 } from '../utils/gitignoreService';
 import { initializeL10n, t } from '../utils/l10n';
 
@@ -181,11 +182,14 @@ export function activate(context: vscode.ExtensionContext): void {
     gitignoreInitStarted = true;
     logger.debug('[activate] Starting deferred .gitignore sync');
     logRuntimeSnapshot(logger, 'activate:gitignore-sync-start');
-    void initGitignoreSync(context, logger).catch((error) => {
-      gitignoreInitStarted = false;
-      logger.warn('[activate] Deferred .gitignore sync failed', error);
-      logRuntimeSnapshot(logger, 'activate:gitignore-sync-failed', { error });
-    });
+    void initGitignoreSync(context, logger)
+      .catch((error) => {
+        logger.warn('[activate] Deferred .gitignore sync failed', error);
+        logRuntimeSnapshot(logger, 'activate:gitignore-sync-failed', { error });
+      })
+      .finally(() => {
+        gitignoreInitStarted = false;
+      });
   };
   context.subscriptions.push(
     subscribeGitignoreDiscoveryChange(() => {
@@ -200,6 +204,24 @@ export function activate(context: vscode.ExtensionContext): void {
           error,
         );
         logRuntimeSnapshot(logger, 'activate:gitignore-discovery-crash', {
+          error,
+        });
+      }
+    }),
+  );
+  context.subscriptions.push(
+    subscribeGitignoreRulesChange(() => {
+      try {
+        logger?.info?.(
+          '[gitignore] Rules changed -> invalidating collision index',
+        );
+        invalidateCollisionIndex(logger, 'gitignore rules changed');
+      } catch (error) {
+        logger.error(
+          '[activate] Crash while handling gitignore rules change',
+          error,
+        );
+        logRuntimeSnapshot(logger, 'activate:gitignore-rules-crash', {
           error,
         });
       }

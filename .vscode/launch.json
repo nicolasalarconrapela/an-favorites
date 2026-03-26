@@ -27,7 +27,7 @@
         "--profile-temp",
         "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "${workspaceFolder}/.vscode-test/Adios"
+        "C:\\Users\\Developer\\Desktop\\Trash"
       ],
       "preLaunchTask": "watch",
       "outFiles": [

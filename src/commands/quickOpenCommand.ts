@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import Fuse from 'fuse.js';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { MRUService } from '../services/mruService';
 import { Logger } from '../logging/logger';
@@ -21,9 +20,9 @@ import {
   buildExclusionGlobFromPatterns,
   filterGitignoredUrisFast,
   filterGitignoredUris,
-  getGitignoreSignature,
   isGitignoreCacheReady,
   subscribeGitignoreDiscoveryChange,
+  subscribeGitignoreRulesChange,
 } from '../utils/gitignoreService';
 
 type QuickOpenItem = vscode.QuickPickItem;
@@ -91,8 +90,9 @@ class LruCache<K, V> {
 
 function buildSearchPattern(searchValue: string): string {
   const normalized = searchValue.trim();
-  if (!normalized) return '*';
-  return `*${normalized}*`;
+  if (!normalized) return '**/*';
+  const escaped = normalized.replace(/([\\*?[\]{}!])/g, '[$1]');
+  return `**/*${escaped}*`;
 }
 
 const HYBRID_PREFIX_STAGE_LIMIT = 1200;
@@ -107,7 +107,8 @@ const QUICKOPEN_TRACE_WARN_MS = 1500;
 const QUICKOPEN_FIND_FILES_TIMEOUT_MS = 2500;
 const QUICKOPEN_LARGE_WORKSPACE_FIND_FILES_TIMEOUT_MS = 12000;
 const QUICKOPEN_STAGE_MAX_RESULTS = 1500;
-const QUICKOPEN_SEARCH_TIMEOUT_ERROR = 'QuickOpenSearchTimeoutError';
+const QUICKOPEN_SEARCH_BUDGET_ERROR = 'QuickOpenSearchBudgetError';
+const QUICKOPEN_HARD_SEARCH_RESULT_LIMIT = 100;
 const QUICKOPEN_MAX_HEAP_BYTES = 550 * 1024 * 1024;
 const QUICKOPEN_MAX_RSS_BYTES = 800 * 1024 * 1024;
 const QUICKOPEN_MAX_HEAP_DELTA_BYTES = 128 * 1024 * 1024;
@@ -115,28 +116,10 @@ const QUICKOPEN_MAX_RSS_DELTA_BYTES = 192 * 1024 * 1024;
 const QUICKOPEN_MAX_SEARCH_STAGE_MS = 5000;
 const QUICKOPEN_LARGE_WORKSPACE_MAX_SEARCH_STAGE_MS = 30000;
 const QUICKOPEN_COMMAND_COOLDOWN_MS = 750;
-const QUICKOPEN_FUSE_INDEX_MAX_FILES = 8000;
-
-interface FuseWorkspaceFileEntry {
-  uri: vscode.Uri;
-  basename: string;
-}
-
-interface FuseWorkspaceIndex {
-  folderKey: string;
-  entries: FuseWorkspaceFileEntry[];
-  fuse: Fuse<FuseWorkspaceFileEntry>;
-  truncated: boolean;
-  gitignoreReady: boolean;
-}
-
 let activeQuickOpenSession:
   | { dispose: () => void; createdAt: number; sessionId: string }
   | null = null;
 let lastQuickOpenCommandAt = 0;
-let workspaceFuseIndex: FuseWorkspaceIndex | null = null;
-let workspaceFuseIndexPromise: Promise<FuseWorkspaceIndex | null> | null = null;
-let lastQuickOpenIndexWarmupErrorAt = 0;
 
 function logQuickOpenTrace(
   logger: Logger | undefined,
@@ -178,14 +161,22 @@ function startQuickOpenWatchdog(
 }
 
 function createQuickOpenSearchTimeoutError(metadata?: Record<string, unknown>): Error {
-  const error = new Error('QuickOpen search timed out');
-  error.name = QUICKOPEN_SEARCH_TIMEOUT_ERROR;
+  const error = new Error('QuickOpen search reached a resource limit');
+  error.name = QUICKOPEN_SEARCH_BUDGET_ERROR;
   Object.assign(error, metadata);
   return error;
 }
 
 function isQuickOpenSearchTimeoutError(error: unknown): boolean {
-  return error instanceof Error && error.name === QUICKOPEN_SEARCH_TIMEOUT_ERROR;
+  return error instanceof Error && error.name === QUICKOPEN_SEARCH_BUDGET_ERROR;
+}
+
+function shouldSkipQuickOpenMemoryGuard(label: string): boolean {
+  return (
+    label.includes('runHybridWorkspaceSearch:local-filter') ||
+    label.includes('runHybridWorkspaceSearch:seed-filter') ||
+    label.includes('runHybridWorkspaceSearch:before-stage:')
+  );
 }
 
 function assertQuickOpenSearchHealth(
@@ -305,7 +296,7 @@ async function findFilesWithTimeout(params: {
           localTokenSource.cancel();
           logQuickOpenTrace(
             logger,
-            '[QuickOpen][trace] findFiles timed out; closing QuickOpen',
+            '[QuickOpen][trace] findFiles reached its search budget',
             {
               pattern,
               limit,
@@ -360,6 +351,11 @@ function matchesSearchText(uri: vscode.Uri, searchValue: string): boolean {
 
 function shouldUseProtectedLocalOnlySearch(searchValue: string): boolean {
   return false;
+}
+
+function isExtensionLikeQuery(searchValue: string): boolean {
+  const normalized = searchValue.trim();
+  return /^\.[a-z0-9_-]+$/i.test(normalized);
 }
 
 function rankSearchBasename(uri: vscode.Uri, searchValue: string): number {
@@ -562,25 +558,18 @@ async function runHybridWorkspaceSearch(params: {
     label: string,
     metadata?: Record<string, unknown>,
   ): void => {
-    assertQuickOpenSearchHealth(logger, label, {
-      normalizedSearch,
-      elapsedMs: Date.now() - searchStartedAt,
-      baselineHeapUsedBytes,
-      baselineRssBytes,
-      largeWorkspaceMode: workspaceSearchBudget.largeWorkspaceMode,
-      ...metadata,
-    });
-    if (Date.now() - searchStartedAt > workspaceSearchBudget.maxSearchStageMs) {
-      logQuickOpenTrace(logger, `[QuickOpen][trace] Search duration guard triggered: ${label}`, {
+    if (!shouldSkipQuickOpenMemoryGuard(label)) {
+      assertQuickOpenSearchHealth(logger, label, {
         normalizedSearch,
         elapsedMs: Date.now() - searchStartedAt,
-        maxSearchStageMs: workspaceSearchBudget.maxSearchStageMs,
+        baselineHeapUsedBytes,
+        baselineRssBytes,
         largeWorkspaceMode: workspaceSearchBudget.largeWorkspaceMode,
         ...metadata,
       });
-      throw createQuickOpenSearchTimeoutError({
-        reason: 'duration-guard',
-        label,
+    }
+    if (Date.now() - searchStartedAt > workspaceSearchBudget.maxSearchStageMs) {
+      logger?.warn?.(`[QuickOpen][trace] Search duration budget exceeded but keeping partial results: ${label}`, {
         normalizedSearch,
         elapsedMs: Date.now() - searchStartedAt,
         maxSearchStageMs: workspaceSearchBudget.maxSearchStageMs,
@@ -590,6 +579,10 @@ async function runHybridWorkspaceSearch(params: {
     }
   };
 
+  const workspaceSearchAlreadyFiltered =
+    searchService.providesFilteredResults === true;
+  const fastGitignoreFilteringReady =
+    workspaceSearchAlreadyFiltered || isGitignoreCacheReady();
   const finishLocalFilterStage = startQuickOpenWatchdog(
     logger,
     'runHybridWorkspaceSearch:local-filter',
@@ -599,11 +592,17 @@ async function runHybridWorkspaceSearch(params: {
       seedCount: seedUris.length,
     },
   );
+  const rawLocalMatches = localCandidateUris.filter((uri) =>
+    matchesSearchText(uri, normalizedSearch),
+  );
   const localMatches = dedupeUrisByFsPath(
-    localCandidateUris.filter((uri) => matchesSearchText(uri, normalizedSearch)),
+    fastGitignoreFilteringReady
+      ? (filterGitignoredUrisFast(rawLocalMatches) ?? rawLocalMatches)
+      : rawLocalMatches,
   );
   finishLocalFilterStage();
   assertSearchStillHealthy('runHybridWorkspaceSearch:local-filter', {
+    localRawMatchCount: rawLocalMatches.length,
     localMatchCount: localMatches.length,
   });
 
@@ -615,10 +614,6 @@ async function runHybridWorkspaceSearch(params: {
       seedCount: seedUris.length,
     },
   );
-  const workspaceSearchAlreadyFiltered =
-    searchService.providesFilteredResults === true;
-  const fastGitignoreFilteringReady =
-    workspaceSearchAlreadyFiltered || isGitignoreCacheReady();
   const filteredSeedCandidates = seedUris.filter((uri) =>
     matchesSearchText(uri, normalizedSearch),
   );
@@ -632,14 +627,16 @@ async function runHybridWorkspaceSearch(params: {
     seededMatchCount: seededMatches.length,
   });
 
-  const stagePatterns = [
-    `${normalizedSearch}*`,
-    buildSearchPattern(normalizedSearch),
-  ];
-  const stageLimits = [
-    Math.min(maxSearchFiles, HYBRID_PREFIX_STAGE_LIMIT),
-    Math.min(maxSearchFiles, HYBRID_FALLBACK_STAGE_LIMIT),
-  ];
+  const extensionLikeQuery = isExtensionLikeQuery(normalizedSearch);
+  const stagePatterns = extensionLikeQuery
+    ? [buildSearchPattern(normalizedSearch)]
+    : [`**/${normalizedSearch.replace(/([\\*?[\]{}!])/g, '[$1]')}*`, buildSearchPattern(normalizedSearch)];
+  const stageLimits = extensionLikeQuery
+    ? [Math.min(maxSearchFiles, HYBRID_FALLBACK_STAGE_LIMIT)]
+    : [
+        Math.min(maxSearchFiles, HYBRID_PREFIX_STAGE_LIMIT),
+        Math.min(maxSearchFiles, HYBRID_FALLBACK_STAGE_LIMIT),
+      ];
 
   let mergedUris = prioritizeDistinctBasenames(
     dedupeUrisByFsPath([...localMatches, ...seededMatches]),
@@ -661,6 +658,7 @@ async function runHybridWorkspaceSearch(params: {
       findFilesTimeoutMs,
       maxSearchStageMs: workspaceSearchBudget.maxSearchStageMs,
       exclusionGlobApplied,
+      extensionLikeQuery,
     });
   }
 
@@ -867,7 +865,9 @@ function getQuickOpenWorkspaceSearchBudget(params: {
   largeWorkspaceMode: boolean;
 } {
   const folderCount = vscode.workspace.workspaceFolders?.length ?? 0;
-  const isBroadQuery = params.normalizedSearch.trim().length <= 4;
+  const trimmedSearch = params.normalizedSearch.trim();
+  const isBroadQuery =
+    trimmedSearch.length <= 4 || isExtensionLikeQuery(trimmedSearch);
   const highResultBudget = params.maxSearchFiles >= 10000;
   const largeWorkspaceMode = folderCount > 0 && (isBroadQuery || highResultBudget);
 
@@ -887,64 +887,29 @@ function getQuickOpenEffectiveSearchLimit(params: {
   configuredMaxSearchFiles: number;
   immediateLimit: number;
 }): number {
+  const configuredCap = Math.min(
+    params.configuredMaxSearchFiles,
+    QUICKOPEN_HARD_SEARCH_RESULT_LIMIT,
+  );
   const queryLength = params.normalizedSearch.trim().length;
-  const minimumRequired = Math.max(params.immediateLimit, 200);
+  const minimumRequired = Math.max(
+    Math.min(params.immediateLimit, QUICKOPEN_HARD_SEARCH_RESULT_LIMIT),
+    1,
+  );
 
   if (queryLength <= 4) {
-    return Math.max(minimumRequired, Math.min(params.configuredMaxSearchFiles, 1200));
+    return Math.max(minimumRequired, Math.min(configuredCap, 1200));
   }
 
   if (queryLength <= 6) {
-    return Math.max(minimumRequired, Math.min(params.configuredMaxSearchFiles, 3000));
+    return Math.max(minimumRequired, Math.min(configuredCap, 3000));
   }
 
   if (queryLength <= 10) {
-    return Math.max(minimumRequired, Math.min(params.configuredMaxSearchFiles, 6000));
+    return Math.max(minimumRequired, Math.min(configuredCap, 6000));
   }
 
-  return Math.max(minimumRequired, Math.min(params.configuredMaxSearchFiles, 10000));
-}
-
-function currentWorkspaceFolderKey(): string {
-  return (vscode.workspace.workspaceFolders ?? [])
-    .map((folder) => folder.uri.fsPath)
-    .sort()
-    .join('|');
-}
-
-function invalidateWorkspaceFuseIndex(
-  logger: Logger | undefined,
-  reason: string,
-): void {
-  workspaceFuseIndex = null;
-  workspaceFuseIndexPromise = null;
-  logger?.debug?.('[QuickOpen][trace] Workspace Fuse index invalidated', {
-    reason,
-  });
-}
-
-function getWorkspaceFuseIndexSnapshot(): FuseWorkspaceIndex | null {
-  const folderKey = currentWorkspaceFolderKey();
-  if (!folderKey) {
-    return null;
-  }
-
-  if (workspaceFuseIndex?.folderKey !== folderKey) {
-    return null;
-  }
-
-  return workspaceFuseIndex;
-}
-
-function notifyQuickOpenIndexWarmupFailure(): void {
-  const now = Date.now();
-  if (now - lastQuickOpenIndexWarmupErrorAt < 10000) {
-    return;
-  }
-  lastQuickOpenIndexWarmupErrorAt = now;
-  void vscode.window.showErrorMessage(
-    t('Quick Open background indexing failed. Live search results are still available.'),
-  );
+  return Math.max(minimumRequired, Math.min(configuredCap, 10000));
 }
 
 function applyQuickOpenResultPathHints(items: FileQuickPickItem[]): void {
@@ -958,123 +923,6 @@ function applyQuickOpenResultPathHints(items: FileQuickPickItem[]): void {
     const basename = safeBasenameFromUri(item.internalUri).toLowerCase();
     item.setShowDescription((basenameCounts.get(basename) ?? 0) > 1);
   }
-}
-
-async function ensureWorkspaceFuseIndex(
-  config: QuickOpenConfig,
-  logger: Logger | undefined,
-  token: vscode.CancellationToken,
-): Promise<FuseWorkspaceIndex | null> {
-  const folderKey = currentWorkspaceFolderKey();
-  if (!folderKey) {
-    return null;
-  }
-
-  if (workspaceFuseIndex?.folderKey === folderKey) {
-    if (workspaceFuseIndex.gitignoreReady || !isGitignoreCacheReady()) {
-      return workspaceFuseIndex;
-    }
-    invalidateWorkspaceFuseIndex(
-      logger,
-      'gitignore-ready-after-initial-fuse-index-build',
-    );
-  }
-
-  if (workspaceFuseIndexPromise) {
-    return workspaceFuseIndexPromise;
-  }
-
-  const buildPromise = (async (): Promise<FuseWorkspaceIndex | null> => {
-    const startedAt = Date.now();
-    const excludeGlob = getSafeQuickOpenExclusionGlob(
-      config.searchExclusions,
-      logger,
-    );
-    logger?.info?.('[QuickOpen][trace] Building Fuse workspace index', {
-      folderKey,
-      maxFiles: QUICKOPEN_FUSE_INDEX_MAX_FILES,
-      excludeGlob,
-      gitignoreReady: isGitignoreCacheReady(),
-    });
-
-    const foundUris = await vscode.workspace.findFiles(
-      '**/*',
-      excludeGlob,
-      QUICKOPEN_FUSE_INDEX_MAX_FILES,
-      token,
-    );
-
-    const gitignoreReady = isGitignoreCacheReady();
-    const filteredUris = gitignoreReady
-      ? (filterGitignoredUrisFast(foundUris) ?? foundUris)
-      : foundUris;
-    const entries = filteredUris
-      .filter((uri) => uri.scheme === 'file')
-      .filter((uri) => Boolean(vscode.workspace.getWorkspaceFolder(uri)))
-      .map((uri) => ({
-        uri,
-        basename: safeBasenameFromUri(uri),
-      }));
-
-    const fuse = new Fuse(entries, {
-      includeScore: true,
-      shouldSort: true,
-      ignoreLocation: true,
-      threshold: 0.35,
-      keys: ['basename'],
-    });
-
-    const index: FuseWorkspaceIndex = {
-      folderKey,
-      entries,
-      fuse,
-      truncated: foundUris.length >= QUICKOPEN_FUSE_INDEX_MAX_FILES,
-      gitignoreReady,
-    };
-    workspaceFuseIndex = index;
-    logger?.info?.('[QuickOpen][trace] Fuse workspace index ready', {
-      durationMs: Date.now() - startedAt,
-      entryCount: entries.length,
-      truncated: index.truncated,
-      gitignoreReady,
-    });
-    return index;
-  })();
-
-  workspaceFuseIndexPromise = buildPromise;
-  try {
-    return await buildPromise;
-  } finally {
-    if (workspaceFuseIndexPromise === buildPromise) {
-      workspaceFuseIndexPromise = null;
-    }
-  }
-}
-
-function warmWorkspaceFuseIndexInBackground(
-  config: QuickOpenConfig,
-  logger: Logger | undefined,
-): void {
-  if (
-    workspaceFuseIndexPromise ||
-    (workspaceFuseIndex &&
-      (workspaceFuseIndex.gitignoreReady || !isGitignoreCacheReady()))
-  ) {
-    return;
-  }
-
-  logger?.debug?.('[QuickOpen][trace] Scheduling Fuse workspace index warmup');
-  const warmupTokenSource = new vscode.CancellationTokenSource();
-  void ensureWorkspaceFuseIndex(config, logger, warmupTokenSource.token)
-    .catch((error) => {
-      logger?.warn?.('[QuickOpen][trace] Fuse workspace index warmup failed', {
-        error,
-      });
-      notifyQuickOpenIndexWarmupFailure();
-    })
-    .finally(() => {
-      warmupTokenSource.dispose();
-    });
 }
 
 function debounce<T extends (...args: any[]) => any>(
@@ -1255,287 +1103,281 @@ function createSearchFileItems(
     });
 }
 
-async function buildSearchItems(params: {
-  normalizedSearch: string;
-  localCandidateUris: vscode.Uri[];
-  searchCache: LruCache<string, SearchCacheEntry>;
-  persistSearchCache: () => void;
-  currentSearchMutationVersion: number;
-  pendingSearchChangedPaths: Set<string>;
-  config: QuickOpenConfig;
-  favoritesProvider: FavoritesTreeDataProvider;
-  logger?: Logger;
-  recentNormSet: Set<string>;
-  favoriteMatchNormSet: Set<string>;
-  searchPage: number;
-  searchService: QuickOpenSearchService;
-  token: vscode.CancellationToken;
-  isBuildCurrent?: () => boolean;
-  baselineHeapUsedBytes?: number;
-  baselineRssBytes?: number;
-}): Promise<{
-  items: FileQuickPickItem[];
-  noticeItem: QuickOpenItem | null;
-  loadMoreItem: ActionQuickPickItem | null;
-}> {
-  const {
-    normalizedSearch,
-    localCandidateUris,
-    searchCache,
-    persistSearchCache,
-    currentSearchMutationVersion,
-    pendingSearchChangedPaths,
-    config,
-    favoritesProvider,
-    logger,
-    recentNormSet,
-    favoriteMatchNormSet,
-    searchPage,
-    searchService,
-    token,
-    isBuildCurrent,
-    baselineHeapUsedBytes,
-    baselineRssBytes,
-  } = params;
-  const shouldRetainResults = (): boolean =>
-    !token.isCancellationRequested && (isBuildCurrent?.() ?? true);
-  const cacheKey = normalizedSearch;
-  let cacheEntry = searchCache.get(cacheKey);
-  let noticeItem: QuickOpenItem | null = null;
-  let loadMoreItem: ActionQuickPickItem | null = null;
-  const finishBuildSearchWatchdog = startQuickOpenWatchdog(
-    logger,
-    'buildSearchItems',
-    {
-      cacheKey,
-      currentSearchMutationVersion,
-      pendingChangedPathCount: pendingSearchChangedPaths.size,
-      localCandidateCount: localCandidateUris.length,
-      searchPage,
-    },
-  );
-  logger?.debug?.(
-    `[QuickOpen] search cache ${cacheEntry ? 'hit' : 'miss'} for "${cacheKey}"`,
-  );
+// async function buildSearchItems(params: {
+//   normalizedSearch: string;
+//   localCandidateUris: vscode.Uri[];
+//   searchCache: LruCache<string, SearchCacheEntry>;
+//   persistSearchCache: () => void;
+//   currentSearchMutationVersion: number;
+//   pendingSearchChangedPaths: Set<string>;
+//   config: QuickOpenConfig;
+//   favoritesProvider: FavoritesTreeDataProvider;
+//   logger?: Logger;
+//   recentNormSet: Set<string>;
+//   favoriteMatchNormSet: Set<string>;
+//   searchPage: number;
+//   searchService: QuickOpenSearchService;
+//   token: vscode.CancellationToken;
+//   isBuildCurrent?: () => boolean;
+//   baselineHeapUsedBytes?: number;
+//   baselineRssBytes?: number;
+// }): Promise<{
+//   items: FileQuickPickItem[];
+//   noticeItem: QuickOpenItem | null;
+//   loadMoreItem: ActionQuickPickItem | null;
+// }> {
+//   const {
+//     normalizedSearch,
+//     localCandidateUris,
+//     searchCache,
+//     persistSearchCache,
+//     currentSearchMutationVersion,
+//     pendingSearchChangedPaths,
+//     config,
+//     favoritesProvider,
+//     logger,
+//     recentNormSet,
+//     favoriteMatchNormSet,
+//     searchPage,
+//     searchService,
+//     token,
+//     isBuildCurrent,
+//     baselineHeapUsedBytes,
+//     baselineRssBytes,
+//   } = params;
+//   const shouldRetainResults = (): boolean =>
+//     !token.isCancellationRequested && (isBuildCurrent?.() ?? true);
+//   const cacheKey = normalizedSearch;
+//   let cacheEntry = searchCache.get(cacheKey);
+//   let noticeItem: QuickOpenItem | null = null;
+//   let loadMoreItem: ActionQuickPickItem | null = null;
+//   const finishBuildSearchWatchdog = startQuickOpenWatchdog(
+//     logger,
+//     'buildSearchItems',
+//     {
+//       cacheKey,
+//       currentSearchMutationVersion,
+//       pendingChangedPathCount: pendingSearchChangedPaths.size,
+//       localCandidateCount: localCandidateUris.length,
+//       searchPage,
+//     },
+//   );
+//   logger?.debug?.(
+//     `[QuickOpen] search cache ${cacheEntry ? 'hit' : 'miss'} for "${cacheKey}"`,
+//   );
 
-  const exclusionGlob = getSafeQuickOpenExclusionGlob(
-    config.searchExclusions,
-    logger,
-  );
-  const finishGitignoreSignatureStage = startQuickOpenWatchdog(
-    logger,
-    'buildSearchItems:getGitignoreSignature',
-    { cacheKey },
-  );
-  const gitignoreSignature = await getGitignoreSignature(token);
-  finishGitignoreSignatureStage();
-  const exclusionSignature = buildSearchExclusionSignature(
-    exclusionGlob,
-    gitignoreSignature,
-  );
-  const maxDisplayResults = Math.max(
-    1,
-    Math.min(config.maxSearchResults, config.maxSearchFiles),
-  );
-  const protectedLocalOnlySearch = shouldUseProtectedLocalOnlySearch(cacheKey);
-  const effectiveMaxSearchFiles = Math.max(
-    config.maxSearchFiles,
-    maxDisplayResults * searchPage,
-  );
-  const needsFullRebuildReason =
-    !cacheEntry
-      ? 'cache-miss'
-      : cacheEntry.exceededMaxFiles &&
-          cacheEntry.uris.length < effectiveMaxSearchFiles
-        ? 'page-expanded'
-      : cacheEntry.exclusionSignature !== exclusionSignature
-        ? 'exclusion-signature-changed'
-        : cacheEntry.mutationVersion !== currentSearchMutationVersion
-          ? pendingSearchChangedPaths.size > MAX_INCREMENTAL_SEARCH_CHANGES
-            ? 'too-many-path-changes'
-            : 'mutation-version-changed'
-          : null;
+//   const exclusionGlob = getSafeQuickOpenExclusionGlob(
+//     config.searchExclusions,
+//     logger,
+//   );
+//   const finishGitignoreSignatureStage = startQuickOpenWatchdog(
+//     logger,
+//     'buildSearchItems:getGitignoreSignature',
+//     { cacheKey },
+//   );
+//   const gitignoreSignature = await getGitignoreSignature(token);
+//   finishGitignoreSignatureStage();
+//   const exclusionSignature = buildSearchExclusionSignature(
+//     exclusionGlob,
+//     gitignoreSignature,
+//   );
+//   const maxDisplayResults = Math.max(
+//     1,
+//     Math.min(
+//       config.maxSearchResults,
+//       config.maxSearchFiles,
+//       QUICKOPEN_HARD_SEARCH_RESULT_LIMIT,
+//     ),
+//   );
+//   const protectedLocalOnlySearch = shouldUseProtectedLocalOnlySearch(cacheKey);
+//   const effectiveMaxSearchFiles = Math.max(
+//     config.maxSearchFiles,
+//     maxDisplayResults * searchPage,
+//   );
+//   const needsFullRebuildReason =
+//     !cacheEntry
+//       ? 'cache-miss'
+//       : cacheEntry.exceededMaxFiles &&
+//           cacheEntry.uris.length < effectiveMaxSearchFiles
+//         ? 'page-expanded'
+//       : cacheEntry.exclusionSignature !== exclusionSignature
+//         ? 'exclusion-signature-changed'
+//         : cacheEntry.mutationVersion !== currentSearchMutationVersion
+//           ? pendingSearchChangedPaths.size > MAX_INCREMENTAL_SEARCH_CHANGES
+//             ? 'too-many-path-changes'
+//             : 'mutation-version-changed'
+//           : null;
 
-  if (
-    cacheEntry &&
-    cacheEntry.exclusionSignature === exclusionSignature &&
-    cacheEntry.mutationVersion !== currentSearchMutationVersion &&
-    pendingSearchChangedPaths.size > 0 &&
-    pendingSearchChangedPaths.size <= MAX_INCREMENTAL_SEARCH_CHANGES
-  ) {
-    logger?.info?.(
-      `[QuickOpen] applying incremental query index update for "${cacheKey}" with ${pendingSearchChangedPaths.size} changed path(s)`,
-    );
-    cacheEntry = await applyIncrementalSearchUpdates({
-      cacheEntry,
-      normalizedSearch: cacheKey,
-      changedPaths: Array.from(pendingSearchChangedPaths),
-      maxSearchFiles: effectiveMaxSearchFiles,
-    });
-    if (!shouldRetainResults()) {
-      finishBuildSearchWatchdog();
-      return {
-        items: [],
-        noticeItem: null,
-        loadMoreItem: null,
-      };
-    }
-    cacheEntry.mutationVersion = currentSearchMutationVersion;
-    if (cacheEntry.uris.length > 0 || cacheEntry.exceededMaxFiles) {
-      searchCache.set(cacheKey, cacheEntry);
-      persistSearchCache();
-    }
-  }
+//   if (
+//     cacheEntry &&
+//     cacheEntry.exclusionSignature === exclusionSignature &&
+//     cacheEntry.mutationVersion !== currentSearchMutationVersion &&
+//     pendingSearchChangedPaths.size > 0 &&
+//     pendingSearchChangedPaths.size <= MAX_INCREMENTAL_SEARCH_CHANGES
+//   ) {
+//     logger?.info?.(
+//       `[QuickOpen] applying incremental query index update for "${cacheKey}" with ${pendingSearchChangedPaths.size} changed path(s)`,
+//     );
+//     cacheEntry = await applyIncrementalSearchUpdates({
+//       cacheEntry,
+//       normalizedSearch: cacheKey,
+//       changedPaths: Array.from(pendingSearchChangedPaths),
+//       maxSearchFiles: effectiveMaxSearchFiles,
+//     });
+//     if (!shouldRetainResults()) {
+//       finishBuildSearchWatchdog();
+//       return {
+//         items: [],
+//         noticeItem: null,
+//         loadMoreItem: null,
+//       };
+//     }
+//     cacheEntry.mutationVersion = currentSearchMutationVersion;
+//     if (cacheEntry.uris.length > 0 || cacheEntry.exceededMaxFiles) {
+//       searchCache.set(cacheKey, cacheEntry);
+//       persistSearchCache();
+//     }
+//   }
 
-  if (
-    !cacheEntry ||
-    (cacheEntry.exceededMaxFiles &&
-      cacheEntry.uris.length < effectiveMaxSearchFiles) ||
-    cacheEntry.exclusionSignature !== exclusionSignature ||
-    cacheEntry.mutationVersion !== currentSearchMutationVersion
-  ) {
-    if (protectedLocalOnlySearch) {
-      logger?.warn?.('[QuickOpen][trace] Protected local-only search mode activated', {
-        cacheKey,
-        minGlobalSearchLength: QUICKOPEN_MIN_GLOBAL_SEARCH_LENGTH,
-      });
-      cacheEntry = {
-        uris: prioritizeDistinctBasenames(
-          dedupeUrisByFsPath(
-            await filterGitignoredUris(
-              localCandidateUris.filter((uri) =>
-                matchesSearchText(uri, cacheKey),
-              ),
-              token,
-            ),
-          ),
-          cacheKey,
-        ).slice(0, maxDisplayResults * searchPage),
-        exceededMaxFiles: false,
-        workspaceSearchDeferred: true,
-        mutationVersion: currentSearchMutationVersion,
-        exclusionSignature,
-      };
-    } else {
-      const prefixSeedUris = getSearchPrefixSeeds(
-        cacheKey,
-        searchCache,
-        exclusionSignature,
-        currentSearchMutationVersion,
-      );
-      logger?.info?.(
-        `[QuickOpen] rebuilding query index for "${cacheKey}" reason=${needsFullRebuildReason} (prefix seeds=${prefixSeedUris.length})`,
-      );
-      logQuickOpenTrace(logger, '[QuickOpen][trace] Query index rebuild started', {
-        cacheKey,
-        needsFullRebuildReason,
-        prefixSeedCount: prefixSeedUris.length,
-        effectiveMaxSearchFiles,
-        mergedExclusionCount: config.searchExclusions.length,
-        exclusionGlobApplied: Boolean(exclusionGlob),
-      });
-      cacheEntry = await runHybridWorkspaceSearch({
-        normalizedSearch: cacheKey,
-        localCandidateUris,
-        seedUris: prefixSeedUris,
-        excludePatterns: config.searchExclusions,
-        maxSearchFiles: effectiveMaxSearchFiles,
-        searchService,
-        logger,
-        token,
-        baselineHeapUsedBytes,
-        baselineRssBytes,
-      });
-      if (!shouldRetainResults()) {
-        finishBuildSearchWatchdog();
-        return {
-          items: [],
-          noticeItem: null,
-          loadMoreItem: null,
-        };
-      }
-      cacheEntry.mutationVersion = currentSearchMutationVersion;
-      cacheEntry.exclusionSignature = exclusionSignature;
-      if (cacheEntry.uris.length > 0 || cacheEntry.exceededMaxFiles) {
-        searchCache.set(cacheKey, cacheEntry);
-        persistSearchCache();
-        logger?.debug?.(
-          `[QuickOpen] query index stored for "${cacheKey}". results=${cacheEntry.uris.length}`,
-        );
-      }
-      if (cacheEntry.uris.length > 0 || cacheEntry.exceededMaxFiles) {
-        logQuickOpenTrace(
-          logger,
-          '[QuickOpen][trace] Query index rebuild completed',
-          {
-            cacheKey,
-            resultCount: cacheEntry.uris.length,
-            exceededMaxFiles: cacheEntry.exceededMaxFiles,
-          },
-        );
-      }
-    }
-  }
+//   if (
+//     !cacheEntry ||
+//     (cacheEntry.exceededMaxFiles &&
+//       cacheEntry.uris.length < effectiveMaxSearchFiles) ||
+//     cacheEntry.exclusionSignature !== exclusionSignature ||
+//     cacheEntry.mutationVersion !== currentSearchMutationVersion
+//   ) {
+//     if (protectedLocalOnlySearch) {
+//       logger?.warn?.('[QuickOpen][trace] Protected local-only search mode activated', {
+//         cacheKey,
+//         minGlobalSearchLength: QUICKOPEN_MIN_GLOBAL_SEARCH_LENGTH,
+//       });
+//       cacheEntry = {
+//         uris: prioritizeDistinctBasenames(
+//           dedupeUrisByFsPath(
+//             await filterGitignoredUris(
+//               localCandidateUris.filter((uri) =>
+//                 matchesSearchText(uri, cacheKey),
+//               ),
+//               token,
+//             ),
+//           ),
+//           cacheKey,
+//         ).slice(0, maxDisplayResults * searchPage),
+//         exceededMaxFiles: false,
+//         workspaceSearchDeferred: true,
+//         mutationVersion: currentSearchMutationVersion,
+//         exclusionSignature,
+//       };
+//     } else {
+//       const prefixSeedUris = getSearchPrefixSeeds(
+//         cacheKey,
+//         searchCache,
+//         exclusionSignature,
+//         currentSearchMutationVersion,
+//       );
+//       logger?.info?.(
+//         `[QuickOpen] rebuilding query index for "${cacheKey}" reason=${needsFullRebuildReason} (prefix seeds=${prefixSeedUris.length})`,
+//       );
+//       logQuickOpenTrace(logger, '[QuickOpen][trace] Query index rebuild started', {
+//         cacheKey,
+//         needsFullRebuildReason,
+//         prefixSeedCount: prefixSeedUris.length,
+//         effectiveMaxSearchFiles,
+//         mergedExclusionCount: config.searchExclusions.length,
+//         exclusionGlobApplied: Boolean(exclusionGlob),
+//       });
+//       cacheEntry = await runHybridWorkspaceSearch({
+//         normalizedSearch: cacheKey,
+//         localCandidateUris,
+//         seedUris: prefixSeedUris,
+//         excludePatterns: config.searchExclusions,
+//         maxSearchFiles: effectiveMaxSearchFiles,
+//         searchService,
+//         logger,
+//         token,
+//         baselineHeapUsedBytes,
+//         baselineRssBytes,
+//       });
+//       if (!shouldRetainResults()) {
+//         finishBuildSearchWatchdog();
+//         return {
+//           items: [],
+//           noticeItem: null,
+//           loadMoreItem: null,
+//         };
+//       }
+//       cacheEntry.mutationVersion = currentSearchMutationVersion;
+//       cacheEntry.exclusionSignature = exclusionSignature;
+//       if (cacheEntry.uris.length > 0 || cacheEntry.exceededMaxFiles) {
+//         searchCache.set(cacheKey, cacheEntry);
+//         persistSearchCache();
+//         logger?.debug?.(
+//           `[QuickOpen] query index stored for "${cacheKey}". results=${cacheEntry.uris.length}`,
+//         );
+//       }
+//       if (cacheEntry.uris.length > 0 || cacheEntry.exceededMaxFiles) {
+//         logQuickOpenTrace(
+//           logger,
+//           '[QuickOpen][trace] Query index rebuild completed',
+//           {
+//             cacheKey,
+//             resultCount: cacheEntry.uris.length,
+//             exceededMaxFiles: cacheEntry.exceededMaxFiles,
+//           },
+//         );
+//       }
+//     }
+//   }
 
-  if (protectedLocalOnlySearch) {
-    noticeItem = {
-      label: t(
-        'Search is running in safe mode. Type at least {0} characters to search the full workspace.',
-        QUICKOPEN_MIN_GLOBAL_SEARCH_LENGTH,
-      ),
-      detail: '',
-    };
-  }
+//   if (protectedLocalOnlySearch) {
+//     noticeItem = {
+//       label: t(
+//         'Search is running in safe mode. Type at least {0} characters to search the full workspace.',
+//         QUICKOPEN_MIN_GLOBAL_SEARCH_LENGTH,
+//       ),
+//       detail: '',
+//     };
+//   }
 
-  if (cacheEntry.exceededMaxFiles) {
-    noticeItem = {
-      label: t(
-        'More results are available. Load more or refine your search.',
-      ),
-      detail: '',
-    };
-  }
+//   if (cacheEntry.exceededMaxFiles) {
+//     noticeItem = {
+//       label: t(
+//         'Showing the first 100 results. Refine your search for a smaller set.',
+//       ),
+//       detail: '',
+//     };
+//   }
 
-  const displayLimit = Math.min(
-    cacheEntry.uris.length,
-    maxDisplayResults * searchPage,
-  );
+//   const displayLimit = Math.min(
+//     cacheEntry.uris.length,
+//     maxDisplayResults * searchPage,
+//   );
 
-  const items = createSearchFileItems(
-    cacheEntry.uris,
-    favoritesProvider,
-    config,
-    favoriteMatchNormSet,
-  )
-    .slice(0, displayLimit)
-    .map((item) => {
-      const isFav = favoritesProvider.hasFavorite(item.internalUri);
-      if (item.isFavorite !== isFav) {
-        item.isFavorite = isFav;
-        item.updateIcon();
-      }
-      return item;
-    });
+//   const items = createSearchFileItems(
+//     cacheEntry.uris,
+//     favoritesProvider,
+//     config,
+//     favoriteMatchNormSet,
+//   )
+//     .slice(0, displayLimit)
+//     .map((item) => {
+//       const isFav = favoritesProvider.hasFavorite(item.internalUri);
+//       if (item.isFavorite !== isFav) {
+//         item.isFavorite = isFav;
+//         item.updateIcon();
+//       }
+//       return item;
+//     });
 
-  if (cacheEntry.uris.length > displayLimit || cacheEntry.exceededMaxFiles) {
-    loadMoreItem = {
-      label: t('Load more'),
-      description: t(
-        'Showing {0} of at least {1}',
-        displayLimit,
-        cacheEntry.uris.length,
-      ),
-      action: 'loadMore',
-    };
-  }
+//   loadMoreItem = null;
 
-  finishBuildSearchWatchdog();
-  return {
-    items,
-    noticeItem,
-    loadMoreItem,
-  };
-}
+//   finishBuildSearchWatchdog();
+//   return {
+//     items,
+//     noticeItem,
+//     loadMoreItem,
+//   };
+// }
 
 async function validateFilesExistence(
   uris: vscode.Uri[],
@@ -2060,11 +1902,15 @@ export function registerQuickOpenCommand(
               );
             });
 
+          const matchingFavoriteCandidateUris = isSearching
+            ? allFavoriteUris.filter((uri) => matchesSearchText(uri, normalizedSearch))
+            : [];
           const matchingFavoriteUris = isSearching
             ? dedupeUrisByFsPath(
-                allFavoriteUris.filter((uri) =>
-                  matchesSearchText(uri, normalizedSearch),
-                ),
+                isGitignoreCacheReady()
+                  ? (filterGitignoredUrisFast(matchingFavoriteCandidateUris) ??
+                    matchingFavoriteCandidateUris)
+                  : matchingFavoriteCandidateUris,
               )
             : [];
 
@@ -2143,23 +1989,6 @@ export function registerQuickOpenCommand(
                 normalizeFsPath(uri.fsPath),
               ),
             );
-            const immediatePreviewUris = prioritizeDistinctBasenames(
-              dedupeUrisByFsPath([
-                ...(filterGitignoredUrisFast(
-                  allUrisToDisplay.filter((uri) =>
-                    matchesSearchText(uri, normalizedSearch),
-                  ),
-                ) ??
-                  allUrisToDisplay.filter((uri) =>
-                    matchesSearchText(uri, normalizedSearch),
-                  )),
-              ]),
-              normalizedSearch,
-            );
-            const immediatePreviewLimit = Math.max(
-              1,
-              Math.min(config.maxSearchResults, config.maxSearchFiles) * searchPage,
-            );
 
             if (previewPinnedItems.length > 0) {
               previewFavoriteItems.push(...previewPinnedItems);
@@ -2176,18 +2005,34 @@ export function registerQuickOpenCommand(
             }
 
             const previewItems: QuickOpenItem[] = [...previewFavoriteItems];
-            const previewSearchItems = createSearchFileItems(
-              immediatePreviewUris.slice(0, immediatePreviewLimit),
+            const previewFavoriteSearchItems = createSearchFileItems(
+              prioritizeDistinctBasenames(
+                dedupeUrisByFsPath(
+                  isGitignoreCacheReady()
+                    ? (filterGitignoredUrisFast(
+                        allUrisToDisplay.filter((uri) =>
+                          matchesSearchText(uri, normalizedSearch),
+                        ),
+                      ) ??
+                      allUrisToDisplay.filter((uri) =>
+                        matchesSearchText(uri, normalizedSearch),
+                      ))
+                    : allUrisToDisplay.filter((uri) =>
+                        matchesSearchText(uri, normalizedSearch),
+                      ),
+                ),
+                normalizedSearch,
+              ).slice(0, Math.max(1, Math.min(20, QUICKOPEN_HARD_SEARCH_RESULT_LIMIT))),
               favoritesProvider,
               config,
               previewFavoriteMatchNormSet,
             );
-            if (previewSearchItems.length > 0) {
+            if (previewFavoriteSearchItems.length > 0) {
               previewItems.push({
                 label: t('Files'),
                 kind: vscode.QuickPickItemKind.Separator,
               });
-              previewItems.push(...previewSearchItems);
+              previewItems.push(...previewFavoriteSearchItems);
             }
             previewItems.push({
               label: `$(loading~spin) ${t('Searching...')}`,
@@ -2214,8 +2059,16 @@ export function registerQuickOpenCommand(
             const exists = existenceMap.get(uri.fsPath) ?? false;
             return exists;
           });
+          const visiblePinnedUris =
+            isSearching && isGitignoreCacheReady()
+              ? (filterGitignoredUrisFast(validPinnedUris) ?? validPinnedUris)
+              : validPinnedUris;
+          const visibleRecentFavUris =
+            isSearching && isGitignoreCacheReady()
+              ? (filterGitignoredUrisFast(validRecentFavUris) ?? validRecentFavUris)
+              : validRecentFavUris;
           const favoriteMatchNormSet = new Set(
-            [...validPinnedUris, ...validRecentFavUris].map((uri) =>
+            [...visiblePinnedUris, ...visibleRecentFavUris].map((uri) =>
               normalizeFsPath(uri.fsPath),
             ),
           );
@@ -2252,12 +2105,12 @@ export function registerQuickOpenCommand(
           }
 
           const pinnedItems = buildPinnedItems(
-            validPinnedUris,
+            visiblePinnedUris,
             favoritesProvider,
             config,
           );
           const recentFavItems = buildRecentFavoriteItems(
-            validRecentFavUris,
+            visibleRecentFavUris,
             favoritesProvider,
             config,
           );
@@ -2339,7 +2192,11 @@ export function registerQuickOpenCommand(
             );
             const immediateLimit = Math.max(
               1,
-              Math.min(config.maxSearchResults, config.maxSearchFiles) * searchPage,
+              Math.min(
+                config.maxSearchResults,
+                config.maxSearchFiles,
+                QUICKOPEN_HARD_SEARCH_RESULT_LIMIT,
+              ) * searchPage,
             );
             const immediateItems = createSearchFileItems(
               immediateUris.slice(0, immediateLimit),
@@ -2373,10 +2230,33 @@ export function registerQuickOpenCommand(
             liveSearchExceededMaxFiles = liveSearchResult.exceededMaxFiles;
             liveSearchGitignoreDeferred = liveSearchResult.workspaceSearchDeferred;
 
-            const combinedUris = prioritizeDistinctBasenames(
+            const combinedCandidateUris = prioritizeDistinctBasenames(
               dedupeUrisByFsPath([...immediateUris, ...liveWorkspaceUris]),
               normalizedSearch,
-            ).slice(0, immediateLimit);
+            );
+            const combinedUrisBeforeLimit =
+              isGitignoreCacheReady()
+                ? (filterGitignoredUrisFast(combinedCandidateUris) ??
+                  combinedCandidateUris)
+                : combinedCandidateUris;
+            if (combinedUrisBeforeLimit.length !== combinedCandidateUris.length) {
+              log.info('[QuickOpen][trace] Final visible results reduced by gitignore filter', {
+                buildId,
+                normalizedSearch,
+                beforeCount: combinedCandidateUris.length,
+                afterCount: combinedUrisBeforeLimit.length,
+                rejectedSample: combinedCandidateUris
+                  .filter(
+                    (uri) =>
+                      !combinedUrisBeforeLimit.some(
+                        (accepted) => normalizeFsPath(accepted.fsPath) === normalizeFsPath(uri.fsPath),
+                      ),
+                  )
+                  .slice(0, 5)
+                  .map((uri) => uri.fsPath),
+              });
+            }
+            const combinedUris = combinedUrisBeforeLimit.slice(0, immediateLimit);
             const searchFileItems = createSearchFileItems(
               combinedUris,
               favoritesProvider,
@@ -2408,7 +2288,7 @@ export function registerQuickOpenCommand(
 
             if (liveSearchExceededMaxFiles) {
               searchItems.push({
-                label: t('Search returned many matches. Refine your search for more precise results.'),
+                label: t('Showing the first 100 results. Refine your search for more precise results.'),
                 description: '',
                 detail: '',
               });
@@ -2551,11 +2431,24 @@ export function registerQuickOpenCommand(
         } catch (error) {
           if (!isBuildCurrent() && !isQuickOpenSearchTimeoutError(error)) return;
           if (isQuickOpenSearchTimeoutError(error)) {
-            log.error('[QuickOpen] Search timed out, closing QuickOpen', error);
-            quickPick.hide();
-            void vscode.window.showErrorMessage(
-              t('Quick Open search timed out. Please refine your search.'),
+            log.error('[QuickOpen] Search reached a resource limit, keeping current QuickOpen results', {
+              error,
+              buildId,
+              normalizedSearch,
+            });
+            const timeoutLabel = t(
+              'Search stopped early to protect VS Code. Results may be partial. Refine your search.',
             );
+            if (!quickPick.items.some((item) => item.label === timeoutLabel)) {
+              quickPick.items = [
+                ...quickPick.items,
+                {
+                  label: timeoutLabel,
+                  description: '',
+                  detail: '',
+                },
+              ];
+            }
             return;
           }
           log.error('Error loading files for QuickOpen', error);
@@ -2594,14 +2487,34 @@ export function registerQuickOpenCommand(
       );
 
       let previousValue = '';
+      const shouldDeferExternalRebuild = (): boolean =>
+        quickPick.value.trim().length > 0;
       const debouncedSearchRebuild = debounce(async (value: string) => {
         await buildItems(value);
       }, 300);
       const debouncedExternalRebuild = debounce(async (reason: string) => {
+        if (shouldDeferExternalRebuild()) {
+          logThrottledWithContext(
+            'debug',
+            'quickopen:external-rebuild-deferred',
+            `External change (${reason}) deferred while search is active`,
+            { activeQuery: quickPick.value },
+          );
+          return;
+        }
         logThrottledWithContext(
           'debug',
           'quickopen:external-rebuild',
           `External change (${reason}), rebuilding QuickOpen items`,
+        );
+        await buildItems(quickPick.value);
+      }, 150);
+      const debouncedRulesRebuild = debounce(async (reason: string) => {
+        logThrottledWithContext(
+          'debug',
+          'quickopen:rules-rebuild',
+          `Gitignore rules changed (${reason}), rebuilding QuickOpen items`,
+          { activeQuery: quickPick.value },
         );
         await buildItems(quickPick.value);
       }, 150);
@@ -2616,8 +2529,12 @@ export function registerQuickOpenCommand(
             'quickopen:gitignore-changed',
             'Gitignore changed while a .gitignore document is open, rebuilding QuickOpen items',
           );
-          invalidateWorkspaceFuseIndex(log, 'gitignore');
           debouncedExternalRebuild('gitignore');
+        })),
+      );
+      disposables.push(
+        subscribeGitignoreRulesChange(wrapQuickOpenCallback(log, 'gitignoreRulesChange', () => {
+          debouncedRulesRebuild('rules-change');
         })),
       );
 
@@ -2686,13 +2603,21 @@ export function registerQuickOpenCommand(
             e.affectsConfiguration('anfavorites.quickOpen') ||
             e.affectsConfiguration('anfavorites.search')
           ) {
+            if (shouldDeferExternalRebuild()) {
+              logThrottledWithContext(
+                'debug',
+                'quickopen:config-rebuild-deferred',
+                'Configuration change deferred while search is active',
+                { activeQuery: quickPick.value },
+              );
+              return;
+            }
             logThrottledWithContext(
               'debug',
               'quickopen:config-changed',
               'Configuration changed (quick open), rebuilding QuickOpen items',
             );
 
-            invalidateWorkspaceFuseIndex(log, 'configuration');
             await buildItems(quickPick.value);
           }
         })),
@@ -2700,12 +2625,29 @@ export function registerQuickOpenCommand(
 
       disposables.push(
         vscode.workspace.onDidChangeWorkspaceFolders(wrapQuickOpenCallback(log, 'workspaceFoldersChange', async () => {
-          invalidateWorkspaceFuseIndex(log, 'workspace-folders');
+          if (shouldDeferExternalRebuild()) {
+            logThrottledWithContext(
+              'debug',
+              'quickopen:workspace-folders-rebuild-deferred',
+              'Workspace folder change deferred while search is active',
+              { activeQuery: quickPick.value },
+            );
+            return;
+          }
           await buildItems(quickPick.value);
         })),
       );
 
       const debouncedRebuild = debounce(async () => {
+        if (shouldDeferExternalRebuild()) {
+          logThrottledWithContext(
+            'debug',
+            'quickopen:fs-rebuild-deferred',
+            'File system change deferred while search is active',
+            { activeQuery: quickPick.value },
+          );
+          return;
+        }
         logThrottledWithContext(
           'debug',
           'quickopen:fs-changed',
@@ -2722,7 +2664,6 @@ export function registerQuickOpenCommand(
             'quickopen:fs-renamed',
             `Files renamed: ${event.files.length} file(s)`,
           );
-          invalidateWorkspaceFuseIndex(log, 'files-renamed');
           debouncedRebuild();
         })),
       );
@@ -2734,7 +2675,6 @@ export function registerQuickOpenCommand(
             'quickopen:fs-deleted',
             `Files deleted: ${event.files.length} file(s)`,
           );
-          invalidateWorkspaceFuseIndex(log, 'files-deleted');
           debouncedRebuild();
         })),
       );
@@ -2746,7 +2686,6 @@ export function registerQuickOpenCommand(
             'quickopen:fs-created',
             `Files created: ${event.files.length} file(s)`,
           );
-          invalidateWorkspaceFuseIndex(log, 'files-created');
           debouncedRebuild();
         })),
       );

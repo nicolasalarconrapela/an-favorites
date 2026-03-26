@@ -38,6 +38,9 @@ async function updateGitignoreFilesSettings(
     await _context.workspaceState.update(INTERNAL_FILES_STATE_KEY, {
       ..._gitignoreFilesState,
     });
+    _logger?.info?.('[gitignore][trace] persisted enable-state updated', {
+      entryCount: Object.keys(_gitignoreFilesState).length,
+    });
   } catch {
     // Ignore workspaceState persistence errors and keep the in-memory state.
   }
@@ -49,10 +52,13 @@ async function syncGitignoreFilesToSettings(
 ): Promise<boolean> {
   const settings = getGitignoreFilesSettings();
   let changed = false;
-  _logger?.debug?.('[gitignore] sync starting');
+  const added: string[] = [];
+  const removed: string[] = [];
+  _logger?.info?.('[gitignore][trace] sync settings started', {
+    existingEntryCount: Object.keys(settings).length,
+  });
 
   const discovered = discoveredOverride ?? (await discoverGitignoreFiles(token));
-  _logger?.debug?.(`[gitignore] discovered ${discovered.length} files`);
   const discoveredRelPaths = new Set(discovered.map((uri) => gitignoreRelPath(uri)));
 
   // 1. Add new discovered files
@@ -61,6 +67,7 @@ async function syncGitignoreFilesToSettings(
     if (!(rel in settings)) {
       settings[rel] = true;
       changed = true;
+      added.push(rel);
     }
   }
 
@@ -69,14 +76,47 @@ async function syncGitignoreFilesToSettings(
     if (!discoveredRelPaths.has(rel)) {
       delete settings[rel];
       changed = true;
+      removed.push(rel);
     }
   }
 
   if (changed) {
+    _logger?.info?.('[gitignore][trace] sync settings detected changes', {
+      discoveredCount: discovered.length,
+      addedCount: added.length,
+      removedCount: removed.length,
+      addedSample: added.slice(0, 10),
+      removedSample: removed.slice(0, 10),
+    });
     await updateGitignoreFilesSettings(settings);
     return true;
   }
+  _logger?.info?.('[gitignore][trace] sync settings completed without changes', {
+    discoveredCount: discovered.length,
+    settingEntryCount: Object.keys(settings).length,
+  });
   return false;
+}
+
+async function refreshGitignorePatternsAfterEnableStateChange(): Promise<void> {
+  try {
+    _logger?.info?.('[gitignore][trace] refreshing patterns after enable-state change', {
+      cacheReadyBefore: _cache !== null,
+      discoveryDirty: _discoveryDirty,
+      patternsDirty: _patternsDirty,
+    });
+    const discovered = currentDiscoveryState() ?? (await discoverGitignoreFiles());
+    const patterns = await getGitignorePatterns(discovered);
+    _logger?.info?.('[gitignore][trace] patterns refreshed after enable-state change', {
+      discoveredCount: discovered.length,
+      patternCount: patterns.length,
+    });
+    emitRulesChange();
+  } catch (error) {
+    _logger?.warn?.('[gitignore] failed to refresh patterns after enable-state change', {
+      error,
+    });
+  }
 }
 
 /** Returns the path used to identify/persist a gitignore Uri (relative to workspace). */
@@ -319,6 +359,7 @@ let _watcher: vscode.FileSystemWatcher | null = null;
 let _folderListener: vscode.Disposable | null = null;
 let _debounceTimer: ReturnType<typeof setTimeout> | null = null;
 let _onDiscoveryChange = new Set<() => void>();
+let _onRulesChange = new Set<() => void>();
 let _gitignoreFilesState: Record<string, boolean> = {};
 let _mergedExclusionsCache: MergedExclusionsCache | null = null;
 let _discoveryPromise: Promise<vscode.Uri[]> | null = null;
@@ -335,6 +376,16 @@ function emitDiscoveryChange(): void {
       cb();
     } catch (error) {
       _logger?.warn?.('[gitignore] discovery listener failed', { error });
+    }
+  }
+}
+
+function emitRulesChange(): void {
+  for (const cb of _onRulesChange) {
+    try {
+      cb();
+    } catch (error) {
+      _logger?.warn?.('[gitignore] rules listener failed', { error });
     }
   }
 }
@@ -531,6 +582,14 @@ function invalidateCache(
     reason === 'gitignore-created' ||
     reason === 'gitignore-deleted' ||
     reason === 'workspace-folders-changed';
+  _logger?.info?.('[gitignore][trace] invalidateCache requested', {
+    reason,
+    showProgress,
+    structureChanged,
+    hadCache: _cache !== null,
+    hadDiscoveryPromise: _discoveryPromise !== null,
+    hadPatternsPromise: _patternsPromise !== null,
+  });
   if (structureChanged) {
     _discoveryPromise = null;
     _lastDiscovered = [];
@@ -552,7 +611,9 @@ function invalidateCache(
           // Perform the actual work
           try {
             await syncGitignoreFilesToSettings();
+            await getGitignorePatterns();
             emitDiscoveryChange();
+            emitRulesChange();
           } catch (error) {
             _logger?.error?.('[gitignore] cache refresh crashed (progress)', {
               reason,
@@ -563,8 +624,10 @@ function invalidateCache(
       );
     } else if (structureChanged) {
       void syncGitignoreFilesToSettings()
-        .then(() => {
+        .then(async () => {
+          await getGitignorePatterns();
           emitDiscoveryChange();
+          emitRulesChange();
         })
         .catch((error) => {
           _logger?.error?.('[gitignore] cache refresh crashed', {
@@ -572,6 +635,10 @@ function invalidateCache(
             error,
           });
         });
+    } else if (reason === 'gitignore-file-enabled-changed' || reason === 'gitignore-files-enabled-changed') {
+      _logger?.debug?.('[gitignore] enable-state change detected; skipping discovery change emission');
+    } else if (reason === 'gitignore-changed') {
+      void refreshGitignorePatternsAfterEnableStateChange();
     } else {
       emitDiscoveryChange();
     }
@@ -583,21 +650,22 @@ function ensureWatcher(logger?: Logger): void {
 
   _watcher = vscode.workspace.createFileSystemWatcher('**/.gitignore');
   _watcher.onDidChange(() => {
-    logger?.debug?.('[gitignore] .gitignore changed');
+    _logger?.info?.('[gitignore][trace] watcher detected .gitignore change');
     invalidateCache(false, 'gitignore-changed');
   });
   _watcher.onDidCreate(() => {
-    logger?.debug?.('[gitignore] .gitignore created');
+    _logger?.info?.('[gitignore][trace] watcher detected .gitignore creation');
     invalidateCache(false, 'gitignore-created');
   });
   _watcher.onDidDelete(() => {
-    logger?.debug?.('[gitignore] .gitignore deleted');
+    _logger?.info?.('[gitignore][trace] watcher detected .gitignore deletion');
     invalidateCache(false, 'gitignore-deleted');
   });
 
-  _folderListener = vscode.workspace.onDidChangeWorkspaceFolders(() =>
-    invalidateCache(false, 'workspace-folders-changed'),
-  );
+  _folderListener = vscode.workspace.onDidChangeWorkspaceFolders(() => {
+    _logger?.info?.('[gitignore][trace] watcher detected workspace folder change');
+    invalidateCache(false, 'workspace-folders-changed');
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -998,10 +1066,16 @@ export async function setGitignoreFileEnabled(
   const rel = gitignoreRelPath(uri);
 
   if (settings[rel] === enabled) return;
+  _logger?.info?.('[gitignore][trace] setGitignoreFileEnabled requested', {
+    rel,
+    previousEnabled: settings[rel] !== false,
+    nextEnabled: enabled,
+  });
   settings[rel] = enabled;
 
   await updateGitignoreFilesSettings(settings);
   invalidateCache(false, 'gitignore-file-enabled-changed'); // force re-read on next search
+  await refreshGitignorePatternsAfterEnableStateChange();
 }
 
 export async function setGitignoreFilesEnabled(
@@ -1009,6 +1083,12 @@ export async function setGitignoreFilesEnabled(
   enabled: boolean,
 ): Promise<void> {
   const settings = getGitignoreFilesSettings();
+  const rels = uris.map((uri) => gitignoreRelPath(uri));
+  _logger?.info?.('[gitignore][trace] setGitignoreFilesEnabled requested', {
+    count: rels.length,
+    nextEnabled: enabled,
+    relSample: rels.slice(0, 10),
+  });
 
   for (const uri of uris) {
     settings[gitignoreRelPath(uri)] = enabled;
@@ -1016,6 +1096,7 @@ export async function setGitignoreFilesEnabled(
 
   await updateGitignoreFilesSettings(settings);
   invalidateCache(false, 'gitignore-files-enabled-changed');
+  await refreshGitignorePatternsAfterEnableStateChange();
 }
 
 export function isGitignoreFileEnabled(uri: vscode.Uri): boolean {
@@ -1045,6 +1126,15 @@ export function subscribeGitignoreDiscoveryChange(
   });
 }
 
+export function subscribeGitignoreRulesChange(
+  cb: () => void,
+): vscode.Disposable {
+  _onRulesChange.add(cb);
+  return new vscode.Disposable(() => {
+    _onRulesChange.delete(cb);
+  });
+}
+
 async function verifyPersistedSnapshotInBackground(
   logger?: Logger,
 ): Promise<void> {
@@ -1055,13 +1145,18 @@ async function verifyPersistedSnapshotInBackground(
 
   try {
     const discovered = await discoverGitignoreFilesInternal(undefined, true);
-    const discoveredRelPaths = discovered.map((uri) =>
-      toPersistedWorkspaceRelativePath(uri),
-    );
+    const settings = getGitignoreFilesSettings();
+    const enabledDiscoveredRelPaths = discovered
+      .map((uri) => toPersistedWorkspaceRelativePath(uri))
+      .filter((rel) => settings[rel] !== false)
+      .sort();
+    const enabledSnapshotRelPaths = snapshot.entries
+      .map((entry) => entry.rel)
+      .sort();
     if (
-      discoveredRelPaths.length !== snapshot.discoveredRelPaths.length ||
-      discoveredRelPaths.some(
-        (rel, index) => rel !== snapshot.discoveredRelPaths[index],
+      enabledDiscoveredRelPaths.length !== enabledSnapshotRelPaths.length ||
+      enabledDiscoveredRelPaths.some(
+        (rel, index) => rel !== enabledSnapshotRelPaths[index],
       )
     ) {
       logger?.info?.('[gitignore] persisted snapshot invalidated by discovery delta');
@@ -1075,6 +1170,9 @@ async function verifyPersistedSnapshotInBackground(
     );
     for (const uri of discovered) {
       const rel = toPersistedWorkspaceRelativePath(uri);
+      if (settings[rel] === false) {
+        continue;
+      }
       const snapshotEntry = snapshotEntryByRel.get(rel);
       if (!snapshotEntry) {
         logger?.info?.('[gitignore] persisted snapshot invalidated by missing entry', {
@@ -1216,4 +1314,5 @@ export function disposeGitignoreService(): void {
   _gitignoredPathCache.clear();
   _mergedExclusionsCache = null;
   _onDiscoveryChange.clear();
+  _onRulesChange.clear();
 }

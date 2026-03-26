@@ -38,7 +38,15 @@ async function searchFolderWithRipgrep(params: {
     return [];
   }
 
-  const args = ['--files', '--hidden', '--null', '--glob', normalizeGlobPattern(pattern)];
+  const args = [
+    '--files',
+    '--hidden',
+    '--no-ignore',
+    '--null',
+    '--glob-case-insensitive',
+    '--glob',
+    normalizeGlobPattern(pattern),
+  ];
   const normalizedExcludePatterns = new Set<string>([
     '!.git',
     '!.git/**',
@@ -126,7 +134,7 @@ async function searchFolderWithRipgrep(params: {
         return;
       }
       flushBuffer();
-      if (signal || code === 0) {
+      if (signal || code === 0 || code === 1) {
         finish();
         return;
       }
@@ -141,7 +149,7 @@ async function searchFolderWithRipgrep(params: {
 }
 
 export class RipgrepQuickOpenSearchService implements QuickOpenSearchService {
-  readonly providesFilteredResults = true;
+  readonly providesFilteredResults = false;
 
   async findFiles(
     pattern: string,

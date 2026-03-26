@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.2.71",
+  "version": "1.2.72",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -479,7 +479,7 @@
       {
         "title": "%config.search.title%",
         "properties": {
-          "anfavorites.Zearch.exclusions": {
+          "anfavorites.search.exclusions": {
             "type": "array",
             "items": {
               "type": "string"
