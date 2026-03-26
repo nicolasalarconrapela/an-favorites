@@ -1,7 +1,10 @@
 **/*.ts
 **/*.map
 **/*.test.ts
-node_modules
+node_modules/*
+!node_modules/@vscode/
+node_modules/@vscode/*
+!node_modules/@vscode/ripgrep/**
 out
 .vscode
 .gitignore

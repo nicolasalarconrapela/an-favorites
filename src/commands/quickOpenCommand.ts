@@ -15,7 +15,7 @@ import {
   safeBasenameFromUri,
 } from '../utils/collisionUtils';
 import { VscodeQuickOpenConfigService } from '../adapters/vscodeQuickOpenConfigService';
-import { VscodeQuickOpenSearchService } from '../adapters/vscodeQuickOpenSearchService';
+import { RipgrepQuickOpenSearchService } from '../adapters/ripgrepQuickOpenSearchService';
 import { t } from '../utils/l10n';
 import {
   buildExclusionGlobFromPatterns,
@@ -91,8 +91,8 @@ class LruCache<K, V> {
 
 function buildSearchPattern(searchValue: string): string {
   const normalized = searchValue.trim();
-  if (!normalized) return '**/*';
-  return `**/*${normalized}*`;
+  if (!normalized) return '*';
+  return `*${normalized}*`;
 }
 
 const HYBRID_PREFIX_STAGE_LIMIT = 1200;
@@ -268,7 +268,7 @@ function wrapQuickOpenCallback<TArgs extends unknown[]>(
 async function findFilesWithTimeout(params: {
   searchService: QuickOpenSearchService;
   pattern: string;
-  exclude: string | undefined;
+  excludePatterns: string[];
   limit: number;
   timeoutMs: number;
   token: vscode.CancellationToken;
@@ -278,7 +278,7 @@ async function findFilesWithTimeout(params: {
   const {
     searchService,
     pattern,
-    exclude,
+    excludePatterns,
     limit,
     timeoutMs,
     token,
@@ -294,7 +294,12 @@ async function findFilesWithTimeout(params: {
   let timeoutHandle: NodeJS.Timeout | undefined;
   try {
     return await Promise.race([
-      searchService.findFiles(pattern, exclude, limit, localTokenSource.token),
+      searchService.findFiles(
+        pattern,
+        excludePatterns,
+        limit,
+        localTokenSource.token,
+      ),
       new Promise<vscode.Uri[]>((_, reject) => {
         timeoutHandle = setTimeout(() => {
           localTokenSource.cancel();
@@ -528,7 +533,7 @@ async function runHybridWorkspaceSearch(params: {
   normalizedSearch: string;
   localCandidateUris: vscode.Uri[];
   seedUris?: vscode.Uri[];
-  exclusionGlob: string | undefined;
+  excludePatterns: string[];
   maxSearchFiles: number;
   searchService: QuickOpenSearchService;
   logger?: Logger;
@@ -540,7 +545,7 @@ async function runHybridWorkspaceSearch(params: {
     normalizedSearch,
     localCandidateUris,
     seedUris = [],
-    exclusionGlob,
+    excludePatterns,
     maxSearchFiles,
     searchService,
     logger,
@@ -610,16 +615,17 @@ async function runHybridWorkspaceSearch(params: {
       seedCount: seedUris.length,
     },
   );
-  const fastGitignoreFilteringReady = isGitignoreCacheReady();
+  const workspaceSearchAlreadyFiltered =
+    searchService.providesFilteredResults === true;
+  const fastGitignoreFilteringReady =
+    workspaceSearchAlreadyFiltered || isGitignoreCacheReady();
+  const filteredSeedCandidates = seedUris.filter((uri) =>
+    matchesSearchText(uri, normalizedSearch),
+  );
   const seededMatches = dedupeUrisByFsPath(
     fastGitignoreFilteringReady
-      ? (filterGitignoredUrisFast(
-          seedUris.filter((uri) => matchesSearchText(uri, normalizedSearch)),
-        ) ?? seedUris.filter((uri) => matchesSearchText(uri, normalizedSearch)))
-      : await filterGitignoredUris(
-          seedUris.filter((uri) => matchesSearchText(uri, normalizedSearch)),
-          token,
-        ),
+      ? (filterGitignoredUrisFast(filteredSeedCandidates) ?? filteredSeedCandidates)
+      : filteredSeedCandidates,
   );
   finishSeedFilterStage();
   assertSearchStillHealthy('runHybridWorkspaceSearch:seed-filter', {
@@ -627,7 +633,7 @@ async function runHybridWorkspaceSearch(params: {
   });
 
   const stagePatterns = [
-    `**/${normalizedSearch}*`,
+    `${normalizedSearch}*`,
     buildSearchPattern(normalizedSearch),
   ];
   const stageLimits = [
@@ -641,7 +647,7 @@ async function runHybridWorkspaceSearch(params: {
   );
   let exceededMaxFiles = mergedUris.length > maxSearchFiles;
   let gitignoreFilteringDeferred = !fastGitignoreFilteringReady;
-  const exclusionGlobApplied = Boolean(exclusionGlob);
+  const exclusionGlobApplied = excludePatterns.length > 0;
   const stageResultCap = exclusionGlobApplied
     ? maxSearchFiles
     : QUICKOPEN_STAGE_MAX_RESULTS;
@@ -699,7 +705,7 @@ async function runHybridWorkspaceSearch(params: {
     const foundUris = await findFilesWithTimeout({
       searchService,
       pattern: stagePatterns[i],
-      exclude: exclusionGlob,
+      excludePatterns,
       limit: rawStageLimit,
       timeoutMs: findFilesTimeoutMs,
       token,
@@ -708,6 +714,7 @@ async function runHybridWorkspaceSearch(params: {
         normalizedSearch,
         stageIndex: i,
         exclusionGlobApplied,
+        workspaceSearchAlreadyFiltered,
       },
     });
     finishFindFilesStage();
@@ -725,7 +732,9 @@ async function runHybridWorkspaceSearch(params: {
       },
     );
     const filteredFoundUris = fastGitignoreFilteringReady
-      ? (filterGitignoredUrisFast(foundUris) ?? foundUris)
+      ? workspaceSearchAlreadyFiltered
+        ? foundUris
+        : (filterGitignoredUrisFast(foundUris) ?? foundUris)
       : foundUris;
     finishFilterStage();
     assertSearchStillHealthy(`runHybridWorkspaceSearch:after-filterGitignoredUris:${i}`, {
@@ -1429,7 +1438,7 @@ async function buildSearchItems(params: {
         normalizedSearch: cacheKey,
         localCandidateUris,
         seedUris: prefixSeedUris,
-        exclusionGlob,
+        excludePatterns: config.searchExclusions,
         maxSearchFiles: effectiveMaxSearchFiles,
         searchService,
         logger,
@@ -1782,8 +1791,8 @@ export function registerQuickOpenCommand(
   const throttleIntervalMs = 2000;
   const configService: QuickOpenConfigService =
     new VscodeQuickOpenConfigService();
-  const searchService: QuickOpenSearchService =
-    new VscodeQuickOpenSearchService();
+      const searchService: QuickOpenSearchService =
+        new RipgrepQuickOpenSearchService();
   const logThrottled = (
     level: 'debug' | 'info' | 'warn' | 'error',
     key: string,
@@ -2346,14 +2355,10 @@ export function registerQuickOpenCommand(
             let liveWorkspaceUris: vscode.Uri[] = [];
             let liveSearchExceededMaxFiles = false;
             let liveSearchGitignoreDeferred = false;
-            const exclusionGlob = getSafeQuickOpenExclusionGlob(
-              config.searchExclusions,
-              log,
-            );
             const liveSearchResult = await runHybridWorkspaceSearch({
               normalizedSearch,
               localCandidateUris: allUrisToDisplay,
-              exclusionGlob,
+              excludePatterns: config.searchExclusions,
               maxSearchFiles: effectiveWorkspaceSearchLimit,
               searchService,
               logger: log,
