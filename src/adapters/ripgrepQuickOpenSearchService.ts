@@ -1,4 +1,8 @@
+import { createHash } from 'crypto';
 import { spawn } from 'child_process';
+import * as fs from 'fs';
+import * as fsPromises from 'fs/promises';
+import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { rgPath } from '@vscode/ripgrep';
@@ -15,7 +19,9 @@ function normalizeExcludePattern(pattern: string): string | null {
     return null;
   }
 
-  return trimmed.startsWith('!') ? trimmed : `!${trimmed}`;
+  const withoutNegation = trimmed.startsWith('!') ? trimmed.slice(1) : trimmed;
+  const normalized = withoutNegation.trim().replace(/\\/g, '/');
+  return normalized || null;
 }
 
 function toWorkspaceUri(
@@ -24,6 +30,91 @@ function toWorkspaceUri(
 ): vscode.Uri {
   const normalized = relativePath.replace(/\//g, path.sep);
   return vscode.Uri.file(path.join(folder.uri.fsPath, normalized));
+}
+
+const RIPGREP_IGNORE_FILE_DIR = path.join(
+  os.tmpdir(),
+  'an-favorites-ripgrep-ignore',
+);
+const ripgrepIgnoreFileByPatternIdentity = new WeakMap<
+  readonly string[],
+  Promise<string | undefined>
+>();
+const ripgrepIgnoreFileCache = new Map<string, Promise<string>>();
+const ripgrepIgnoreFilesForCleanup = new Set<string>();
+let ripgrepIgnoreCleanupRegistered = false;
+
+function ensureRipgrepIgnoreCleanupRegistered(): void {
+  if (ripgrepIgnoreCleanupRegistered) {
+    return;
+  }
+
+  ripgrepIgnoreCleanupRegistered = true;
+  process.once('exit', () => {
+    for (const filePath of ripgrepIgnoreFilesForCleanup) {
+      try {
+        fs.unlinkSync(filePath);
+      } catch {
+        // Best-effort cleanup of temp ignore files.
+      }
+    }
+  });
+}
+
+async function getRipgrepIgnoreFilePath(
+  excludePatterns: string[],
+): Promise<string | undefined> {
+  const identityCachedFilePromise =
+    ripgrepIgnoreFileByPatternIdentity.get(excludePatterns);
+  if (identityCachedFilePromise) {
+    return identityCachedFilePromise;
+  }
+
+  const normalizedExcludePatterns = Array.from(
+    new Set<string>([
+      '.git/',
+      ...excludePatterns
+        .map((value) => normalizeExcludePattern(value))
+        .filter((value): value is string => Boolean(value)),
+    ]),
+  ).sort();
+
+  if (normalizedExcludePatterns.length === 0) {
+    return undefined;
+  }
+
+  const fileContents = `${normalizedExcludePatterns.join('\n')}\n`;
+  const fileHash = createHash('sha1').update(fileContents).digest('hex');
+  const cachedFilePromise = ripgrepIgnoreFileCache.get(fileHash);
+  if (cachedFilePromise) {
+    ripgrepIgnoreFileByPatternIdentity.set(excludePatterns, cachedFilePromise);
+    return cachedFilePromise;
+  }
+
+  const filePromise = (async (): Promise<string> => {
+    await fsPromises.mkdir(RIPGREP_IGNORE_FILE_DIR, { recursive: true });
+    const filePath = path.join(RIPGREP_IGNORE_FILE_DIR, `${fileHash}.ignore`);
+
+    try {
+      await fsPromises.access(filePath, fs.constants.F_OK);
+    } catch {
+      await fsPromises.writeFile(filePath, fileContents, 'utf8');
+    }
+
+    ripgrepIgnoreFilesForCleanup.add(filePath);
+    ensureRipgrepIgnoreCleanupRegistered();
+    return filePath;
+  })();
+
+  ripgrepIgnoreFileCache.set(fileHash, filePromise);
+  ripgrepIgnoreFileByPatternIdentity.set(excludePatterns, filePromise);
+  try {
+    return await filePromise;
+  } catch (error) {
+    ripgrepIgnoreFileCache.delete(fileHash);
+    ripgrepIgnoreFileByPatternIdentity.delete(excludePatterns);
+    throw error;
+  }
 }
 
 async function searchFolderWithRipgrep(params: {
@@ -38,26 +129,23 @@ async function searchFolderWithRipgrep(params: {
     return [];
   }
 
+  const ignoreFilePath = await getRipgrepIgnoreFilePath(excludePatterns);
   const args = [
     '--files',
     '--hidden',
     '--no-ignore',
     '--null',
     '--glob-case-insensitive',
-    '--glob',
-    normalizeGlobPattern(pattern),
   ];
-  const normalizedExcludePatterns = new Set<string>([
-    '!.git',
-    '!.git/**',
-    ...excludePatterns
-      .map((value) => normalizeExcludePattern(value))
-      .filter((value): value is string => Boolean(value)),
-  ]);
 
-  for (const excludePattern of normalizedExcludePatterns) {
-    args.push('--glob', excludePattern);
+  if (ignoreFilePath) {
+    args.push('--ignore-file', ignoreFilePath);
+    if (process.platform === 'win32') {
+      args.push('--ignore-file-case-insensitive');
+    }
   }
+
+  args.push('--glob', normalizeGlobPattern(pattern));
 
   return new Promise<vscode.Uri[]>((resolve, reject) => {
     const results: vscode.Uri[] = [];

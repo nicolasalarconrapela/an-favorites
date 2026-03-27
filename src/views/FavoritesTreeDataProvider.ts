@@ -215,6 +215,18 @@ export class FavoritesTreeDataProvider
     return Array.from(this.favorites.keys());
   }
 
+  public getQuickOpenFavoritesSnapshot(): Array<{
+    uri: vscode.Uri;
+    addedAt: number;
+    isPinned: boolean;
+  }> {
+    return Array.from(this.favorites.entries()).map(([filePath, metadata]) => ({
+      uri: vscode.Uri.file(filePath),
+      addedAt: metadata.addedAt,
+      isPinned: metadata.isPinned,
+    }));
+  }
+
   getTreeItem(element: GroupItem | FavoriteItem): vscode.TreeItem {
     return element;
   }

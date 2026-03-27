@@ -1024,7 +1024,7 @@ export async function getMergedExclusions(
     _logger?.debug?.(
       `[gitignore] merged exclusions cache hit. total=${_mergedExclusionsCache.merged.length}`,
     );
-    return [..._mergedExclusionsCache.merged];
+    return _mergedExclusionsCache.merged;
   }
 
   const seen = new Set<string>(userExclusions);
@@ -1043,7 +1043,7 @@ export async function getMergedExclusions(
   _logger?.info?.(
     `[gitignore] merged exclusions cache refreshed. user=${userExclusions.length} gitignore=${gitignorePatterns.length} merged=${merged.length}`,
   );
-  return merged;
+  return _mergedExclusionsCache.merged;
 }
 
 export function buildExclusionGlobFromPatterns(
