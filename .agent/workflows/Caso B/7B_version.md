@@ -4,8 +4,8 @@ description: Version bump, rama y commit · Caso B (develop → releases/1.X.0)
 
 # Version bump, rama y commit
 
-Este paso continúa el flujo anterior.
-Usar el contexto generado en el workflow previo.
+Este paso continúa el flujo anterior.  
+Usar el contexto generado en el workflow previo.  
 Continuar con las variables generadas en el paso anterior.
 
 Este paso es crítico. Cada acción requiere confirmación explícita del usuario antes de ejecutarse.  
@@ -39,8 +39,47 @@ Leer de `"$VAR_S1_FILE"`:
 - `VERSION_ACTUAL` → versión actual en `package.json` (ej. `1.2.5`)
 - `RELEASE_VERSION` → versión objetivo calculada (ej. `1.3.0`)
 - `TARGET_BRANCH` → rama destino calculada (ej. `releases/1.3.0`)
+- `RELEASE_LATEST` → último tag/release existente que servirá como base real para crear la rama
 - `OUTPUT_DIR`
 - `VAR_S1_FILE`
+
+---
+
+## B.0 Verificación de idempotencia
+
+Objetivo:
+
+Comprobar si el bump de versión ya fue realizado en un paso anterior para no repetirlo.
+
+Ejecuta las siguientes comprobaciones --sin solicitar confirmación al usuario-- y --sin modificar ningún archivo--:
+
+```bash
+git log --oneline -1
+````
+
+```bash
+grep '"version"' package.json
+```
+
+Condición de salto:
+
+Si se cumplen --todas-- las condiciones siguientes simultáneamente:
+
+- el último commit (`git log --oneline -1`) contiene exactamente el mensaje `chore: bump version to <RELEASE_VERSION>`
+- `package.json` contiene exactamente `"version": "<RELEASE_VERSION>"`
+
+Entonces:
+
+- informar al usuario: `⚠️ El bump de versión ya estaba aplicado. package.json y el último commit coinciden con <RELEASE_VERSION>. Se omiten los pasos B.1, B.2 y B.3.`
+- continuar directamente en --B.4-- (Crear rama de release)
+- no ejecutar ningún comando de modificación de `package.json`
+- no crear un nuevo commit
+- no preguntar confirmación adicional para saltar al B.4
+
+Si --no-- se cumplen todas las condiciones simultáneamente:
+
+- continuar normalmente en --B.1-- (Previsualización)
+- no omitir ningún paso
 
 ---
 
@@ -56,6 +95,7 @@ Acción (solo lectura, sin ejecutar nada):
 - leer `VERSION_ACTUAL` desde `"$VAR_S1_FILE"`
 - leer `RELEASE_VERSION` desde `"$VAR_S1_FILE"`
 - leer `TARGET_BRANCH` desde `"$VAR_S1_FILE"`
+- leer `RELEASE_LATEST` desde `"$VAR_S1_FILE"`
 
 Mostrar la previsualización:
 
@@ -65,8 +105,8 @@ Operaciones previstas (en este orden):
        "version": "<VERSION_ACTUAL>" → "version": "<RELEASE_VERSION>"
   2. Commit del bump:
        chore: bump version to <RELEASE_VERSION>
-  3. Crear rama de release:
-       git branch <TARGET_BRANCH>
+  3. Crear rama de release desde el commit del último tag:
+       git branch <TARGET_BRANCH> <RELEASE_LATEST>^{commit}
   4. Publicar rama en origin:
        git push -u origin <TARGET_BRANCH>
 
@@ -74,6 +114,7 @@ Operaciones previstas (en este orden):
   - Versión actual:  <VERSION_ACTUAL>
   - Versión nueva:   <RELEASE_VERSION>
   - Rama destino:    <TARGET_BRANCH>
+  - Tag base real:   <RELEASE_LATEST>
 ```
 
 Abortar si:
@@ -82,6 +123,7 @@ Abortar si:
 - `VERSION_ACTUAL` está vacía o no sigue el patrón `X.Y.Z`
 - `RELEASE_VERSION` está vacía o no sigue el patrón `X.Y.Z`
 - `TARGET_BRANCH` está vacío o no cumple `^releases/1\.[0-9]+\.0$`
+- `RELEASE_LATEST` está vacío
 
 Salida requerida:
 
@@ -175,36 +217,64 @@ Salida requerida:
 
 Objetivo:
 
-Crear la rama `TARGET_BRANCH` localmente a partir del estado actual de `develop`, **después** de que el commit del bump haya sido confirmado.
+Crear la rama `TARGET_BRANCH` localmente a partir del commit referenciado por el tag `RELEASE_LATEST`.
 
-Regla crítica:
+Reglas críticas:
 
-- no ejecutar este paso si el commit de B.3 no existe en el log
-- no ejecutar sin autorización explícita del usuario
+- no ejecutar este paso sin autorización explícita del usuario
+- `RELEASE_LATEST` debe existir y haberse obtenido en el paso previo
+- el tag `RELEASE_LATEST` debe existir en git
+- la rama `TARGET_BRANCH` debe crearse desde el commit del tag `RELEASE_LATEST`, no desde `HEAD`
+- si en B.3 se creó el commit `chore: bump version to <RELEASE_VERSION>`, ese commit no debe usarse como base para la rama
+- no cambiarse de rama
+- no ejecutar ningún otro comando adicional
 
-Comando permitido:
+Comandos permitidos:
+
+Verificación previa obligatoria del tag:
 
 ```bash
-git branch <TARGET_BRANCH>
+git rev-parse --verify "refs/tags/${RELEASE_LATEST}"
+```
+
+Creación de la rama desde el commit del tag:
+
+```bash
+git branch "${TARGET_BRANCH}" "${RELEASE_LATEST}^{commit}"
 ```
 
 Verificación requerida:
 
 ```bash
-git branch --list <TARGET_BRANCH>
+git branch --list "${TARGET_BRANCH}"
 ```
 
-La salida debe confirmar que la rama `<TARGET_BRANCH>` existe.
+```bash
+git rev-parse "${TARGET_BRANCH}^{commit}"
+```
+
+```bash
+git rev-parse "${RELEASE_LATEST}^{commit}"
+```
+
+La verificación final debe demostrar que:
+
+- la rama `${TARGET_BRANCH}` existe
+- el commit de `${TARGET_BRANCH}` coincide exactamente con el commit de `${RELEASE_LATEST}`
 
 Abortar si:
 
-- el commit de B.3 no existe en el log
-- el comando `git branch` falla
+- `RELEASE_LATEST` no existe o está vacío
+- el tag `RELEASE_LATEST` no existe en git
+- el comando `git branch "${TARGET_BRANCH}" "${RELEASE_LATEST}^{commit}"` falla
 - la rama no aparece en `git branch --list` tras la ejecución
+- el commit de `TARGET_BRANCH` no coincide exactamente con el commit del tag `RELEASE_LATEST`
 
 Salida requerida:
 
-- mostrar confirmación de que la rama fue creada
+- mostrar el tag base utilizado: `RELEASE_LATEST`
+- mostrar confirmación de que la rama fue creada desde el commit del tag
+- mostrar ambos commits comparados en la verificación
 - preguntar al usuario si desea publicar la rama en origin
 
 ---
@@ -252,9 +322,11 @@ Mostrar:
 - `VERSION_ACTUAL` (versión anterior)
 - `RELEASE_VERSION` (versión nueva)
 - `TARGET_BRANCH` (rama creada y publicada)
+- `RELEASE_LATEST` (tag base usado para crear la rama)
 - confirmación de que `package.json` contiene la nueva versión
 - confirmación de que el commit fue creado correctamente
 - confirmación de que la rama `TARGET_BRANCH` existe localmente y en origin
+- confirmación de que la rama `TARGET_BRANCH` fue creada desde el commit del tag `RELEASE_LATEST`
 - resumen de comandos ejecutados
 
 Abortar si:
@@ -262,6 +334,7 @@ Abortar si:
 - `package.json` no contiene `RELEASE_VERSION`
 - el commit no existe en el log
 - la rama `TARGET_BRANCH` no existe localmente o no está en origin
+- la rama `TARGET_BRANCH` no apunta al mismo commit que `RELEASE_LATEST`
 
 Esperar confirmación explícita del usuario antes de continuar con el siguiente paso.
 
