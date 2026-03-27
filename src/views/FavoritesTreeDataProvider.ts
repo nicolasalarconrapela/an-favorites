@@ -215,6 +215,18 @@ export class FavoritesTreeDataProvider
     return Array.from(this.favorites.keys());
   }
 
+  public getQuickOpenFavoritesSnapshot(): Array<{
+    uri: vscode.Uri;
+    addedAt: number;
+    isPinned: boolean;
+  }> {
+    return Array.from(this.favorites.entries()).map(([filePath, metadata]) => ({
+      uri: vscode.Uri.file(filePath),
+      addedAt: metadata.addedAt,
+      isPinned: metadata.isPinned,
+    }));
+  }
+
   getTreeItem(element: GroupItem | FavoriteItem): vscode.TreeItem {
     return element;
   }
@@ -933,7 +945,11 @@ export class FavoritesTreeDataProvider
 
     const duplicates = Array.from(nameMap.entries())
       .filter(([_, paths]) => paths.length > 1)
-      .map(([name, paths]) => ({ name, count: paths.length, paths }));
+      .map(([name, paths]) => ({
+        name,
+        count: paths.length,
+        samplePaths: paths.slice(0, 5),
+      }));
 
     if (duplicates.length > 0) {
       this.logger.warn(

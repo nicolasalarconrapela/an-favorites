@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { createAppLogger } from '../logging/loggingModule';
-import { LogLevel } from '../logging/logger';
+import { createAppLogger, startLoggedAction } from '../logging/loggingModule';
+import { LogLevel, Logger } from '../logging/logger';
 
 import { registerAddToFavoritesCommand } from '../commands/addToFavoritesCommand';
 import { registerAddToFavoritesInGroupCommand } from '../commands/addToFavoritesInGroupCommand';
@@ -25,7 +25,8 @@ import {
 import {
   disposeGitignoreService,
   initGitignoreSync,
-  onGitignoreDiscoveryChange,
+  subscribeGitignoreDiscoveryChange,
+  subscribeGitignoreRulesChange,
 } from '../utils/gitignoreService';
 import { initializeL10n, t } from '../utils/l10n';
 
@@ -48,12 +49,22 @@ export function activate(context: vscode.ExtensionContext): void {
     maxFileSizeBytes: 5 * 1024 * 1024,
     maxRotatedFiles,
   });
+  registerProcessFaultTracing(context, logger);
+  const activationTrace = startLoggedAction(logger, 'activacion de extension', {
+    version: context.extension.packageJSON.version,
+  });
+  logRuntimeSnapshot(logger, 'activate:logger-ready', {
+    workspaceFolderCount: vscode.workspace.workspaceFolders?.length ?? 0,
+    windowName: getCurrentWindowLabel(),
+    logLevel,
+  });
 
   logger.debug('━━━ Extension activation started ━━━');
 
   const sharedStorage = new SharedStorageService(context, logger);
   const telemetry = new TelemetryService();
   const mruService = new MRUService(context, logger);
+  activationTrace.step('servicios base creados');
 
   logger.debug('Registering favorites tree provider...');
 
@@ -71,6 +82,7 @@ export function activate(context: vscode.ExtensionContext): void {
   });
 
   context.subscriptions.push(treeView);
+  activationTrace.step('tree view registrada');
 
   logger.debug('Registering favorites commands...');
 
@@ -88,6 +100,7 @@ export function activate(context: vscode.ExtensionContext): void {
   logger.debug('[activate] registering quickOpen...');
   registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
   logger.debug('[activate] quickOpen registered.');
+  activationTrace.step('comandos registrados');
 
   // Register Get Started command
   context.subscriptions.push(
@@ -145,18 +158,87 @@ export function activate(context: vscode.ExtensionContext): void {
 
   telemetry.track('activated');
   logger.debug('━━━ Extension activation completed successfully ━━━');
+  activationTrace.success();
 
   // Check for new version and show notification
   void checkReleaseUpdate(context, logger);
 
-  // Sync .gitignore patterns into workspace settings in the background
-  void initGitignoreSync(context, logger);
-  onGitignoreDiscoveryChange(() => {
-    logger?.info?.(
-      '[gitignore] Discovery changed -> invalidating collision index',
+  // Delay the .gitignore scan so startup-critical work finishes first.
+  let gitignoreInitTimer: NodeJS.Timeout | undefined;
+  let gitignoreInitStarted = false;
+  const startGitignoreSync = (): void => {
+    if (gitignoreInitStarted) {
+      logger.debug('[activate] Deferred .gitignore sync already in progress');
+      return;
+    }
+
+    if ((vscode.workspace.workspaceFolders ?? []).length === 0) {
+      logger.debug(
+        '[activate] Deferred .gitignore sync skipped for now: no workspace folders yet',
+      );
+      return;
+    }
+
+    gitignoreInitStarted = true;
+    logger.debug('[activate] Starting deferred .gitignore sync');
+    logRuntimeSnapshot(logger, 'activate:gitignore-sync-start');
+    void initGitignoreSync(context, logger)
+      .catch((error) => {
+        logger.warn('[activate] Deferred .gitignore sync failed', error);
+        logRuntimeSnapshot(logger, 'activate:gitignore-sync-failed', { error });
+      })
+      .finally(() => {
+        gitignoreInitStarted = false;
+      });
+  };
+  context.subscriptions.push(
+    subscribeGitignoreDiscoveryChange(() => {
+      try {
+        logger?.info?.(
+          '[gitignore] Discovery changed -> invalidating collision index',
+        );
+        invalidateCollisionIndex(logger, 'gitignore changed');
+      } catch (error) {
+        logger.error(
+          '[activate] Crash while handling gitignore discovery change',
+          error,
+        );
+        logRuntimeSnapshot(logger, 'activate:gitignore-discovery-crash', {
+          error,
+        });
+      }
+    }),
+  );
+  context.subscriptions.push(
+    subscribeGitignoreRulesChange(() => {
+      try {
+        logger?.info?.(
+          '[gitignore] Rules changed -> invalidating collision index',
+        );
+        invalidateCollisionIndex(logger, 'gitignore rules changed');
+      } catch (error) {
+        logger.error(
+          '[activate] Crash while handling gitignore rules change',
+          error,
+        );
+        logRuntimeSnapshot(logger, 'activate:gitignore-rules-crash', {
+          error,
+        });
+      }
+    }),
+  );
+  gitignoreInitTimer = setTimeout(() => {
+    gitignoreInitTimer = undefined;
+    logger.debug(
+      `[activate] Deferred .gitignore sync timer elapsed after ${GITIGNORE_INIT_DELAY_MS}ms`,
     );
-    invalidateCollisionIndex(logger, 'gitignore changed');
-  });
+    startGitignoreSync();
+  }, GITIGNORE_INIT_DELAY_MS);
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeWorkspaceFolders(() => {
+      startGitignoreSync();
+    }),
+  );
 
   const watchedPaths = new Map<string, vscode.FileSystemWatcher>();
   const pendingValidations = new Set<string>();
@@ -180,10 +262,22 @@ export function activate(context: vscode.ExtensionContext): void {
       2000,
     ) ?? logger.debug(`Files deleted (batch): ${paths.length}`);
 
-    await Promise.all([
-      favoritesProvider.validateFavoritesForPaths(paths),
-      mruService.validateFilesForPaths(paths),
-    ]);
+    try {
+      await Promise.all([
+        favoritesProvider.validateFavoritesForPaths(paths),
+        mruService.validateFilesForPaths(paths),
+      ]);
+    } catch (error) {
+      logger.error('[watcher] Failed while flushing path validations', {
+        pathCount: paths.length,
+        samplePaths: paths.slice(0, 10),
+        error,
+      });
+      logRuntimeSnapshot(logger, 'activate:flush-validations-failed', {
+        pathCount: paths.length,
+        error,
+      });
+    }
   };
 
   const scheduleValidation = (fsPath: string): void => {
@@ -214,6 +308,16 @@ export function activate(context: vscode.ExtensionContext): void {
     const favoritePaths = favoritesProvider.getFavoritePaths();
     const recentPaths = mruService.getRecentFiles();
     const targetPaths = new Set([...favoritePaths, ...recentPaths]);
+    logger.throttle?.(
+      'debug',
+      'watcher:sync-summary',
+      '[watcher] Synchronizing file watchers',
+      {
+        targetPathCount: targetPaths.size,
+        currentWatcherCount: watchedPaths.size,
+      },
+      2000,
+    );
 
     for (const [fsPath, watcher] of watchedPaths) {
       if (!targetPaths.has(fsPath)) {
@@ -242,7 +346,12 @@ export function activate(context: vscode.ExtensionContext): void {
     }
     watcherSyncTimer = setTimeout(() => {
       watcherSyncTimer = undefined;
-      syncFileWatchers();
+      try {
+        syncFileWatchers();
+      } catch (error) {
+        logger.error('[watcher] syncFileWatchers crashed', error);
+        logRuntimeSnapshot(logger, 'activate:watcher-sync-crash', { error });
+      }
     }, 200);
   };
 
@@ -260,40 +369,54 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   const renameListener = vscode.workspace.onDidRenameFiles(async (event) => {
-    logger.throttle?.(
-      'debug',
-      'watcher:file-renamed',
-      `Files renamed/moved: ${event.files.length} files`,
-      undefined,
-      2000,
-    ) ?? logger.debug(`Files renamed/moved: ${event.files.length} files`);
+    try {
+      logger.throttle?.(
+        'debug',
+        'watcher:file-renamed',
+        `Files renamed/moved: ${event.files.length} files`,
+        undefined,
+        2000,
+      ) ?? logger.debug(`Files renamed/moved: ${event.files.length} files`);
 
-    for (const file of event.files) {
-      const oldPath = file.oldUri.fsPath;
-      const newPath = file.newUri.fsPath;
+      for (const file of event.files) {
+        const oldPath = file.oldUri.fsPath;
+        const newPath = file.newUri.fsPath;
 
-      const oldName = path.basename(oldPath);
-      const newName = path.basename(newPath);
-      const nameChanged = oldName !== newName;
+        const oldName = path.basename(oldPath);
+        const newName = path.basename(newPath);
+        const nameChanged = oldName !== newName;
 
-      logger.debug(
-        `Updating path: ${oldPath} -> ${newPath} (name changed: ${nameChanged})`,
-      );
-
-      favoritesProvider.updatePath(oldPath, newPath);
-      mruService.updatePath(oldPath, newPath);
-
-      if (nameChanged) {
         logger.debug(
-          `Filename changed: "${oldName}" -> "${newName}", collision detection will be recalculated`,
+          `Updating path: ${oldPath} -> ${newPath} (name changed: ${nameChanged})`,
         );
+
+        favoritesProvider.updatePath(oldPath, newPath);
+        mruService.updatePath(oldPath, newPath);
+
+        if (nameChanged) {
+          logger.debug(
+            `Filename changed: "${oldName}" -> "${newName}", collision detection will be recalculated`,
+          );
+        }
       }
+    } catch (error) {
+      logger.error('[watcher] Rename handler crashed', {
+        fileCount: event.files.length,
+        error,
+      });
+      logRuntimeSnapshot(logger, 'activate:rename-handler-crash', {
+        fileCount: event.files.length,
+        error,
+      });
     }
   });
 
   context.subscriptions.push(renameListener);
   context.subscriptions.push({
     dispose: () => {
+      if (gitignoreInitTimer) {
+        clearTimeout(gitignoreInitTimer);
+      }
       if (validationTimer) {
         clearTimeout(validationTimer);
       }
@@ -313,7 +436,72 @@ export function activate(context: vscode.ExtensionContext): void {
 
 export function deactivate(): void {}
 
+function registerProcessFaultTracing(
+  context: vscode.ExtensionContext,
+  logger: Logger,
+): void {
+  const onUnhandledRejection = (reason: unknown) => {
+    logger.error('[fatal] Unhandled promise rejection in extension host', {
+      reason,
+    });
+    logRuntimeSnapshot(logger, 'fatal:unhandled-rejection', { reason });
+  };
+
+  const onUncaughtException = (error: Error) => {
+    logger.error('[fatal] Uncaught exception in extension host', error);
+    logRuntimeSnapshot(logger, 'fatal:uncaught-exception', { error });
+  };
+
+  process.on('unhandledRejection', onUnhandledRejection);
+  process.on('uncaughtException', onUncaughtException);
+
+  context.subscriptions.push({
+    dispose: () => {
+      process.off('unhandledRejection', onUnhandledRejection);
+      process.off('uncaughtException', onUncaughtException);
+    },
+  });
+}
+
+function logRuntimeSnapshot(
+  logger: Logger,
+  reason: string,
+  metadata?: Record<string, unknown>,
+): void {
+  const memory = process.memoryUsage();
+  logger.info('[trace] Runtime snapshot', {
+    reason,
+    rssBytes: memory.rss,
+    heapTotalBytes: memory.heapTotal,
+    heapUsedBytes: memory.heapUsed,
+    externalBytes: memory.external,
+    arrayBuffersBytes: memory.arrayBuffers,
+    pid: process.pid,
+    uptimeSeconds: Math.round(process.uptime()),
+    ...metadata,
+  });
+}
+
+function getCurrentWindowLabel(): string {
+  const workspaceFile = vscode.workspace.workspaceFile;
+  if (workspaceFile) {
+    return path.basename(workspaceFile.fsPath);
+  }
+
+  const folders = vscode.workspace.workspaceFolders ?? [];
+  if (folders.length === 0) {
+    return 'no-workspace';
+  }
+
+  if (folders.length === 1) {
+    return folders[0].name;
+  }
+
+  return folders.map((folder) => folder.name).join(', ');
+}
+
 const RELEASE_NOTICE_DELAY_MS = 4000;
+const GITIGNORE_INIT_DELAY_MS = 750;
 const RELEASE_NOTICE_LAST_SEEN_VERSION_KEY = 'anfavorites.lastSeenVersion';
 const RELEASE_NOTICE_PREFERENCE_CONFIG_KEY =
   'releaseNotifications.preference';
@@ -326,7 +514,7 @@ type ReleaseNoticePreference = 'show' | 'skip' | 'never';
  */
 async function checkReleaseUpdate(
   context: vscode.ExtensionContext,
-  logger: any,
+  logger: Logger,
 ): Promise<void> {
   const currentVersion = context.extension.packageJSON.version;
   const lastSeenVersion = context.globalState.get<string>(
