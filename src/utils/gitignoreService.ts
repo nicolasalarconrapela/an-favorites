@@ -899,6 +899,16 @@ export function isGitignoreCacheReady(): boolean {
   return _cache !== null;
 }
 
+export function getEnabledGitignoreFilesFast(): vscode.Uri[] | null {
+  const cache = _cache;
+  if (!cache) {
+    return null;
+  }
+
+  const settings = getGitignoreFilesSettings();
+  return cache.discovered.filter((uri) => settings[gitignoreRelPath(uri)] !== false);
+}
+
 export async function isGitignored(
   uri: vscode.Uri,
   token?: vscode.CancellationToken,

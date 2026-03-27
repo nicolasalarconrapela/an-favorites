@@ -1,13 +1,11 @@
-import { createHash } from 'crypto';
 import { spawn } from 'child_process';
 import * as fs from 'fs';
-import * as fsPromises from 'fs/promises';
-import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { rgPath } from '@vscode/ripgrep';
 import { QuickOpenSearchService } from '../commands/quickOpen/quickOpenSearchService';
 import { Logger } from '../logging/logger';
+import { getEnabledGitignoreFilesFast } from '../utils/gitignoreService';
 
 function normalizeGlobPattern(pattern: string): string {
   const trimmed = pattern.trim();
@@ -33,108 +31,71 @@ function toWorkspaceUri(
   return vscode.Uri.file(path.join(folder.uri.fsPath, normalized));
 }
 
-const RIPGREP_IGNORE_FILE_DIR = path.join(
-  os.tmpdir(),
-  'an-favorites-ripgrep-ignore',
-);
-const ripgrepIgnoreFileByPatternIdentity = new WeakMap<
-  readonly string[],
-  Promise<string | undefined>
->();
-const ripgrepIgnoreFileCache = new Map<string, Promise<string>>();
-const ripgrepIgnoreFilesForCleanup = new Set<string>();
-let ripgrepIgnoreCleanupRegistered = false;
 let ripgrepSearchSequence = 0;
 let ripgrepWorkspaceSearchSequence = 0;
 
-function ensureRipgrepIgnoreCleanupRegistered(): void {
-  if (ripgrepIgnoreCleanupRegistered) {
-    return;
-  }
+function buildFolderGitignoreFilesIndex(
+  gitignoreFiles: readonly vscode.Uri[],
+): Map<string, string[]> {
+  const index = new Map<string, string[]>();
 
-  ripgrepIgnoreCleanupRegistered = true;
-  process.once('exit', () => {
-    for (const filePath of ripgrepIgnoreFilesForCleanup) {
-      try {
-        fs.unlinkSync(filePath);
-      } catch {
-        // Best-effort cleanup of temp ignore files.
-      }
-    }
-  });
-}
-
-async function getRipgrepIgnoreFilePath(
-  excludePatterns: string[],
-): Promise<string | undefined> {
-  const identityCachedFilePromise =
-    ripgrepIgnoreFileByPatternIdentity.get(excludePatterns);
-  if (identityCachedFilePromise) {
-    return identityCachedFilePromise;
-  }
-
-  const normalizedExcludePatterns = Array.from(
-    new Set<string>([
-      '.git/',
-      ...excludePatterns
-        .map((value) => normalizeExcludePattern(value))
-        .filter((value): value is string => Boolean(value)),
-    ]),
-  ).sort();
-
-  if (normalizedExcludePatterns.length === 0) {
-    return undefined;
-  }
-
-  const fileContents = `${normalizedExcludePatterns.join('\n')}\n`;
-  const fileHash = createHash('sha1').update(fileContents).digest('hex');
-  const cachedFilePromise = ripgrepIgnoreFileCache.get(fileHash);
-  if (cachedFilePromise) {
-    ripgrepIgnoreFileByPatternIdentity.set(excludePatterns, cachedFilePromise);
-    return cachedFilePromise;
-  }
-
-  const filePromise = (async (): Promise<string> => {
-    await fsPromises.mkdir(RIPGREP_IGNORE_FILE_DIR, { recursive: true });
-    const filePath = path.join(RIPGREP_IGNORE_FILE_DIR, `${fileHash}.ignore`);
-
-    try {
-      await fsPromises.access(filePath, fs.constants.F_OK);
-    } catch {
-      await fsPromises.writeFile(filePath, fileContents, 'utf8');
+  for (const uri of gitignoreFiles) {
+    const folder = vscode.workspace.getWorkspaceFolder(uri);
+    if (!folder || !fs.existsSync(uri.fsPath)) {
+      continue;
     }
 
-    ripgrepIgnoreFilesForCleanup.add(filePath);
-    ensureRipgrepIgnoreCleanupRegistered();
-    return filePath;
-  })();
-
-  ripgrepIgnoreFileCache.set(fileHash, filePromise);
-  ripgrepIgnoreFileByPatternIdentity.set(excludePatterns, filePromise);
-  try {
-    return await filePromise;
-  } catch (error) {
-    ripgrepIgnoreFileCache.delete(fileHash);
-    ripgrepIgnoreFileByPatternIdentity.delete(excludePatterns);
-    throw error;
+    const key = folder.uri.fsPath.toLowerCase();
+    const entry = index.get(key);
+    if (entry) {
+      entry.push(uri.fsPath);
+    } else {
+      index.set(key, [uri.fsPath]);
+    }
   }
+
+  for (const filePaths of index.values()) {
+    filePaths.sort(
+      (left, right) => left.length - right.length || left.localeCompare(right),
+    );
+  }
+
+  return index;
 }
 
 async function searchFolderWithRipgrep(params: {
   folder: vscode.WorkspaceFolder;
   pattern: string;
   excludePatterns: string[];
+  gitignoreFilePaths: readonly string[];
   limit: number;
   token?: vscode.CancellationToken;
   logger?: Logger;
 }): Promise<vscode.Uri[]> {
-  const { folder, pattern, excludePatterns, limit, token, logger } = params;
+  const {
+    folder,
+    pattern,
+    excludePatterns,
+    gitignoreFilePaths,
+    limit,
+    token,
+    logger,
+  } = params;
   if (limit <= 0) {
     return [];
   }
   const searchId = ++ripgrepSearchSequence;
 
-  const ignoreFilePath = await getRipgrepIgnoreFilePath(excludePatterns);
+  const normalizedExcludePatterns = Array.from(
+    new Set<string>(
+      [
+        '**/.git/**',
+        ...excludePatterns
+          .map((value) => normalizeExcludePattern(value))
+          .filter((value): value is string => Boolean(value)),
+      ],
+    ),
+  ).sort();
   const args = [
     '--files',
     '--hidden',
@@ -143,11 +104,17 @@ async function searchFolderWithRipgrep(params: {
     '--glob-case-insensitive',
   ];
 
-  if (ignoreFilePath) {
-    args.push('--ignore-file', ignoreFilePath);
+  if (gitignoreFilePaths.length > 0) {
     if (process.platform === 'win32') {
       args.push('--ignore-file-case-insensitive');
     }
+    for (const gitignoreFilePath of gitignoreFilePaths) {
+      args.push('--ignore-file', gitignoreFilePath);
+    }
+  }
+
+  for (const excludePattern of normalizedExcludePatterns) {
+    args.push('--glob', `!${excludePattern}`);
   }
 
   args.push('--glob', normalizeGlobPattern(pattern));
@@ -165,9 +132,9 @@ async function searchFolderWithRipgrep(params: {
       cwd: folder.uri.fsPath,
       pattern,
       limit,
-      excludeCount: excludePatterns.length,
-      hasIgnoreFile: Boolean(ignoreFilePath),
-      ignoreFilePath,
+      excludeCount: normalizedExcludePatterns.length,
+      gitignoreFileCount: gitignoreFilePaths.length,
+      gitignoreFileSample: gitignoreFilePaths.slice(0, 5),
       argCount: args.length,
     });
 
@@ -310,7 +277,7 @@ async function searchFolderWithRipgrep(params: {
 }
 
 export class RipgrepQuickOpenSearchService implements QuickOpenSearchService {
-  readonly providesFilteredResults = false;
+  readonly providesFilteredResults = true;
 
   async findFiles(
     pattern: string,
@@ -324,6 +291,8 @@ export class RipgrepQuickOpenSearchService implements QuickOpenSearchService {
       return [];
     }
     const workspaceSearchId = ++ripgrepWorkspaceSearchSequence;
+    const gitignoreFiles = getEnabledGitignoreFilesFast() ?? [];
+    const gitignoreFilesByFolder = buildFolderGitignoreFilesIndex(gitignoreFiles);
 
     const startedAt = Date.now();
     logger?.info?.('[QuickOpen][trace] ripgrep workspace search started', {
@@ -332,6 +301,7 @@ export class RipgrepQuickOpenSearchService implements QuickOpenSearchService {
       pattern,
       limit,
       excludeCount: excludePatterns.length,
+      gitignoreFileCount: gitignoreFiles.length,
     });
 
     const results: vscode.Uri[] = [];
@@ -353,11 +323,15 @@ export class RipgrepQuickOpenSearchService implements QuickOpenSearchService {
         folder: folder.name,
         remainingLimit: limit - results.length,
         pattern,
+        gitignoreFileCount:
+          gitignoreFilesByFolder.get(folder.uri.fsPath.toLowerCase())?.length ?? 0,
       });
       const folderResults = await searchFolderWithRipgrep({
         folder,
         pattern,
         excludePatterns,
+        gitignoreFilePaths:
+          gitignoreFilesByFolder.get(folder.uri.fsPath.toLowerCase()) ?? [],
         limit: limit - results.length,
         token,
         logger,
