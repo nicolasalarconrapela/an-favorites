@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { Logger } from '../../logging/logger';
 
 export interface QuickOpenSearchService {
   readonly providesFilteredResults?: boolean;
@@ -8,5 +9,6 @@ export interface QuickOpenSearchService {
     excludePatterns: string[],
     limit: number,
     token?: vscode.CancellationToken,
+    logger?: Logger,
   ): Thenable<vscode.Uri[]>;
 }

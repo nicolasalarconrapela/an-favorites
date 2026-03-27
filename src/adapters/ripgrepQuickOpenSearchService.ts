@@ -7,6 +7,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { rgPath } from '@vscode/ripgrep';
 import { QuickOpenSearchService } from '../commands/quickOpen/quickOpenSearchService';
+import { Logger } from '../logging/logger';
 
 function normalizeGlobPattern(pattern: string): string {
   const trimmed = pattern.trim();
@@ -43,6 +44,8 @@ const ripgrepIgnoreFileByPatternIdentity = new WeakMap<
 const ripgrepIgnoreFileCache = new Map<string, Promise<string>>();
 const ripgrepIgnoreFilesForCleanup = new Set<string>();
 let ripgrepIgnoreCleanupRegistered = false;
+let ripgrepSearchSequence = 0;
+let ripgrepWorkspaceSearchSequence = 0;
 
 function ensureRipgrepIgnoreCleanupRegistered(): void {
   if (ripgrepIgnoreCleanupRegistered) {
@@ -123,11 +126,13 @@ async function searchFolderWithRipgrep(params: {
   excludePatterns: string[];
   limit: number;
   token?: vscode.CancellationToken;
+  logger?: Logger;
 }): Promise<vscode.Uri[]> {
-  const { folder, pattern, excludePatterns, limit, token } = params;
+  const { folder, pattern, excludePatterns, limit, token, logger } = params;
   if (limit <= 0) {
     return [];
   }
+  const searchId = ++ripgrepSearchSequence;
 
   const ignoreFilePath = await getRipgrepIgnoreFilePath(excludePatterns);
   const args = [
@@ -152,11 +157,31 @@ async function searchFolderWithRipgrep(params: {
     let buffer = '';
     let stderr = '';
     let settled = false;
+    const startedAt = Date.now();
+
+    logger?.info?.('[QuickOpen][trace] ripgrep search started', {
+      searchId,
+      folder: folder.name,
+      cwd: folder.uri.fsPath,
+      pattern,
+      limit,
+      excludeCount: excludePatterns.length,
+      hasIgnoreFile: Boolean(ignoreFilePath),
+      ignoreFilePath,
+      argCount: args.length,
+    });
 
     const child = spawn(rgPath, args, {
       cwd: folder.uri.fsPath,
       windowsHide: true,
       stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    logger?.info?.('[QuickOpen][trace] ripgrep process spawned', {
+      searchId,
+      folder: folder.name,
+      pid: child.pid ?? null,
+      pattern,
+      limit,
     });
 
     const finish = (error?: Error): void => {
@@ -165,13 +190,43 @@ async function searchFolderWithRipgrep(params: {
       }
       settled = true;
       cancellationDisposable.dispose();
+      const durationMs = Date.now() - startedAt;
+      const cancelled = token?.isCancellationRequested ?? false;
+      let killRequested = false;
       if (!child.killed && child.exitCode === null) {
-        child.kill();
+        killRequested = child.kill();
       }
       if (error) {
+        logger?.error?.('[QuickOpen][trace] ripgrep search failed', {
+          searchId,
+          folder: folder.name,
+          pattern,
+          limit,
+          resultCount: results.length,
+          durationMs,
+          cancelled,
+          message: error.message,
+          pid: child.pid ?? null,
+          childKilled: child.killed,
+          exitCode: child.exitCode,
+          killRequested,
+        });
         reject(error);
         return;
       }
+      logger?.info?.('[QuickOpen][trace] ripgrep search finished', {
+        searchId,
+        folder: folder.name,
+        pattern,
+        limit,
+        resultCount: results.length,
+        durationMs,
+        cancelled,
+        pid: child.pid ?? null,
+        childKilled: child.killed,
+        exitCode: child.exitCode,
+        killRequested,
+      });
       resolve(results);
     };
 
@@ -192,6 +247,14 @@ async function searchFolderWithRipgrep(params: {
 
     const cancellationDisposable =
       token?.onCancellationRequested(() => {
+        logger?.info?.('[QuickOpen][trace] ripgrep search cancellation requested', {
+          searchId,
+          folder: folder.name,
+          pattern,
+          limit,
+          pid: child.pid ?? null,
+          partialResultCount: results.length,
+        });
         finish();
       }) ?? new vscode.Disposable(() => {});
 
@@ -218,6 +281,16 @@ async function searchFolderWithRipgrep(params: {
     });
 
     child.on('close', (code, signal) => {
+      logger?.info?.('[QuickOpen][trace] ripgrep process closed', {
+        searchId,
+        folder: folder.name,
+        pattern,
+        code,
+        signal,
+        resultCount: results.length,
+        settled,
+        cancelled: token?.isCancellationRequested ?? false,
+      });
       if (settled) {
         return;
       }
@@ -244,26 +317,58 @@ export class RipgrepQuickOpenSearchService implements QuickOpenSearchService {
     excludePatterns: string[],
     limit: number,
     token?: vscode.CancellationToken,
+    logger?: Logger,
   ): Promise<vscode.Uri[]> {
     const folders = vscode.workspace.workspaceFolders ?? [];
     if (folders.length === 0 || limit <= 0) {
       return [];
     }
+    const workspaceSearchId = ++ripgrepWorkspaceSearchSequence;
+
+    const startedAt = Date.now();
+    logger?.info?.('[QuickOpen][trace] ripgrep workspace search started', {
+      workspaceSearchId,
+      folderCount: folders.length,
+      pattern,
+      limit,
+      excludeCount: excludePatterns.length,
+    });
 
     const results: vscode.Uri[] = [];
     const seen = new Set<string>();
 
     for (const folder of folders) {
       if (token?.isCancellationRequested || results.length >= limit) {
+        logger?.info?.('[QuickOpen][trace] ripgrep workspace search loop stopped early', {
+          workspaceSearchId,
+          pattern,
+          resultCount: results.length,
+          cancelled: token?.isCancellationRequested ?? false,
+        });
         break;
       }
 
+      logger?.info?.('[QuickOpen][trace] ripgrep workspace folder search dispatched', {
+        workspaceSearchId,
+        folder: folder.name,
+        remainingLimit: limit - results.length,
+        pattern,
+      });
       const folderResults = await searchFolderWithRipgrep({
         folder,
         pattern,
         excludePatterns,
         limit: limit - results.length,
         token,
+        logger,
+      });
+      logger?.info?.('[QuickOpen][trace] ripgrep workspace folder search finished', {
+        workspaceSearchId,
+        folder: folder.name,
+        pattern,
+        folderResultCount: folderResults.length,
+        accumulatedResultCount: results.length,
+        cancelled: token?.isCancellationRequested ?? false,
       });
 
       for (const uri of folderResults) {
@@ -278,6 +383,16 @@ export class RipgrepQuickOpenSearchService implements QuickOpenSearchService {
         }
       }
     }
+
+    logger?.info?.('[QuickOpen][trace] ripgrep workspace search finished', {
+      workspaceSearchId,
+      folderCount: folders.length,
+      pattern,
+      limit,
+      resultCount: results.length,
+      durationMs: Date.now() - startedAt,
+      cancelled: token?.isCancellationRequested ?? false,
+    });
 
     return results;
   }
