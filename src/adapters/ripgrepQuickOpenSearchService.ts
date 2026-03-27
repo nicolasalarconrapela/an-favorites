@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import { rgPath } from '@vscode/ripgrep';
 import { QuickOpenSearchService } from '../commands/quickOpen/quickOpenSearchService';
 import { Logger } from '../logging/logger';
+import { normalizeFsPath } from '../utils/collisionUtils';
 import { getEnabledGitignoreFilesFast } from '../utils/gitignoreService';
 
 function normalizeGlobPattern(pattern: string): string {
@@ -40,7 +41,7 @@ function isWorkspaceRootGitignore(
   folder: vscode.WorkspaceFolder,
 ): boolean {
   const rootGitignorePath = path.join(folder.uri.fsPath, '.gitignore');
-  return uri.fsPath.toLowerCase() === rootGitignorePath.toLowerCase();
+  return normalizeFsPath(uri.fsPath) === normalizeFsPath(rootGitignorePath);
 }
 
 function buildFolderRootGitignoreFilesIndex(
@@ -58,7 +59,7 @@ function buildFolderRootGitignoreFilesIndex(
       continue;
     }
 
-    const key = folder.uri.fsPath.toLowerCase();
+    const key = normalizeFsPath(folder.uri.fsPath);
     const entry = index.get(key);
     if (entry) {
       entry.push(uri.fsPath);
@@ -344,14 +345,14 @@ export class RipgrepQuickOpenSearchService implements QuickOpenSearchService {
         remainingLimit: limit - results.length,
         pattern,
         gitignoreFileCount:
-          rootGitignoreFilesByFolder.get(folder.uri.fsPath.toLowerCase())?.length ?? 0,
+          rootGitignoreFilesByFolder.get(normalizeFsPath(folder.uri.fsPath))?.length ?? 0,
       });
       const folderResults = await searchFolderWithRipgrep({
         folder,
         pattern,
         excludePatterns,
         gitignoreFilePaths:
-          rootGitignoreFilesByFolder.get(folder.uri.fsPath.toLowerCase()) ?? [],
+          rootGitignoreFilesByFolder.get(normalizeFsPath(folder.uri.fsPath)) ?? [],
         limit: limit - results.length,
         token,
         logger,
@@ -366,7 +367,7 @@ export class RipgrepQuickOpenSearchService implements QuickOpenSearchService {
       });
 
       for (const uri of folderResults) {
-        const key = uri.fsPath.toLowerCase();
+        const key = normalizeFsPath(uri.fsPath);
         if (seen.has(key)) {
           continue;
         }

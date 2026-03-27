@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as path from 'path';
 
@@ -5,9 +6,86 @@ export function isWindows(): boolean {
   return process.platform === 'win32';
 }
 
+const caseSensitivityCache = new Map<string, boolean>();
+
+function toggleCaseCharacter(value: string): string {
+  return value === value.toLowerCase()
+    ? value.toUpperCase()
+    : value.toLowerCase();
+}
+
+function buildAlternateCasePath(existingPath: string): string | null {
+  let current = path.normalize(existingPath);
+
+  while (true) {
+    const basename = path.basename(current);
+    const alphaIndex = basename.search(/[a-zA-Z]/);
+    if (alphaIndex >= 0) {
+      const alternateBasename =
+        basename.slice(0, alphaIndex) +
+        toggleCaseCharacter(basename.charAt(alphaIndex)) +
+        basename.slice(alphaIndex + 1);
+      return path.join(path.dirname(current), alternateBasename);
+    }
+
+    const parent = path.dirname(current);
+    if (parent === current) {
+      return null;
+    }
+    current = parent;
+  }
+}
+
+function findExistingProbePath(fsPath: string): string | null {
+  let current = path.normalize(fsPath);
+
+  while (true) {
+    if (fs.existsSync(current)) {
+      return current;
+    }
+
+    const parent = path.dirname(current);
+    if (parent === current) {
+      return null;
+    }
+    current = parent;
+  }
+}
+
+function isPathCaseSensitive(fsPath: string): boolean {
+  const probePath = findExistingProbePath(fsPath);
+  if (!probePath) {
+    return process.platform !== 'win32';
+  }
+
+  const cached = caseSensitivityCache.get(probePath);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const alternatePath = buildAlternateCasePath(probePath);
+  if (!alternatePath || alternatePath === probePath) {
+    const fallback = process.platform !== 'win32';
+    caseSensitivityCache.set(probePath, fallback);
+    return fallback;
+  }
+
+  let caseSensitive = true;
+  try {
+    const originalRealPath = fs.realpathSync.native(probePath);
+    const alternateRealPath = fs.realpathSync.native(alternatePath);
+    caseSensitive = originalRealPath !== alternateRealPath;
+  } catch {
+    caseSensitive = true;
+  }
+
+  caseSensitivityCache.set(probePath, caseSensitive);
+  return caseSensitive;
+}
+
 export function normalizeFsPath(p: string): string {
   const normalized = path.normalize(p);
-  return isWindows() ? normalized.toLowerCase() : normalized;
+  return isPathCaseSensitive(normalized) ? normalized : normalized.toLowerCase();
 }
 
 export function invalidateCollisionIndex(
