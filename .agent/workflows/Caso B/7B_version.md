@@ -269,8 +269,8 @@ Esperar confirmación explícita del usuario antes de continuar con el siguiente
 
 ## Paso anterior
 
-- [7. Generación de textos de Merge](file:///c:/Users/Developer/Desktop/@anappwilos/afav_TEST/.agent/workflows/Caso%20B/7.md)
+- [7. Generación de textos de Merge](.agent/workflows/Caso%20B/7.md)
 
 ## Siguiente paso
 
-- [8. Creación de PR](file:///c:/Users/Developer/Desktop/@anappwilos/afav_TEST/.agent/workflows/Caso%20B/8.md)
+- [8. Creación de PR](.agent/workflows/Caso%20B/8.md)
