@@ -34,14 +34,26 @@ function toWorkspaceUri(
 let ripgrepSearchSequence = 0;
 let ripgrepWorkspaceSearchSequence = 0;
 
-function buildFolderGitignoreFilesIndex(
+function isWorkspaceRootGitignore(
+  uri: vscode.Uri,
+  folder: vscode.WorkspaceFolder,
+): boolean {
+  const rootGitignorePath = path.join(folder.uri.fsPath, '.gitignore');
+  return uri.fsPath.toLowerCase() === rootGitignorePath.toLowerCase();
+}
+
+function buildFolderRootGitignoreFilesIndex(
   gitignoreFiles: readonly vscode.Uri[],
 ): Map<string, string[]> {
   const index = new Map<string, string[]>();
 
   for (const uri of gitignoreFiles) {
     const folder = vscode.workspace.getWorkspaceFolder(uri);
-    if (!folder || !fs.existsSync(uri.fsPath)) {
+    if (
+      !folder ||
+      !isWorkspaceRootGitignore(uri, folder) ||
+      !fs.existsSync(uri.fsPath)
+    ) {
       continue;
     }
 
@@ -277,7 +289,10 @@ async function searchFolderWithRipgrep(params: {
 }
 
 export class RipgrepQuickOpenSearchService implements QuickOpenSearchService {
-  readonly providesFilteredResults = true;
+  // ripgrep can safely apply only the workspace-root .gitignore files here.
+  // Nested .gitignore files are filtered afterward by the in-memory matcher,
+  // which preserves their directory-relative semantics.
+  readonly providesFilteredResults = false;
 
   async findFiles(
     pattern: string,
@@ -292,7 +307,8 @@ export class RipgrepQuickOpenSearchService implements QuickOpenSearchService {
     }
     const workspaceSearchId = ++ripgrepWorkspaceSearchSequence;
     const gitignoreFiles = getEnabledGitignoreFilesFast() ?? [];
-    const gitignoreFilesByFolder = buildFolderGitignoreFilesIndex(gitignoreFiles);
+    const rootGitignoreFilesByFolder =
+      buildFolderRootGitignoreFilesIndex(gitignoreFiles);
 
     const startedAt = Date.now();
     logger?.info?.('[QuickOpen][trace] ripgrep workspace search started', {
@@ -324,14 +340,14 @@ export class RipgrepQuickOpenSearchService implements QuickOpenSearchService {
         remainingLimit: limit - results.length,
         pattern,
         gitignoreFileCount:
-          gitignoreFilesByFolder.get(folder.uri.fsPath.toLowerCase())?.length ?? 0,
+          rootGitignoreFilesByFolder.get(folder.uri.fsPath.toLowerCase())?.length ?? 0,
       });
       const folderResults = await searchFolderWithRipgrep({
         folder,
         pattern,
         excludePatterns,
         gitignoreFilePaths:
-          gitignoreFilesByFolder.get(folder.uri.fsPath.toLowerCase()) ?? [],
+          rootGitignoreFilesByFolder.get(folder.uri.fsPath.toLowerCase()) ?? [],
         limit: limit - results.length,
         token,
         logger,
