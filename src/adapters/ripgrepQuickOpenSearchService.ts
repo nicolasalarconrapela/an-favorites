@@ -9,7 +9,7 @@ import { getEnabledGitignoreFilesFast } from '../utils/gitignoreService';
 
 function normalizeGlobPattern(pattern: string): string {
   const trimmed = pattern.trim();
-  return trimmed || '*';
+  return trimmed || '**/*';
 }
 
 function normalizeExcludePattern(pattern: string): string | null {
@@ -33,6 +33,7 @@ function toWorkspaceUri(
 
 let ripgrepSearchSequence = 0;
 let ripgrepWorkspaceSearchSequence = 0;
+const RIPGREP_STDERR_LIMIT = 4096;
 
 function isWorkspaceRootGitignore(
   uri: vscode.Uri,
@@ -256,7 +257,10 @@ async function searchFolderWithRipgrep(params: {
 
     child.stderr.setEncoding('utf8');
     child.stderr.on('data', (chunk: string) => {
-      stderr += chunk;
+      if (stderr.length >= RIPGREP_STDERR_LIMIT) {
+        return;
+      }
+      stderr += chunk.slice(0, RIPGREP_STDERR_LIMIT - stderr.length);
     });
 
     child.on('close', (code, signal) => {
