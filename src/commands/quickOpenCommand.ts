@@ -2355,6 +2355,16 @@ export function registerQuickOpenCommand(
       log.info('[QuickOpen] Preparing initial QuickPick shell...');
       quickPick.items = buildInitialQuickPickItems();
 
+      if (isDisposed || activeQuickOpenSession?.sessionId !== sessionId) {
+        log.info('[QuickOpen] Aborting QuickPick show because session is no longer active', {
+          sessionId,
+          isDisposed,
+          activeSessionId: activeQuickOpenSession?.sessionId ?? null,
+        });
+        safeDispose();
+        return;
+      }
+
       log.info('[QuickOpen] Showing QuickPick UI NOW (shell ready)...');
       quickPick.show();
       log.info('[QuickOpen][traza] QuickOpen visible', {
@@ -2366,7 +2376,9 @@ export function registerQuickOpenCommand(
         '[QuickOpen] ✓ QuickPick visible and ready for user interaction',
       );
       log.info('[QuickOpen] Starting initial buildItems(false)...');
-      void buildItems('');
+      if (!isDisposed && activeQuickOpenSession?.sessionId === sessionId) {
+        void buildItems('');
+      }
 
       let previousValue = '';
       const shouldDeferExternalRebuild = (): boolean =>
