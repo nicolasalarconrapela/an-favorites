@@ -10,10 +10,33 @@ REPOWN="$(printf '%s\n' "$GIT_REMOTE_URL" | sed -E 's#(git@github.com:|https://g
 RELEASE_LATEST="$(gh release view --repo "$REPOWN" --json tagName --jq .tagName)"
 
 RAMA_ACTUAL="$(git branch --show-current)"
+
+# ── Validación de rama ──────────────────────────────────────────────────────
+# La rama debe cumplir exactamente ^releases/[0-9]+\.[0-9]+\.[0-9]+$
+BRANCH_PATTERN='^releases/[0-9]+\.[0-9]+\.[0-9]+$'
+if ! echo "$RAMA_ACTUAL" | grep -qE "$BRANCH_PATTERN"; then
+  echo "Error (Caso C): la rama actual '$RAMA_ACTUAL' no es una rama de release válida."
+  echo "Se requiere una rama con el patrón: releases/X.Y.Z (ej. releases/1.3.0)"
+  echo "Flujo abortado."
+  exit 1
+fi
+
+# Extraer la versión embebida en el nombre de la rama (ej. releases/1.3.0 → 1.3.0)
+RELEASE_VERSION_FROM_BRANCH="$(echo "$RAMA_ACTUAL" | sed -E 's|^releases/||')"
+
 VERSION_ACTUAL="$(sed -nE 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' package.json | head -n 1)"
 
 if [[ -z "${VERSION_ACTUAL}" ]]; then
   echo "Error: no se pudo obtener VERSION_ACTUAL desde package.json"
+  exit 1
+fi
+
+# ── Validación de consonancia versión ↔ rama ───────────────────────────────
+if [[ "$VERSION_ACTUAL" != "$RELEASE_VERSION_FROM_BRANCH" ]]; then
+  echo "Error (Caso C): la versión en package.json ('${VERSION_ACTUAL}') no coincide"
+  echo "con la versión embebida en la rama ('${RELEASE_VERSION_FROM_BRANCH}')."
+  echo "Ajusta package.json o la rama antes de continuar."
+  echo "Flujo abortado."
   exit 1
 fi
 
@@ -35,6 +58,9 @@ mkdir -p "$OUTPUT_DIR"
 
 cat > "$VAR_S1_FILE" <<EOF
 RAMA_ACTUAL=$RAMA_ACTUAL
+CURRENT_BRANCH=$RAMA_ACTUAL
+TARGET_BRANCH=main
+RELEASE_VERSION=$VERSION_ACTUAL
 GIT_REMOTE_URL=$GIT_REMOTE_URL
 REPOWN=$REPOWN
 RELEASE_LATEST=$RELEASE_LATEST
@@ -60,5 +86,6 @@ if [[ ! -s "$DIFF_FILE" ]]; then
   exit 1
 fi
 
+echo "✅ Validación superada: rama '$RAMA_ACTUAL' · package.json versión '${VERSION_ACTUAL}' ✓"
 echo "Variables guardadas en: $VAR_S1_FILE"
 echo "Diff generado en: $DIFF_FILE"
