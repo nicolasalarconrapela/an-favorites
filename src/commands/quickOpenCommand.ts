@@ -2126,6 +2126,11 @@ export function registerQuickOpenCommand(
                 kind: vscode.QuickPickItemKind.Separator,
               });
               searchItems.push(...searchFileItems);
+            } else {
+              searchItems.push({
+                label: t("0 results for search: '{0}'", normalizedSearch),
+                kind: vscode.QuickPickItemKind.Separator,
+              });
             }
 
             if (liveSearchGitignoreDeferred) {

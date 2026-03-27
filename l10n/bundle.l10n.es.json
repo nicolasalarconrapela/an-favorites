@@ -70,6 +70,7 @@
   "No new recent files": "No hay recientes nuevos",
   "Clear all": "Limpiar todo",
   "Files": "Archivos",
+  "0 results for search: '{0}'": "0 resultados en la b\u00fasqueda: '{0}'",
   "Error loading files (see logs)": "Error cargando archivos (ver logs)",
   "File does not exist: {0}": "El archivo no existe: {0}",
   "Group: {0}": "Grupo: {0}",
