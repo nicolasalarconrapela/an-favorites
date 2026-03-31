@@ -68,8 +68,9 @@ const QUICKOPEN_GITIGNORE_OVERSCAN_FACTOR = 4;
 const QUICKOPEN_TRACE_WARN_MS = 1500;
 const QUICKOPEN_FIND_FILES_TIMEOUT_MS = 2500;
 const QUICKOPEN_LARGE_WORKSPACE_FIND_FILES_TIMEOUT_MS = 12000;
-const QUICKOPEN_STAGE_MAX_RESULTS = 300;
-const QUICKOPEN_HARD_SEARCH_RESULT_LIMIT = 1000;
+const QUICKOPEN_SEARCH_RESULT_PAGE_SIZE = 1000;
+const QUICKOPEN_HARD_SEARCH_RESULT_LIMIT = 5000;
+const QUICKOPEN_STAGE_MAX_RESULTS = QUICKOPEN_HARD_SEARCH_RESULT_LIMIT;
 const QUICKOPEN_MAX_HEAP_BYTES = 550 * 1024 * 1024;
 const QUICKOPEN_MAX_RSS_BYTES = 800 * 1024 * 1024;
 const QUICKOPEN_MAX_HEAP_DELTA_BYTES = 128 * 1024 * 1024;
@@ -340,60 +341,31 @@ function isExtensionLikeQuery(searchValue: string): boolean {
 }
 
 function getQuickOpenStrictResultCap(normalizedSearch: string): number {
-  const queryLength = normalizedSearch.trim().length;
-  if (queryLength <= 1) {
-    return 20;
-  }
-  if (queryLength <= 2) {
-    return 35;
-  }
-  if (queryLength <= 3) {
-    return 60;
-  }
+  void normalizedSearch;
   return QUICKOPEN_HARD_SEARCH_RESULT_LIMIT;
 }
 
 function getQuickOpenSearchStagePlan(params: {
   normalizedSearch: string;
   maxSearchFiles: number;
+  requestedPageLimit: number;
 }): Array<{ pattern: string; limit: number }> {
-  const { normalizedSearch, maxSearchFiles } = params;
+  const { normalizedSearch, maxSearchFiles, requestedPageLimit } = params;
   const extensionLikeQuery = isExtensionLikeQuery(normalizedSearch);
   const escaped = normalizedSearch.replace(/([\\*?[\]{}!])/g, '[$1]');
-  const queryLength = normalizedSearch.trim().length;
+  const stageLimit = Math.max(
+    1,
+    Math.min(
+      maxSearchFiles,
+      Math.max(requestedPageLimit, HYBRID_PREFIX_STAGE_LIMIT),
+    ),
+  );
 
   if (extensionLikeQuery) {
     return [
       {
         pattern: buildSearchPattern(normalizedSearch),
-        limit: Math.min(maxSearchFiles, HYBRID_FALLBACK_STAGE_LIMIT),
-      },
-    ];
-  }
-
-  if (queryLength <= 1) {
-    return [
-      {
-        pattern: `**/${escaped}*`,
-        limit: Math.min(maxSearchFiles, 20),
-      },
-    ];
-  }
-
-  if (queryLength <= 2) {
-    return [
-      {
-        pattern: `**/${escaped}*`,
-        limit: Math.min(maxSearchFiles, 35),
-      },
-    ];
-  }
-
-  if (queryLength <= 3) {
-    return [
-      {
-        pattern: `**/${escaped}*`,
-        limit: Math.min(maxSearchFiles, 50),
+        limit: Math.max(stageLimit, HYBRID_FALLBACK_STAGE_LIMIT),
       },
     ];
   }
@@ -401,7 +373,7 @@ function getQuickOpenSearchStagePlan(params: {
   return [
     {
       pattern: `**/${escaped}*`,
-      limit: Math.min(maxSearchFiles, HYBRID_PREFIX_STAGE_LIMIT),
+      limit: stageLimit,
     },
   ];
 }
@@ -534,6 +506,7 @@ async function runHybridWorkspaceSearch(params: {
   const stagePlan = getQuickOpenSearchStagePlan({
     normalizedSearch,
     maxSearchFiles,
+    requestedPageLimit: maxSearchFiles,
   });
   const primaryStage = stagePlan[0];
   if (!primaryStage || token.isCancellationRequested) {
@@ -841,10 +814,12 @@ function buildFavoriteBuildState(
   };
 }
 
-type FavoritesAction = 'clearRecents';
+type FavoritesAction = 'clearRecents' | 'loadMoreSearchResults';
 
 interface ActionQuickPickItem extends vscode.QuickPickItem {
   action: FavoritesAction;
+  searchQuery?: string;
+  nextPageLimit?: number;
 }
 
 type DebouncedFunction<T extends (...args: any[]) => any> = ((
@@ -964,7 +939,7 @@ function getQuickOpenWorkspaceSearchBudget(params: {
 function getQuickOpenEffectiveSearchLimit(params: {
   normalizedSearch: string;
   configuredMaxSearchFiles: number;
-  immediateLimit: number;
+  requestedPageLimit: number;
 }): number {
   const configuredCap = Math.min(
     params.configuredMaxSearchFiles,
@@ -973,7 +948,7 @@ function getQuickOpenEffectiveSearchLimit(params: {
   const strictCap = getQuickOpenStrictResultCap(params.normalizedSearch);
   const requestedPageLimit = Math.max(
     1,
-    Math.min(params.immediateLimit, QUICKOPEN_HARD_SEARCH_RESULT_LIMIT),
+    Math.min(params.requestedPageLimit, QUICKOPEN_HARD_SEARCH_RESULT_LIMIT),
   );
 
   return Math.min(configuredCap, strictCap, requestedPageLimit);
@@ -1545,6 +1520,45 @@ export function registerQuickOpenCommand(
       const deferredExternalRebuildReasons = new Set<string>();
       let suppressedFavoritesTreeRefreshCount = 0;
       let suppressedMruRefreshCount = 0;
+      const searchResultPageLimitByQuery = new Map<string, number>();
+      const getSearchResultPageKey = (searchQuery: string): string =>
+        searchQuery.trim().toLowerCase();
+      const getMaxVisibleSearchResults = (config: QuickOpenConfig): number =>
+        Math.max(
+          1,
+          Math.min(
+            config.maxSearchResults,
+            config.maxSearchFiles,
+            QUICKOPEN_HARD_SEARCH_RESULT_LIMIT,
+          ),
+        );
+      const getRequestedSearchResultPageLimit = (
+        searchQuery: string,
+        config: QuickOpenConfig,
+      ): number => {
+        const key = getSearchResultPageKey(searchQuery);
+        const maxVisibleSearchResults = getMaxVisibleSearchResults(config);
+        const storedLimit = key
+          ? searchResultPageLimitByQuery.get(key) ??
+            QUICKOPEN_SEARCH_RESULT_PAGE_SIZE
+          : QUICKOPEN_SEARCH_RESULT_PAGE_SIZE;
+        return Math.max(1, Math.min(storedLimit, maxVisibleSearchResults));
+      };
+      const setRequestedSearchResultPageLimit = (
+        searchQuery: string,
+        nextPageLimit: number,
+        config: QuickOpenConfig,
+      ): void => {
+        const key = getSearchResultPageKey(searchQuery);
+        if (!key) {
+          return;
+        }
+        const maxVisibleSearchResults = getMaxVisibleSearchResults(config);
+        searchResultPageLimitByQuery.set(
+          key,
+          Math.max(1, Math.min(nextPageLimit, maxVisibleSearchResults)),
+        );
+      };
       const buildInitialQuickPickItems = (): QuickOpenItem[] => {
         const config = configService.getConfig();
         const favoriteState = buildFavoriteBuildState(favoritesProvider);
@@ -2184,22 +2198,16 @@ export function registerQuickOpenCommand(
               ),
               normalizedSearch,
             );
-            const maxVisibleSearchResults = Math.max(
-              1,
-              Math.min(
-                config.maxSearchResults,
-                config.maxSearchFiles,
-                QUICKOPEN_HARD_SEARCH_RESULT_LIMIT,
-              ),
-            );
-            const immediateLimit = Math.max(
-              1,
-              maxVisibleSearchResults,
+            const maxVisibleSearchResults =
+              getMaxVisibleSearchResults(config);
+            const immediateLimit = getRequestedSearchResultPageLimit(
+              normalizedSearch,
+              config,
             );
             const effectiveWorkspaceSearchLimit = getQuickOpenEffectiveSearchLimit({
               normalizedSearch,
               configuredMaxSearchFiles: config.maxSearchFiles,
-              immediateLimit,
+              requestedPageLimit: immediateLimit,
             });
             const workspaceGitignoreReady = isGitignoreCacheReady();
             const backendUsesGitignorePatterns = Boolean(
@@ -2318,8 +2326,10 @@ export function registerQuickOpenCommand(
               searchItems.push(...searchFileItems);
             } else {
               searchItems.push({
-                label: t("0 results for search: '{0}'", normalizedSearch),
-                kind: vscode.QuickPickItemKind.Separator,
+                label: t('No results found.'),
+                description: '',
+                detail: normalizedSearch,
+                alwaysShow: true,
               });
             }
 
@@ -2349,11 +2359,28 @@ export function registerQuickOpenCommand(
               }
             }
 
-            const hitHardSearchResultCap =
-              immediateLimit >= maxVisibleSearchResults &&
-              (liveSearchExceededMaxFiles ||
-                combinedUrisBeforeLimit.length > combinedUris.length);
-            if (hitHardSearchResultCap) {
+            const hasMoreSearchResults =
+              liveSearchExceededMaxFiles ||
+              combinedUrisBeforeLimit.length > combinedUris.length;
+            const canLoadNextSearchPage =
+              hasMoreSearchResults &&
+              immediateLimit < maxVisibleSearchResults;
+            if (canLoadNextSearchPage) {
+              const nextPageLimit = Math.min(
+                immediateLimit + QUICKOPEN_SEARCH_RESULT_PAGE_SIZE,
+                maxVisibleSearchResults,
+              );
+              const nextPageSize = nextPageLimit - immediateLimit;
+              searchNoticeItem = {
+                label: `$(chevron-down) ${t('Load more')}`,
+                description: t('Showing {0} of {1}', combinedUris.length, nextPageLimit),
+                detail: t('Load the next page of {0} results.', nextPageSize),
+                alwaysShow: true,
+                action: 'loadMoreSearchResults',
+                searchQuery: normalizedSearch,
+                nextPageLimit,
+              } as ActionQuickPickItem;
+            } else if (hasMoreSearchResults) {
               searchNoticeItem = {
                 label: t(
                   'Showing the first {0} results. Refine your search for more precise results.',
@@ -2894,6 +2921,20 @@ export function registerQuickOpenCommand(
 
             quickPick.items = buildInitialQuickPickItems();
             void buildItems('');
+            return;
+          }
+          if (actionItem.action === 'loadMoreSearchResults') {
+            const searchQuery = actionItem.searchQuery ?? quickPick.value;
+            const nextPageLimit =
+              actionItem.nextPageLimit ?? QUICKOPEN_SEARCH_RESULT_PAGE_SIZE;
+            const config = configService.getConfig();
+            log.info('[QuickOpen] Executing action: loadMoreSearchResults', {
+              searchQuery,
+              nextPageLimit,
+            });
+            setRequestedSearchResultPageLimit(searchQuery, nextPageLimit, config);
+            quickPick.busy = true;
+            await buildItems(searchQuery);
             return;
           }
           if (!isFileItem(selected)) {
