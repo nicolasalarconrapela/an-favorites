@@ -78,6 +78,7 @@ const QUICKOPEN_MAX_RSS_DELTA_BYTES = 192 * 1024 * 1024;
 const QUICKOPEN_MAX_SEARCH_STAGE_MS = 5000;
 const QUICKOPEN_LARGE_WORKSPACE_MAX_SEARCH_STAGE_MS = 30000;
 const QUICKOPEN_COMMAND_COOLDOWN_MS = 750;
+const QUICKOPEN_INLINE_MUTATION_REBUILD_SUPPRESSION_MS = 1000;
 let activeQuickOpenSession:
   | { dispose: () => void; createdAt: number; sessionId: string }
   | null = null;
@@ -1520,6 +1521,7 @@ export function registerQuickOpenCommand(
       const deferredExternalRebuildReasons = new Set<string>();
       let suppressedFavoritesTreeRefreshCount = 0;
       let suppressedMruRefreshCount = 0;
+      let suppressInlineMutationRebuildUntil = 0;
       const searchResultPageLimitByQuery = new Map<string, number>();
       const getSearchResultPageKey = (searchQuery: string): string =>
         searchQuery.trim().toLowerCase();
@@ -1789,8 +1791,14 @@ export function registerQuickOpenCommand(
       const updateVisibleItemsForUri = (
         uri: vscode.Uri,
         updater: (item: FileQuickPickItem) => void,
-      ): void => {
+      ): {
+        updatedItemCount: number;
+        durationMs: number;
+        activeItemRestored: boolean;
+      } => {
+        const startedAt = Date.now();
         const normalizedTarget = normalizeFsPath(uri.fsPath);
+        let updatedItemCount = 0;
         const updatedItems = quickPick.items.map((candidate) => {
           if (
             !isFileItem(candidate) ||
@@ -1798,6 +1806,7 @@ export function registerQuickOpenCommand(
           ) {
             return candidate;
           }
+          updatedItemCount += 1;
           updater(candidate);
           candidate.updateIcon();
           return candidate;
@@ -1811,6 +1820,11 @@ export function registerQuickOpenCommand(
         if (activeMatch && isFileItem(activeMatch)) {
           quickPick.activeItems = [activeMatch];
         }
+        return {
+          updatedItemCount,
+          durationMs: Date.now() - startedAt,
+          activeItemRestored: Boolean(activeMatch && isFileItem(activeMatch)),
+        };
       };
       const deferExternalRebuild = (reason: string, key: string, message: string): void => {
         deferredExternalRebuildReasons.add(reason);
@@ -2667,6 +2681,68 @@ export function registerQuickOpenCommand(
         );
         await buildItems(quickPick.value);
       }, 150);
+      const debouncedInlineMutationRebuild = debounce(async (reason: string) => {
+        log.debug('[QuickOpen][trace] Rebuilding QuickOpen after inline favorite mutation', {
+          reason,
+          activeQuery: quickPick.value,
+        });
+        await buildItems(quickPick.value);
+      }, 10);
+      const scheduleInlineMutationRefresh = (
+        reason: string,
+        filePath: string,
+        startedAt: number,
+        updateResult: {
+          updatedItemCount: number;
+          durationMs: number;
+          activeItemRestored: boolean;
+        },
+        extra?: Record<string, unknown>,
+      ): void => {
+        const activeQuery = quickPick.value.trim();
+        const isSearching = activeQuery.length > 0;
+        suppressInlineMutationRebuildUntil = Date.now() +
+          QUICKOPEN_INLINE_MUTATION_REBUILD_SUPPRESSION_MS;
+        const logPayload = {
+          reason,
+          filePath,
+          activeQuery,
+          isSearching,
+          suppressInlineMutationRebuildUntil,
+          totalDurationMs: Date.now() - startedAt,
+          uiUpdateDurationMs: updateResult.durationMs,
+          updatedItemCount: updateResult.updatedItemCount,
+          activeItemRestored: updateResult.activeItemRestored,
+          ...extra,
+        };
+
+        if (isSearching) {
+          log.info('[QuickOpen][trace] Inline mutation applied locally during active search; full rebuild skipped', logPayload);
+          return;
+        }
+
+        log.info('[QuickOpen][trace] Inline mutation scheduling full rebuild for non-search view', logPayload);
+        debouncedInlineMutationRebuild(reason);
+      };
+      const shouldSkipInlineMutationTriggeredRebuild = (
+        source: string,
+      ): boolean => {
+        const activeQuery = quickPick.value.trim();
+        const now = Date.now();
+        const shouldSkip =
+          activeQuery.length > 0 &&
+          now < suppressInlineMutationRebuildUntil;
+        if (shouldSkip) {
+          log.info('[QuickOpen][trace] Skipping rebuild caused by internal inline mutation while search is active', {
+            source,
+            activeQuery,
+            suppressInlineMutationRebuildUntil,
+            remainingSuppressionMs:
+              suppressInlineMutationRebuildUntil - now,
+          });
+        }
+        return shouldSkip;
+      };
       const debouncedRulesRebuild = debounce(async (reason: string) => {
         if (shouldDeferExternalRebuild()) {
           deferExternalRebuild(
@@ -2700,6 +2776,7 @@ export function registerQuickOpenCommand(
         debouncedSearchRebuild.cancel();
         debouncedExternalRebuild.cancel();
         debouncedFavoritesRebuild.cancel();
+        debouncedInlineMutationRebuild.cancel();
         debouncedRulesRebuild.cancel();
         debouncedRebuild.cancel();
       };
@@ -2782,6 +2859,9 @@ export function registerQuickOpenCommand(
             });
             return;
           }
+          if (shouldSkipInlineMutationTriggeredRebuild('favoritesTreeChange')) {
+            return;
+          }
           logThrottledWithContext(
             'debug',
             'quickopen:favorites-changed',
@@ -2799,6 +2879,9 @@ export function registerQuickOpenCommand(
             log.debug('[QuickOpen][trace] Skipping QuickOpen rebuild for internally triggered MRU change', {
               remainingSuppressedMruRefreshCount: suppressedMruRefreshCount,
             });
+            return;
+          }
+          if (shouldSkipInlineMutationTriggeredRebuild('mruChange')) {
             return;
           }
           logThrottledWithContext(
@@ -3063,38 +3146,55 @@ export function registerQuickOpenCommand(
 
           if (button.tooltip === t('Remove from Favorites')) {
             log.info(`[QuickOpen] Removing from favorites: ${uri.fsPath}`);
+            const startedAt = Date.now();
             suppressedFavoritesTreeRefreshCount += 1;
+            const providerStartedAt = Date.now();
             favoritesProvider.removeFavorite(uri);
-            updateVisibleItemsForUri(uri, (visibleItem) => {
+            const providerDurationMs = Date.now() - providerStartedAt;
+            const updateResult = updateVisibleItemsForUri(uri, (visibleItem) => {
               visibleItem.isFavorite = false;
               visibleItem.isPinned = false;
               visibleItem.isIndividualPinned = false;
             });
+            scheduleInlineMutationRefresh(
+              'remove-favorite',
+              uri.fsPath,
+              startedAt,
+              updateResult,
+              { providerDurationMs },
+            );
             return;
           }
 
           if (button.tooltip === t('Pin') || button.tooltip === t('Unpin')) {
             log.info(`[QuickOpen] Toggling pin for: ${uri.fsPath}`);
-            if (!favoritesProvider.hasFavorite(uri)) {
-              suppressedFavoritesTreeRefreshCount += 2;
-              favoritesProvider.addFavorite(uri);
-              favoritesProvider.togglePin(uri);
-            } else {
-              suppressedFavoritesTreeRefreshCount += 1;
-              favoritesProvider.togglePin(uri);
-            }
-            const isPinnedNow = favoritesProvider.isPinned(uri);
-            updateVisibleItemsForUri(uri, (visibleItem) => {
+            const startedAt = Date.now();
+            suppressedFavoritesTreeRefreshCount += 1;
+            const isPinnedNow = !item.isIndividualPinned;
+            const providerStartedAt = Date.now();
+            favoritesProvider.setPinned(uri, isPinnedNow);
+            const providerDurationMs = Date.now() - providerStartedAt;
+            const updateResult = updateVisibleItemsForUri(uri, (visibleItem) => {
               visibleItem.isFavorite = true;
               visibleItem.isIndividualPinned = isPinnedNow;
               visibleItem.isPinned = isPinnedNow;
             });
+            scheduleInlineMutationRefresh(
+              'toggle-pin',
+              uri.fsPath,
+              startedAt,
+              updateResult,
+              { providerDurationMs, isPinnedNow },
+            );
             return;
           }
 
           log.info(`[QuickOpen] Toggling favorite for: ${uri.fsPath}`);
 
           try {
+            const startedAt = Date.now();
+            const wasFavorite = item.isFavorite;
+            const providerStartedAt = Date.now();
             if (item.isFavorite) {
               log.debug('[QuickOpen] Removing from favorites');
               suppressedFavoritesTreeRefreshCount += 1;
@@ -3106,14 +3206,26 @@ export function registerQuickOpenCommand(
               favoritesProvider.addFavorite(uri);
               mruService.remove(uri.fsPath);
             }
+            const providerDurationMs = Date.now() - providerStartedAt;
             const isFavoriteNow = favoritesProvider.hasFavorite(uri);
-            updateVisibleItemsForUri(uri, (visibleItem) => {
+            const updateResult = updateVisibleItemsForUri(uri, (visibleItem) => {
               visibleItem.isFavorite = isFavoriteNow;
               if (!isFavoriteNow) {
                 visibleItem.isPinned = false;
                 visibleItem.isIndividualPinned = false;
               }
             });
+            scheduleInlineMutationRefresh(
+              'toggle-favorite',
+              uri.fsPath,
+              startedAt,
+              updateResult,
+              {
+                providerDurationMs,
+                wasFavorite,
+                isFavoriteNow,
+              },
+            );
             log.debug('[QuickOpen] Favorite toggled successfully');
           } catch (error) {
             log.error('[QuickOpen] ❌ Error toggling favorite', error);

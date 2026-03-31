@@ -95,6 +95,52 @@ export class SharedStorageService {
     });
   }
 
+  public updateMany(entries: Record<string, unknown>): void {
+    const keys = Object.keys(entries);
+    if (keys.length === 0) {
+      return;
+    }
+    const startedAt = Date.now();
+
+    if (this.useSharedFile && this.sharedFilePath) {
+      try {
+        const data = this.readSharedData();
+        for (const key of keys) {
+          data[key] = entries[key];
+        }
+        this.writeSharedData(data);
+        this.logger.info('[SharedStorage][trace] updateMany persisted to shared file', {
+          keys,
+          entryCount: keys.length,
+          path: this.sharedFilePath,
+          durationMs: Date.now() - startedAt,
+        });
+        for (const key of keys) {
+          this._onDidChange.fire(key);
+        }
+      } catch (error) {
+        this.logger.error(
+          `[SharedStorage] Error al actualizar almacenamiento en lote: ${keys.join(', ')}`,
+          error,
+        );
+      }
+      return;
+    }
+
+    Promise.all(
+      keys.map((key) => this.context.workspaceState.update(key, entries[key])),
+    ).then(() => {
+      this.logger.info('[SharedStorage][trace] updateMany persisted to workspaceState', {
+        keys,
+        entryCount: keys.length,
+        durationMs: Date.now() - startedAt,
+      });
+      for (const key of keys) {
+        this._onDidChange.fire(key);
+      }
+    });
+  }
+
   public dispose(): void {
     this._onDidChange.dispose();
     this.stopWatchers();
@@ -357,6 +403,7 @@ export class SharedStorageService {
 
   private writeSharedData(data: Record<string, unknown>): void {
     if (!this.sharedFilePath) return;
+    const startedAt = Date.now();
 
     const dir = path.dirname(this.sharedFilePath);
     if (!fs.existsSync(dir)) {
@@ -380,6 +427,11 @@ export class SharedStorageService {
         fs.unlinkSync(tempPath);
       }
       this.lastWriteTime = Date.now();
+      this.logger.info('[SharedStorage][trace] writeSharedData completed', {
+        path: this.sharedFilePath,
+        bytesWritten: Buffer.byteLength(serialized, 'utf8'),
+        durationMs: Date.now() - startedAt,
+      });
     } catch (error) {
       this.logger.error('[SharedStorage] Error escritura', error);
       try {
