@@ -1,6 +1,11 @@
 ---
 description: Version bump, rama y commit · Caso B (develop → releases/1.X.0)
 ---
+## Paso anterior
+
+- [7. Generación de textos de Merge](.agent/workflows/Caso%20B/7.md)
+
+---
 
 # Version bump, rama y commit
 
@@ -339,10 +344,6 @@ Abortar si:
 Esperar confirmación explícita del usuario antes de continuar con el siguiente paso.
 
 ---
-
-## Paso anterior
-
-- [7. Generación de textos de Merge](.agent/workflows/Caso%20B/7.md)
 
 ## Siguiente paso
 
