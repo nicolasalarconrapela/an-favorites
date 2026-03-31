@@ -53,6 +53,7 @@
   "Error opening file: {0}": "Error al abrir archivo: {0}",
   "Open to the Side": "Abrir al lado",
   "Open in New Window": "Abrir en nueva ventana",
+  "Open in Floating Window": "Abrir en ventana flotante",
   "Open in Active Editor": "Abrir normalmente",
   "Remove from Recent": "Eliminar de recientes",
   "Remove from Favorites": "Eliminar de favoritos",
