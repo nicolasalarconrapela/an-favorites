@@ -1441,6 +1441,7 @@ export function registerQuickOpenCommand(
       const quickPick = vscode.window.createQuickPick<QuickOpenItem>();
       log.debug('[QuickOpen] QuickPick instance created');
 
+      quickPick.value = '';
       quickPick.placeholder = t('Search files by name');
       quickPick.matchOnDescription = true;
       quickPick.matchOnDetail = true;
@@ -1670,20 +1671,13 @@ export function registerQuickOpenCommand(
           });
         }
 
-        items.push({
-          label: `$(loading~spin) ${t('Loading...')}`,
-          description: '',
-          detail: t('Refreshing Quick Open results...'),
-        });
-
         return items;
       };
-      const buildSearchPreviewItems = (searchQuery: string): QuickOpenItem[] => {
+      const buildSearchProgressItems = (searchQuery: string): QuickOpenItem[] => {
         const normalizedSearch = searchQuery.trim();
         if (!normalizedSearch) {
           return buildInitialQuickPickItems();
         }
-
         const config = configService.getConfig();
         const favoriteState = buildFavoriteBuildState(favoritesProvider);
         const matchingFavoriteCandidateUris = favoriteState.allFavoriteUris.filter(
@@ -1695,97 +1689,60 @@ export function registerQuickOpenCommand(
               matchingFavoriteCandidateUris)
             : matchingFavoriteCandidateUris,
         );
-        const pinnedFavUris = matchingFavoriteUris.filter((uri) =>
+        const pinnedUris = matchingFavoriteUris.filter((uri) =>
           favoriteState.isPinned(uri),
         );
         const pinnedNormSet = new Set(
-          pinnedFavUris.map((uri) => normalizeFsPath(uri.fsPath)),
+          pinnedUris.map((uri) => normalizeFsPath(uri.fsPath)),
         );
-        const recentFavUris = matchingFavoriteUris.filter((uri) => {
+        const favoriteUris = matchingFavoriteUris.filter((uri) => {
           const norm = normalizeFsPath(uri.fsPath);
           return !pinnedNormSet.has(norm);
         });
-        const allUrisToDisplay = dedupeUrisByFsPath([
-          ...pinnedFavUris,
-          ...recentFavUris,
-        ]);
-        const previewPinnedItems = buildPinnedItems(
-          pinnedFavUris,
+        const pinnedItems = buildPinnedItems(pinnedUris, favoriteState, config);
+        const favoriteItems = buildRecentFavoriteItems(
+          favoriteUris,
           favoriteState,
           config,
         );
-        const previewRecentFavItems = buildRecentFavoriteItems(
-          recentFavUris,
-          favoriteState,
-          config,
-        );
-        const previewFavoriteMatchNormSet = new Set(
-          [...pinnedFavUris, ...recentFavUris].map((uri) =>
-            normalizeFsPath(uri.fsPath),
-          ),
-        );
-        const previewItems: QuickOpenItem[] = [];
+        applyQuickOpenResultPathHints([...pinnedItems, ...favoriteItems]);
 
-        if (previewPinnedItems.length > 0) {
-          previewItems.push(...previewPinnedItems);
+        const items: QuickOpenItem[] = [];
+        if (pinnedItems.length > 0) {
+          items.push(...pinnedItems);
         }
-
-        previewItems.push({
-          label:
-            previewRecentFavItems.length > 0 ? t('Favorites') : t('No favorites yet'),
-          kind: vscode.QuickPickItemKind.Separator,
-        });
-        previewItems.push({ label: ' ', alwaysShow: false });
-        if (previewRecentFavItems.length > 0) {
-          previewItems.push(...previewRecentFavItems);
-        }
-
-        const previewFavoriteSearchItems = createSearchFileItems(
-          prioritizeDistinctBasenames(
-            dedupeUrisByFsPath(
-              allUrisToDisplay.filter((uri) =>
-                matchesSearchText(uri, normalizedSearch),
-              ),
-            ),
-            normalizedSearch,
-          ).slice(0, Math.max(1, Math.min(20, QUICKOPEN_HARD_SEARCH_RESULT_LIMIT))),
-          favoriteState,
-          config,
-          previewFavoriteMatchNormSet,
-        );
-        applyQuickOpenResultPathHints([
-          ...previewPinnedItems,
-          ...previewRecentFavItems,
-          ...previewFavoriteSearchItems,
-        ]);
-        if (previewFavoriteSearchItems.length > 0) {
-          previewItems.push({
-            label: t('Files'),
+        if (favoriteItems.length > 0) {
+          items.push({
+            label: t('Favorites'),
             kind: vscode.QuickPickItemKind.Separator,
           });
-          previewItems.push(...previewFavoriteSearchItems);
+          items.push({ label: ' ', alwaysShow: false });
+          items.push(...favoriteItems);
         }
-
-        previewItems.push({
+        items.push({
           label: `$(loading~spin) ${t('Searching...')}`,
           description: normalizedSearch,
           detail: t('Searching workspace files by name...'),
+          alwaysShow: true,
         });
-
-        return previewItems;
+        return items;
       };
-      const applySearchPreviewItems = (searchQuery: string, reason: string): void => {
+      const applySearchProgressState = (searchQuery: string, reason: string): void => {
         const normalizedSearch = searchQuery.trim();
         if (!normalizedSearch) {
           return;
         }
-        const previewItems = buildSearchPreviewItems(normalizedSearch);
+        const progressItems = buildSearchProgressItems(normalizedSearch);
         quickPick.busy = true;
-        quickPick.items = previewItems;
-        log.debug('[QuickOpen][trace] Applied transient preview state for active search query', {
+        quickPick.items = progressItems;
+        const firstFileItem = progressItems.find((item) =>
+          isFileItem(item),
+        ) as FileQuickPickItem | undefined;
+        quickPick.activeItems = firstFileItem ? [firstFileItem] : [];
+        log.debug('[QuickOpen][trace] Applied in-progress search state with favorite matches', {
           reason,
           searchQuery: normalizedSearch,
-          itemCount: previewItems.length,
+          itemCount: progressItems.length,
         });
       };
       const updateVisibleItemsForUri = (
@@ -2096,7 +2053,7 @@ export function registerQuickOpenCommand(
             candidateCount: allUrisToDisplay.length,
           });
           if (isSearching) {
-            applySearchPreviewItems(normalizedSearch, 'build-start');
+            applySearchProgressState(normalizedSearch, 'build-start');
           }
           log.debug('[QuickOpen][trace] Skipping filesystem existence validation in QuickOpen build', {
             buildId,
@@ -2636,6 +2593,8 @@ export function registerQuickOpenCommand(
       }
 
       log.info('[QuickOpen] Showing QuickPick UI NOW (shell ready)...');
+      quickPick.value = '';
+      quickPick.busy = false;
       quickPick.show();
       log.info('[QuickOpen][traza] QuickOpen visible', {
         sessionId,
@@ -2826,7 +2785,7 @@ export function registerQuickOpenCommand(
               quickPick.items = buildInitialQuickPickItems();
               void buildItems('');
             } else {
-              applySearchPreviewItems(value, 'empty-state-transition');
+              applySearchProgressState(value, 'empty-state-transition');
               log.debug('[QuickOpen][trace] Scheduling debounced search rebuild', {
                 value,
                 length: value.length,
@@ -2838,7 +2797,7 @@ export function registerQuickOpenCommand(
           }
 
           if (!isEmpty) {
-            applySearchPreviewItems(value, 'active-search-update');
+            applySearchProgressState(value, 'active-search-update');
             log.debug('[QuickOpen][trace] Scheduling debounced search rebuild', {
               value,
               length: value.length,
