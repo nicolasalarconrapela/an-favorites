@@ -934,11 +934,15 @@ async function openUriInEditor(
 }
 
 async function openUriInNewWindow(uri: vscode.Uri, logger?: Logger): Promise<void> {
-  logger?.info?.('[QuickOpen] Opening resource in new window', {
+  logger?.info?.('[QuickOpen] Opening resource in floating window', {
     filePath: uri.fsPath,
+    scheme: uri.scheme,
     sourceWindowName: getCurrentWindowLabel(),
   });
-  await openUriInEditor(uri, { logger });
+  await vscode.commands.executeCommand('vscode.open', uri, {
+    preview: true,
+    preserveFocus: true,
+  });
   await vscode.commands.executeCommand(
     'workbench.action.moveEditorToNewWindow',
   );
@@ -1247,7 +1251,7 @@ class FileQuickPickItem implements vscode.QuickPickItem {
     if (!this._openInNewWindow && this._showOpenInNewWindowButton) {
       buttons.push({
         iconPath: createButtonIcon('link-external', 'symbol-file'),
-        tooltip: t('Open in New Window'),
+        tooltip: t('Open in Floating Window'),
       });
     }
 
@@ -2126,6 +2130,11 @@ export function registerQuickOpenCommand(
                 kind: vscode.QuickPickItemKind.Separator,
               });
               searchItems.push(...searchFileItems);
+            } else {
+              searchItems.push({
+                label: t("0 results for search: '{0}'", normalizedSearch),
+                kind: vscode.QuickPickItemKind.Separator,
+              });
             }
 
             if (liveSearchGitignoreDeferred) {
@@ -2350,6 +2359,16 @@ export function registerQuickOpenCommand(
       log.info('[QuickOpen] Preparing initial QuickPick shell...');
       quickPick.items = buildInitialQuickPickItems();
 
+      if (isDisposed || activeQuickOpenSession?.sessionId !== sessionId) {
+        log.info('[QuickOpen] Aborting QuickPick show because session is no longer active', {
+          sessionId,
+          isDisposed,
+          activeSessionId: activeQuickOpenSession?.sessionId ?? null,
+        });
+        safeDispose();
+        return;
+      }
+
       log.info('[QuickOpen] Showing QuickPick UI NOW (shell ready)...');
       quickPick.show();
       log.info('[QuickOpen][traza] QuickOpen visible', {
@@ -2361,7 +2380,9 @@ export function registerQuickOpenCommand(
         '[QuickOpen] ✓ QuickPick visible and ready for user interaction',
       );
       log.info('[QuickOpen] Starting initial buildItems(false)...');
-      void buildItems('');
+      if (!isDisposed && activeQuickOpenSession?.sessionId === sessionId) {
+        void buildItems('');
+      }
 
       let previousValue = '';
       const shouldDeferExternalRebuild = (): boolean =>
@@ -2691,7 +2712,7 @@ export function registerQuickOpenCommand(
 
           if (openInNewWindow) {
             log.info(
-              `[QuickOpen] Opening in new window: ${selected.internalUri.fsPath}`,
+              `[QuickOpen] Opening in floating window: ${selected.internalUri.fsPath}`,
             );
             await openUriInNewWindow(selected.internalUri, log);
           } else {
@@ -2739,15 +2760,15 @@ export function registerQuickOpenCommand(
             return;
           }
 
-          if (button.tooltip === t('Open in New Window')) {
-            log.info(`[QuickOpen] Opening in new window: ${uri.fsPath}`);
+          if (button.tooltip === t('Open in Floating Window')) {
+            log.info(`[QuickOpen] Opening in floating window: ${uri.fsPath}`);
             try {
               cancelQuickOpenBackgroundWork('button-open-new-window');
               safeDispose();
               await openUriInNewWindow(uri, log);
               mruService.add(uri.fsPath);
             } catch (err) {
-              log.error(`[QuickOpen] Error opening in new window`, err);
+              log.error(`[QuickOpen] Error opening in floating window`, err);
             }
             return;
           }
