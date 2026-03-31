@@ -14,6 +14,7 @@ import { Logger } from '../logging/logger';
 export class SharedStorageService {
   private static readonly SHARED_SETTING_KEY =
     'anfavorites.storage.shareAcrossIdes';
+  private static readonly SELF_WRITE_EXTERNAL_CHANGE_IGNORE_MS = 1000;
 
   private _onDidChange = new vscode.EventEmitter<string | undefined>();
   public readonly onDidChange = this._onDidChange.event;
@@ -363,7 +364,17 @@ export class SharedStorageService {
 
   private handleExternalChange(source: string): void {
     const now = Date.now();
-    if (now - this.lastWriteTime < 250) {
+    const elapsedSinceLastWrite = now - this.lastWriteTime;
+    if (
+      elapsedSinceLastWrite <
+      SharedStorageService.SELF_WRITE_EXTERNAL_CHANGE_IGNORE_MS
+    ) {
+      this.logger.info('[SharedStorage][trace] Ignoring watcher event caused by recent self write', {
+        source,
+        elapsedSinceLastWriteMs: elapsedSinceLastWrite,
+        ignoreWindowMs:
+          SharedStorageService.SELF_WRITE_EXTERNAL_CHANGE_IGNORE_MS,
+      });
       return;
     }
     if (this.debounceTimer) {
