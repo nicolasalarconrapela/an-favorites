@@ -231,6 +231,9 @@ Reglas:
 - no ejecutar este paso sin autorización explícita del usuario
 - validar antes del push que no existen cambios locales pendientes
 - el push debe hacerse únicamente sobre `CURRENT_BRANCH`
+- los cambios dentro de `.agent/**` y `out_tmp/**` no deben bloquear por sí solos este push
+- está estrictamente prohibido borrar, limpiar o recrear `out_tmp/**` para permitir el push
+- está estrictamente prohibido ejecutar comandos destructivos como `rm -rf`, `del /s /q`, `Remove-Item -Recurse -Force` o equivalentes sobre `out_tmp/**`
 
 Comandos permitidos:
 
@@ -244,7 +247,7 @@ git push origin "${CURRENT_BRANCH}"
 
 Abortar si:
 
-- `git status --short` muestra cambios pendientes
+- `git status --short` muestra cambios pendientes fuera de `.agent/**` y `out_tmp/**`
 - `git push origin "${CURRENT_BRANCH}"` falla
 
 Salida requerida:
