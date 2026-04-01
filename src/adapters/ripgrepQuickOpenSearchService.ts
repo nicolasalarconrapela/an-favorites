@@ -1,12 +1,11 @@
 import { spawn } from 'child_process';
-import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { rgPath } from '@vscode/ripgrep';
 import { QuickOpenSearchService } from '../commands/quickOpen/quickOpenSearchService';
 import { Logger } from '../logging/logger';
 import { normalizeFsPath } from '../utils/collisionUtils';
-import { getEnabledGitignoreFilesFast } from '../utils/gitignoreService';
+import { getCompiledRipgrepIgnoreFiles } from '../utils/gitignoreService';
 
 function normalizeGlobPattern(pattern: string): string {
   const trimmed = pattern.trim();
@@ -34,48 +33,8 @@ function toWorkspaceUri(
 
 let ripgrepSearchSequence = 0;
 let ripgrepWorkspaceSearchSequence = 0;
+let activeRipgrepProcessCount = 0;
 const RIPGREP_STDERR_LIMIT = 4096;
-
-function isWorkspaceRootGitignore(
-  uri: vscode.Uri,
-  folder: vscode.WorkspaceFolder,
-): boolean {
-  const rootGitignorePath = path.join(folder.uri.fsPath, '.gitignore');
-  return normalizeFsPath(uri.fsPath) === normalizeFsPath(rootGitignorePath);
-}
-
-function buildFolderRootGitignoreFilesIndex(
-  gitignoreFiles: readonly vscode.Uri[],
-): Map<string, string[]> {
-  const index = new Map<string, string[]>();
-
-  for (const uri of gitignoreFiles) {
-    const folder = vscode.workspace.getWorkspaceFolder(uri);
-    if (
-      !folder ||
-      !isWorkspaceRootGitignore(uri, folder) ||
-      !fs.existsSync(uri.fsPath)
-    ) {
-      continue;
-    }
-
-    const key = normalizeFsPath(folder.uri.fsPath);
-    const entry = index.get(key);
-    if (entry) {
-      entry.push(uri.fsPath);
-    } else {
-      index.set(key, [uri.fsPath]);
-    }
-  }
-
-  for (const filePaths of index.values()) {
-    filePaths.sort(
-      (left, right) => left.length - right.length || left.localeCompare(right),
-    );
-  }
-
-  return index;
-}
 
 async function searchFolderWithRipgrep(params: {
   folder: vscode.WorkspaceFolder;
@@ -138,6 +97,9 @@ async function searchFolderWithRipgrep(params: {
     let buffer = '';
     let stderr = '';
     let settled = false;
+    let finishRequested = false;
+    let requestedFinishReason = 'completed';
+    let requestedFinishError: Error | undefined;
     const startedAt = Date.now();
 
     logger?.info?.('[QuickOpen][trace] ripgrep search started', {
@@ -152,31 +114,40 @@ async function searchFolderWithRipgrep(params: {
       argCount: args.length,
     });
 
-    const child = spawn(rgPath, args, {
-      cwd: folder.uri.fsPath,
-      windowsHide: true,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
+    let child: ReturnType<typeof spawn>;
+    try {
+      child = spawn(rgPath, args, {
+        cwd: folder.uri.fsPath,
+        windowsHide: true,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+    } catch (error) {
+      reject(
+        new Error(
+          `ripgrep search failed to spawn for "${folder.name}": ${error instanceof Error ? error.message : String(error)}`,
+        ),
+      );
+      return;
+    }
+    activeRipgrepProcessCount += 1;
     logger?.info?.('[QuickOpen][trace] ripgrep process spawned', {
       searchId,
       folder: folder.name,
       pid: child.pid ?? null,
       pattern,
       limit,
+      activeRipgrepProcessCount,
     });
 
-    const finish = (error?: Error): void => {
+    const settle = (error?: Error): void => {
       if (settled) {
         return;
       }
       settled = true;
       cancellationDisposable.dispose();
+      activeRipgrepProcessCount = Math.max(0, activeRipgrepProcessCount - 1);
       const durationMs = Date.now() - startedAt;
       const cancelled = token?.isCancellationRequested ?? false;
-      let killRequested = false;
-      if (!child.killed && child.exitCode === null) {
-        killRequested = child.kill();
-      }
       if (error) {
         logger?.error?.('[QuickOpen][trace] ripgrep search failed', {
           searchId,
@@ -190,7 +161,8 @@ async function searchFolderWithRipgrep(params: {
           pid: child.pid ?? null,
           childKilled: child.killed,
           exitCode: child.exitCode,
-          killRequested,
+          requestedFinishReason,
+          activeRipgrepProcessCount,
         });
         reject(error);
         return;
@@ -206,21 +178,57 @@ async function searchFolderWithRipgrep(params: {
         pid: child.pid ?? null,
         childKilled: child.killed,
         exitCode: child.exitCode,
-        killRequested,
+        requestedFinishReason,
+        activeRipgrepProcessCount,
       });
       resolve(results);
     };
 
+    const requestFinish = (reason: string, error?: Error): void => {
+      if (settled || finishRequested) {
+        return;
+      }
+      finishRequested = true;
+      requestedFinishReason = reason;
+      requestedFinishError = error;
+      const shouldKill = !child.killed && child.exitCode === null;
+      const killRequested = shouldKill ? child.kill() : false;
+      logger?.info?.('[QuickOpen][trace] ripgrep search finish requested', {
+        searchId,
+        folder: folder.name,
+        pattern,
+        limit,
+        reason,
+        pid: child.pid ?? null,
+        childKilled: child.killed,
+        exitCode: child.exitCode,
+        killRequested,
+        partialResultCount: results.length,
+        activeRipgrepProcessCount,
+      });
+      if (!shouldKill) {
+        settle(requestedFinishError);
+      }
+    };
+
     const flushBuffer = (): void => {
+      if (settled || finishRequested) {
+        buffer = '';
+        return;
+      }
       const parts = buffer.split('\u0000');
       buffer = parts.pop() ?? '';
       for (const relativePath of parts) {
+        if (settled || finishRequested) {
+          buffer = '';
+          return;
+        }
         if (!relativePath) {
           continue;
         }
         results.push(toWorkspaceUri(folder, relativePath));
         if (results.length >= limit) {
-          finish();
+          requestFinish('result-limit-reached');
           return;
         }
       }
@@ -236,19 +244,30 @@ async function searchFolderWithRipgrep(params: {
           pid: child.pid ?? null,
           partialResultCount: results.length,
         });
-        finish();
+        requestFinish('cancellation-requested');
       }) ?? new vscode.Disposable(() => {});
 
     child.on('error', (error) => {
-      finish(
+      settle(
         new Error(
           `ripgrep search failed to start for "${folder.name}": ${error instanceof Error ? error.message : String(error)}`,
         ),
       );
     });
 
-    child.stdout.setEncoding('utf8');
-    child.stdout.on('data', (chunk: string) => {
+    const stdout = child.stdout;
+    const stderrStream = child.stderr;
+    if (!stdout || !stderrStream) {
+      settle(
+        new Error(
+          `ripgrep search failed for "${folder.name}": stdout/stderr pipe was not available`,
+        ),
+      );
+      return;
+    }
+
+    stdout.setEncoding('utf8');
+    stdout.on('data', (chunk: string) => {
       if (settled) {
         return;
       }
@@ -256,8 +275,8 @@ async function searchFolderWithRipgrep(params: {
       flushBuffer();
     });
 
-    child.stderr.setEncoding('utf8');
-    child.stderr.on('data', (chunk: string) => {
+    stderrStream.setEncoding('utf8');
+    stderrStream.on('data', (chunk: string) => {
       if (stderr.length >= RIPGREP_STDERR_LIMIT) {
         return;
       }
@@ -273,18 +292,25 @@ async function searchFolderWithRipgrep(params: {
         signal,
         resultCount: results.length,
         settled,
+        finishRequested,
+        requestedFinishReason,
         cancelled: token?.isCancellationRequested ?? false,
+        activeRipgrepProcessCount,
       });
       if (settled) {
         return;
       }
       flushBuffer();
+      if (finishRequested) {
+        settle(requestedFinishError);
+        return;
+      }
       if (signal || code === 0 || code === 1) {
-        finish();
+        settle();
         return;
       }
 
-      finish(
+      settle(
         new Error(
           `ripgrep search failed for "${folder.name}" (code=${code ?? 'unknown'}): ${stderr.trim() || 'no stderr output'}`,
         ),
@@ -294,10 +320,7 @@ async function searchFolderWithRipgrep(params: {
 }
 
 export class RipgrepQuickOpenSearchService implements QuickOpenSearchService {
-  // ripgrep can safely apply only the workspace-root .gitignore files here.
-  // Nested .gitignore files are filtered afterward by the in-memory matcher,
-  // which preserves their directory-relative semantics.
-  readonly providesFilteredResults = false;
+  readonly providesFilteredResults = true;
 
   async findFiles(
     pattern: string,
@@ -311,9 +334,9 @@ export class RipgrepQuickOpenSearchService implements QuickOpenSearchService {
       return [];
     }
     const workspaceSearchId = ++ripgrepWorkspaceSearchSequence;
-    const gitignoreFiles = getEnabledGitignoreFilesFast() ?? [];
-    const rootGitignoreFilesByFolder =
-      buildFolderRootGitignoreFilesIndex(gitignoreFiles);
+    const compiledIgnoreFilesByFolder = await getCompiledRipgrepIgnoreFiles(
+      token,
+    );
 
     const startedAt = Date.now();
     logger?.info?.('[QuickOpen][trace] ripgrep workspace search started', {
@@ -322,7 +345,7 @@ export class RipgrepQuickOpenSearchService implements QuickOpenSearchService {
       pattern,
       limit,
       excludeCount: excludePatterns.length,
-      gitignoreFileCount: gitignoreFiles.length,
+      compiledIgnoreFolderCount: compiledIgnoreFilesByFolder.size,
     });
 
     const results: vscode.Uri[] = [];
@@ -344,15 +367,17 @@ export class RipgrepQuickOpenSearchService implements QuickOpenSearchService {
         folder: folder.name,
         remainingLimit: limit - results.length,
         pattern,
-        gitignoreFileCount:
-          rootGitignoreFilesByFolder.get(normalizeFsPath(folder.uri.fsPath))?.length ?? 0,
+        compiledIgnoreFileCount:
+          compiledIgnoreFilesByFolder.get(normalizeFsPath(folder.uri.fsPath))
+            ?.length ?? 0,
       });
       const folderResults = await searchFolderWithRipgrep({
         folder,
         pattern,
         excludePatterns,
         gitignoreFilePaths:
-          rootGitignoreFilesByFolder.get(normalizeFsPath(folder.uri.fsPath)) ?? [],
+          compiledIgnoreFilesByFolder.get(normalizeFsPath(folder.uri.fsPath)) ??
+          [],
         limit: limit - results.length,
         token,
         logger,

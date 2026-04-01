@@ -1,4 +1,7 @@
 import ignore, { type Ignore } from 'ignore';
+import { createHash } from 'crypto';
+import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { startLoggedAction } from '../logging/loggingModule';
@@ -320,6 +323,7 @@ interface GitignoreCache {
   patterns: string[];
   signature: string;
   matchers: GitignoreMatcher[];
+  entries: PersistedGitignoreSnapshotEntry[];
 }
 
 interface PersistedGitignoreSnapshotEntry {
@@ -346,6 +350,12 @@ interface MergedExclusionsCache {
   merged: string[];
 }
 
+interface RipgrepIgnoreFilesCache {
+  folderKey: string;
+  signature: string;
+  filesByFolder: Map<string, string[]>;
+}
+
 interface GitignoreMatcher {
   baseDir: string;
   matcher: Ignore;
@@ -354,14 +364,15 @@ interface GitignoreMatcher {
 let _logger: Logger | null = null;
 let _context: vscode.ExtensionContext | null = null;
 let _cache: GitignoreCache | null = null;
-let _gitignoredPathCache = new Map<string, boolean>();
+const _gitignoredPathCache = new Map<string, boolean>();
 let _watcher: vscode.FileSystemWatcher | null = null;
 let _folderListener: vscode.Disposable | null = null;
 let _debounceTimer: ReturnType<typeof setTimeout> | null = null;
-let _onDiscoveryChange = new Set<() => void>();
-let _onRulesChange = new Set<() => void>();
+const _onDiscoveryChange = new Set<() => void>();
+const _onRulesChange = new Set<() => void>();
 let _gitignoreFilesState: Record<string, boolean> = {};
 let _mergedExclusionsCache: MergedExclusionsCache | null = null;
+let _ripgrepIgnoreFilesCache: RipgrepIgnoreFilesCache | null = null;
 let _discoveryPromise: Promise<vscode.Uri[]> | null = null;
 let _patternsPromise: Promise<string[]> | null = null;
 let _lastDiscovered: vscode.Uri[] = [];
@@ -406,6 +417,142 @@ function workspaceScanStateKey(): string {
 
 function buildPatternsSignature(patterns: string[]): string {
   return [...patterns].sort().join('|');
+}
+
+function buildRipgrepIgnoreFilesSignature(
+  entries: readonly PersistedGitignoreSnapshotEntry[],
+): string {
+  const hash = createHash('sha1');
+  for (const entry of [...entries].sort((left, right) =>
+    left.rel.localeCompare(right.rel),
+  )) {
+    hash.update(entry.rel);
+    hash.update('\u0000');
+    hash.update(entry.baseDir);
+    hash.update('\u0000');
+    hash.update(entry.lines.join('\n'));
+    hash.update('\u0000');
+  }
+  return hash.digest('hex');
+}
+
+function compileGitignoreLineForRipgrep(
+  line: string,
+  baseDir: string,
+): string[] {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.startsWith('#')) {
+    return [];
+  }
+
+  let normalized = trimmed;
+  let escapedPrefix = false;
+  if (
+    normalized.startsWith('\\') &&
+    (normalized[1] === '#' || normalized[1] === '!')
+  ) {
+    normalized = normalized.slice(1);
+    escapedPrefix = true;
+  }
+
+  let negated = false;
+  if (!escapedPrefix && normalized.startsWith('!')) {
+    negated = true;
+    normalized = normalized.slice(1).trim();
+  }
+
+  if (!normalized) {
+    return [];
+  }
+
+  const prefix = baseDir && baseDir !== '.' ? `${baseDir}/` : '';
+  const isDirOnly = normalized.endsWith('/');
+  const patternBody = isDirOnly ? normalized.slice(0, -1) : normalized;
+  const emit = (pattern: string): string =>
+    `${negated ? '!' : ''}${pattern}`;
+  const results: string[] = [];
+  const seen = new Set<string>();
+  const push = (...patterns: string[]) => {
+    for (const pattern of patterns) {
+      const clean = pattern.replace(/\/+/g, '/').replace(/^\/+/, '');
+      if (!clean || seen.has(clean)) {
+        continue;
+      }
+      seen.add(clean);
+      results.push(emit(clean));
+    }
+  };
+
+  if (patternBody.startsWith('/')) {
+    const cleanRel = patternBody.slice(1);
+    if (isDirOnly) {
+      push(`${prefix}${cleanRel}/`, `${prefix}${cleanRel}/**`);
+    } else {
+      push(`${prefix}${cleanRel}`, `${prefix}${cleanRel}/**`);
+    }
+    return results;
+  }
+
+  if (patternBody.includes('**')) {
+    if (isDirOnly) {
+      push(`${prefix}${patternBody}/`, `${prefix}${patternBody}/**`);
+    } else {
+      push(`${prefix}${patternBody}`, `${prefix}${patternBody}/**`);
+    }
+    return results;
+  }
+
+  if (patternBody.includes('/')) {
+    if (isDirOnly) {
+      push(`${prefix}${patternBody}/`, `${prefix}${patternBody}/**`);
+    } else {
+      push(`${prefix}${patternBody}`, `${prefix}${patternBody}/**`);
+    }
+    return results;
+  }
+
+  if (isDirOnly) {
+    push(
+      `${prefix}${patternBody}/`,
+      `${prefix}${patternBody}/**`,
+      `${prefix}**/${patternBody}/`,
+      `${prefix}**/${patternBody}/**`,
+    );
+  } else {
+    push(
+      `${prefix}${patternBody}`,
+      `${prefix}${patternBody}/**`,
+      `${prefix}**/${patternBody}`,
+      `${prefix}**/${patternBody}/**`,
+    );
+  }
+
+  return results;
+}
+
+async function disposeRipgrepIgnoreFilesCache(): Promise<void> {
+  const cache = _ripgrepIgnoreFilesCache;
+  _ripgrepIgnoreFilesCache = null;
+  if (!cache) {
+    return;
+  }
+
+  const uniquePaths = new Set<string>();
+  for (const filePaths of cache.filesByFolder.values()) {
+    for (const filePath of filePaths) {
+      uniquePaths.add(filePath);
+    }
+  }
+
+  await Promise.all(
+    Array.from(uniquePaths).map(async (filePath) => {
+      try {
+        await fs.promises.unlink(filePath);
+      } catch {
+        // Best-effort cleanup only.
+      }
+    }),
+  );
 }
 
 function currentDiscoveryState(): vscode.Uri[] | null {
@@ -522,6 +669,7 @@ function hydrateCacheFromPersistedSnapshot(): boolean {
     patterns,
     signature: buildPatternsSignature(patterns),
     matchers,
+    entries: enabledEntries,
   };
   _lastDiscovered = [...discovered];
   _lastDiscoveredFolderKey = folderKey;
@@ -573,6 +721,7 @@ function invalidateCache(
   reason: string = 'unknown',
 ): void {
   _logger?.info?.(`[gitignore] cache invalidated (${reason})`);
+  const hadCache = _cache !== null;
   _cache = null;
   _patternsPromise = null;
   _gitignoredPathCache.clear();
@@ -586,10 +735,11 @@ function invalidateCache(
     reason,
     showProgress,
     structureChanged,
-    hadCache: _cache !== null,
+    hadCache,
     hadDiscoveryPromise: _discoveryPromise !== null,
     hadPatternsPromise: _patternsPromise !== null,
   });
+  void disposeRipgrepIgnoreFilesCache();
   if (structureChanged) {
     _discoveryPromise = null;
     _lastDiscovered = [];
@@ -845,6 +995,7 @@ export async function getGitignorePatterns(
     patterns: [...allPatterns],
     signature,
     matchers,
+    entries: snapshotEntries,
   };
   _patternsDirty = false;
   _initialWarmupCompleted = true;
@@ -907,6 +1058,113 @@ export function getEnabledGitignoreFilesFast(): vscode.Uri[] | null {
 
   const settings = getGitignoreFilesSettings();
   return cache.discovered.filter((uri) => settings[gitignoreRelPath(uri)] !== false);
+}
+
+export async function getCompiledRipgrepIgnoreFiles(
+  token?: vscode.CancellationToken,
+): Promise<Map<string, string[]>> {
+  if (!_cache) {
+    await getGitignorePatterns(token);
+  }
+
+  const cache = _cache;
+  const folderKey = currentFolderKey();
+  if (!cache || cache.folderKey !== folderKey) {
+    return new Map();
+  }
+
+  const enabledEntries = cache.entries.filter(
+    (entry) => _gitignoreFilesState[entry.rel] !== false,
+  );
+  const signature = buildRipgrepIgnoreFilesSignature(enabledEntries);
+  if (
+    _ripgrepIgnoreFilesCache &&
+    _ripgrepIgnoreFilesCache.folderKey === folderKey &&
+    _ripgrepIgnoreFilesCache.signature === signature
+  ) {
+    return new Map(_ripgrepIgnoreFilesCache.filesByFolder);
+  }
+
+  await disposeRipgrepIgnoreFilesCache();
+
+  const tempRoot = path.join(os.tmpdir(), 'an-favorites', 'ripgrep-ignore');
+  await fs.promises.mkdir(tempRoot, { recursive: true });
+
+  const relToUri = new Map(
+    cache.discovered.map((uri) => [gitignoreRelPath(uri), uri] as const),
+  );
+  const compiledByFolder = new Map<string, string[]>();
+  const seenByFolder = new Map<string, Set<string>>();
+
+  for (const entry of enabledEntries) {
+    if (token?.isCancellationRequested) {
+      break;
+    }
+    const uri = relToUri.get(entry.rel);
+    if (!uri) {
+      continue;
+    }
+    const folder = vscode.workspace.getWorkspaceFolder(uri);
+    if (!folder) {
+      continue;
+    }
+    const folderPath = normalizePathForRipgrepCache(folder.uri.fsPath);
+    const lines = compiledByFolder.get(folderPath) ?? [];
+    const seen = seenByFolder.get(folderPath) ?? new Set<string>();
+    if (!compiledByFolder.has(folderPath)) {
+      compiledByFolder.set(folderPath, lines);
+      seenByFolder.set(folderPath, seen);
+    }
+    for (const line of entry.lines) {
+      for (const compiledLine of compileGitignoreLineForRipgrep(
+        line,
+        entry.baseDir,
+      )) {
+        if (seen.has(compiledLine)) {
+          continue;
+        }
+        seen.add(compiledLine);
+        lines.push(compiledLine);
+      }
+    }
+  }
+
+  const filesByFolder = new Map<string, string[]>();
+  for (const [folderPath, lines] of compiledByFolder) {
+    const content = lines.join('\n');
+    const fileHash = createHash('sha1')
+      .update(folderKey)
+      .update('\u0000')
+      .update(folderPath)
+      .update('\u0000')
+      .update(content)
+      .digest('hex');
+    const filePath = path.join(tempRoot, `${fileHash}.ignore`);
+    await fs.promises.writeFile(
+      filePath,
+      content ? `${content}\n` : '',
+      'utf8',
+    );
+    filesByFolder.set(folderPath, [filePath]);
+  }
+
+  _ripgrepIgnoreFilesCache = {
+    folderKey,
+    signature,
+    filesByFolder,
+  };
+
+  _logger?.info?.('[gitignore][trace] ripgrep ignore files compiled', {
+    folderCount: filesByFolder.size,
+    enabledGitignoreCount: enabledEntries.length,
+    signature,
+  });
+
+  return new Map(filesByFolder);
+}
+
+function normalizePathForRipgrepCache(fsPath: string): string {
+  return fsPath.toLowerCase();
 }
 
 export async function isGitignored(
@@ -1222,7 +1480,7 @@ export async function initGitignoreSync(
   logger?: Logger,
 ): Promise<void> {
   _context = context;
-  _logger = logger;
+  _logger = logger ?? null;
   _gitignoreFilesState =
     context.workspaceState.get<Record<string, boolean>>(
       INTERNAL_FILES_STATE_KEY,
