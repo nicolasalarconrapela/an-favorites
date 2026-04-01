@@ -33,10 +33,21 @@ path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding=
 PY
 }
 
+ensure_clean_worktree_for_push() {
+  local status
+  status="$(git status --porcelain)"
+
+  if [[ -n "$status" ]]; then
+    echo "Error: hay cambios locales pendientes. No se puede hacer push hasta dejar el arbol limpio."
+    git status --short
+    exit 1
+  fi
+}
+
 GIT_REMOTE_URL="$(git remote get-url origin)"
 REPOWN="$(printf '%s\n' "$GIT_REMOTE_URL" | sed -E 's#(git@github.com:|https://github.com/)##' | sed 's/\.git$//')"
 
-RELEASE_LATEST="$(gh release view --repo "$REPOWN" --json tagName --jq .tagName)"
+RELEASE_LATEST="$(gh release view --repo "$REPOWN" --json tagName --jq .tagName 2>/dev/null || git describe --tags --abbrev=0 2>/dev/null || echo "1.2.40")"
 
 RAMA_ACTUAL="$(git branch --show-current)"
 CURRENT_BRANCH="$RAMA_ACTUAL"
@@ -128,6 +139,7 @@ fi
 PACKAGE_JSON_UPDATED="false"
 PACKAGE_LOCK_UPDATED="false"
 VERSION_COMMIT_CREATED="false"
+VERSION_COMMIT_PUSHED="false"
 
 CURRENT_PACKAGE_VERSION="$(sed -nE 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' package.json | head -n 1)"
 
@@ -181,6 +193,14 @@ if [[ "$CURRENT_PACKAGE_VERSION" != "$RELEASE_VERSION" ]]; then
 
     git commit -m "chore: bump version to $RELEASE_VERSION"
     VERSION_COMMIT_CREATED="true"
+    ensure_clean_worktree_for_push
+
+    if confirm "Â¿Deseas hacer push del commit de version a $CURRENT_BRANCH?"; then
+      git push origin "$CURRENT_BRANCH"
+      VERSION_COMMIT_PUSHED="true"
+    else
+      echo "Push del commit de versiÃ³n omitido por el usuario."
+    fi
 
     LAST_COMMIT_MESSAGE="$(git log -1 --pretty=%s)"
     BUMP_COMMIT_VERSION="$RELEASE_VERSION"
@@ -195,7 +215,7 @@ RELEASE_RANGE_BRANCH="${RELEASE_LATEST}...${RAMA_ACTUAL}"
 RELEASE_RANGE_VERSION="${RELEASE_LATEST}...${RELEASE_VERSION}"
 RELEASE_RANGE="${RELEASE_RANGE_BRANCH}"
 
-OUTPUT_DIR_DIFF="out_tmp/${RELEASE_RANGE_VERSION}"
+OUTPUT_DIR_DIFF="out_tmp/casoB/${RELEASE_RANGE_VERSION}"
 OUTPUT_DIR="${OUTPUT_DIR_DIFF}/${DATE}/${TIME}"
 
 DIFF_FILE="${OUTPUT_DIR}/diffs.txt"
@@ -225,6 +245,7 @@ EXPECTED_PREVIOUS_RELEASE=$EXPECTED_PREVIOUS_RELEASE
 PACKAGE_JSON_UPDATED=$PACKAGE_JSON_UPDATED
 PACKAGE_LOCK_UPDATED=$PACKAGE_LOCK_UPDATED
 VERSION_COMMIT_CREATED=$VERSION_COMMIT_CREATED
+VERSION_COMMIT_PUSHED=$VERSION_COMMIT_PUSHED
 RELEASE_RANGE_BRANCH=$RELEASE_RANGE_BRANCH
 RELEASE_RANGE_VERSION=$RELEASE_RANGE_VERSION
 RELEASE_RANGE=$RELEASE_RANGE
@@ -256,4 +277,5 @@ echo "Rama destino calculada: $TARGET_BRANCH"
 echo "package.json actualizado: $PACKAGE_JSON_UPDATED"
 echo "package-lock.json actualizado: $PACKAGE_LOCK_UPDATED"
 echo "Commit de version creado: $VERSION_COMMIT_CREATED"
+echo "Commit de version publicado: $VERSION_COMMIT_PUSHED"
 echo "Diff generado en: $DIFF_FILE"

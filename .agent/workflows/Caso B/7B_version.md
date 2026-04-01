@@ -110,9 +110,11 @@ Operaciones previstas (en este orden):
        "version": "<VERSION_ACTUAL>" → "version": "<RELEASE_VERSION>"
   2. Commit del bump:
        chore: bump version to <RELEASE_VERSION>
-  3. Crear rama de release desde el commit del último tag:
+  3. Publicar el commit del bump en develop:
+       git push origin develop
+  4. Crear rama de release desde el commit del último tag:
        git branch <TARGET_BRANCH> <RELEASE_LATEST>^{commit}
-  4. Publicar rama en origin:
+  5. Publicar rama en origin:
        git push -u origin <TARGET_BRANCH>
 
   - Rama actual:     develop
@@ -214,6 +216,42 @@ Salida requerida:
 
 - tras `git add`: confirmar que `package.json` está en stage
 - tras `git commit`: mostrar la salida del commit y `git log --oneline -1`
+- preguntar al usuario si desea continuar con la creación de la rama
+
+---
+
+## B.3.1 Publicar commit del bump en la rama actual
+
+Objetivo:
+
+Publicar en `origin` el commit `chore: bump version to <RELEASE_VERSION>` para alinear la rama actual antes de crear la rama de release.
+
+Reglas:
+
+- no ejecutar este paso sin autorización explícita del usuario
+- validar antes del push que no existen cambios locales pendientes
+- el push debe hacerse únicamente sobre `CURRENT_BRANCH`
+
+Comandos permitidos:
+
+```bash
+git status --short
+```
+
+```bash
+git push origin "${CURRENT_BRANCH}"
+```
+
+Abortar si:
+
+- `git status --short` muestra cambios pendientes
+- `git push origin "${CURRENT_BRANCH}"` falla
+
+Salida requerida:
+
+- mostrar el estado previo del repositorio
+- mostrar la salida del push
+- confirmar que la rama actual quedó alineada con origin
 - preguntar al usuario si desea continuar con la creación de la rama
 
 ---
