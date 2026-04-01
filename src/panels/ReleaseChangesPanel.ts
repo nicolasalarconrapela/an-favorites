@@ -1,13 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { marked } from 'marked';
-
-type ReleaseSection = {
-  version: string;
-  feature: string;
-  body: string;
-};
+import { parseReleaseNotes } from '../utils/releaseNotesParser';
 
 export class ReleaseChangesPanel {
   public static currentPanel: ReleaseChangesPanel | undefined;
@@ -123,87 +117,12 @@ export class ReleaseChangesPanel {
   }
 
   private _parseReleaseNotes(content: string): void {
-    this._releaseTitle = undefined;
-    this._releaseVersion = undefined;
-    this._lastReleaseDate = undefined;
-    this._summaryHtml = '';
-    this._detailsHtml = '';
-
-    const sections = this._extractVersionSections(content);
-    if (sections.length > 0) {
-      const latestSection = sections.sort((a, b) =>
-        compareVersions(b.version, a.version),
-      )[0];
-
-      this._releaseVersion = latestSection.version;
-      this._releaseTitle = `v${latestSection.version} - ${latestSection.feature}`;
-      this._lastReleaseDate = this._extractReleaseDate(latestSection.body);
-
-      const cleanBody = this._removeReleaseDateLine(latestSection.body).trim();
-      this._setHtmlFromBody(cleanBody);
-      return;
-    }
-
-    const legacyTitleMatch = content.match(/^(?:#|##)\s+(.+)$/m);
-    let legacyContent = content;
-    if (legacyTitleMatch) {
-      this._releaseTitle = legacyTitleMatch[1].trim();
-      legacyContent = legacyContent.replace(/^(?:#|##)\s+.+\r?\n?/, '');
-    }
-
-    this._lastReleaseDate = this._extractReleaseDate(legacyContent);
-    const cleanLegacyContent = this._removeReleaseDateLine(legacyContent).trim();
-    this._setHtmlFromBody(cleanLegacyContent);
-  }
-
-  private _setHtmlFromBody(content: string): void {
-    const splitMatch = content.match(/^###\s+/m);
-    if (splitMatch && splitMatch.index !== undefined) {
-      const summaryPart = content.substring(0, splitMatch.index).trim();
-      const detailsPart = content.substring(splitMatch.index).trim();
-
-      this._summaryHtml = summaryPart ? (marked.parse(summaryPart) as string) : '';
-      this._detailsHtml = detailsPart ? (marked.parse(detailsPart) as string) : '';
-      return;
-    }
-
-    this._summaryHtml = content ? (marked.parse(content) as string) : '';
-    this._detailsHtml = '';
-  }
-
-  private _extractVersionSections(content: string): ReleaseSection[] {
-    const normalized = content.replace(/^\uFEFF/, '');
-    const sectionRegex = /^##\s+v(\d+(?:\.\d+){1,3})\s*-\s*(.+?)\s*$/gm;
-    const matches = Array.from(normalized.matchAll(sectionRegex));
-
-    return matches.map((match, index) => {
-      const start = match.index ?? 0;
-      const bodyStart = start + match[0].length;
-      const bodyEnd =
-        index + 1 < matches.length
-          ? (matches[index + 1].index ?? normalized.length)
-          : normalized.length;
-
-      return {
-        version: match[1].trim(),
-        feature: match[2].trim(),
-        body: normalized.substring(bodyStart, bodyEnd).trim(),
-      };
-    });
-  }
-
-  private _extractReleaseDate(content: string): string | undefined {
-    const dateMatch = content.match(
-      /_\s*(?:Release date|Fecha de lanzamiento):\s*([^_\n\r]+)_/i,
-    );
-    return dateMatch?.[1].trim();
-  }
-
-  private _removeReleaseDateLine(content: string): string {
-    return content.replace(
-      /_\s*(?:Release date|Fecha de lanzamiento):\s*[^_\n\r]+_\r?\n?/i,
-      '',
-    );
+    const parsed = parseReleaseNotes(content);
+    this._releaseTitle = parsed.releaseTitle;
+    this._releaseVersion = parsed.releaseVersion;
+    this._lastReleaseDate = parsed.lastReleaseDate;
+    this._summaryHtml = parsed.summaryHtml;
+    this._detailsHtml = parsed.detailsHtml;
   }
 
   private _getWebviewContent(
@@ -522,23 +441,6 @@ export class ReleaseChangesPanel {
       </body>
       </html>`;
   }
-}
-
-function compareVersions(left: string, right: string): number {
-  const leftParts = left.split('.').map((part) => Number.parseInt(part, 10));
-  const rightParts = right.split('.').map((part) => Number.parseInt(part, 10));
-  const maxLength = Math.max(leftParts.length, rightParts.length);
-
-  for (let index = 0; index < maxLength; index += 1) {
-    const leftValue = leftParts[index] ?? 0;
-    const rightValue = rightParts[index] ?? 0;
-
-    if (leftValue !== rightValue) {
-      return leftValue - rightValue;
-    }
-  }
-
-  return 0;
 }
 
 function getNonce() {
