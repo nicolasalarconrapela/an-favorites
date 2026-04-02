@@ -1,6 +1,4 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
 import { parseReleaseNotes } from '../utils/releaseNotesParser';
 
 export class ReleaseChangesPanel {
@@ -14,6 +12,7 @@ export class ReleaseChangesPanel {
   private _lastReleaseDate: string | undefined;
   private _summaryHtml = '';
   private _detailsHtml = '';
+  private _packageVersion = '1.0.0';
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
     this._panel = panel;
@@ -26,16 +25,20 @@ export class ReleaseChangesPanel {
       'resources',
       'icon_no_bg.svg',
     );
+  }
 
+  private async _init(): Promise<void> {
+    await this._loadContent();
     this._panel.webview.html = this._getWebviewContent(
       this._panel.webview,
       this._extensionUri,
     );
   }
 
-  public static render(extensionUri: vscode.Uri) {
+  public static async render(extensionUri: vscode.Uri): Promise<void> {
     if (ReleaseChangesPanel.currentPanel) {
       ReleaseChangesPanel.currentPanel._panel.reveal(vscode.ViewColumn.One);
+      await ReleaseChangesPanel.currentPanel._loadContent();
       ReleaseChangesPanel.currentPanel._panel.webview.html =
         ReleaseChangesPanel.currentPanel._getWebviewContent(
           ReleaseChangesPanel.currentPanel._panel.webview,
@@ -57,6 +60,7 @@ export class ReleaseChangesPanel {
         panel,
         extensionUri,
       );
+      await ReleaseChangesPanel.currentPanel._init();
     }
   }
 
@@ -73,7 +77,26 @@ export class ReleaseChangesPanel {
     }
   }
 
-  private _getMarkdownSource(): void {
+  private async _fileExists(uri: vscode.Uri): Promise<boolean> {
+    try {
+      await vscode.workspace.fs.stat(uri);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async _loadContent(): Promise<void> {
+    await this._getMarkdownSource();
+    try {
+      const packageUri = vscode.Uri.joinPath(this._extensionUri, 'package.json');
+      const bytes = await vscode.workspace.fs.readFile(packageUri);
+      const pkg = JSON.parse(Buffer.from(bytes).toString('utf8')) as { version: string };
+      this._packageVersion = pkg.version;
+    } catch {}
+  }
+
+  private async _getMarkdownSource(): Promise<void> {
     try {
       const configLanguage =
         vscode.workspace
@@ -85,31 +108,30 @@ export class ReleaseChangesPanel {
       }
       const baseLanguage = language.split('-')[0];
 
-      const exactLocalizedPath = path.join(
-        this._extensionUri.fsPath,
+      const exactLocalizedUri = vscode.Uri.joinPath(
+        this._extensionUri,
         `RELEASE_NOTES.${language}.md`,
       );
-      const baseLocalizedPath = path.join(
-        this._extensionUri.fsPath,
+      const baseLocalizedUri = vscode.Uri.joinPath(
+        this._extensionUri,
         `RELEASE_NOTES.${baseLanguage}.md`,
       );
-      const defaultReleaseNotePath = path.join(
-        this._extensionUri.fsPath,
+      const defaultReleaseNoteUri = vscode.Uri.joinPath(
+        this._extensionUri,
         'RELEASE_NOTES.md',
       );
 
-      let releaseNotePath = defaultReleaseNotePath;
+      let releaseNoteUri = defaultReleaseNoteUri;
 
-      if (fs.existsSync(exactLocalizedPath)) {
-        releaseNotePath = exactLocalizedPath;
-      } else if (fs.existsSync(baseLocalizedPath)) {
-        releaseNotePath = baseLocalizedPath;
+      if (await this._fileExists(exactLocalizedUri)) {
+        releaseNoteUri = exactLocalizedUri;
+      } else if (await this._fileExists(baseLocalizedUri)) {
+        releaseNoteUri = baseLocalizedUri;
       }
 
-      if (fs.existsSync(releaseNotePath)) {
-        const content = fs.readFileSync(releaseNotePath, 'utf8');
-        this._parseReleaseNotes(content);
-      }
+      const bytes = await vscode.workspace.fs.readFile(releaseNoteUri);
+      const content = Buffer.from(bytes).toString('utf8');
+      this._parseReleaseNotes(content);
     } catch (error) {
       this._summaryHtml = `<p>Error: ${error}</p>`;
       this._detailsHtml = '';
@@ -130,22 +152,14 @@ export class ReleaseChangesPanel {
     _extensionUri: vscode.Uri,
   ): string {
     const nonce = getNonce();
-    this._getMarkdownSource();
 
-    let packageVersion = '1.0.0';
-    try {
-      const packagePath = path.join(this._extensionUri.fsPath, 'package.json');
-      const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-      packageVersion = pkg.version;
-    } catch {}
-
-    const displayVersion = this._releaseVersion || packageVersion;
+    const displayVersion = this._releaseVersion || this._packageVersion;
     const tabTitle = `v${displayVersion} - AnFavorites`;
     if (this._panel) {
       this._panel.title = tabTitle;
     }
 
-    const urlGithub = 'https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/1.3.x/chore/general/';
+    const urlGithub = 'https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/develop/';
     const backgroundDarkUri = urlGithub + 'resources/background_mosaic_dark.webp';
     const backgroundLightUri = urlGithub + 'resources/background_mosaic_light.webp';
 

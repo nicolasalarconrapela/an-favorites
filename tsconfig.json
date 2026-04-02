@@ -5,6 +5,7 @@
     "outDir": "dist",
     "rootDir": "src",
     "lib": ["ES2020"],
+    "types": ["node"],
     "sourceMap": true,
     "strict": true,
     "noImplicitReturns": true,
