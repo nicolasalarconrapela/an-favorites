@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.2.401",
+  "version": "1.2.501",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -755,8 +755,8 @@
     "l10n:export": "l10n-dev export --outDir ./l10n ./src",
     "l10n:validate": "l10n-dev validate ./l10n",
     "compile-tests": "node -e \"require('fs').rmSync('out/test', { recursive: true, force: true })\" && tsc -p test/tsconfig.json",
-    "test": "npm run compile-tests && node --test ./out/test/test/**/*.test.js",
-    "prepublishOnly": "npm run lint && npm run test && npm run compile",
+    "test:integration": "npm run compile && npm run compile-tests && node ./out/test/test/runTest.js",
+    "prepublishOnly": "npm run lint && npm run test:integration && npm run compile",
     "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
@@ -768,6 +768,7 @@
     "@typescript-eslint/eslint-plugin": "^8.58.0",
     "@typescript-eslint/parser": "^8.58.0",
     "@vscode/l10n-dev": "^0.0.35",
+    "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.7.2-12",
     "esbuild": "^0.27.4",
     "eslint": "^10.1.0",
