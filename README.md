@@ -1,7 +1,6 @@
-![Logotipo y banner](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/1.3.x/chore/general/resources/banner_logo.webp)
+![Logotipo y banner](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/develop/resources/banner_logo.png)
 
 <h1 align="left">AnFavorites</h1>
-
 
 <p align="center">
   </a>
@@ -11,7 +10,6 @@
   <a href="https://open-vsx.org/extension/AnAppWilos/an-favorites">
     <img src="https://img.shields.io/open-vsx/v/AnAppWilos/an-favorites?style=for-the-badge&label=Open%20VSX" alt="Open VSX Version">
   </a>
-
 
 </p>
 <p align="center">
@@ -34,7 +32,7 @@
   </a>
 </p>
 
-![img_init](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/1.3.x/chore/general/resources/init.webp)
+![img_init](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/develop/resources/init.png)
 
 **AnFavorites** is an extension that optimizes your file workflow by providing instant, centralized access to your most important files with a single keyboard shortcut (`Ctrl+Alt+F`).
 

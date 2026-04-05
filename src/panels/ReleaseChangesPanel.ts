@@ -1,13 +1,5 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
-import { marked } from 'marked';
-
-type ReleaseSection = {
-  version: string;
-  feature: string;
-  body: string;
-};
+import { parseReleaseNotes } from '../utils/releaseNotesParser';
 
 export class ReleaseChangesPanel {
   public static currentPanel: ReleaseChangesPanel | undefined;
@@ -20,6 +12,7 @@ export class ReleaseChangesPanel {
   private _lastReleaseDate: string | undefined;
   private _summaryHtml = '';
   private _detailsHtml = '';
+  private _packageVersion = '1.0.0';
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
     this._panel = panel;
@@ -32,16 +25,20 @@ export class ReleaseChangesPanel {
       'resources',
       'icon_no_bg.svg',
     );
+  }
 
+  private async _init(): Promise<void> {
+    await this._loadContent();
     this._panel.webview.html = this._getWebviewContent(
       this._panel.webview,
       this._extensionUri,
     );
   }
 
-  public static render(extensionUri: vscode.Uri) {
+  public static async render(extensionUri: vscode.Uri): Promise<void> {
     if (ReleaseChangesPanel.currentPanel) {
       ReleaseChangesPanel.currentPanel._panel.reveal(vscode.ViewColumn.One);
+      await ReleaseChangesPanel.currentPanel._loadContent();
       ReleaseChangesPanel.currentPanel._panel.webview.html =
         ReleaseChangesPanel.currentPanel._getWebviewContent(
           ReleaseChangesPanel.currentPanel._panel.webview,
@@ -63,6 +60,7 @@ export class ReleaseChangesPanel {
         panel,
         extensionUri,
       );
+      await ReleaseChangesPanel.currentPanel._init();
     }
   }
 
@@ -79,7 +77,26 @@ export class ReleaseChangesPanel {
     }
   }
 
-  private _getMarkdownSource(): void {
+  private async _fileExists(uri: vscode.Uri): Promise<boolean> {
+    try {
+      await vscode.workspace.fs.stat(uri);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async _loadContent(): Promise<void> {
+    await this._getMarkdownSource();
+    try {
+      const packageUri = vscode.Uri.joinPath(this._extensionUri, 'package.json');
+      const bytes = await vscode.workspace.fs.readFile(packageUri);
+      const pkg = JSON.parse(Buffer.from(bytes).toString('utf8')) as { version: string };
+      this._packageVersion = pkg.version;
+    } catch {}
+  }
+
+  private async _getMarkdownSource(): Promise<void> {
     try {
       const configLanguage =
         vscode.workspace
@@ -91,31 +108,30 @@ export class ReleaseChangesPanel {
       }
       const baseLanguage = language.split('-')[0];
 
-      const exactLocalizedPath = path.join(
-        this._extensionUri.fsPath,
+      const exactLocalizedUri = vscode.Uri.joinPath(
+        this._extensionUri,
         `RELEASE_NOTES.${language}.md`,
       );
-      const baseLocalizedPath = path.join(
-        this._extensionUri.fsPath,
+      const baseLocalizedUri = vscode.Uri.joinPath(
+        this._extensionUri,
         `RELEASE_NOTES.${baseLanguage}.md`,
       );
-      const defaultReleaseNotePath = path.join(
-        this._extensionUri.fsPath,
+      const defaultReleaseNoteUri = vscode.Uri.joinPath(
+        this._extensionUri,
         'RELEASE_NOTES.md',
       );
 
-      let releaseNotePath = defaultReleaseNotePath;
+      let releaseNoteUri = defaultReleaseNoteUri;
 
-      if (fs.existsSync(exactLocalizedPath)) {
-        releaseNotePath = exactLocalizedPath;
-      } else if (fs.existsSync(baseLocalizedPath)) {
-        releaseNotePath = baseLocalizedPath;
+      if (await this._fileExists(exactLocalizedUri)) {
+        releaseNoteUri = exactLocalizedUri;
+      } else if (await this._fileExists(baseLocalizedUri)) {
+        releaseNoteUri = baseLocalizedUri;
       }
 
-      if (fs.existsSync(releaseNotePath)) {
-        const content = fs.readFileSync(releaseNotePath, 'utf8');
-        this._parseReleaseNotes(content);
-      }
+      const bytes = await vscode.workspace.fs.readFile(releaseNoteUri);
+      const content = Buffer.from(bytes).toString('utf8');
+      this._parseReleaseNotes(content);
     } catch (error) {
       this._summaryHtml = `<p>Error: ${error}</p>`;
       this._detailsHtml = '';
@@ -123,87 +139,12 @@ export class ReleaseChangesPanel {
   }
 
   private _parseReleaseNotes(content: string): void {
-    this._releaseTitle = undefined;
-    this._releaseVersion = undefined;
-    this._lastReleaseDate = undefined;
-    this._summaryHtml = '';
-    this._detailsHtml = '';
-
-    const sections = this._extractVersionSections(content);
-    if (sections.length > 0) {
-      const latestSection = sections.sort((a, b) =>
-        compareVersions(b.version, a.version),
-      )[0];
-
-      this._releaseVersion = latestSection.version;
-      this._releaseTitle = `v${latestSection.version} - ${latestSection.feature}`;
-      this._lastReleaseDate = this._extractReleaseDate(latestSection.body);
-
-      const cleanBody = this._removeReleaseDateLine(latestSection.body).trim();
-      this._setHtmlFromBody(cleanBody);
-      return;
-    }
-
-    const legacyTitleMatch = content.match(/^(?:#|##)\s+(.+)$/m);
-    let legacyContent = content;
-    if (legacyTitleMatch) {
-      this._releaseTitle = legacyTitleMatch[1].trim();
-      legacyContent = legacyContent.replace(/^(?:#|##)\s+.+\r?\n?/, '');
-    }
-
-    this._lastReleaseDate = this._extractReleaseDate(legacyContent);
-    const cleanLegacyContent = this._removeReleaseDateLine(legacyContent).trim();
-    this._setHtmlFromBody(cleanLegacyContent);
-  }
-
-  private _setHtmlFromBody(content: string): void {
-    const splitMatch = content.match(/^###\s+/m);
-    if (splitMatch && splitMatch.index !== undefined) {
-      const summaryPart = content.substring(0, splitMatch.index).trim();
-      const detailsPart = content.substring(splitMatch.index).trim();
-
-      this._summaryHtml = summaryPart ? (marked.parse(summaryPart) as string) : '';
-      this._detailsHtml = detailsPart ? (marked.parse(detailsPart) as string) : '';
-      return;
-    }
-
-    this._summaryHtml = content ? (marked.parse(content) as string) : '';
-    this._detailsHtml = '';
-  }
-
-  private _extractVersionSections(content: string): ReleaseSection[] {
-    const normalized = content.replace(/^\uFEFF/, '');
-    const sectionRegex = /^##\s+v(\d+(?:\.\d+){1,3})\s*-\s*(.+?)\s*$/gm;
-    const matches = Array.from(normalized.matchAll(sectionRegex));
-
-    return matches.map((match, index) => {
-      const start = match.index ?? 0;
-      const bodyStart = start + match[0].length;
-      const bodyEnd =
-        index + 1 < matches.length
-          ? (matches[index + 1].index ?? normalized.length)
-          : normalized.length;
-
-      return {
-        version: match[1].trim(),
-        feature: match[2].trim(),
-        body: normalized.substring(bodyStart, bodyEnd).trim(),
-      };
-    });
-  }
-
-  private _extractReleaseDate(content: string): string | undefined {
-    const dateMatch = content.match(
-      /_\s*(?:Release date|Fecha de lanzamiento):\s*([^_\n\r]+)_/i,
-    );
-    return dateMatch?.[1].trim();
-  }
-
-  private _removeReleaseDateLine(content: string): string {
-    return content.replace(
-      /_\s*(?:Release date|Fecha de lanzamiento):\s*[^_\n\r]+_\r?\n?/i,
-      '',
-    );
+    const parsed = parseReleaseNotes(content);
+    this._releaseTitle = parsed.releaseTitle;
+    this._releaseVersion = parsed.releaseVersion;
+    this._lastReleaseDate = parsed.lastReleaseDate;
+    this._summaryHtml = parsed.summaryHtml;
+    this._detailsHtml = parsed.detailsHtml;
   }
 
   private _getWebviewContent(
@@ -211,22 +152,14 @@ export class ReleaseChangesPanel {
     _extensionUri: vscode.Uri,
   ): string {
     const nonce = getNonce();
-    this._getMarkdownSource();
 
-    let packageVersion = '1.0.0';
-    try {
-      const packagePath = path.join(this._extensionUri.fsPath, 'package.json');
-      const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-      packageVersion = pkg.version;
-    } catch {}
-
-    const displayVersion = this._releaseVersion || packageVersion;
+    const displayVersion = this._releaseVersion || this._packageVersion;
     const tabTitle = `v${displayVersion} - AnFavorites`;
     if (this._panel) {
       this._panel.title = tabTitle;
     }
 
-    const urlGithub = 'https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/1.3.x/chore/general/';
+    const urlGithub = 'https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/develop/';
     const backgroundDarkUri = urlGithub + 'resources/background_mosaic_dark.webp';
     const backgroundLightUri = urlGithub + 'resources/background_mosaic_light.webp';
 
@@ -522,23 +455,6 @@ export class ReleaseChangesPanel {
       </body>
       </html>`;
   }
-}
-
-function compareVersions(left: string, right: string): number {
-  const leftParts = left.split('.').map((part) => Number.parseInt(part, 10));
-  const rightParts = right.split('.').map((part) => Number.parseInt(part, 10));
-  const maxLength = Math.max(leftParts.length, rightParts.length);
-
-  for (let index = 0; index < maxLength; index += 1) {
-    const leftValue = leftParts[index] ?? 0;
-    const rightValue = rightParts[index] ?? 0;
-
-    if (leftValue !== rightValue) {
-      return leftValue - rightValue;
-    }
-  }
-
-  return 0;
 }
 
 function getNonce() {
