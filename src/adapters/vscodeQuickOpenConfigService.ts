@@ -44,12 +44,6 @@ export class VscodeQuickOpenConfigService implements QuickOpenConfigService {
     const maxSearchFiles = 20000;
     const searchCacheSize = 50;
 
-    const isAnGravity = vscode.env.appName.includes('AnGravity');
-    const defaultShowIcons = isAnGravity ? false : true;
-    const showIcons = configQuickOpen.get<boolean>(
-      'showIcons',
-      defaultShowIcons,
-    );
     const pathDetailLocation = configQuickOpen.get<'description' | 'detail'>(
       'pathDetailLocation',
       'detail',
@@ -73,7 +67,6 @@ export class VscodeQuickOpenConfigService implements QuickOpenConfigService {
       openInNewWindow,
       showOpenToSideButton,
       showOpenInNewWindowButton,
-      showIcons,
       pathDetailLocation,
       showPathWhen,
       searchExclusions,

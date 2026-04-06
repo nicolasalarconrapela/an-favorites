@@ -16,7 +16,6 @@ export interface QuickOpenConfig {
   openInNewWindow: boolean;
   showOpenToSideButton: boolean;
   showOpenInNewWindowButton: boolean;
-  showIcons: boolean;
   pathDetailLocation: 'description' | 'detail';
   showPathWhen: 'always' | 'onConflict';
   searchExclusions: string[];

@@ -7,6 +7,7 @@ type LanguageBundle = Record<string, string>;
 let enBundle: LanguageBundle | null = null;
 let esBundle: LanguageBundle | null = null;
 let extensionPath: string | undefined;
+let l10nOutputChannel: vscode.OutputChannel | null = null;
 
 export function initializeL10n(context: vscode.ExtensionContext): void {
   extensionPath = context.extensionPath;
@@ -42,9 +43,24 @@ function loadBundle(locale: string): LanguageBundle | null {
       return JSON.parse(content) as LanguageBundle;
     }
   } catch (error) {
-    console.error(`Error loading bundle for locale ${locale}:`, error);
+    getL10nOutputChannel().appendLine(
+      `[error] [l10n] Failed to load bundle for locale "${locale}": ${formatError(error)}`,
+    );
   }
   return null;
+}
+
+function getL10nOutputChannel(): vscode.OutputChannel {
+  l10nOutputChannel ??= vscode.window.createOutputChannel('AnFavorites');
+  return l10nOutputChannel;
+}
+
+function formatError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.stack ?? error.message;
+  }
+
+  return String(error);
 }
 
 function getConfiguredLanguage(): string {

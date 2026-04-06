@@ -1,6 +1,6 @@
 # --------------------------------------------------------------------------------
-# File created using 'AnGitIgnored' extensions for Visual Studio Code: 
-# https://marketplace.visualstudio.com/items?itemName=AnAppWiLos.angitignored 
+# File created using 'AnGitIgnored' extensions for Visual Studio Code:
+# https://marketplace.visualstudio.com/items?itemName=AnAppWiLos.angitignored
 #-------------------------------------------------------------------------------
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,windows,node
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,windows,node
@@ -193,3 +193,4 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,windows,node
 
 # Custom rules (everything added below won't be overriden by 'Generate .gitignore File' if you use 'Update' option)
+*.zip

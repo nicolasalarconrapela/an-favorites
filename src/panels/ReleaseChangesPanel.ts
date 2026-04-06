@@ -1,13 +1,18 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
-import { marked } from 'marked';
+import { parseReleaseNotes } from '../utils/releaseNotesParser';
 
 export class ReleaseChangesPanel {
   public static currentPanel: ReleaseChangesPanel | undefined;
   private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionUri: vscode.Uri;
   private _disposables: vscode.Disposable[] = [];
+
+  private _releaseTitle: string | undefined;
+  private _releaseVersion: string | undefined;
+  private _lastReleaseDate: string | undefined;
+  private _summaryHtml = '';
+  private _detailsHtml = '';
+  private _packageVersion = '1.0.0';
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
     this._panel = panel;
@@ -20,16 +25,20 @@ export class ReleaseChangesPanel {
       'resources',
       'icon_no_bg.svg',
     );
+  }
 
+  private async _init(): Promise<void> {
+    await this._loadContent();
     this._panel.webview.html = this._getWebviewContent(
       this._panel.webview,
       this._extensionUri,
     );
   }
 
-  public static render(extensionUri: vscode.Uri) {
+  public static async render(extensionUri: vscode.Uri): Promise<void> {
     if (ReleaseChangesPanel.currentPanel) {
       ReleaseChangesPanel.currentPanel._panel.reveal(vscode.ViewColumn.One);
+      await ReleaseChangesPanel.currentPanel._loadContent();
       ReleaseChangesPanel.currentPanel._panel.webview.html =
         ReleaseChangesPanel.currentPanel._getWebviewContent(
           ReleaseChangesPanel.currentPanel._panel.webview,
@@ -51,6 +60,7 @@ export class ReleaseChangesPanel {
         panel,
         extensionUri,
       );
+      await ReleaseChangesPanel.currentPanel._init();
     }
   }
 
@@ -67,12 +77,26 @@ export class ReleaseChangesPanel {
     }
   }
 
-  private _releaseTitle: string | undefined;
-  private _lastReleaseDate: string | undefined;
-  private _summaryHtml: string = '';
-  private _detailsHtml: string = '';
+  private async _fileExists(uri: vscode.Uri): Promise<boolean> {
+    try {
+      await vscode.workspace.fs.stat(uri);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
-  private _getMarkdownSource(): void {
+  private async _loadContent(): Promise<void> {
+    await this._getMarkdownSource();
+    try {
+      const packageUri = vscode.Uri.joinPath(this._extensionUri, 'package.json');
+      const bytes = await vscode.workspace.fs.readFile(packageUri);
+      const pkg = JSON.parse(Buffer.from(bytes).toString('utf8')) as { version: string };
+      this._packageVersion = pkg.version;
+    } catch {}
+  }
+
+  private async _getMarkdownSource(): Promise<void> {
     try {
       const configLanguage =
         vscode.workspace
@@ -84,70 +108,43 @@ export class ReleaseChangesPanel {
       }
       const baseLanguage = language.split('-')[0];
 
-      const exactLocalizedPath = path.join(
-        this._extensionUri.fsPath,
+      const exactLocalizedUri = vscode.Uri.joinPath(
+        this._extensionUri,
         `RELEASE_NOTES.${language}.md`,
       );
-      const baseLocalizedPath = path.join(
-        this._extensionUri.fsPath,
+      const baseLocalizedUri = vscode.Uri.joinPath(
+        this._extensionUri,
         `RELEASE_NOTES.${baseLanguage}.md`,
       );
-      const defaultReleaseNotePath = path.join(
-        this._extensionUri.fsPath,
+      const defaultReleaseNoteUri = vscode.Uri.joinPath(
+        this._extensionUri,
         'RELEASE_NOTES.md',
       );
 
-      let releaseNotePath = defaultReleaseNotePath;
+      let releaseNoteUri = defaultReleaseNoteUri;
 
-      if (fs.existsSync(exactLocalizedPath)) {
-        releaseNotePath = exactLocalizedPath;
-      } else if (fs.existsSync(baseLocalizedPath)) {
-        releaseNotePath = baseLocalizedPath;
+      if (await this._fileExists(exactLocalizedUri)) {
+        releaseNoteUri = exactLocalizedUri;
+      } else if (await this._fileExists(baseLocalizedUri)) {
+        releaseNoteUri = baseLocalizedUri;
       }
 
-      if (fs.existsSync(releaseNotePath)) {
-        let content = fs.readFileSync(releaseNotePath, 'utf8');
-
-        // 1. Extraer título
-        const titleMatch = content.match(/^(?:#|##)\s+(.+)$/m);
-        if (titleMatch) {
-          this._releaseTitle = titleMatch[1].trim();
-          content = content.replace(/^(?:#|##)\s+.+\r?\n?/, '');
-        }
-
-        // 2. Extraer fecha (Busca "Fecha de lanzamiento")
-        const dateMatch = content.match(
-          /_\s*Fecha de lanzamiento:\s*([^_\n\r]+)_/i,
-        );
-        if (dateMatch) {
-          this._lastReleaseDate = dateMatch[1].trim();
-          content = content.replace(
-            /_\s*Fecha de lanzamiento:\s*[^_\n\r]+_\r?\n?/i,
-            '',
-          );
-        }
-
-        // 3. Dividir contenido: Resumen vs Detalles (###)
-        const splitMatch = content.match(/^###\s+/m);
-        if (splitMatch && splitMatch.index !== undefined) {
-          let summaryPart = content.substring(0, splitMatch.index).trim();
-          const detailsPart = content.substring(splitMatch.index).trim();
-
-          // Eliminar específicamente el encabezado "## Resumen" si existe
-          summaryPart = summaryPart.replace(/^##\s+Resumen\r?\n?/i, '');
-
-          this._summaryHtml = marked.parse(summaryPart) as string;
-          this._detailsHtml = marked.parse(detailsPart) as string;
-        } else {
-          // Si no hay división, intentar quitar el encabezado de resumen de todo el contenido
-          const cleanContent = content.replace(/^##\s+Resumen\r?\n?/i, '');
-          this._summaryHtml = marked.parse(cleanContent) as string;
-          this._detailsHtml = '';
-        }
-      }
+      const bytes = await vscode.workspace.fs.readFile(releaseNoteUri);
+      const content = Buffer.from(bytes).toString('utf8');
+      this._parseReleaseNotes(content);
     } catch (error) {
       this._summaryHtml = `<p>Error: ${error}</p>`;
+      this._detailsHtml = '';
     }
+  }
+
+  private _parseReleaseNotes(content: string): void {
+    const parsed = parseReleaseNotes(content);
+    this._releaseTitle = parsed.releaseTitle;
+    this._releaseVersion = parsed.releaseVersion;
+    this._lastReleaseDate = parsed.lastReleaseDate;
+    this._summaryHtml = parsed.summaryHtml;
+    this._detailsHtml = parsed.detailsHtml;
   }
 
   private _getWebviewContent(
@@ -155,52 +152,20 @@ export class ReleaseChangesPanel {
     _extensionUri: vscode.Uri,
   ): string {
     const nonce = getNonce();
-    this._getMarkdownSource();
 
-    // Obtener información de la versión
-    let version = '1.0.0';
-    try {
-      const packagePath = path.join(this._extensionUri.fsPath, 'package.json');
-      const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-      version = pkg.version;
-    } catch (e) {}
-
-    const tabTitle = `v${version} - AnFavorites`;
+    const displayVersion = this._releaseVersion || this._packageVersion;
+    const tabTitle = `v${displayVersion} - AnFavorites`;
     if (this._panel) {
       this._panel.title = tabTitle;
     }
 
-    const bannerUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'resources', 'banner_logo.png'),
-    );
+    const urlGithub = 'https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/develop/';
+    const backgroundDarkUri = urlGithub + 'resources/background_mosaic_dark.webp';
+    const backgroundLightUri = urlGithub + 'resources/background_mosaic_light.webp';
 
-    const iconUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'resources', 'icon_no_bg.svg'),
-    );
-
-    const backgroundDarkUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(
-        this._extensionUri,
-        'resources',
-        'background_mosaic_dark.png',
-      ),
-    );
-
-    const backgroundLightUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(
-        this._extensionUri,
-        'resources',
-        'background_mosaic_light.png',
-      ),
-    );
-
-    // Formatear la fecha
     const releaseDateStr =
       this._lastReleaseDate || new Date().toISOString().split('T')[0];
     const dateObj = new Date(releaseDateStr);
-
-    // Si la fecha extraída ya es legible (como "29 de marzo, 2027"), usarla directamente.
-    // De lo contrario, intentar formatearla normalmente.
     const formattedDate = !isNaN(dateObj.getTime())
       ? dateObj.toLocaleDateString('en-US', {
           month: 'long',
@@ -226,11 +191,8 @@ export class ReleaseChangesPanel {
     const encodedFullMessage = encodeURIComponent(fullMessage);
     const encodedMarketplaceUrl = encodeURIComponent(marketplaceUrl);
 
-    // X (Twitter)
     const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodedFullMessage}`;
-    // LinkedIn
     const linkedinShareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedMarketplaceUrl}`;
-    // Reddit
     const redditShareUrl = `https://www.reddit.com/submit?url=${encodedMarketplaceUrl}&title=${encodeURIComponent(shareText)}`;
 
     return /* html */ `<!DOCTYPE html>
@@ -325,7 +287,6 @@ export class ReleaseChangesPanel {
                 letter-spacing: -0.2px;
               }
 
-              /* Markdown styles */
               h1, h2, h3, h4, h5, h6 {
                   color: var(--vscode-editor-foreground);
                   font-weight: 600;
@@ -342,14 +303,12 @@ export class ReleaseChangesPanel {
                   font-weight: 500;
                   color: var(--vscode-editor-foreground);
               }
-              h3 { font-size: 1.3em; }
 
+              h3 { font-size: 1.3em; }
               a { color: var(--vscode-textLink-foreground); text-decoration: none; }
               a:hover { text-decoration: underline; color: var(--vscode-textLink-activeForeground); }
-
               ul, ol { padding-left: 20px; margin-top: 0; margin-bottom: 20px; }
               li { margin-top: 0.5em; }
-
               p { margin-top: 0; margin-bottom: 16px; }
 
               code {
@@ -360,8 +319,6 @@ export class ReleaseChangesPanel {
                   border-radius: 4px;
                   font-family: var(--vscode-editor-font-family);
               }
-
-
 
               .cta-container {
                   display: flex;
@@ -442,10 +399,10 @@ export class ReleaseChangesPanel {
           <div class="overlay">
           <div class="content-wrapper">
 
-          <h1 class="release-title">${this._releaseTitle || `${monthName} ${year} (version ${version})`}</h1>
+          <h1 class="release-title">${this._releaseTitle || `${monthName} ${year} (version ${displayVersion})`}</h1>
 
           <div class="release-meta">
-            Fecha de lanzamiento: ${formattedDate}
+            ${vscode.l10n.t('Release date')}: ${formattedDate}
           </div>
 
           <div class="summary-content">
