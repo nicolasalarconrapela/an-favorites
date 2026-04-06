@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -50,7 +50,7 @@ ensure_clean_worktree_for_push() {
 GIT_REMOTE_URL="$(git remote get-url origin)"
 REPOWN="$(printf '%s\n' "$GIT_REMOTE_URL" | sed -E 's#(git@github.com:|https://github.com/)##' | sed 's/\.git$//')"
 
-RELEASE_LATEST="$(gh release view --repo "$REPOWN" --json tagName --jq .tagName 2>/dev/null || git describe --tags --abbrev=0 2>/dev/null || echo "1.2.40")"
+RELEASE_LATEST="$(gh release view --repo "$REPOWN" --json tagName --jq .tagName 2>/dev/null || git describe --tags --abbrev=0 2>/dev/null || echo "")"
 
 RAMA_ACTUAL="$(git branch --show-current)"
 CURRENT_BRANCH="$RAMA_ACTUAL"
