@@ -1,13 +1,16 @@
 import * as vscode from 'vscode';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { FavoriteItem } from '../views/FavoritesTreeDataProvider';
+import { Logger } from '../logging/logger';
 import { t } from '../utils/l10n';
 
 export function registerRemoveFromFavoritesCommand(
   context: vscode.ExtensionContext,
   favoritesProvider: FavoritesTreeDataProvider,
-  logger: any,
+  logger: Logger,
 ): void {
+  const log =
+    logger.withContext?.({ scope: 'RemoveFromFavoritesCommand' }) ?? logger;
   const disposable = vscode.commands.registerCommand(
     'anfavorites.removeFromFavorites',
     async (item?: FavoriteItem, selectedItems?: FavoriteItem[]) => {
@@ -15,7 +18,7 @@ export function registerRemoveFromFavoritesCommand(
 
       if (itemsToProcess.length === 0) {
         vscode.window.showWarningMessage(t('No item selected'));
-        logger.warn('removeFromFavorites called without items');
+        log.warn('Command invoked without favorite items');
         return;
       }
 
@@ -27,12 +30,18 @@ export function registerRemoveFromFavoritesCommand(
           { modal: true },
           deleteAllLabel,
         );
-        if (confirm !== deleteAllLabel) return;
+        if (confirm !== deleteAllLabel) {
+          log.debug('Bulk removal cancelled by user', { count });
+          return;
+        }
       }
 
       for (const current of itemsToProcess) {
         if (current instanceof FavoriteItem) {
-          logger.debug(`Removing favorite: ${current.resourceUri.fsPath}`);
+          log.info('Removing favorite', {
+            filePath: current.resourceUri.fsPath,
+            groupName: current.group,
+          });
           favoritesProvider.removeFavorite(current.resourceUri);
         }
       }
@@ -53,5 +62,5 @@ export function registerRemoveFromFavoritesCommand(
   );
 
   context.subscriptions.push(disposable);
-  logger.debug('removeFromFavorites command registered');
+  log.debug('Command registered');
 }

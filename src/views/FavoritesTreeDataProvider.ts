@@ -215,6 +215,18 @@ export class FavoritesTreeDataProvider
     return Array.from(this.favorites.keys());
   }
 
+  public getQuickOpenFavoritesSnapshot(): Array<{
+    uri: vscode.Uri;
+    addedAt: number;
+    isPinned: boolean;
+  }> {
+    return Array.from(this.favorites.entries()).map(([filePath, metadata]) => ({
+      uri: vscode.Uri.file(filePath),
+      addedAt: metadata.addedAt,
+      isPinned: metadata.isPinned,
+    }));
+  }
+
   getTreeItem(element: GroupItem | FavoriteItem): vscode.TreeItem {
     return element;
   }
@@ -464,6 +476,43 @@ export class FavoritesTreeDataProvider
     this.refresh();
   }
 
+  setPinned(
+    uri: vscode.Uri,
+    isPinned: boolean,
+    group?: string,
+  ): void {
+    const targetGroup = group || FavoritesTreeDataProvider.DEFAULT_GROUP;
+    const filePath = uri.fsPath;
+    const existing = this.favorites.get(filePath);
+
+    if (!existing && !isPinned) {
+      return;
+    }
+
+    if (!existing) {
+      this.logger.debug(`[favorites] setPinned -> creating favorite ${filePath}`, {
+        group: targetGroup,
+        isPinned,
+      });
+      this.favorites.set(filePath, {
+        group: targetGroup,
+        addedAt: Date.now(),
+        isPinned,
+      });
+    } else {
+      existing.isPinned = isPinned;
+      if (isPinned) {
+        existing.addedAt = Date.now();
+      }
+      this.logger.debug(`[favorites] setPinned -> ${filePath} = ${isPinned}`, {
+        group: existing.group,
+      });
+    }
+
+    this.saveFavorites();
+    this.refresh();
+  }
+
   removeFavorite(uri: vscode.Uri): void {
     this.logger.debug(`[favorites] removeFavorite -> ${uri.fsPath}`);
     this.favorites.delete(uri.fsPath);
@@ -629,15 +678,7 @@ export class FavoritesTreeDataProvider
     const metadata = this.favorites.get(uri.fsPath);
     if (!metadata) return;
 
-    metadata.isPinned = !metadata.isPinned;
-    if (metadata.isPinned) {
-      metadata.addedAt = Date.now();
-    }
-    this.logger.debug(
-      `[favorites] togglePin -> ${uri.fsPath} = ${metadata.isPinned}`,
-    );
-    this.saveFavorites();
-    this.refresh();
+    this.setPinned(uri, !metadata.isPinned, metadata.group);
   }
 
   isPinned(uri: vscode.Uri): boolean {
@@ -933,7 +974,11 @@ export class FavoritesTreeDataProvider
 
     const duplicates = Array.from(nameMap.entries())
       .filter(([_, paths]) => paths.length > 1)
-      .map(([name, paths]) => ({ name, count: paths.length, paths }));
+      .map(([name, paths]) => ({
+        name,
+        count: paths.length,
+        samplePaths: paths.slice(0, 5),
+      }));
 
     if (duplicates.length > 0) {
       this.logger.warn(
@@ -946,6 +991,7 @@ export class FavoritesTreeDataProvider
   }
 
   private saveFavorites(): void {
+    const startedAt = Date.now();
     const favoritesArray: any[] = [];
 
     this.favorites.forEach((metadata, filePath) => {
@@ -962,10 +1008,17 @@ export class FavoritesTreeDataProvider
     );
     this._isSaving = true;
     try {
-      this.storage.update('anfavorites.favorites.v2', favoritesArray);
-      this.storage.update('anfavorites.groups', Array.from(this.groups));
+      this.storage.updateMany({
+        'anfavorites.favorites.v2': favoritesArray,
+        'anfavorites.groups': Array.from(this.groups),
+      });
     } finally {
       this._isSaving = false;
+      this.logger.info('[favorites][trace] saveFavorites completed', {
+        favoritesCount: favoritesArray.length,
+        groupsCount: this.groups.size,
+        durationMs: Date.now() - startedAt,
+      });
     }
   }
 

@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.2.44",
+  "version": "1.2.601",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -364,6 +364,25 @@
         }
       },
       {
+        "title": "%config.notifications.title%",
+        "properties": {
+          "anfavorites.releaseNotifications.preference": {
+            "type": "string",
+            "scope": "application",
+            "default": "show",
+            "enum": [
+              "show",
+              "never"
+            ],
+            "enumDescriptions": [
+              "%config.releaseNotifications.preference.enum.show%",
+              "%config.releaseNotifications.preference.enum.never%"
+            ],
+            "description": "%config.releaseNotifications.preference.description%"
+          }
+        }
+      },
+      {
         "title": "%config.logging.title%",
         "properties": {
           "anfavorites.logging.level": {
@@ -460,7 +479,7 @@
       {
         "title": "%config.search.title%",
         "properties": {
-          "anfavorites.Zearch.exclusions": {
+          "anfavorites.search.exclusions": {
             "type": "array",
             "items": {
               "type": "string"
@@ -516,11 +535,6 @@
       {
         "title": "%config.quickOpen.title%",
         "properties": {
-          "anfavorites.quickOpen.showIcons": {
-            "type": "boolean",
-            "default": true,
-            "description": "%config.quickOpen.showIcons.description%"
-          },
           "anfavorites.quickOpen.pathDetailLocation": {
             "type": "string",
             "default": "description",
@@ -740,41 +754,42 @@
     "watch": "node scripts/esbuild.js --watch",
     "l10n:export": "l10n-dev export --outDir ./l10n ./src",
     "l10n:validate": "l10n-dev validate ./l10n",
-    "compile-tests": "tsc -p test/tsconfig.json",
-    "test": "npm run compile-tests && node ./out/test/runTest.js",
-    "prepublishOnly": "npm run lint && npm run test && npm run compile",
+    "compile-tests": "node -e \"require('fs').rmSync('out/test', { recursive: true, force: true })\" && tsc -p test/tsconfig.json",
+    "test:integration": "npm run compile && npm run compile-tests && node ./out/test/test/runTest.js",
+    "prepublishOnly": "npm run lint && npm run test:integration && npm run compile",
     "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/marked": "^5.0.2",
     "@types/minimatch": "^5.1.2",
-    "@types/mocha": "^10.0.6",
-    "@types/node": "^25.0.6",
-    "@types/vscode": "^1.85.0",
-    "@typescript-eslint/eslint-plugin": "^8.52.0",
-    "@typescript-eslint/parser": "^8.52.0",
+    "@types/node": "^25.5.0",
+    "@types/vscode": "^1.86.0",
+    "@typescript-eslint/eslint-plugin": "^8.58.0",
+    "@typescript-eslint/parser": "^8.58.0",
     "@vscode/l10n-dev": "^0.0.35",
     "@vscode/test-electron": "^2.5.2",
-    "@vscode/vsce": "^3.7.2-7",
-    "esbuild": "^0.27.2",
-    "eslint": "^10.0.1",
+    "@vscode/vsce": "^3.7.2-12",
+    "esbuild": "^0.27.4",
+    "eslint": "^10.1.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.4.0",
-    "mocha": "^10.7.5",
     "prettier": "^3.7.4",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.56.1"
+    "typescript-eslint": "^8.58.0"
   },
   "overrides": {
     "diff": "8.0.3",
     "minimist": "1.2.8",
-    "minimatch": "10.2.2",
+    "minimatch": "10.2.5",
     "@vscode/vsce": {
-      "minimatch": "3.1.2"
+      "minimatch": "3.1.5"
     }
   },
   "dependencies": {
-    "marked": "^17.0.4"
+    "@vscode/ripgrep": "^1.17.1",
+    "fuse.js": "^7.1.0",
+    "ignore": "^7.0.5",
+    "marked": "^17.0.5"
   }
 }

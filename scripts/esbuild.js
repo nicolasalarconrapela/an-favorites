@@ -8,7 +8,7 @@ const config = {
   platform: "node",
   format: "cjs",
   outfile: "dist/bootstrap/extension.js",
-  external: ["vscode"],
+  external: ["vscode", "@vscode/ripgrep"],
   sourcemap: true,
   sourcesContent: false,
   target: "node18",

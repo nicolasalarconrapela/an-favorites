@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { Logger } from '../logging/logger';
+import { startLoggedAction } from '../logging/loggingModule';
 import { t } from '../utils/l10n';
 import { MRUService } from '../services/mruService';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
@@ -41,9 +42,10 @@ export async function quickClear(
   favoritesProvider: FavoritesTreeDataProvider,
   mruService: MRUService,
 ): Promise<void> {
+  const action = startLoggedAction(logger, 'limpieza de cache');
   try {
     // 1. Clear legacy global and workspace states
-    logger.debug('[cache] Clearing legacy stats (v1)...');
+    action.step('borrando estados legacy');
     await context.globalState.update('anfavorites.favorites', undefined);
     await context.globalState.update('anfavorites.mru', undefined);
 
@@ -53,11 +55,11 @@ export async function quickClear(
     await context.workspaceState.update('anfavorites.gitignore.filesState', undefined);
 
     // 2. Invalidate search patterns and collision caches
-    logger.debug('[cache] Invalidating collision cache...');
+    action.step('invalidando caches internas');
     invalidateCollisionIndex(logger, 'user manually cleared cache');
 
     // 3. Re-read real configs
-    logger.debug('[cache] Reloading providers from clean slate...');
+    action.step('recargando providers');
     favoritesProvider.reloadFavorites();
     mruService.reloadRecentFiles();
 
@@ -65,7 +67,9 @@ export async function quickClear(
       t('AnFavorites caches and legacy data cleared successfully.'),
     );
     logger.info('Cache cleared successfully.');
+    action.success();
   } catch (error) {
+    action.fail(error);
     logger.error('Failed to clear cache.', error);
     vscode.window.showErrorMessage(t('Failed to clear cache.'));
   }

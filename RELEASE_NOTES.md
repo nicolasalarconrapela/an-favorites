@@ -1,6 +1,6 @@
 # Release Notes
 
-## v1.2.40 - Intelligent Exclusions & Smart Maintenance
+## Intelligent Exclusions & Smart Maintenance - v1.2.40
 
 _Release Date: March 16, 2026_
 
