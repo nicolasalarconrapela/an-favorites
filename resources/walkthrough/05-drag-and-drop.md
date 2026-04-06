@@ -6,13 +6,13 @@ Reorder your favorites and groups effortlessly with full drag-and-drop support!
 
 Drag any favorite to a new position or into a different group:
 
-<video src="../media/drag&drop_unique.mp4" autoplay loop muted></video>
+<video src="https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/main/resources/media/drag%26drop_unique.mp4" autoplay loop muted></video>
 
 ## Multiple Items
 
 Hold **Ctrl** (or **Cmd** on Mac) to select multiple favorites, then drag them all at once:
 
-<video src="../media/drag&drop_multi.mp4" autoplay loop muted></video>
+<video src="https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/main/resources/media/drag%26drop_multi.mp4" autoplay loop muted></video>
 
 > ⚠️ **Note:** Folders cannot be added directly as favorites — only individual files are supported.
 
@@ -20,7 +20,7 @@ Hold **Ctrl** (or **Cmd** on Mac) to select multiple favorites, then drag them a
 
 Reorder favorites within the same group by dragging them up or down:
 
-<video src="../media/drag&drop_intern.mp4" autoplay loop muted></video>
+<video src="https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/main/resources/media/drag%26drop_intern.mp4" autoplay loop muted></video>
 
 ## What You Can Do
 

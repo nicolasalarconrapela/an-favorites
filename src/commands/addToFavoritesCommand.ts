@@ -1,27 +1,29 @@
 import * as vscode from 'vscode';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
+import { Logger } from '../logging/logger';
 import { t } from '../utils/l10n';
 
 export function registerAddToFavoritesCommand(
   context: vscode.ExtensionContext,
   favoritesProvider: FavoritesTreeDataProvider,
-  logger: any,
+  logger: Logger,
 ): void {
+  const log = logger.withContext?.({ scope: 'AddToFavoritesCommand' }) ?? logger;
   const disposable = vscode.commands.registerCommand(
     'anfavorites.addToFavorites',
     async (uri?: vscode.Uri) => {
       try {
-        logger.debug('addToFavorites command triggered', { uri: uri?.fsPath });
+        log.debug('Command triggered', { uri: uri?.fsPath });
 
         const targetUri = uri || vscode.window.activeTextEditor?.document.uri;
 
         if (!targetUri) {
           vscode.window.showWarningMessage(t('No file selected'));
-          logger.warn('No URI provided for addToFavorites');
+          log.warn('Command aborted because no target URI was resolved');
           return;
         }
 
-        logger.debug(`Target URI: ${targetUri.fsPath}`);
+        log.debug('Resolved target URI', { filePath: targetUri.fsPath });
 
         try {
           const stat = await vscode.workspace.fs.stat(targetUri);
@@ -29,11 +31,16 @@ export function registerAddToFavoritesCommand(
             vscode.window.showWarningMessage(
               t('Folders cannot be added to favorites'),
             );
-            logger.warn('Attempted to add directory to favorites');
+            log.warn('Rejected directory favorite request', {
+              filePath: targetUri.fsPath,
+            });
             return;
           }
         } catch (error) {
-          logger.error('Error checking file', error);
+          log.error('Failed to stat candidate favorite', {
+            filePath: targetUri.fsPath,
+            error,
+          });
           vscode.window.showErrorMessage(t('Error checking file'));
           return;
         }
@@ -42,7 +49,7 @@ export function registerAddToFavoritesCommand(
           vscode.window.showInformationMessage(
             t('File is already in favorites'),
           );
-          logger.debug('File already in favorites');
+          log.debug('Skipped duplicate favorite', { filePath: targetUri.fsPath });
           return;
         }
 
@@ -50,9 +57,10 @@ export function registerAddToFavoritesCommand(
         const groupDisplayName =
           FavoritesTreeDataProvider.getGroupDisplayName(groupName);
 
-        logger.debug(
-          `Adding favorite directly to default group: ${targetUri.fsPath}`,
-        );
+        log.info('Adding favorite to default group', {
+          filePath: targetUri.fsPath,
+          groupName,
+        });
         favoritesProvider.addFavorite(targetUri, groupName);
 
         vscode.window.showInformationMessage(
@@ -62,9 +70,12 @@ export function registerAddToFavoritesCommand(
             targetUri.fsPath,
           ),
         );
-        logger.debug('Favorite added successfully');
+        log.info('Favorite added successfully', {
+          filePath: targetUri.fsPath,
+          groupName,
+        });
       } catch (error) {
-        logger.error('Unexpected error in addToFavorites', error);
+        log.error('Unexpected failure while adding favorite', error);
         vscode.window.showErrorMessage(
           t('Error adding favorite: {0}', String(error)),
         );
@@ -73,5 +84,5 @@ export function registerAddToFavoritesCommand(
   );
 
   context.subscriptions.push(disposable);
-  logger.debug('addToFavorites command registered');
+  log.debug('Command registered');
 }

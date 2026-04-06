@@ -1,0 +1,9 @@
+# Un patrón por línea para excluir rutas del git diff del workflow.
+# Se ignoran líneas vacías y comentarios.
+node_modules/**
+out/**
+out_tmp/**
+dist/**
+.vscode-test/**
+tmp_analysis/**
+.agent/**

@@ -1,7 +1,6 @@
-![Logo_&_Banner](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/main/resources/banner_logo.png)
+![Logotipo y banner](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/develop/resources/banner_logo.png)
 
 <h1 align="left">AnFavorites</h1>
-
 
 <p align="center">
   </a>
@@ -11,7 +10,6 @@
   <a href="https://open-vsx.org/extension/AnAppWilos/an-favorites">
     <img src="https://img.shields.io/open-vsx/v/AnAppWilos/an-favorites?style=for-the-badge&label=Open%20VSX" alt="Open VSX Version">
   </a>
-
 
 </p>
 <p align="center">
@@ -34,7 +32,7 @@
   </a>
 </p>
 
-![img_init](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/main/resources/init.png)
+![img_init](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/develop/resources/init.png)
 
 **AnFavorites** is an extension that optimizes your file workflow by providing instant, centralized access to your most important files with a single keyboard shortcut (`Ctrl+Alt+F`).
 
@@ -104,6 +102,14 @@ npm run compile
 ```
 
 Press `F5` in VS Code to open a new Extension Development Host window.
+
+### VSIX packaging contract
+
+The extension is packaged with `vsce package` and a strict `.vscodeignore` whitelist.
+
+- `dist/bootstrap/extension.js` contains the bundled runtime for app dependencies such as `fuse.js`, `ignore`, `marked`, and bundled transitive code like `minimatch`.
+- `@vscode/ripgrep` remains external inside the `.vsix`, together with the minimal transitive runtime packages it declares (`https-proxy-agent`, `proxy-from-env`, `yauzl`, `agent-base`, `debug`, `buffer-crc32`, `fd-slicer`, `ms`, `pend`).
+- `npm run validate:vsix` inspects the generated `.vsix` and fails if any other `extension/node_modules/**` entry is present.
 
 ## 📄 License
 
