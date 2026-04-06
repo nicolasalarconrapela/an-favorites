@@ -86,7 +86,11 @@ export class MRUService {
 
     const duplicates = Array.from(nameMap.entries())
       .filter(([_, paths]) => paths.length > 1)
-      .map(([name, paths]) => ({ name, count: paths.length, paths }));
+      .map(([name, paths]) => ({
+        name,
+        count: paths.length,
+        samplePaths: paths.slice(0, 5),
+      }));
 
     if (duplicates.length > 0) {
       this.logger.warn(

@@ -5,25 +5,20 @@ AnFavorites is highly configurable. Here are the most useful settings to customi
 ## 🔍 Search
 
 - **Exclusion patterns** (`anfavorites.search.exclusions`): Exclude folders like `node_modules`, `dist`, etc. from Quick Open searches
-- **Gitignore integration** (`anfavorites.gitignore.enabled`): Automatically use `.gitignore` rules to exclude files from search.
-- **Nested gitignores** (`anfavorites.gitignore.includeNested`): Support `.gitignore` files in subdirectories.
 - **Max search files** (`anfavorites.search.maxSearchFiles`): Maximum files retrieved per search before showing a warning (default: 1000)
 - **Max search results** (`anfavorites.search.maxSearchResults`): Maximum results displayed (default: 200)
 
 ## 🧿 .gitignore Integration
 
-AnFavorites can automatically respect your repository's `.gitignore` files to exclude files and folders from Quick Open and searches. Key points:
+By default, AnFavorites uses native **Ripgrep** acceleration to respect your repository's `.gitignore` files automatically. 
 
-- **Enable / Disable**: Toggle `anfavorites.gitignore.enabled` to turn `.gitignore` support on or off.
-- **Nested `.gitignore` files**: Use `anfavorites.gitignore.includeNested` to include `.gitignore` files located in subdirectories.
-- **Per-file control**: Discovered `.gitignore` files are tracked in the workspace setting `anfavorites.gitignore.files` so you can enable/disable individual `.gitignore` files.
-- **Merged exclusions**: `.gitignore` patterns are merged with your `anfavorites.search.exclusions` and used when scanning for files.
+- **Manage exclusions visually**: To enable or disable specific `.gitignore` files, use the **Manage .gitignore Files** command instead of modifying settings manually.
+- **Merged exclusions**: Active `.gitignore` patterns are cleanly merged with your `anfavorites.search.exclusions`.
 
-This integration helps keep Quick Open focused on relevant files without manually maintaining exclusion lists.
+This ensures your search results stay lightning fast and strictly focused only on the files that matter.
 
 ## 🎨 Quick Open
 
-- **Show icons** (`anfavorites.quickOpen.showIcons`): Toggle file icons in the Quick Open list
 - **Path detail location** (`anfavorites.quickOpen.pathDetailLocation`): Show file paths below (**detail**) or beside (**description**) the file name
 - **Show path when** (`anfavorites.quickOpen.showPathWhen`): Always show paths or only on name conflicts
 - **Open to side** (`anfavorites.quickOpen.actions.openToSide`): Automatically open files in a side editor
@@ -49,6 +44,7 @@ Choose between **English**, **Español**, or **Auto** (follows VS Code's languag
 
 ## 🛠️ Maintenance
 
+- **Release notifications** (`anfavorites.releaseNotifications.preference`): Control whether to see update announcements automatically when a new version installs (`show` or `never`).
 - **Clear cache** (`anfavorites.advanced.clearCacheAction`): Use this setting to manually purge search indexes and troubleshooting data from the extension.
 
 ## Pro Tip 💡

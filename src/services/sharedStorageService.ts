@@ -14,6 +14,7 @@ import { Logger } from '../logging/logger';
 export class SharedStorageService {
   private static readonly SHARED_SETTING_KEY =
     'anfavorites.storage.shareAcrossIdes';
+  private static readonly SELF_WRITE_EXTERNAL_CHANGE_IGNORE_MS = 1000;
 
   private _onDidChange = new vscode.EventEmitter<string | undefined>();
   public readonly onDidChange = this._onDidChange.event;
@@ -95,6 +96,52 @@ export class SharedStorageService {
     });
   }
 
+  public updateMany(entries: Record<string, unknown>): void {
+    const keys = Object.keys(entries);
+    if (keys.length === 0) {
+      return;
+    }
+    const startedAt = Date.now();
+
+    if (this.useSharedFile && this.sharedFilePath) {
+      try {
+        const data = this.readSharedData();
+        for (const key of keys) {
+          data[key] = entries[key];
+        }
+        this.writeSharedData(data);
+        this.logger.info('[SharedStorage][trace] updateMany persisted to shared file', {
+          keys,
+          entryCount: keys.length,
+          path: this.sharedFilePath,
+          durationMs: Date.now() - startedAt,
+        });
+        for (const key of keys) {
+          this._onDidChange.fire(key);
+        }
+      } catch (error) {
+        this.logger.error(
+          `[SharedStorage] Error al actualizar almacenamiento en lote: ${keys.join(', ')}`,
+          error,
+        );
+      }
+      return;
+    }
+
+    Promise.all(
+      keys.map((key) => this.context.workspaceState.update(key, entries[key])),
+    ).then(() => {
+      this.logger.info('[SharedStorage][trace] updateMany persisted to workspaceState', {
+        keys,
+        entryCount: keys.length,
+        durationMs: Date.now() - startedAt,
+      });
+      for (const key of keys) {
+        this._onDidChange.fire(key);
+      }
+    });
+  }
+
   public dispose(): void {
     this._onDidChange.dispose();
     this.stopWatchers();
@@ -147,6 +194,7 @@ export class SharedStorageService {
 
     if (shouldShare && this.sharedFilePath) {
       this.ensureStorageFile();
+      this.seedSharedStorageFromWorkspaceStateIfNeeded();
       this.startFileWatcher();
       this.useSharedFile = true;
       this.logger.info('[SharedStorage] Modo Cross-IDE ACTIVADO.', {
@@ -234,6 +282,40 @@ export class SharedStorageService {
     }
   }
 
+  private seedSharedStorageFromWorkspaceStateIfNeeded(): void {
+    if (!this.sharedFilePath) {
+      return;
+    }
+
+    const sharedData = this.readSharedData();
+    if (Object.keys(sharedData).length > 0) {
+      return;
+    }
+
+    const favorites = this.context.workspaceState.get(
+      'anfavorites.favorites.v2',
+    );
+    const groups = this.context.workspaceState.get('anfavorites.groups');
+
+    if (favorites === undefined && groups === undefined) {
+      return;
+    }
+
+    const hydratedData: Record<string, unknown> = {};
+    if (favorites !== undefined) {
+      hydratedData['anfavorites.favorites.v2'] = favorites;
+    }
+    if (groups !== undefined) {
+      hydratedData['anfavorites.groups'] = groups;
+    }
+
+    this.writeSharedData(hydratedData);
+    this.logger.info('[SharedStorage] WorkspaceState migrado a almacenamiento compartido.', {
+      path: this.sharedFilePath,
+      keys: Object.keys(hydratedData),
+    });
+  }
+
   private startFileWatcher(): void {
     if (!this.sharedFilePath) {
       return;
@@ -248,7 +330,13 @@ export class SharedStorageService {
       );
       this.fileWatcher = vscode.workspace.createFileSystemWatcher(pattern);
 
-      const fireChange = () => this.handleExternalChange('VS Code Watcher');
+      const fireChange = () => {
+        try {
+          this.handleExternalChange('VS Code Watcher');
+        } catch (error) {
+          this.logger.error('[SharedStorage] File watcher callback failed', error);
+        }
+      };
 
       this.fileWatcher.onDidChange(fireChange);
       this.fileWatcher.onDidCreate(fireChange);
@@ -261,7 +349,11 @@ export class SharedStorageService {
       if (fs.existsSync(this.sharedFilePath)) {
         this.nodeFileWatcher = fs.watch(this.sharedFilePath, (eventType) => {
           if (eventType === 'change' || eventType === 'rename') {
-            this.handleExternalChange('Node fs.watch');
+            try {
+              this.handleExternalChange('Node fs.watch');
+            } catch (error) {
+              this.logger.error('[SharedStorage] Node watcher callback failed', error);
+            }
           }
         });
       }
@@ -272,18 +364,36 @@ export class SharedStorageService {
 
   private handleExternalChange(source: string): void {
     const now = Date.now();
-    if (now - this.lastWriteTime < 250) {
+    const elapsedSinceLastWrite = now - this.lastWriteTime;
+    if (
+      elapsedSinceLastWrite <
+      SharedStorageService.SELF_WRITE_EXTERNAL_CHANGE_IGNORE_MS
+    ) {
+      this.logger.info('[SharedStorage][trace] Ignoring watcher event caused by recent self write', {
+        source,
+        elapsedSinceLastWriteMs: elapsedSinceLastWrite,
+        ignoreWindowMs:
+          SharedStorageService.SELF_WRITE_EXTERNAL_CHANGE_IGNORE_MS,
+      });
       return;
     }
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
     }
     this.debounceTimer = setTimeout(() => {
-      this.logger.info(
-        `[SharedStorage] Cambio externo detectado (${source}). Recargando.`,
-      );
-      this._onDidChange.fire(undefined);
-      this.debounceTimer = null;
+      try {
+        this.logger.info(
+          `[SharedStorage] Cambio externo detectado (${source}). Recargando.`,
+        );
+        this._onDidChange.fire(undefined);
+      } catch (error) {
+        this.logger.error('[SharedStorage] External change notification failed', {
+          source,
+          error,
+        });
+      } finally {
+        this.debounceTimer = null;
+      }
     }, 100);
   }
 
@@ -304,6 +414,7 @@ export class SharedStorageService {
 
   private writeSharedData(data: Record<string, unknown>): void {
     if (!this.sharedFilePath) return;
+    const startedAt = Date.now();
 
     const dir = path.dirname(this.sharedFilePath);
     if (!fs.existsSync(dir)) {
@@ -327,6 +438,11 @@ export class SharedStorageService {
         fs.unlinkSync(tempPath);
       }
       this.lastWriteTime = Date.now();
+      this.logger.info('[SharedStorage][trace] writeSharedData completed', {
+        path: this.sharedFilePath,
+        bytesWritten: Buffer.byteLength(serialized, 'utf8'),
+        durationMs: Date.now() - startedAt,
+      });
     } catch (error) {
       this.logger.error('[SharedStorage] Error escritura', error);
       try {

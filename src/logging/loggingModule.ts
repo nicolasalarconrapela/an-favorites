@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as util from 'util';
 import * as vscode from 'vscode';
 
 import {
@@ -56,11 +57,19 @@ interface LoggingModuleOptions extends LoggerOptions {
   maxRotatedFiles?: number;
 
   flushIntervalMs?: number;
+
+  pathRoots?: string[];
 }
 
 interface ContextMetadata {
   context?: LogContext;
   metadata?: unknown;
+}
+
+export interface LoggedActionHandle {
+  step(message: string, metadata?: LogMetadata): void;
+  success(metadata?: LogMetadata): void;
+  fail(error: unknown, metadata?: LogMetadata): void;
 }
 
 const DEFAULT_REDACT_KEYS = [
@@ -85,12 +94,14 @@ export class LoggingModule implements Logger {
   private readonly maxMetadataStringLength: number;
   private readonly redactKeys: string[];
   private readonly redactPaths: boolean;
+  private readonly pathRoots: string[];
   private readonly consoleOutput: boolean;
   private level: InternalLogLevel;
   private readonly pendingTxtLines: string[] = [];
   private readonly pendingJsonLines: string[] = [];
   private flushTimer: NodeJS.Timeout | null = null;
   private writeQueue: Promise<void> = Promise.resolve();
+  private isDisposed = false;
   private readonly throttleBuckets = new Map<
     string,
     { lastLoggedAt: number; skipped: number }
@@ -115,7 +126,8 @@ export class LoggingModule implements Logger {
     this.redactKeys = (options.redactKeys ?? DEFAULT_REDACT_KEYS).map((key) =>
       key.toLowerCase(),
     );
-    this.redactPaths = options.redactPaths ?? false;
+    this.redactPaths = options.redactPaths ?? true;
+    this.pathRoots = (options.pathRoots ?? []).map((root) => path.resolve(root));
     this.consoleOutput = options.consoleOutput ?? false;
 
     this.ensureLogDirectory();
@@ -125,29 +137,85 @@ export class LoggingModule implements Logger {
     context: vscode.ExtensionContext,
     options: LoggingModuleOptions = {},
   ): LoggingModule {
-    const channelName = options.channelName ?? 'AnFavorites Logs';
+    const channelName = options.channelName ?? 'AnFavorites';
     const channel = vscode.window.createOutputChannel(channelName);
 
-    channel.append('\uFEFF');
+    // channel.append('\uFEFF');
 
-    const baseLogDir = path.join(context.logUri.fsPath, 'anfavorites');
+    const baseLogDir = LoggingModule.buildSessionLogDirectory(context);
     const logFileNameBase = options.logFileName ?? 'extension';
     const logFilePathTxt = path.join(baseLogDir, `${logFileNameBase}.txt`);
     const logFilePathJson = path.join(baseLogDir, `${logFileNameBase}.json`);
+    const version = String(context.extension.packageJSON.version ?? 'unknown');
+    const workspaceName = LoggingModule.getStartupWorkspaceLabel();
 
     const logger = new LoggingModule(
       channel,
       logFilePathTxt,
       logFilePathJson,
-      options,
+      {
+        ...options,
+        redactPaths: options.redactPaths ?? true,
+        pathRoots: [
+          ...(options.pathRoots ?? []),
+          ...((vscode.workspace.workspaceFolders ?? []).map((folder) => folder.uri.fsPath)),
+          context.extensionUri.fsPath,
+          context.logUri.fsPath,
+        ],
+      },
     );
 
     logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     logger.info('📋 Canal de logs AnFavorites iniciado');
-    logger.info(`📁 Archivos de log: ${logFilePathTxt} | ${logFilePathJson}`);
     logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
+    logger.info(
+      `Archivos de log inicializados | version=${version} | carpeta=${workspaceName} | txt=${logFilePathTxt} | json=${logFilePathJson}`,
+      {
+        version,
+        workspaceName,
+        txtLogPath: logFilePathTxt,
+        jsonLogPath: logFilePathJson,
+      },
+    );
+    channel.appendLine(
+      `[log-paths] version=${version} | carpeta=${workspaceName} | txt=${logFilePathTxt} | json=${logFilePathJson}`,
+    );
     return logger;
+  }
+
+  private static buildSessionLogDirectory(
+    context: vscode.ExtensionContext,
+  ): string {
+    const version = String(context.extension.packageJSON.version ?? 'unknown');
+    const now = new Date();
+    const pad = (value: number) => value.toString().padStart(2, '0');
+    const ddmmyy = `${pad(now.getDate())}${pad(now.getMonth() + 1)}${String(
+      now.getFullYear(),
+    ).slice(-2)}`;
+    const hhmmss = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(
+      now.getSeconds(),
+    )}`;
+
+    return path.join(context.logUri.fsPath, 'anfavorites', version, ddmmyy, hhmmss);
+  }
+
+  private static getStartupWorkspaceLabel(): string {
+    const workspaceFile = vscode.workspace.workspaceFile;
+    if (workspaceFile) {
+      return path.basename(workspaceFile.fsPath);
+    }
+
+    const folders = vscode.workspace.workspaceFolders ?? [];
+    if (folders.length === 0) {
+      return 'no-workspace';
+    }
+
+    if (folders.length === 1) {
+      return folders[0].name;
+    }
+
+    return folders.map((folder) => folder.name).join(', ');
   }
 
   setLevel(level: LogLevel): void {
@@ -258,12 +326,27 @@ export class LoggingModule implements Logger {
   }
 
   dispose(): void {
+    if (this.isDisposed) {
+      return;
+    }
+    this.isDisposed = true;
     if (this.flushTimer) {
       clearTimeout(this.flushTimer);
       this.flushTimer = null;
     }
-    void this.flushPending();
-    this.channel.dispose();
+
+    const txtLines = this.pendingTxtLines.splice(0);
+    const jsonLines = this.pendingJsonLines.splice(0);
+
+    this.writeQueue = this.writeQueue.finally(async () => {
+      if (txtLines.length > 0) {
+        await this.appendBuffered(this.logFilePathTxt, txtLines.join(''));
+      }
+      if (jsonLines.length > 0) {
+        await this.appendBuffered(this.logFilePathJson, jsonLines.join(''));
+      }
+      this.channel.dispose();
+    });
   }
 
   private write(
@@ -276,7 +359,7 @@ export class LoggingModule implements Logger {
     }
 
     const timestamp = new Date().toISOString();
-    const resolvedMessage = this.resolveMessage(message);
+    const resolvedMessage = this.redactString(this.resolveMessage(message));
     const resolvedMetadata = this.resolveMetadata(metadata);
     const contextMetadata = this.extractContext(resolvedMetadata);
     const safeMetadata = this.sanitizeMetadata(contextMetadata.metadata);
@@ -302,6 +385,9 @@ export class LoggingModule implements Logger {
   }
 
   private appendToChannel(level: LogLevel, line: string): void {
+    if (this.isDisposed) {
+      return;
+    }
     const icon = LEVEL_ICONS[level];
     const colorIndicator = LEVEL_COLORS[level];
     const formattedLine = `${icon} ${colorIndicator} [${level.toUpperCase()}] ${line}`;
@@ -595,18 +681,81 @@ export class LoggingModule implements Logger {
       return `${value.slice(0, this.maxMetadataStringLength)}…[truncated]`;
     }
 
-    if (this.redactPaths && key && key.toLowerCase().includes('path')) {
-      return '[path redacted]';
+    if (this.redactPaths) {
+      if (
+        key &&
+        ['txtlogpath', 'jsonlogpath', 'logfilepath', 'logdir'].includes(
+          key.toLowerCase(),
+        )
+      ) {
+        return value;
+      }
+      if (key && key.toLowerCase().includes('path')) {
+        return this.rewriteAbsolutePaths(value);
+      }
+      return this.rewriteAbsolutePaths(value);
     }
 
     return value;
+  }
+
+  private rewriteAbsolutePaths(value: string): string {
+    const absolutePathPattern =
+      /([a-zA-Z]:\\[^<>:"|?*\r\n]+|\/[^<>:"|?*\r\n]+)(?=$|[\s),;])/g;
+
+    return value.replace(absolutePathPattern, (match) =>
+      this.toSafePathReference(match),
+    );
+  }
+
+  private toSafePathReference(value: string): string {
+    const normalizedInput = path.normalize(value);
+
+    for (const root of this.pathRoots) {
+      const relative = path.relative(root, normalizedInput);
+      if (
+        relative &&
+        !relative.startsWith('..') &&
+        !path.isAbsolute(relative)
+      ) {
+        return `<${this.getRootLabel(root)}>/${relative.replace(/\\/g, '/')}`;
+      }
+
+      if (relative === '') {
+        return `<${this.getRootLabel(root)}>`;
+      }
+    }
+
+    if (path.isAbsolute(normalizedInput)) {
+      return '[absolute-path]';
+    }
+
+    return value;
+  }
+
+  private getRootLabel(root: string): string {
+    const workspaceFolder = vscode.workspace.workspaceFolders?.find(
+      (folder) => path.resolve(folder.uri.fsPath) === root,
+    );
+    if (workspaceFolder) {
+      return workspaceFolder.name;
+    }
+
+    if (
+      path.resolve(root) ===
+      path.resolve(vscode.workspace.workspaceFile?.fsPath ?? '')
+    ) {
+      return 'workspace';
+    }
+
+    return path.basename(root) || 'root';
   }
 
   private serializeMetadata(metadata: unknown): string {
     if (metadata === undefined) {
       return '';
     }
-    return this.safeStringify(metadata);
+    return this.safeInspect(metadata);
   }
 
   private safeStringify(value: unknown): string {
@@ -623,6 +772,21 @@ export class LoggingModule implements Logger {
           seen.add(val);
         }
         return val;
+      });
+    } catch {
+      return '[metadata: not serializable]';
+    }
+  }
+
+  private safeInspect(value: unknown): string {
+    try {
+      return util.inspect(value, {
+        depth: this.maxMetadataDepth,
+        breakLength: Infinity,
+        compact: true,
+        maxArrayLength: 50,
+        maxStringLength: this.maxMetadataStringLength,
+        sorted: true,
       });
     } catch {
       return '[metadata: not serializable]';
@@ -697,6 +861,9 @@ class ContextualLogger implements Logger {
 
   private mergeMetadata(metadata?: LogMetadata): LogMetadata {
     const resolved = typeof metadata === 'function' ? metadata() : metadata;
+    if (resolved === undefined) {
+      return { ...this.context };
+    }
     if (
       resolved &&
       typeof resolved === 'object' &&
@@ -713,4 +880,65 @@ export function createAppLogger(
   options?: LoggingModuleOptions,
 ): LoggingModule {
   return LoggingModule.create(context, options);
+}
+
+export function startLoggedAction(
+  logger: Logger,
+  action: string,
+  metadata?: LogMetadata,
+): LoggedActionHandle {
+  const startedAt = Date.now();
+  logger.info(`Inicio de ${action}`, metadata);
+
+  return {
+    step(message: string, stepMetadata?: LogMetadata) {
+      logger.debug(`[${action}] ${message}`, stepMetadata);
+    },
+    success(successMetadata?: LogMetadata) {
+      logger.info(`Fin de ${action}`, {
+        durationMs: Date.now() - startedAt,
+        ...toStructuredLogMetadata(successMetadata),
+      });
+    },
+    fail(error: unknown, failMetadata?: LogMetadata) {
+      logger.error(`Error en ${action}`, {
+        durationMs: Date.now() - startedAt,
+        ...toStructuredLogMetadata(failMetadata),
+        error,
+      });
+    },
+  };
+}
+
+export async function runLoggedAction<T>(
+  logger: Logger,
+  action: string,
+  work: (handle: LoggedActionHandle) => T | Promise<T>,
+  metadata?: LogMetadata,
+): Promise<T> {
+  const handle = startLoggedAction(logger, action, metadata);
+  try {
+    const result = await work(handle);
+    handle.success();
+    return result;
+  } catch (error) {
+    handle.fail(error);
+    throw error;
+  }
+}
+
+function toStructuredLogMetadata(metadata: unknown): Record<string, unknown> {
+  if (metadata === undefined) {
+    return {};
+  }
+
+  if (
+    typeof metadata === 'object' &&
+    metadata !== null &&
+    !(metadata instanceof Error)
+  ) {
+    return metadata as Record<string, unknown>;
+  }
+
+  return { metadata };
 }

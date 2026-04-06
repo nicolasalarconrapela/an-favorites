@@ -1,4 +1,35 @@
-# Exclusiones Inteligentes y Mantenimiento - v1.2.40
+# Notas de la versión
+
+## v1.3.0 - Búsqueda Nativa Ripgrep y Gestor interactivo .gitignore
+
+_Fecha de lanzamiento: 06 de Abril de 2026_
+
+¡Bienvenido a **AnFavorites v1.3.0**! Actualizamos la velocidad de tu búsqueda de archivos introduciendo la integración **nativa de Ripgrep** en nuestro Quick Open para un rendimiento sin precedentes. Además, combinamos esto con el nuevo [**Gestor de archivos .gitignore**](command:anfavorites.manageGitignore), brindándote control interactivo visual sobre tu lógica de exclusión. ¡Por último, hemos transformado los gráficos a formato `.webp` reduciendo drásticamente el peso de la extensión!
+
+## Comandos
+
+- **[Gestionar archivos .gitignore](command:anfavorites.manageGitignore)**: Permite seleccionar qué archivos `.gitignore` se aplican como restricciones.
+- **[Ver Notas de Lanzamiento](command:anfavorites.openReleaseChanges)**: Previsualiza el contenido de nuestras releases cuando quieras.
+
+### Nuevas funcionalidades ✨
+
+- **Búsqueda Ripgrep Nativa**: Aceleración completa de búsqueda propulsada por ripgrep interno.
+- **Control de Notificaciones**: Gestiona si quieres ver y cuándo las ventanas de novedades tras cada actualización de la extensión.
+
+### Mejoras 🛠️
+
+- **Aceleración Gráfica y Extensión Liviana**: Transición de tutoriales pesados MP4 a web streams ligeros, y modernización de recursos gráficos a `.webp`.
+- **Empaquetado blindado**: Cerramos brechas en nuestro ciclo de compilación introduciendo el comprobador estricto (`validate:vsix`), previniendo basura transitoria.
+
+### Correcciones 🐛
+
+- **Bugs resueltos**: Corregido el error tipográfico accidental en `Zearch.exclusions`.
+
+### Seguridad 🔒
+
+- **Dependencias controladas**: Limitación extrema del encapsulamiento VS Code (VSIX) mitigando activamente ataques derivados de dependencias transitorias.
+
+## Exclusiones Inteligentes y Mantenimiento - v1.2.40
 
 _Fecha de lanzamiento: 16 de marzo, 2026_
 

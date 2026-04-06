@@ -5,25 +5,20 @@ AnFavorites es altamente configurable. Aquí están los ajustes más útiles par
 ## 🔍 Búsqueda
 
 - **Patrones de exclusión** (`anfavorites.search.exclusions`): Excluye carpetas como `node_modules`, `dist`, etc. de las búsquedas en Quick Open
-- **Integración .gitignore** (`anfavorites.gitignore.enabled`): Usa automáticamente las reglas de `.gitignore` para excluir archivos.
-- **Gitignores anidados** (`anfavorites.gitignore.includeNested`): Soporte para archivos `.gitignore` en subdirectorios.
 - **Máximo de archivos** (`anfavorites.search.maxSearchFiles`): Máximo de archivos recuperados por búsqueda antes de mostrar un aviso (por defecto: 1000)
 - **Máximo de resultados** (`anfavorites.search.maxSearchResults`): Máximo de resultados mostrados (por defecto: 200)
 
 ## 🧿 Integración con `.gitignore`
 
-AnFavorites puede respetar automáticamente los archivos `.gitignore` del repositorio para excluir archivos y carpetas de Quick Open y de las búsquedas. Puntos clave:
+Por defecto, AnFavorites usa la aceleración nativa de **Ripgrep** para respetar automáticamente los archivos `.gitignore` de tu repositorio.
 
-- **Activar / Desactivar**: Usa `anfavorites.gitignore.enabled` para activar o desactivar el soporte de `.gitignore`.
-- **`.gitignore` anidados**: `anfavorites.gitignore.includeNested` permite incluir archivos `.gitignore` ubicados en subdirectorios.
-- **Control por archivo**: Los `.gitignore` descubiertos se registran en la configuración de workspace `anfavorites.gitignore.files`, donde puedes habilitar/deshabilitar archivos individuales.
-- **Exclusiones combinadas**: Los patrones de `.gitignore` se fusionan con `anfavorites.search.exclusions` y se usan durante el escaneo de archivos.
+- **Gestión visual**: Para activar o desactivar archivos `.gitignore` específicos, usa el comando **Gestionar archivos .gitignore** en lugar de modificar ajustes manualmente.
+- **Exclusiones combinadas**: Los patrones activos de `.gitignore` se fusionan transparentemente con `anfavorites.search.exclusions`.
 
-Esta integración mantiene Quick Open enfocado en los archivos relevantes sin necesidad de mantener manualmente largas listas de exclusión.
+Esto asegura que tus resultados de búsqueda sean ultrarrápidos y se centren solo en los archivos relevantes.
 
 ## 🎨 Quick Open
 
-- **Mostrar iconos** (`anfavorites.quickOpen.showIcons`): Activa/desactiva los iconos de archivo en la lista de Quick Open
 - **Ubicación del detalle** (`anfavorites.quickOpen.pathDetailLocation`): Muestra las rutas debajo (**detail**) o al lado (**description**) del nombre del archivo
 - **Cuándo mostrar la ruta** (`anfavorites.quickOpen.showPathWhen`): Mostrar siempre la ruta o solo cuando haya conflictos de nombre
 - **Abrir al lado** (`anfavorites.quickOpen.actions.openToSide`): Abre automáticamente archivos en el editor lateral
@@ -49,6 +44,7 @@ Elige entre **English**, **Español** o **Auto** (sigue la configuración de idi
 
 ## 🛠️ Mantenimiento
 
+- **Notificaciones de actualización** (`anfavorites.releaseNotifications.preference`): Controla si deseas ver la ventana de novedades automáticamente tras una actualización (`show` o `never`).
 - **Limpiar cache** (`anfavorites.advanced.clearCacheAction`): Usa este ajuste para purgar manualmente los índices de búsqueda y datos de diagnóstico de la extensión.
 
 ## Consejo 💡

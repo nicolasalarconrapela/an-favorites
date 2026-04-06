@@ -1,7 +1,6 @@
-![Logo_&_Banner](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/main/resources/banner_logo.png)
+![Logotipo y banner](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/develop/resources/banner_logo.png)
 
 <h1 align="left">AnFavorites</h1>
-
 
 <p align="center">
   </a>
@@ -11,7 +10,6 @@
   <a href="https://open-vsx.org/extension/AnAppWilos/an-favorites">
     <img src="https://img.shields.io/open-vsx/v/AnAppWilos/an-favorites?style=for-the-badge&label=Open%20VSX" alt="Open VSX Version">
   </a>
-
 
 </p>
 <p align="center">
@@ -34,7 +32,7 @@
   </a>
 </p>
 
-![img_init](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/main/resources/init.png)
+![img_init](https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/develop/resources/init.png)
 
 **AnFavorites** is an extension that optimizes your file workflow by providing instant, centralized access to your most important files with a single keyboard shortcut (`Ctrl+Alt+F`).
 
@@ -49,12 +47,14 @@ If you work with multiple environments (like Cursor or Windsurf), your favorites
 
 ## 🚀 Key Features
 
-- **⚡ Quick Open (`Ctrl+Alt+F`)**: A lightning-fast custom picker unifying recent searches, pinned files, and groups in one place.
+- **⚡ Native Quick Open (`Ctrl+Alt+F`)**: A lightning-fast custom picker unifying recent searches, pinned files, and global **Ripgrep-powered** searches across the workspace.
 - **📂 Smart Groups & Organization**: Manage and group your files seamlessly with full **Drag & Drop** support in the AnFavorites sidebar tree view.
 - **🔄 IDE Syncronization**: Share favorites between VS Code, Cursor, Windsurf, or any IDE working on the same workspace out-of-the-box.
 - **📌 Pin & Prioritize**: Pin your most critical files directly to the root of your favorites view so they are always 1-click away.
+- **🧿 Interactive .gitignore Manager**: Intelligently manage exclusions using our built-in `.gitignore` rules manager to keep your UI lightning-fast.
+- **🪟 Advanced Window Controls**: Native integration to open your favorites in Floating Windows or Editor Splits straight from Quick Open.
 - **🧩 Multi-root Workspace Support**: Efficient file categorization that understands and organizes files relative to multi-root workspace folders.
-- **🔍 Configurable Exclusions**: Easily ignore messy folders (`node_modules`, `.git`, `.venv`) from searches to keep your UI lightning-fast.
+- **🔍 Configurable Exclusions**: Easily ignore messy folders (`node_modules`, `.git`, `.venv`) from searches natively.
 - **🌐 Dual Language**: Completely localized out-of-the-box for **English** and **Spanish** (`en` / `es`).
 
 ---
@@ -71,18 +71,50 @@ You can install the extension directly from the Visual Studio Marketplace:
 
 ---
 
+## ⌨️ Commands
+
+| Command | Action |
+| --- | --- |
+| **`AnFavorites: Quick Open`** (`anfavorites.quickOpen`) | Launch the central search and navigation picker (`Ctrl+Alt+F`). |
+| **`AnFavorites: Manage .gitignore Files`** (`anfavorites.manageGitignore`) | Enable or disable specific workspace `.gitignore` files visually. |
+| **`AnFavorites: Configure Keybindings`** (`anfavorites.configureKeybindings`) | Easily set custom shortcuts for extension functions. |
+| **`AnFavorites: Clear Extension Cache`** (`anfavorites.clearCache`) | Clear internal search indexes and runtime cache. |
+| **`AnFavorites: View Release Notes`** (`anfavorites.openReleaseChanges`) | Relaunch the visual walkthrough for the latest update. |
+
+---
+
 ## ⚙️ Extension Settings
 
 AnFavorites provides extensive options to suit your workflow. Open VS Code Settings (`Ctrl+,`) and search for **AnFavorites**:
 
-| Setting                                 | Description                                                                 | Default                    |
-| --------------------------------------- | --------------------------------------------------------------------------- | -------------------------- |
-| `anfavorites.limits.maxPinned`          | Maximum number of files allowed to be pinned directly.                      | `3`                        |
-| `anfavorites.quickOpen.maxFavorites`    | How many favorite files populate the Quick Open initial view.               | `3`                        |
-| `anfavorites.tree.multiroot.separation` | Modifies how files display in multi-root workspaces (none, groups).         | `none`                     |
-| `anfavorites.search.exclusions`         | A glob list of files/folders to hide during workspace searches.             | `[**/node_modules/**,...]` |
-| `anfavorites.storage.shareAcrossIdes`   | Syncs workspace favorites across all compatible IDEs running the workspace. | `true`                     |
-| `anfavorites.language`                  | Forcibly set Extension Language to auto, English, or Spanish.               | `auto`                     |
+### UI & Layout
+| Setting | Description | Default |
+| --- | --- | --- |
+| `anfavorites.language` | Forcibly set Extension Language. | `auto` |
+| `anfavorites.multiroot.separation` | Organize files in multi-root workspaces (`none`, `groups`, `ungrouped`, or `both`). | `none` |
+| `anfavorites.quickOpen.pathDetailLocation` | Placement of file paths in Quick Open (`description` or `detail`). | `description` |
+| `anfavorites.quickOpen.showPathWhen` | When to show file paths (`always` or `onConflict`). | `onConflict` |
+
+### Search & Operations
+| Setting | Description | Default |
+| --- | --- | --- |
+| `anfavorites.search.exclusions` | A glob list of files/folders to hide during workspace searches. | `[**/node_modules/**,...]` |
+| `anfavorites.quickOpen.actions.openToSide` | Use the Split Editor feature natively. | `true` |
+| `anfavorites.quickOpen.actions.openInNewWindow` | Use Floating Window features natively. | `false` |
+
+### Limits & Capacities
+| Setting | Description | Default |
+| --- | --- | --- |
+| `anfavorites.limits.maxPinned` | Maximum number of files allowed to be pinned directly. | `3` |
+| `anfavorites.limits.quickOpen.maxFavorites` | How many favorite files populate the Quick Open initial view. | `3` |
+| `anfavorites.limits.quickOpen.maxRecentFiles`| How many recent files populate the Quick Open initial view. | `3` |
+
+### Storage & Diagnostics
+| Setting | Description | Default |
+| --- | --- | --- |
+| `anfavorites.storage.shareAcrossIdes` | Syncs workspace favorites across all compatible IDEs running the workspace. | `true` |
+| `anfavorites.releaseNotifications.preference` | Controls update release notifications behavior (`show` or `never`). | `show` |
+| `anfavorites.logging.level` | Verbosity of internal operational logs (`debug`, `info`, `warn`, `error`). | `info` |
 
 ---
 
@@ -104,6 +136,14 @@ npm run compile
 ```
 
 Press `F5` in VS Code to open a new Extension Development Host window.
+
+### VSIX packaging contract
+
+The extension is packaged with `vsce package` and a strict `.vscodeignore` whitelist.
+
+- `dist/bootstrap/extension.js` contains the bundled runtime for app dependencies such as `fuse.js`, `ignore`, `marked`, and bundled transitive code like `minimatch`.
+- `@vscode/ripgrep` remains external inside the `.vsix`, together with the minimal transitive runtime packages it declares (`https-proxy-agent`, `proxy-from-env`, `yauzl`, `agent-base`, `debug`, `buffer-crc32`, `fd-slicer`, `ms`, `pend`).
+- `npm run validate:vsix` inspects the generated `.vsix` and fails if any other `extension/node_modules/**` entry is present.
 
 ## 📄 License
 

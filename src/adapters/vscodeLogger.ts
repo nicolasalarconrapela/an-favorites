@@ -4,37 +4,37 @@ import { LogContext, LogMessage, LogMetadata, Logger } from '../logging/logger';
 
 export class VsCodeLogger implements Logger {
   private readonly channel: vscode.OutputChannel;
+  private readonly context?: LogContext;
 
-  constructor(channelName: string) {
-    this.channel = vscode.window.createOutputChannel(channelName);
+  constructor(channelNameOrChannel: string | vscode.OutputChannel, context?: LogContext) {
+    this.channel =
+      typeof channelNameOrChannel === 'string'
+        ? vscode.window.createOutputChannel(channelNameOrChannel)
+        : channelNameOrChannel;
+    this.context = context;
   }
 
-  debug(message: LogMessage): void {
-    this.channel.appendLine(`[debug] ${this.resolveMessage(message)}`);
+  debug(message: LogMessage, metadata?: LogMetadata): void {
+    this.write('debug', message, metadata);
   }
 
-  info(message: LogMessage): void {
-    this.channel.appendLine(`[info] ${this.resolveMessage(message)}`);
+  info(message: LogMessage, metadata?: LogMetadata): void {
+    this.write('info', message, metadata);
   }
 
-  warn(message: LogMessage): void {
-    this.channel.appendLine(`[warn] ${this.resolveMessage(message)}`);
+  warn(message: LogMessage, metadata?: LogMetadata): void {
+    this.write('warn', message, metadata);
   }
 
   error(message: LogMessage, error?: Error | unknown | LogMetadata): void {
-    this.channel.appendLine(`[error] ${this.resolveMessage(message)}`);
-    if (error) {
-      const resolved = typeof error === 'function' ? error() : error;
-      if (resolved instanceof Error) {
-        this.channel.appendLine(resolved.stack ?? resolved.message);
-      } else {
-        this.channel.appendLine(String(resolved));
-      }
-    }
+    this.write('error', message, error);
   }
 
-  withContext(_context: LogContext): Logger {
-    return this;
+  withContext(context: LogContext): Logger {
+    return new VsCodeLogger(this.channel, {
+      ...(this.context ?? {}),
+      ...context,
+    });
   }
 
   dispose(): void {
@@ -43,5 +43,44 @@ export class VsCodeLogger implements Logger {
 
   private resolveMessage(message: LogMessage): string {
     return typeof message === 'function' ? message() : message;
+  }
+
+  private write(
+    level: 'debug' | 'info' | 'warn' | 'error',
+    message: LogMessage,
+    metadata?: LogMetadata,
+  ): void {
+    const parts = [`[${level}]`];
+    const scope = this.context?.scope;
+
+    if (scope) {
+      parts.push(`[${scope}]`);
+    }
+
+    parts.push(this.resolveMessage(message));
+
+    const resolvedMetadata =
+      typeof metadata === 'function' ? metadata() : metadata;
+    if (resolvedMetadata !== undefined) {
+      parts.push(this.stringifyMetadata(resolvedMetadata));
+    }
+
+    this.channel.appendLine(parts.join(' '));
+  }
+
+  private stringifyMetadata(metadata: unknown): string {
+    if (metadata instanceof Error) {
+      return metadata.stack ?? metadata.message;
+    }
+
+    if (typeof metadata === 'string') {
+      return metadata;
+    }
+
+    try {
+      return JSON.stringify(metadata);
+    } catch {
+      return String(metadata);
+    }
   }
 }

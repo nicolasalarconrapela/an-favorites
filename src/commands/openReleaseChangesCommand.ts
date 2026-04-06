@@ -5,8 +5,8 @@ export function registerOpenReleaseChangesCommand(
   context: vscode.ExtensionContext,
 ) {
   context.subscriptions.push(
-    vscode.commands.registerCommand('anfavorites.openReleaseChanges', () => {
-      ReleaseChangesPanel.render(context.extensionUri);
+    vscode.commands.registerCommand('anfavorites.openReleaseChanges', async () => {
+      await ReleaseChangesPanel.render(context.extensionUri);
     }),
   );
 }

@@ -10,15 +10,16 @@ export function registerHelloCommand(
   logger: Logger,
   settings: ExtensionSettings,
 ): void {
+  const log = logger.withContext?.({ scope: 'HelloCommand' }) ?? logger;
   const command = vscode.commands.registerCommand(
     'anfavorites.hello',
     () => {
       if (!settings.enableGreeting) {
-        logger.info('Greeting disabled by configuration');
+        log.info('Greeting command skipped because it is disabled in settings');
         return;
       }
       const message = service.getMessage();
-      logger.info('Mostrando mensaje');
+      log.info('Showing greeting message');
       vscode.window.showInformationMessage(message);
     },
   );

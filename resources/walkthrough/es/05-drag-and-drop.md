@@ -6,13 +6,13 @@
 
 Arrastra cualquier favorito a una nueva posición o a un grupo diferente:
 
-<video src="../../media/drag&drop_unique.mp4" autoplay loop muted></video>
+<video src="https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/main/resources/media/drag%26drop_unique.mp4" autoplay loop muted></video>
 
 ## Múltiples Elementos
 
 Mantén **Ctrl** (o **Cmd** en Mac) para seleccionar varios favoritos, luego arrástralos todos a la vez:
 
-<video src="../../media/drag&drop_multi.mp4" autoplay loop muted></video>
+<video src="https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/main/resources/media/drag%26drop_multi.mp4" autoplay loop muted></video>
 
 > ⚠️ **Nota:** Las carpetas no se pueden añadir directamente como favoritos — solo se admiten archivos individuales.
 
@@ -20,7 +20,7 @@ Mantén **Ctrl** (o **Cmd** en Mac) para seleccionar varios favoritos, luego arr
 
 Reordena favoritos dentro del mismo grupo arrastrándolos arriba o abajo:
 
-<video src="../../media/drag&drop_intern.mp4" autoplay loop muted></video>
+<video src="https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/main/resources/media/drag%26drop_intern.mp4" autoplay loop muted></video>
 
 ## Qué Puedes Hacer
 
