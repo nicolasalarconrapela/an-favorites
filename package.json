@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.2.601",
+  "version": "1.2.603",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -757,7 +757,9 @@
     "compile-tests": "node -e \"require('fs').rmSync('out/test', { recursive: true, force: true })\" && tsc -p test/tsconfig.json",
     "test:integration": "npm run compile && npm run compile-tests && node ./out/test/test/runTest.js",
     "prepublishOnly": "npm run lint && npm run test:integration && npm run compile",
-    "package": "vsce package --no-dependencies"
+    "package:vsix": "vsce package",
+    "validate:vsix": "node scripts/validate-vsix.js",
+    "package": "npm run package:vsix && npm run validate:vsix"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -773,10 +775,15 @@
     "esbuild": "^0.27.4",
     "eslint": "^10.1.0",
     "eslint-config-prettier": "^10.1.8",
+    "fuse.js": "^7.1.0",
     "globals": "^17.4.0",
+    "ignore": "^7.0.5",
+    "minimatch": "10.2.5",
+    "marked": "^17.0.5",
     "prettier": "^3.7.4",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.58.0"
+    "typescript-eslint": "^8.58.0",
+    "yauzl": "^2.10.0"
   },
   "overrides": {
     "diff": "8.0.3",
@@ -787,9 +794,6 @@
     }
   },
   "dependencies": {
-    "@vscode/ripgrep": "^1.17.1",
-    "fuse.js": "^7.1.0",
-    "ignore": "^7.0.5",
-    "marked": "^17.0.5"
+    "@vscode/ripgrep": "^1.17.1"
   }
 }

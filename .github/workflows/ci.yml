@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop]
+    branches: [ main, develop, release/*, releases/* ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, release/*, releases/* ]
 
 jobs:
   test:
@@ -60,3 +60,4 @@ jobs:
           exit 1
         fi
         ls -lh ./*.vsix
+        npm run validate:vsix -- "$(ls -t ./*.vsix | head -n 1)"
