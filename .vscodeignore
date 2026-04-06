@@ -34,3 +34,8 @@ resources/icon.original-1024.png
 resources/banner_logo.png
 resources/banner_logo_v1.png
 resources/init.png
+*.ini
+*.txt
+!LICENSE
+!README.md
+!CHANGELOG.md
