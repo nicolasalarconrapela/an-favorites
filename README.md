@@ -47,7 +47,7 @@ If you work with multiple environments (like Cursor or Windsurf), your favorites
 
 ## 🚀 Key Features
 
-- **⚡ Quick Open (`Ctrl+Alt+F`)**: A lightning-fast custom picker unifying recent searches, pinned files, and groups in one place.
+- **⚡ Native Quick Open (`Ctrl+Alt+F`)**: A lightning-fast custom picker unifying recent searches, pinned files, and global Ripgrep-powered searches across the workspace.
 - **📂 Smart Groups & Organization**: Manage and group your files seamlessly with full **Drag & Drop** support in the AnFavorites sidebar tree view.
 - **🔄 IDE Syncronization**: Share favorites between VS Code, Cursor, Windsurf, or any IDE working on the same workspace out-of-the-box.
 - **📌 Pin & Prioritize**: Pin your most critical files directly to the root of your favorites view so they are always 1-click away.
@@ -76,6 +76,7 @@ AnFavorites provides extensive options to suit your workflow. Open VS Code Setti
 | Setting                                 | Description                                                                 | Default                    |
 | --------------------------------------- | --------------------------------------------------------------------------- | -------------------------- |
 | `anfavorites.limits.maxPinned`          | Maximum number of files allowed to be pinned directly.                      | `3`                        |
+| `anfavorites.releaseNotifications.preference` | Controls update release notifications behavior (show or never).           | `show`                     |
 | `anfavorites.quickOpen.maxFavorites`    | How many favorite files populate the Quick Open initial view.               | `3`                        |
 | `anfavorites.tree.multiroot.separation` | Modifies how files display in multi-root workspaces (none, groups).         | `none`                     |
 | `anfavorites.search.exclusions`         | A glob list of files/folders to hide during workspace searches.             | `[**/node_modules/**,...]` |

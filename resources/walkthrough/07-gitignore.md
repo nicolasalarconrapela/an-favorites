@@ -14,8 +14,8 @@ You can manually manage which `.gitignore` files are active:
 
 [Manage .gitignore Files](command:anfavorites.manageGitignore)
 
-## 🔍 Nested Support
+## ️⚡ Native Ripgrep Acceleration
 
-By default, only `.gitignore` files at the workspace root are used. You can enable support for **nested .gitignore files** in the settings if your project uses them within subdirectories.
+Thanks to native **Ripgrep** integration under the hood, AnFavorites natively explores your entire workspace hierarchy. Nested `.gitignore` files inside your subdirectories are evaluated at lightning speeds without requiring any additional configuration.
 
 This ensures your search results stay clean and focused only on the files that matter.

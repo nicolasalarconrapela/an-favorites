@@ -1,5 +1,34 @@
 # Release Notes
 
+## v1.3.0 - Native Ripgrep Search & Interactive gitignore Manager
+
+_Release Date: April 06, 2026_
+
+Welcome to **AnFavorites v1.3.0**! We're upgrading search speed by introducing **Native Ripgrep** integration to Quick Open, resulting in unprecedented performance when handling deep workspaces. The update pairs this with a brand-new [**Manage .gitignore Files**](command:anfavorites.manageGitignore) manager, giving you interactive visual control over your search exclusion logic. Finally, we've optimized graphics to `.webp` scaling down the extension size significantly!
+
+## Commands
+
+- **[Manage .gitignore Files](command:anfavorites.manageGitignore)**: Select and manage which `.gitignore` files apply to your workspace.
+- **[View Release Notes](command:anfavorites.openReleaseChanges)**: Launch the release preview directly.
+
+### New Features ✨
+
+- **Native Ripgrep Integration**: Under-the-hood acceleration driving Quick Open search.
+- **Notification Controls**: Take command over update popups via our new notification preferences logic.
+
+### Improvements 🛠️
+
+- **Sleek Graphics & Size Drops**: Extracted old MP4 tutorials to remote streams and transitioned high resolution imagery to efficient `.webp` equivalents.
+- **Rock-solid Packaging**: We've drastically tightened our VS Code publish pipeline (`validate:vsix`) ensuring zero bundled garbage payloads.
+
+### Fixes 🐛
+
+- **Typos Squashed**: Corrected `Zearch.exclusions` key error.
+
+### Security 🔒
+
+- **Audited Dependencies**: Enforced a sanitized whitelisting step so VSIX files remain completely resilient against indirect dependency threats.
+
 ## Intelligent Exclusions & Smart Maintenance - v1.2.40
 
 _Release Date: March 16, 2026_
