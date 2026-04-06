@@ -755,6 +755,7 @@
     "l10n:export": "l10n-dev export --outDir ./l10n ./src",
     "l10n:validate": "l10n-dev validate ./l10n",
     "compile-tests": "node -e \"require('fs').rmSync('out/test', { recursive: true, force: true })\" && tsc -p test/tsconfig.json",
+    "test": "npm run test:integration",
     "test:integration": "npm run compile && npm run compile-tests && node ./out/test/test/runTest.js",
     "prepublishOnly": "npm run lint && npm run test:integration && npm run compile",
     "package:vsix": "vsce package",
