@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../lib/diff_excludes.sh"
+
 DATE="$(date +%d%m%Y)"
 TIME="$(date +%H%M%S)"
 
@@ -49,6 +52,11 @@ VAR_S1_FILE="${OUTPUT_DIR}/Var_S1.txt"
 
 PWD_EXECUTION="$(pwd)"
 USER_EXECUTION="$(whoami)"
+DIFF_EXCLUDES_FILE="$(get_diff_excludes_file)"
+load_diff_excludes "$DIFF_EXCLUDES_FILE"
+DIFF_EXCLUDE_PATTERNS_COUNT="${#DIFF_EXCLUDE_DIRS[@]}"
+DIFF_EXCLUDE_PATTERNS_JOINED="$(join_diff_excludes)"
+DIFF_EXCLUDE_PATTERNS_JOINED="${DIFF_EXCLUDE_PATTERNS_JOINED%|}"
 
 mkdir -p "$OUTPUT_DIR"
 
@@ -74,12 +82,19 @@ ANALYSIS_FILE=$ANALYSIS_FILE
 VAR_S1_FILE=$VAR_S1_FILE
 PWD_EXECUTION=$PWD_EXECUTION
 USER_EXECUTION=$USER_EXECUTION
+DIFF_EXCLUDES_FILE=$DIFF_EXCLUDES_FILE
+DIFF_EXCLUDE_PATTERNS_COUNT=$DIFF_EXCLUDE_PATTERNS_COUNT
+DIFF_EXCLUDE_PATTERNS=$DIFF_EXCLUDE_PATTERNS_JOINED
 EOF
 
-git diff "$RELEASE_RANGE" > "$DIFF_FILE"
+DIFF_ARGS=(git diff "$RELEASE_RANGE" -- .)
+for exclude_dir in "${DIFF_EXCLUDE_DIRS[@]}"; do
+  DIFF_ARGS+=(":(exclude)$exclude_dir")
+done
+"${DIFF_ARGS[@]}" > "$DIFF_FILE"
 
 if [[ ! -s "$DIFF_FILE" ]]; then
-  echo "Error: no se generó correctamente el archivo diff en $DIFF_FILE"
+  echo "Error: no se generÃ³ correctamente el archivo diff en $DIFF_FILE"
   exit 1
 fi
 
@@ -87,3 +102,5 @@ echo "Variables guardadas en: $VAR_S1_FILE"
 echo "Ultima release publicada: $RELEASE_LATEST"
 echo "Version de release sincronizada: $RELEASE_VERSION"
 echo "Diff generado en: $DIFF_FILE"
+echo "Archivo de exclusiones: $DIFF_EXCLUDES_FILE"
+echo "Patrones de exclusion aplicados: ${DIFF_EXCLUDE_PATTERNS_COUNT}"
