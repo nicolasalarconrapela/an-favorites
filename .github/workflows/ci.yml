@@ -60,3 +60,4 @@ jobs:
           exit 1
         fi
         ls -lh ./*.vsix
+        npm run validate:vsix -- "$(ls -t ./*.vsix | head -n 1)"

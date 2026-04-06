@@ -103,6 +103,14 @@ npm run compile
 
 Press `F5` in VS Code to open a new Extension Development Host window.
 
+### VSIX packaging contract
+
+The extension is packaged with `vsce package` and a strict `.vscodeignore` whitelist.
+
+- `dist/bootstrap/extension.js` contains the bundled runtime for app dependencies such as `fuse.js`, `ignore`, `marked`, and bundled transitive code like `minimatch`.
+- `@vscode/ripgrep` remains external inside the `.vsix`, together with the minimal transitive runtime packages it declares (`https-proxy-agent`, `proxy-from-env`, `yauzl`, `agent-base`, `debug`, `buffer-crc32`, `fd-slicer`, `ms`, `pend`).
+- `npm run validate:vsix` inspects the generated `.vsix` and fails if any other `extension/node_modules/**` entry is present.
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
