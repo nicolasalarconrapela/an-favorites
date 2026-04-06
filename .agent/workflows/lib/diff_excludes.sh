@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+#!/bin/bash
+set -euo pipefail
 
 get_diff_excludes_file() {
   local script_dir
