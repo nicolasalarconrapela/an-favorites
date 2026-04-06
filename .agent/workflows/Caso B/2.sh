@@ -22,7 +22,7 @@ update_package_version() {
     exit 1
   fi
 
-  py - "$new_version" <<'PY'
+  python - "$new_version" <<'PY'
 import json
 import sys
 from pathlib import Path

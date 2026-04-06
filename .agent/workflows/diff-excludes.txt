@@ -7,3 +7,8 @@ dist/**
 .vscode-test/**
 tmp_analysis/**
 .agent/**
+package-lock.json
+.gitignore
+.vscode/launch.json
+CHANGELOG.md
+
