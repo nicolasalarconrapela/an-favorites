@@ -14,9 +14,9 @@ const ALLOWED_NODE_MODULE_PREFIXES = [
   "extension/node_modules/ms/",
   "extension/node_modules/pend/",
 ];
-const REQUIRED_ENTRIES = [
-  "extension/dist/bootstrap/extension.js",
-  "extension/node_modules/@vscode/ripgrep/bin/rg.exe",
+const REQUIRED_ENTRIES = ["extension/dist/bootstrap/extension.js"];
+const REQUIRED_ENTRY_PATTERNS = [
+  /^extension\/node_modules\/@vscode\/ripgrep\/bin\/rg(?:\.exe)?$/,
 ];
 
 function findLatestVsix(cwd) {
@@ -70,6 +70,9 @@ async function main() {
   const missingEntries = REQUIRED_ENTRIES.filter(
     (requiredEntry) => !entries.includes(requiredEntry)
   );
+  const missingEntryPatterns = REQUIRED_ENTRY_PATTERNS.filter(
+    (requiredPattern) => !entries.some((entry) => requiredPattern.test(entry))
+  );
   const unexpectedNodeModules = entries.filter((entry) => {
     if (!entry.startsWith("extension/node_modules/")) {
       return false;
@@ -80,11 +83,22 @@ async function main() {
     );
   });
 
-  if (missingEntries.length > 0 || unexpectedNodeModules.length > 0) {
+  if (
+    missingEntries.length > 0 ||
+    missingEntryPatterns.length > 0 ||
+    unexpectedNodeModules.length > 0
+  ) {
     if (missingEntries.length > 0) {
       console.error("[validate:vsix] Missing required entries:");
       for (const entry of missingEntries) {
         console.error(` - ${entry}`);
+      }
+    }
+
+    if (missingEntryPatterns.length > 0) {
+      console.error("[validate:vsix] Missing required entry patterns:");
+      for (const pattern of missingEntryPatterns) {
+        console.error(` - ${pattern}`);
       }
     }
 
