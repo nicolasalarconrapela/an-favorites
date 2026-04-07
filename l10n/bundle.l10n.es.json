@@ -126,6 +126,8 @@
   "Test": "Prueba",
   "Test Command": "Probar comando",
   "Testing": "Probando",
+  "Mode: Background": "Modo: Segundo plano | Pulsar para cambiar",
+  "Mode: Foreground": "Modo: Primer plano | Pulsar para cambiar",
   "Command & Preview": "Comando y vista previa",
   "Save command": "Guardar comando",
   "Discard": "Descartar",

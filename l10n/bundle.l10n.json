@@ -1,4 +1,5 @@
 {
+  "TODO: Los nombre de tienen que ser Keys, por ejemplo : No file selected to no_file_selected": "Pendiente",
   "No file selected": "No file selected",
   "Folders cannot be added to favorites": "Folders cannot be added to favorites",
   "Error checking file": "Error checking file",
@@ -126,6 +127,8 @@
   "Test": "Test",
   "Test Command": "Test Command",
   "Testing": "Testing",
+  "Mode: Background": "Mode: Background | Click to switch",
+  "Mode: Foreground": "Mode: Foreground | Click to switch",
   "Command & Preview": "Command & Preview",
   "Save command": "Save command",
   "Discard": "Discard",
