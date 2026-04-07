@@ -837,8 +837,7 @@ class CommandQuickPickItem implements vscode.QuickPickItem {
   constructor(commandItem: CommandItem) {
     this.commandItemRef = commandItem;
     const data = commandItem.data;
-    const modeIcon = data.background ? '$(server-process)' : '$(terminal)';
-    this.label = `${modeIcon} ${data.label}`;
+    this.label = data.label;
     this.description = data.command;
     this.detail = data.cwd ? `cwd: ${data.cwd}` : undefined;
     this.iconPath = new vscode.ThemeIcon(
