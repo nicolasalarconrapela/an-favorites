@@ -14,8 +14,8 @@ Puede gestionar manualmente qué archivos `.gitignore` están activos:
 
 [Gestionar archivos .gitignore](command:anfavorites.manageGitignore)
 
-## 🔍 Soporte para Archivos Anidados
+## ️⚡ Aceleración Nativa Ripgrep
 
-Por defecto, solo se utilizan los archivos `.gitignore` en la raíz del espacio de trabajo. Si su proyecto los utiliza dentro de subdirectorios, puede habilitar el soporte para **archivos .gitignore anidados** en la configuración.
+Gracias a la integración nativa de **Ripgrep**, AnFavorites explora la jerarquía completa de tu espacio de trabajo de forma nativa. Los archivos `.gitignore` anidados en tus subdirectorios se evalúan a la máxima velocidad sin requerir configuración adicional.
 
 Esto garantiza que sus resultados de búsqueda se mantengan limpios y se centren únicamente en los archivos que importan.
