@@ -779,6 +779,26 @@ function isFileItem(item: vscode.QuickPickItem): item is FileQuickPickItem {
   return typeof (item as any)?.internalUri?.fsPath === 'string';
 }
 
+function matchesCommandSearchText(
+  command: {
+    label: string;
+    command: string;
+    cwd?: string;
+    type?: 'shell' | 'vscode';
+  },
+  searchValue: string,
+): boolean {
+  const normalizedSearch = searchValue.trim().toLowerCase();
+  if (!normalizedSearch) {
+    return true;
+  }
+
+  return [command.label, command.command, command.cwd ?? '', command.type ?? '']
+    .join(' ')
+    .toLowerCase()
+    .includes(normalizedSearch);
+}
+
 function buildFavoriteBuildState(
   favoritesProvider: FavoritesTreeDataProvider,
 ): FavoriteBuildState {
@@ -839,7 +859,7 @@ class CommandQuickPickItem implements vscode.QuickPickItem {
     const data = commandItem.data;
     this.label = data.label;
     this.description = data.command;
-    this.detail = data.cwd ? `cwd: ${data.cwd}` : undefined;
+    this.detail = data.cwd ? ` ${data.cwd}` : undefined;
     this.iconPath = new vscode.ThemeIcon(
       data.background ? 'server-process' : 'terminal',
     );
@@ -2190,8 +2210,13 @@ export function registerQuickOpenCommand(
 
           // Commands section
           const allCommands = favoritesProvider.getCommands();
-          if (allCommands.length > 0) {
-            const commandQuickPickItems = allCommands
+          const visibleCommands = isSearching
+            ? allCommands.filter((command) =>
+                matchesCommandSearchText(command, normalizedSearch),
+              )
+            : allCommands;
+          if (visibleCommands.length > 0) {
+            const commandQuickPickItems = visibleCommands
               .sort((a, b) => b.addedAt - a.addedAt)
               .map((data) => {
                 const item = new CommandItem(data);
