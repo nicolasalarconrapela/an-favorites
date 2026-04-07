@@ -16,6 +16,7 @@ import { registerClearCacheCommand } from '../commands/clearCacheCommand';
 import { registerOpenReleaseChangesCommand } from '../commands/openReleaseChangesCommand';
 import { TelemetryService } from '../services/telemetry';
 import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
+import { registerCommandFavoritesCommands } from '../commands/commandFavoritesCommands';
 import { MRUService } from '../services/mruService';
 import { SharedStorageService } from '../services/sharedStorageService';
 import {
@@ -101,6 +102,9 @@ export function activate(context: vscode.ExtensionContext): void {
   registerQuickOpenCommand(context, favoritesProvider, logger, mruService);
   logger.debug('[activate] quickOpen registered.');
   activationTrace.step('comandos registrados');
+
+  registerCommandFavoritesCommands(context, favoritesProvider, logger);
+  logger.debug('[activate] commandFavorites commands registered.');
 
   // Register Get Started command
   context.subscriptions.push(

@@ -3,6 +3,7 @@ import {
   FavoritesTreeDataProvider,
   GroupItem,
   FavoriteItem,
+  CommandItem,
 } from '../views/FavoritesTreeDataProvider';
 import { Logger } from '../logging/logger';
 import { t } from '../utils/l10n';
@@ -267,12 +268,20 @@ export function registerManageGroupsCommands(
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.moveFavorite',
-      async (item?: FavoriteItem, selectedItems?: FavoriteItem[]) => {
-        const itemsToProcess = (selectedItems || (item ? [item] : [])).filter(
+      async (
+        item?: FavoriteItem | CommandItem,
+        selectedItems?: (FavoriteItem | CommandItem)[],
+      ) => {
+        const allItems = selectedItems || (item ? [item] : []);
+        const favoriteItems = allItems.filter(
           (i): i is FavoriteItem => i instanceof FavoriteItem,
         );
+        const commandItems = allItems.filter(
+          (i): i is CommandItem => i instanceof CommandItem,
+        );
+        const totalItems = favoriteItems.length + commandItems.length;
 
-        if (itemsToProcess.length === 0) {
+        if (totalItems === 0) {
           vscode.window.showWarningMessage(t('Select a favorite to move'));
           return;
         }
@@ -294,16 +303,22 @@ export function registerManageGroupsCommands(
           isCreate: true,
         });
 
+        const currentGroupName =
+          favoriteItems.length > 0
+            ? favoriteItems[0].group
+            : commandItems[0].data.group ||
+              FavoritesTreeDataProvider.DEFAULT_GROUP;
+
         const selected = await vscode.window.showQuickPick(items, {
           placeHolder:
-            itemsToProcess.length === 1
+            totalItems === 1
               ? t(
                   'Move from "{0}" to...',
                   FavoritesTreeDataProvider.getGroupDisplayName(
-                    itemsToProcess[0].group,
+                    currentGroupName,
                   ),
                 )
-              : t('Move {0} items to...', itemsToProcess.length),
+              : t('Move {0} items to...', totalItems),
         });
 
         if (!selected) {
@@ -341,26 +356,36 @@ export function registerManageGroupsCommands(
         const targetGroupDisplayName =
           FavoritesTreeDataProvider.getGroupDisplayName(targetGroup);
 
-        for (const f of itemsToProcess) {
+        for (const f of favoriteItems) {
           log.info('Moving favorite to group', {
             filePath: f.resourceUri.fsPath,
             fromGroup: f.group,
             toGroup: targetGroup,
           });
+          logger.debug(
+            `Moving favorite ${f.resourceUri.fsPath} to group "${targetGroup}"`,
+          );
           favoritesProvider.moveFavorite(f.resourceUri, targetGroup);
         }
 
+        for (const c of commandItems) {
+          logger.debug(
+            `Moving command "${c.data.label}" to group "${targetGroup}"`,
+          );
+          favoritesProvider.moveCommand(c.data.id, targetGroup);
+        }
+
         vscode.window.showInformationMessage(
-          itemsToProcess.length === 1
+          totalItems === 1
             ? t('Favorite moved to "{0}"', targetGroupDisplayName)
             : t(
                 '{0} favorites moved to "{1}"',
-                itemsToProcess.length,
+                totalItems,
                 targetGroupDisplayName,
               ),
         );
         log.info('Favorites moved successfully', {
-          count: itemsToProcess.length,
+          count: totalItems,
           targetGroup,
         });
       },
@@ -405,28 +430,49 @@ export function registerManageGroupsCommands(
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'anfavorites.removeFromGroup',
-      async (item?: FavoriteItem, selectedItems?: FavoriteItem[]) => {
-        const itemsToProcess = (selectedItems || (item ? [item] : [])).filter(
+      async (
+        item?: FavoriteItem | CommandItem,
+        selectedItems?: (FavoriteItem | CommandItem)[],
+      ) => {
+        const allItems = selectedItems || (item ? [item] : []);
+        const favoriteItems = allItems.filter(
           (i): i is FavoriteItem => i instanceof FavoriteItem,
         );
+        const commandItems = allItems.filter(
+          (i): i is CommandItem => i instanceof CommandItem,
+        );
+        const totalItems = favoriteItems.length + commandItems.length;
 
-        if (itemsToProcess.length === 0) {
+        if (totalItems === 0) {
           return;
         }
 
-        for (const f of itemsToProcess) {
+        for (const f of favoriteItems) {
           log.info('Resetting favorite to default group', {
             filePath: f.resourceUri.fsPath,
             fromGroup: f.group,
           });
+          logger.debug(
+            `Removing from group: ${f.resourceUri.fsPath} (group: ${f.group})`,
+          );
           favoritesProvider.resetFavoriteGroup(f.resourceUri);
         }
 
-        if (itemsToProcess.length > 1) {
+        for (const c of commandItems) {
+          logger.debug(
+            `Removing command from group: "${c.data.label}" (group: ${c.data.group})`,
+          );
+          favoritesProvider.moveCommand(
+            c.data.id,
+            FavoritesTreeDataProvider.DEFAULT_GROUP,
+          );
+        }
+
+        if (totalItems > 1) {
           vscode.window.showInformationMessage(
             t(
               '{0} items moved to "{1}"',
-              itemsToProcess.length,
+              totalItems,
               FavoritesTreeDataProvider.getDefaultGroupLabel(),
             ),
           );

@@ -43,7 +43,6 @@ export class VscodeQuickOpenConfigService implements QuickOpenConfigService {
     const maxSearchResults = 5000;
     const maxSearchFiles = 20000;
     const searchCacheSize = 50;
-
     const pathDetailLocation = configQuickOpen.get<'description' | 'detail'>(
       'pathDetailLocation',
       'detail',

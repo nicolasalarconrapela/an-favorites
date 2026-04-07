@@ -141,6 +141,36 @@
         "icon": "$(list-unordered)"
       },
       {
+        "command": "anfavorites.addCommandFavorite",
+        "title": "%command.addCommandFavorite.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(add)"
+      },
+      {
+        "command": "anfavorites.runCommandFavorite",
+        "title": "%command.runCommandFavorite.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(run)"
+      },
+      {
+        "command": "anfavorites.editCommandFavorite",
+        "title": "%command.editCommandFavorite.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "anfavorites.removeCommandFavorite",
+        "title": "%command.removeCommandFavorite.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "anfavorites.addVSCodeCommandFavorite",
+        "title": "%command.addVSCodeCommandFavorite.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(symbol-event)"
+      },
+      {
         "command": "anfavorites.clearCache",
         "title": "Clear Extension Cache",
         "category": "%command.category.anfavorites%",
@@ -221,6 +251,16 @@
           "command": "anfavorites.removeAllFavorites",
           "when": "view == anfavorites.favoritesView",
           "group": "navigation"
+        },
+        {
+          "command": "anfavorites.addCommandFavorite",
+          "when": "view == anfavorites.favoritesView",
+          "group": "navigation"
+        },
+        {
+          "command": "anfavorites.addVSCodeCommandFavorite",
+          "when": "view == anfavorites.favoritesView",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -250,6 +290,11 @@
           "group": "favorites@1"
         },
         {
+          "command": "anfavorites.moveFavorite",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /^commandItem/",
+          "group": "inline@3"
+        },
+        {
           "command": "anfavorites.renameGroup",
           "when": "view == anfavorites.favoritesView && viewItem =~ /groupItem/",
           "group": "inline"
@@ -261,13 +306,28 @@
         },
         {
           "command": "anfavorites.clearGroup",
-          "when": "view == anfavorites.favoritesView && viewItem == groupItem",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /groupItem/",
           "group": "inline"
         },
         {
           "command": "anfavorites.removeFromGroup",
           "when": "view == anfavorites.favoritesView && viewItem =~ /:grouped/",
           "group": "inline@3"
+        },
+        {
+          "command": "anfavorites.runCommandFavorite",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /^commandItem/",
+          "group": "inline@0"
+        },
+        {
+          "command": "anfavorites.editCommandFavorite",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /^commandItem/",
+          "group": "inline@1"
+        },
+        {
+          "command": "anfavorites.removeCommandFavorite",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /^commandItem/",
+          "group": "inline@2"
         }
       ],
       "commandPalette": [
@@ -322,6 +382,18 @@
         {
           "command": "anfavorites.configureKeybindings",
           "when": "true"
+        },
+        {
+          "command": "anfavorites.runCommandFavorite",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.editCommandFavorite",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.removeCommandFavorite",
+          "when": "false"
         },
         {
           "command": "anfavorites.clearCache",

@@ -14,8 +14,86 @@ function getDefaultGroupLabel(): string {
   return t('Ungrouped');
 }
 
+export function resolveWorkspaceCwd(cwd?: string): string | undefined {
+  if (!cwd) return undefined;
+
+  if (path.isAbsolute(cwd)) return cwd;
+
+  const folders = vscode.workspace.workspaceFolders;
+  if (!folders || folders.length === 0) return cwd;
+
+  // Multi-root: paths are stored as "FolderName/subdir" or just "FolderName"
+  if (folders.length > 1) {
+    const slashIdx = cwd.indexOf('/');
+    const folderName = slashIdx !== -1 ? cwd.slice(0, slashIdx) : cwd;
+    const subdir = slashIdx !== -1 ? cwd.slice(slashIdx + 1) : undefined;
+
+    const matchingFolder = folders.find((f) => f.name === folderName);
+    if (matchingFolder) {
+      return subdir
+        ? path.join(matchingFolder.uri.fsPath, subdir)
+        : matchingFolder.uri.fsPath;
+    }
+  }
+
+  return path.join(folders[0].uri.fsPath, cwd);
+}
+
 const getGroupDisplayName = (groupName: string): string =>
   groupName === DEFAULT_GROUP_ID ? getDefaultGroupLabel() : groupName;
+
+export interface CommandFavoriteData {
+  id: string;
+  label: string;
+  command: string;
+  cwd?: string;
+  background: boolean;
+  addedAt: number;
+  group?: string;
+  type?: 'shell' | 'vscode';
+}
+
+export class CommandItem extends vscode.TreeItem {
+  constructor(public readonly data: CommandFavoriteData) {
+    super(data.label, vscode.TreeItemCollapsibleState.None);
+
+    this.id = `command:${data.id}`;
+    const groupName = data.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
+    const isVscode = data.type === 'vscode';
+
+    if (isVscode) {
+      this.tooltip = data.command;
+      this.description = data.command;
+      this.iconPath = new vscode.ThemeIcon('symbol-event');
+    } else {
+      this.tooltip = data.background
+        ? `${data.command}${data.cwd ? ` (${data.cwd})` : ''} — ${t('Background')}`
+        : `${data.command}${data.cwd ? ` (${data.cwd})` : ''} — ${t('Foreground')}`;
+      this.description = data.cwd
+        ? `${data.command} [${data.cwd}]`
+        : data.command;
+      this.iconPath = new vscode.ThemeIcon(
+        data.background ? 'server-process' : 'terminal',
+      );
+    }
+
+    let ctx = isVscode
+      ? 'commandItem:vscode'
+      : data.background
+        ? 'commandItem:background'
+        : 'commandItem';
+    if (groupName !== FavoritesTreeDataProvider.DEFAULT_GROUP) {
+      ctx += ':grouped';
+    }
+    this.contextValue = ctx;
+
+    this.command = {
+      command: 'anfavorites.runCommandFavorite',
+      title: t('Run Command'),
+      arguments: [this],
+    };
+  }
+}
 
 export class GroupItem extends vscode.TreeItem {
   constructor(
@@ -121,19 +199,41 @@ interface FavoriteMetadata {
 
 export class FavoritesTreeDataProvider
   implements
-    vscode.TreeDataProvider<GroupItem | FavoriteItem | WorkspaceItem>,
-    vscode.TreeDragAndDropController<GroupItem | FavoriteItem | WorkspaceItem>,
+    vscode.TreeDataProvider<
+      GroupItem | FavoriteItem | WorkspaceItem | CommandItem
+    >,
+    vscode.TreeDragAndDropController<
+      GroupItem | FavoriteItem | WorkspaceItem | CommandItem
+    >,
     vscode.Disposable
 {
   private readonly disposables: vscode.Disposable[] = [];
   private _onDidChangeTreeData: vscode.EventEmitter<
-    GroupItem | FavoriteItem | WorkspaceItem | undefined | null | void
+    | GroupItem
+    | FavoriteItem
+    | WorkspaceItem
+    | CommandItem
+    | undefined
+    | null
+    | void
   > = new vscode.EventEmitter<
-    GroupItem | FavoriteItem | WorkspaceItem | undefined | null | void
+    | GroupItem
+    | FavoriteItem
+    | WorkspaceItem
+    | CommandItem
+    | undefined
+    | null
+    | void
   >();
 
   readonly onDidChangeTreeData: vscode.Event<
-    GroupItem | FavoriteItem | WorkspaceItem | undefined | null | void
+    | GroupItem
+    | FavoriteItem
+    | WorkspaceItem
+    | CommandItem
+    | undefined
+    | null
+    | void
   > = this._onDidChangeTreeData.event;
 
   public readonly dragMimeTypes = ['application/vnd.code.tree.favorites'];
@@ -143,6 +243,7 @@ export class FavoritesTreeDataProvider
   ];
 
   private favorites: Map<string, FavoriteMetadata> = new Map();
+  private commands: CommandFavoriteData[] = [];
 
   private groups: Set<string> = new Set([
     FavoritesTreeDataProvider.DEFAULT_GROUP,
@@ -227,30 +328,24 @@ export class FavoritesTreeDataProvider
     }));
   }
 
-  getTreeItem(element: GroupItem | FavoriteItem): vscode.TreeItem {
+  getTreeItem(
+    element: GroupItem | FavoriteItem | WorkspaceItem | CommandItem,
+  ): vscode.TreeItem {
     return element;
   }
 
   async getChildren(
-    element?: GroupItem | FavoriteItem | WorkspaceItem,
-  ): Promise<(GroupItem | FavoriteItem | WorkspaceItem)[]> {
+    element?: GroupItem | FavoriteItem | WorkspaceItem | CommandItem,
+  ): Promise<(GroupItem | FavoriteItem | WorkspaceItem | CommandItem)[]> {
     const t0 = Date.now();
 
     if (!element) {
       const groups: GroupItem[] = [];
       const groupMap = this.getGroupMap();
 
-      const ws = (vscode.workspace.workspaceFolders ?? []).map(
-        (f) => f.uri.fsPath,
-      );
-      this.logger.debug(
-        `[getChildren:root] Start. favorites=${this.favorites.size} groups=${groupMap.size}`,
-        { workspaceFolders: ws },
-      );
-
       groupMap.forEach((filePaths, groupName) => {
+        // Check if group has visible files or commands
         let hasVisibleFiles = false;
-
         for (const filePath of filePaths) {
           const uri = vscode.Uri.file(filePath);
           if (vscode.workspace.getWorkspaceFolder(uri)) {
@@ -259,13 +354,13 @@ export class FavoritesTreeDataProvider
           }
         }
 
-        const isEmpty = filePaths.length === 0;
-        const included = hasVisibleFiles || isEmpty;
+        const hasCommands = this.commands.some((cmd) => {
+          const cmdGroup = cmd.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
+          return cmdGroup === groupName;
+        });
 
-        this.logger.debug(
-          '[getChildren:root] ' +
-            `Group "${groupName}" -> files=${filePaths.length} hasVisibleFiles=${hasVisibleFiles} isEmpty=${isEmpty} included=${included}`,
-        );
+        const isEmpty = filePaths.length === 0 && !hasCommands;
+        const included = hasVisibleFiles || hasCommands || isEmpty;
 
         if (included) {
           groups.push(
@@ -278,9 +373,6 @@ export class FavoritesTreeDataProvider
         }
       });
 
-      this.logger.debug(
-        `[getChildren:root] End. returnedGroups=${groups.length} in ${Date.now() - t0}ms`,
-      );
       return Promise.resolve(groups);
     }
 
@@ -332,26 +424,30 @@ export class FavoritesTreeDataProvider
             );
           }
         }
-        return Promise.resolve(workspaceItems);
+
+        // After workspace sub-items, also append commands for this group
+        const cmdItems: CommandItem[] = [];
+        this.commands.forEach((cmd) => {
+          const cmdGroup = cmd.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
+          if (cmdGroup === element.groupName) {
+            cmdItems.push(new CommandItem(cmd));
+          }
+        });
+
+        return Promise.resolve([...workspaceItems, ...cmdItems]);
       }
 
-      const items: FavoriteItem[] = [];
+      const favoriteItems: FavoriteItem[] = [];
       this.logger.debug(`[getChildren:group] Start "${element.groupName}"`);
 
       this.favorites.forEach((metadata, filePath) => {
         if (metadata.group !== element.groupName) return;
 
         const uri = vscode.Uri.file(filePath);
-
         const wf = vscode.workspace.getWorkspaceFolder(uri);
-        if (!wf) {
-          this.logger.debug(
-            `[getChildren:group] EXCLUDED (not in workspace): ${filePath}`,
-          );
-          return;
-        }
+        if (!wf) return;
 
-        items.push(
+        favoriteItems.push(
           new FavoriteItem(
             uri,
             element.groupName,
@@ -361,15 +457,18 @@ export class FavoritesTreeDataProvider
         );
       });
 
-      this.logger.debug(`[getChildren:group] Collected items=${items.length}`);
+      await this._resolveCollisions(favoriteItems, element.groupName);
 
-      await this._resolveCollisions(items, element.groupName);
+      // Commands in this group
+      const cmdItems: CommandItem[] = [];
+      this.commands.forEach((cmd) => {
+        const cmdGroup = cmd.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
+        if (cmdGroup === element.groupName) {
+          cmdItems.push(new CommandItem(cmd));
+        }
+      });
 
-      this.logger.debug(
-        '[getChildren:group] ' +
-          `End "${element.groupName}" returnedItems=${items.length} in ${Date.now() - t0}ms`,
-      );
-      return Promise.resolve(items);
+      return Promise.resolve([...favoriteItems, ...cmdItems]);
     }
 
     if (element instanceof WorkspaceItem) {
@@ -394,7 +493,7 @@ export class FavoritesTreeDataProvider
       });
 
       await this._resolveCollisions(
-        items,
+        items.filter((i): i is FavoriteItem => i instanceof FavoriteItem),
         `${element.groupName}:${element.name}`,
       );
       return Promise.resolve(items);
@@ -453,6 +552,14 @@ export class FavoritesTreeDataProvider
         groupMap.set(metadata.group, []);
       }
       groupMap.get(metadata.group)!.push(filePath);
+    });
+
+    this.commands.forEach((cmd) => {
+      const g = cmd.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
+      if (!groupMap.has(g)) {
+        this.groups.add(g);
+        groupMap.set(g, []);
+      }
     });
 
     return groupMap;
@@ -535,6 +642,12 @@ export class FavoritesTreeDataProvider
       }
     });
 
+    this.commands.forEach((cmd) => {
+      if (cmd.group === groupName) {
+        cmd.group = FavoritesTreeDataProvider.DEFAULT_GROUP;
+      }
+    });
+
     this.saveFavorites();
     this.refresh();
   }
@@ -609,6 +722,15 @@ export class FavoritesTreeDataProvider
       }
     });
 
+    this.commands.forEach((cmd) => {
+      if (cmd.group === groupName) {
+        cmd.group = FavoritesTreeDataProvider.DEFAULT_GROUP;
+        this.logger.debug(`[groups] Moved command to default`, {
+          label: cmd.label,
+        });
+      }
+    });
+
     this.groups.delete(groupName);
     this.saveFavorites();
     this.refresh();
@@ -642,6 +764,16 @@ export class FavoritesTreeDataProvider
         metadata.group = newName;
         this.logger.debug(`[groups] Updated favorite group`, {
           filePath,
+          newName,
+        });
+      }
+    });
+
+    this.commands.forEach((cmd) => {
+      if (cmd.group === oldName) {
+        cmd.group = newName;
+        this.logger.debug(`[groups] Updated command group`, {
+          label: cmd.label,
           newName,
         });
       }
@@ -715,7 +847,7 @@ export class FavoritesTreeDataProvider
   }
 
   handleDrag(
-    source: (GroupItem | FavoriteItem | WorkspaceItem)[],
+    source: (GroupItem | FavoriteItem | WorkspaceItem | CommandItem)[],
     dataTransfer: vscode.DataTransfer,
     token: vscode.CancellationToken,
   ): void | Thenable<void> {
@@ -725,10 +857,16 @@ export class FavoritesTreeDataProvider
       .filter((item): item is FavoriteItem => item instanceof FavoriteItem)
       .map((item) => item.resourceUri.fsPath);
 
-    if (draggedFiles.length > 0) {
+    const draggedCommands = source
+      .filter((item): item is CommandItem => item instanceof CommandItem)
+      .map((item) => item.data.id);
+
+    const payload = { files: draggedFiles, commands: draggedCommands };
+
+    if (draggedFiles.length > 0 || draggedCommands.length > 0) {
       dataTransfer.set(
         'application/vnd.code.tree.favorites',
-        new vscode.DataTransferItem(JSON.stringify(draggedFiles)),
+        new vscode.DataTransferItem(JSON.stringify(payload)),
       );
     }
   }
@@ -758,12 +896,30 @@ export class FavoritesTreeDataProvider
     const treeItem = dataTransfer.get('application/vnd.code.tree.favorites');
     if (treeItem) {
       try {
-        const filePaths = JSON.parse(treeItem.value) as string[];
+        const raw =
+          typeof treeItem.value === 'string'
+            ? treeItem.value
+            : await treeItem.asString();
+
+        let payload: { files?: string[]; commands?: string[] };
+
+        // Support both old format (string[]) and new format ({ files, commands })
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          payload = { files: parsed, commands: [] };
+        } else {
+          payload = parsed;
+        }
+
+        const filePaths = payload.files || [];
+        const commandIds = payload.commands || [];
+
         this.logger.debug(
-          `[dnd] Moving ${filePaths.length} internal items to "${targetGroupName}"`,
+          `[dnd] Moving ${filePaths.length} files + ${commandIds.length} commands to "${targetGroupName}"`,
         );
 
         let movedCount = 0;
+
         filePaths.forEach((filePath) => {
           const metadata = this.favorites.get(filePath);
           if (metadata && metadata.group !== targetGroupName) {
@@ -771,6 +927,15 @@ export class FavoritesTreeDataProvider
             movedCount++;
           }
         });
+
+        commandIds.forEach((cmdId) => {
+          const cmd = this.commands.find((c) => c.id === cmdId);
+          if (cmd && cmd.group !== targetGroupName) {
+            cmd.group = targetGroupName;
+            movedCount++;
+          }
+        });
+
         this.saveFavorites();
         this.refresh();
 
@@ -872,9 +1037,19 @@ export class FavoritesTreeDataProvider
       'anfavorites.favorites.v2',
     );
     const sharedGroups = this.storage.get<string[]>('anfavorites.groups');
+    const sharedCommands = this.storage.get<CommandFavoriteData[]>(
+      'anfavorites.commands.v1',
+    );
 
     if (sharedGroups) {
       sharedGroups.forEach((g) => this.groups.add(g));
+    }
+
+    if (sharedCommands) {
+      this.commands = sharedCommands;
+      sharedCommands.forEach((cmd) => {
+        if (cmd.group) this.groups.add(cmd.group);
+      });
     }
 
     if (sharedData) {
@@ -1011,6 +1186,7 @@ export class FavoritesTreeDataProvider
       this.storage.updateMany({
         'anfavorites.favorites.v2': favoritesArray,
         'anfavorites.groups': Array.from(this.groups),
+        'anfavorites.commands.v1': this.commands,
       });
     } finally {
       this._isSaving = false;
@@ -1122,6 +1298,142 @@ export class FavoritesTreeDataProvider
 
     this.saveFavorites();
     this.refresh();
+  }
+
+  // ── Command management (Merged from CommandFavoritesTreeDataProvider) ──
+
+  getCommands(): CommandFavoriteData[] {
+    return [...this.commands];
+  }
+
+  addCommand(
+    data: Omit<CommandFavoriteData, 'id' | 'addedAt'>,
+  ): CommandFavoriteData {
+    const newCmd: CommandFavoriteData = {
+      ...data,
+      id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`,
+      addedAt: Date.now(),
+      group: data.group || FavoritesTreeDataProvider.DEFAULT_GROUP,
+    };
+    this.commands.push(newCmd);
+    this.saveFavorites();
+    this.refresh();
+    this.logger.debug(`[commands] addCommand -> "${newCmd.label}"`);
+    return newCmd;
+  }
+
+  removeCommand(id: string): void {
+    const before = this.commands.length;
+    this.commands = this.commands.filter((c) => c.id !== id);
+    if (this.commands.length !== before) {
+      this.saveFavorites();
+      this.refresh();
+      this.logger.debug(`[commands] removeCommand -> id=${id}`);
+    }
+  }
+
+  moveCommand(id: string, newGroup: string): void {
+    const cmd = this.commands.find((c) => c.id === id);
+    if (!cmd) {
+      this.logger.warn(`[commands] moveCommand FAILED (not found) -> id=${id}`);
+      return;
+    }
+
+    this.logger.debug(`[commands] moveCommand -> id=${id}`, {
+      from: cmd.group,
+      to: newGroup,
+    });
+    cmd.group = newGroup;
+
+    this.saveFavorites();
+    this.refresh();
+  }
+
+  editCommand(
+    id: string,
+    data: Partial<Omit<CommandFavoriteData, 'id' | 'addedAt'>>,
+  ): boolean {
+    const idx = this.commands.findIndex((c) => c.id === id);
+    if (idx === -1) {
+      this.logger.warn(`[commands] editCommand FAILED (not found) -> id=${id}`);
+      return false;
+    }
+    this.commands[idx] = { ...this.commands[idx], ...data };
+    this.saveFavorites();
+    this.refresh();
+    this.logger.debug(`[commands] editCommand -> id=${id}`);
+    return true;
+  }
+
+  runCommand(item: CommandItem): void {
+    const data = item.data;
+
+    if (data.type === 'vscode') {
+      this.logger.debug(
+        `[commands] runCommand (vscode) -> "${data.label}" command=${data.command}`,
+      );
+      vscode.commands.executeCommand(data.command).then(
+        () => {
+          this.logger.debug(
+            `[commands] VS Code command executed: "${data.label}"`,
+          );
+        },
+        (err) => {
+          this.logger.error(`[commands] Error executing VS Code command`, err);
+          vscode.window.showErrorMessage(
+            t('Error executing command: {0}', String(err)),
+          );
+        },
+      );
+      return;
+    }
+
+    const resolvedCwd = resolveWorkspaceCwd(data.cwd);
+
+    this.logger.debug(
+      `[commands] runCommand -> "${data.label}" background=${data.background} cwd=${resolvedCwd ?? '(none)'}`,
+    );
+
+    if (data.background) {
+      const task = new vscode.Task(
+        { type: 'anfavorites-command', id: data.id },
+        vscode.TaskScope.Workspace,
+        data.label,
+        'AnFavorites',
+        new vscode.ShellExecution(data.command, {
+          cwd: resolvedCwd,
+        }),
+      );
+      task.presentationOptions = {
+        reveal: vscode.TaskRevealKind.Silent,
+        panel: vscode.TaskPanelKind.Dedicated,
+        showReuseMessage: false,
+        clear: false,
+      };
+      vscode.tasks.executeTask(task).then(
+        () => {
+          this.logger.debug(
+            `[commands] Background task started: "${data.label}"`,
+          );
+        },
+        (err) => {
+          this.logger.error(`[commands] Error starting background task`, err);
+          vscode.window.showErrorMessage(
+            t('Error executing command: {0}', String(err)),
+          );
+        },
+      );
+    } else {
+      const terminal = vscode.window.createTerminal({
+        name: data.label,
+        cwd: resolvedCwd,
+      });
+      terminal.sendText(data.command);
+      terminal.show();
+      this.logger.debug(
+        `[commands] Foreground terminal created: "${data.label}"`,
+      );
+    }
   }
 
   public dispose(): void {
