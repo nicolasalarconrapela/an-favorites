@@ -1176,20 +1176,14 @@ async function promptCommandFlow(
     scope?: 'local' | 'global';
     language?: string;
   },
-  options?: {
-    skipScopeStep?: boolean;
-    skipLanguageStep?: boolean;
-  },
 ): Promise<CommandFlowResult | undefined> {
-  const skipScopeStep = options?.skipScopeStep ?? false;
-  const skipLanguageStep = options?.skipLanguageStep ?? false;
-  const TOTAL = 6 - (skipScopeStep ? 1 : 0) - (skipLanguageStep ? 1 : 0);
+  const TOTAL = 4;
   let step = 1;
 
   // Accumulated state — pre-populated from existing when editing
   let stepLabel = existing?.label ?? '';
-  let stepScope: 'local' | 'global' = existing?.scope ?? 'local';
-  let stepLanguage = existing?.language ?? 'generic';
+  const stepScope: 'local' | 'global' = existing?.scope ?? 'local';
+  const stepLanguage = existing?.language ?? 'generic';
   let stepCommand = existing?.command ?? '';
   let stepCwd: string | null = existing?.cwd ?? null;
   let stepBackground = existing?.background ?? false;
@@ -1212,32 +1206,27 @@ async function promptCommandFlow(
         break;
       }
       case 2: {
-        if (skipScopeStep) {
-          step = 3;
-          break;
-        }
-        const r = await promptCommandScope(stepScope, TOTAL, 2);
+        const r = await runModeStep(
+          `${t('Add Command Favorite')} (2/${TOTAL})`,
+          stepBackground,
+        );
         if (r === undefined) return undefined;
         if (isBack(r)) {
           step = 1;
           break;
         }
-        stepScope = r;
+        stepBackground = r;
         step = 3;
         break;
       }
       case 3: {
-        if (skipLanguageStep) {
-          step = 4;
-          break;
-        }
-        const r = await promptCommandLanguage(stepLanguage, TOTAL, 3);
+        const r = await promptCwd(stepCwd ?? undefined, TOTAL, 3);
         if (r === undefined) return undefined;
         if (isBack(r)) {
           step = 2;
           break;
         }
-        stepLanguage = r;
+        stepCwd = r;
         step = 4;
         break;
       }
@@ -1379,9 +1368,6 @@ async function promptAddCommandCreationFlow(
     background: seed?.background ?? false,
     scope,
     language: seed?.language ?? 'generic',
-  }, {
-    skipScopeStep: true,
-    skipLanguageStep: true,
   });
 
   if (!result) {
