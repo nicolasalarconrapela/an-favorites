@@ -332,7 +332,7 @@ export class FavoritesTreeDataProvider
       case 'java':
         return t('Java');
       default:
-        return t('Generic');
+        return t('Personalized');
     }
   }
 

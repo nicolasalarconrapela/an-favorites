@@ -617,8 +617,33 @@ const COMMAND_LANGUAGE_OPTIONS: Array<{
   { value: 'python', label: t('Python') },
   { value: 'node', label: t('Node') },
   { value: 'java', label: t('Java') },
-  { value: 'generic', label: t('Generic') },
+  { value: 'generic', label: t('Personalized') },
 ];
+
+type CommandCreationMode =
+  | { kind: 'personalized-new' }
+  | {
+      kind: 'personalized-existing';
+      template: {
+        label: string;
+        command: string;
+        cwd?: string;
+        background: boolean;
+        language: string;
+        type?: 'shell' | 'vscode';
+      };
+    }
+  | {
+      kind: 'opensource-template';
+      template: {
+        label: string;
+        command: string;
+        cwd?: string;
+        background: boolean;
+        language: string;
+        type?: 'shell' | 'vscode';
+      };
+    };
 
 async function promptCommandScope(
   currentScope: 'local' | 'global' = 'local',
@@ -707,6 +732,299 @@ async function promptCommandLanguage(
     disposables.push(quickPick.onDidHide(() => done(undefined)));
     quickPick.show();
   });
+}
+
+async function promptCommandSourceType(
+  totalSteps: number,
+  stepNumber: number,
+): Promise<'personalized' | 'opensource' | Back | undefined> {
+  interface SourceItem extends vscode.QuickPickItem {
+    sourceType: 'personalized' | 'opensource';
+  }
+
+  return new Promise<'personalized' | 'opensource' | Back | undefined>(
+    (resolve) => {
+      const quickPick = vscode.window.createQuickPick<SourceItem>();
+      quickPick.title = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps})`;
+      quickPick.placeholder = t('Select command source');
+      quickPick.ignoreFocusOut = true;
+      quickPick.buttons = [BACK_BUTTON];
+      quickPick.items = [
+        {
+          label: t('Personalized'),
+          description: t('Create your own command or reuse an existing one'),
+          sourceType: 'personalized',
+        },
+        {
+          label: t('OpenSource Templates'),
+          description: t('Start from reusable templates grouped by language'),
+          sourceType: 'opensource',
+        },
+      ];
+
+      let finished = false;
+      const disposables: vscode.Disposable[] = [];
+      const done = (
+        result: 'personalized' | 'opensource' | Back | undefined,
+      ) => {
+        if (finished) return;
+        finished = true;
+        disposables.forEach((d) => d.dispose());
+        quickPick.dispose();
+        resolve(result);
+      };
+
+      disposables.push(
+        quickPick.onDidAccept(() => done(quickPick.selectedItems[0]?.sourceType)),
+      );
+      disposables.push(
+        quickPick.onDidTriggerButton((button) => {
+          if (button === BACK_BUTTON) done(BACK);
+        }),
+      );
+      disposables.push(quickPick.onDidHide(() => done(undefined)));
+      quickPick.show();
+    },
+  );
+}
+
+async function promptPersonalizedMode(
+  totalSteps: number,
+  stepNumber: number,
+): Promise<'new' | 'existing' | Back | undefined> {
+  interface PersonalizedModeItem extends vscode.QuickPickItem {
+    mode: 'new' | 'existing';
+  }
+
+  return new Promise<'new' | 'existing' | Back | undefined>((resolve) => {
+    const quickPick = vscode.window.createQuickPick<PersonalizedModeItem>();
+    quickPick.title = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps})`;
+    quickPick.placeholder = t('Choose how to start your personalized command');
+    quickPick.ignoreFocusOut = true;
+    quickPick.buttons = [BACK_BUTTON];
+    quickPick.items = [
+      {
+        label: t('New'),
+        description: t('Create a personalized command from scratch'),
+        mode: 'new',
+      },
+      {
+        label: t('Existing'),
+        description: t('Reuse one of your existing commands as a base'),
+        mode: 'existing',
+      },
+    ];
+
+    let finished = false;
+    const disposables: vscode.Disposable[] = [];
+    const done = (result: 'new' | 'existing' | Back | undefined) => {
+      if (finished) return;
+      finished = true;
+      disposables.forEach((d) => d.dispose());
+      quickPick.dispose();
+      resolve(result);
+    };
+
+    disposables.push(
+      quickPick.onDidAccept(() => done(quickPick.selectedItems[0]?.mode)),
+    );
+    disposables.push(
+      quickPick.onDidTriggerButton((button) => {
+        if (button === BACK_BUTTON) done(BACK);
+      }),
+    );
+    disposables.push(quickPick.onDidHide(() => done(undefined)));
+    quickPick.show();
+  });
+}
+
+async function promptExistingCommandTemplate(
+  provider: FavoritesTreeDataProvider,
+  totalSteps: number,
+  stepNumber: number,
+): Promise<
+  | CommandCreationMode['template']
+  | Back
+  | undefined
+> {
+  interface ExistingCommandItem extends vscode.QuickPickItem {
+    template: CommandCreationMode['template'];
+  }
+
+  const editableCommands = provider
+    .getCommands()
+    .filter((command) => command.scope !== 'opensource')
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  if (editableCommands.length === 0) {
+    vscode.window.showInformationMessage(t('No existing commands available.'));
+    return BACK;
+  }
+
+  return new Promise<CommandCreationMode['template'] | Back | undefined>(
+    (resolve) => {
+      const quickPick = vscode.window.createQuickPick<ExistingCommandItem>();
+      quickPick.title = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps})`;
+      quickPick.placeholder = t('Select an existing command');
+      quickPick.ignoreFocusOut = true;
+      quickPick.buttons = [BACK_BUTTON];
+      quickPick.items = editableCommands.map((command) => ({
+        label: command.label,
+        description: `${command.scope === 'global' ? t('Global') : t('Local')} • ${command.language === 'generic' ? t('Personalized') : command.language}`,
+        detail: command.command,
+        template: {
+          label: command.label,
+          command: command.command,
+          cwd: command.cwd,
+          background: command.background,
+          language: command.language,
+          type: command.type,
+        },
+      }));
+
+      let finished = false;
+      const disposables: vscode.Disposable[] = [];
+      const done = (
+        result: CommandCreationMode['template'] | Back | undefined,
+      ) => {
+        if (finished) return;
+        finished = true;
+        disposables.forEach((d) => d.dispose());
+        quickPick.dispose();
+        resolve(result);
+      };
+
+      disposables.push(
+        quickPick.onDidAccept(() => done(quickPick.selectedItems[0]?.template)),
+      );
+      disposables.push(
+        quickPick.onDidTriggerButton((button) => {
+          if (button === BACK_BUTTON) done(BACK);
+        }),
+      );
+      disposables.push(quickPick.onDidHide(() => done(undefined)));
+      quickPick.show();
+    },
+  );
+}
+
+async function promptOpenSourceLanguage(
+  provider: FavoritesTreeDataProvider,
+  totalSteps: number,
+  stepNumber: number,
+): Promise<string | Back | undefined> {
+  interface TemplateLanguageItem extends vscode.QuickPickItem {
+    language: string;
+  }
+
+  const languages = Array.from(
+    new Set(
+      provider
+        .getCommandsByScope('opensource')
+        .map((command) => command.language)
+        .sort(),
+    ),
+  );
+
+  return new Promise<string | Back | undefined>((resolve) => {
+    const quickPick = vscode.window.createQuickPick<TemplateLanguageItem>();
+    quickPick.title = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps})`;
+    quickPick.placeholder = t('Select OpenSource template language');
+    quickPick.ignoreFocusOut = true;
+    quickPick.buttons = [BACK_BUTTON];
+    quickPick.items = languages.map((language) => ({
+      label:
+        COMMAND_LANGUAGE_OPTIONS.find((option) => option.value === language)?.label ??
+        language,
+      language,
+    }));
+
+    let finished = false;
+    const disposables: vscode.Disposable[] = [];
+    const done = (result: string | Back | undefined) => {
+      if (finished) return;
+      finished = true;
+      disposables.forEach((d) => d.dispose());
+      quickPick.dispose();
+      resolve(result);
+    };
+
+    disposables.push(
+      quickPick.onDidAccept(() => done(quickPick.selectedItems[0]?.language)),
+    );
+    disposables.push(
+      quickPick.onDidTriggerButton((button) => {
+        if (button === BACK_BUTTON) done(BACK);
+      }),
+    );
+    disposables.push(quickPick.onDidHide(() => done(undefined)));
+    quickPick.show();
+  });
+}
+
+async function promptOpenSourceTemplate(
+  provider: FavoritesTreeDataProvider,
+  language: string,
+  totalSteps: number,
+  stepNumber: number,
+): Promise<
+  | CommandCreationMode['template']
+  | Back
+  | undefined
+> {
+  interface TemplateItem extends vscode.QuickPickItem {
+    template: CommandCreationMode['template'];
+  }
+
+  const templates = provider
+    .getCommandsByScope('opensource')
+    .filter((command) => command.language === language)
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  return new Promise<CommandCreationMode['template'] | Back | undefined>(
+    (resolve) => {
+      const quickPick = vscode.window.createQuickPick<TemplateItem>();
+      quickPick.title = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps})`;
+      quickPick.placeholder = t('Select OpenSource template');
+      quickPick.ignoreFocusOut = true;
+      quickPick.buttons = [BACK_BUTTON];
+      quickPick.items = templates.map((command) => ({
+        label: command.label,
+        detail: command.command,
+        template: {
+          label: command.label,
+          command: command.command,
+          cwd: command.cwd,
+          background: command.background,
+          language: command.language,
+          type: command.type,
+        },
+      }));
+
+      let finished = false;
+      const disposables: vscode.Disposable[] = [];
+      const done = (
+        result: CommandCreationMode['template'] | Back | undefined,
+      ) => {
+        if (finished) return;
+        finished = true;
+        disposables.forEach((d) => d.dispose());
+        quickPick.dispose();
+        resolve(result);
+      };
+
+      disposables.push(
+        quickPick.onDidAccept(() => done(quickPick.selectedItems[0]?.template)),
+      );
+      disposables.push(
+        quickPick.onDidTriggerButton((button) => {
+          if (button === BACK_BUTTON) done(BACK);
+        }),
+      );
+      disposables.push(quickPick.onDidHide(() => done(undefined)));
+      quickPick.show();
+    },
+  );
 }
 
 async function runPreviewStep(
@@ -858,8 +1176,14 @@ async function promptCommandFlow(
     scope?: 'local' | 'global';
     language?: string;
   },
+  options?: {
+    skipScopeStep?: boolean;
+    skipLanguageStep?: boolean;
+  },
 ): Promise<CommandFlowResult | undefined> {
-  const TOTAL = 6;
+  const skipScopeStep = options?.skipScopeStep ?? false;
+  const skipLanguageStep = options?.skipLanguageStep ?? false;
+  const TOTAL = 6 - (skipScopeStep ? 1 : 0) - (skipLanguageStep ? 1 : 0);
   let step = 1;
 
   // Accumulated state — pre-populated from existing when editing
@@ -888,6 +1212,10 @@ async function promptCommandFlow(
         break;
       }
       case 2: {
+        if (skipScopeStep) {
+          step = 3;
+          break;
+        }
         const r = await promptCommandScope(stepScope, TOTAL, 2);
         if (r === undefined) return undefined;
         if (isBack(r)) {
@@ -899,6 +1227,10 @@ async function promptCommandFlow(
         break;
       }
       case 3: {
+        if (skipLanguageStep) {
+          step = 4;
+          break;
+        }
         const r = await promptCommandLanguage(stepLanguage, TOTAL, 3);
         if (r === undefined) return undefined;
         if (isBack(r)) {
@@ -967,6 +1299,105 @@ async function promptSaveOpenSourceFlow(
   return { ...result, scope };
 }
 
+async function promptAddCommandCreationFlow(
+  provider: FavoritesTreeDataProvider,
+): Promise<CommandFlowResult | undefined> {
+  const TOTAL = 7;
+
+  const scope = await promptCommandScope('local', TOTAL, 1);
+  if (!scope || isBack(scope)) {
+    return undefined;
+  }
+
+  const sourceType = await promptCommandSourceType(TOTAL, 2);
+  if (!sourceType) {
+    return undefined;
+  }
+  if (isBack(sourceType)) {
+    return promptAddCommandCreationFlow(provider);
+  }
+
+  let seed:
+    | {
+        label: string;
+        command: string;
+        cwd?: string;
+        background: boolean;
+        language?: string;
+      }
+    | undefined;
+
+  if (sourceType === 'personalized') {
+    const personalizedMode = await promptPersonalizedMode(TOTAL, 3);
+    if (!personalizedMode) {
+      return undefined;
+    }
+    if (isBack(personalizedMode)) {
+      return promptAddCommandCreationFlow(provider);
+    }
+
+    if (personalizedMode === 'existing') {
+      const template = await promptExistingCommandTemplate(provider, TOTAL, 4);
+      if (!template) {
+        return undefined;
+      }
+      if (isBack(template)) {
+        return promptAddCommandCreationFlow(provider);
+      }
+      seed = template;
+    } else {
+      seed = {
+        label: '',
+        command: '',
+        background: false,
+        language: 'generic',
+      };
+    }
+  } else {
+    const language = await promptOpenSourceLanguage(provider, TOTAL, 3);
+    if (!language) {
+      return undefined;
+    }
+    if (isBack(language)) {
+      return promptAddCommandCreationFlow(provider);
+    }
+
+    const template = await promptOpenSourceTemplate(provider, language, TOTAL, 4);
+    if (!template) {
+      return undefined;
+    }
+    if (isBack(template)) {
+      return promptAddCommandCreationFlow(provider);
+    }
+    seed = template;
+  }
+
+  const result = await promptCommandFlow(provider, {
+    label: seed?.label ?? '',
+    command: seed?.command ?? '',
+    cwd: seed?.cwd,
+    background: seed?.background ?? false,
+    scope,
+    language: seed?.language ?? 'generic',
+  }, {
+    skipScopeStep: true,
+    skipLanguageStep: true,
+  });
+
+  if (!result) {
+    return undefined;
+  }
+
+  return {
+    ...result,
+    scope,
+    language:
+      sourceType === 'personalized' && !seed?.language
+        ? 'generic'
+        : result.language,
+  };
+}
+
 export function registerCommandFavoritesCommands(
   context: vscode.ExtensionContext,
   commandsProvider: FavoritesTreeDataProvider,
@@ -993,28 +1424,16 @@ export function registerCommandFavoritesCommands(
     vscode.commands.registerCommand(
       'anfavorites.addCommandFavorite',
       async () => {
-        const result = await promptCommandFlow(commandsProvider);
+        const result = await promptAddCommandCreationFlow(commandsProvider);
 
         if (result) {
-          const scope = await promptCommandScope(result.scope ?? 'local', 2, 1);
-          if (!scope || isBack(scope)) {
-            return;
-          }
-          const language = await promptCommandLanguage(
-            result.language ?? 'generic',
-            2,
-            2,
-          );
-          if (!language || isBack(language)) {
-            return;
-          }
           commandsProvider.addCommand({
             label: result.label,
             command: result.command,
             cwd: result.cwd,
             background: result.background,
-            scope,
-            language,
+            scope: result.scope,
+            language: result.language,
           });
           vscode.window.showInformationMessage(
             t('Command "{0}" added.', result.label),
