@@ -1,5 +1,19 @@
 # Release Notes
 
+## v1.3.1 - Faster Quick Open & Performance Fixes
+
+_Release Date: April 08, 2026_
+
+After receiving reports that **Quick Open** was taking too long to appear, especially in large projects, we've redesigned how your files are processed to ensure that opening is **instant and smooth**.
+
+### Improvements 🛠️
+
+- **Instant Opening**: We've eliminated the delay when launching Quick Open, making it significantly faster even in the most demanding workspaces.
+
+- **Improved Reliability**: Internal adjustments to ensure smoother navigation through your favorites and recent files.
+
+- **Transparent Monitoring**: Added diagnostic tools to help us keep the extension performing at its best in future updates.
+
 ## v1.3.0 - Native Ripgrep Search & Interactive gitignore Manager
 
 _Release Date: April 06, 2026_

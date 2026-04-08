@@ -1,5 +1,17 @@
 # Notas de la versión
 
+## v1.3.1 - Mayor velocidad en Quick Open y correcciones de rendimiento
+ 
+_Fecha de lanzamiento: 08 de Abril de 2026_
+ 
+Tras reportar que **Quick Open** tardaba demasiado en aparecer, especialmente en proyectos grandes hemos rediseñado cómo se procesan tus archivos para asegurar que la apertura sea **instantánea y fluida**.
+ 
+### Mejoras 🛠️
+ 
+- **Apertura Instantánea**: Hemos eliminado el retraso al iniciar Quick Open, haciéndolo significativamente más rápido incluso en los espacios de trabajo más pesados.
+- **Fiabilidad Mejorada**: Ajustes internos para garantizar una navegación más fluida por tus favoritos y archivos recientes.
+- **Monitorización Transparente**: Añadidas herramientas de diagnóstico que nos ayudarán a mantener la extensión funcionando al máximo nivel en futuras actualizaciones.
+
 ## v1.3.0 - Búsqueda Nativa Ripgrep y Gestor interactivo .gitignore
 
 _Fecha de lanzamiento: 06 de Abril de 2026_

@@ -1471,6 +1471,7 @@ export function registerQuickOpenCommand(
       const disposables: vscode.Disposable[] = [];
       let isDisposed = false;
       let searchFailureNoticeShown = false;
+      let quickPickVisibleAt: number | null = null;
 
       const safeDispose = () => {
         if (isDisposed) {
@@ -1563,69 +1564,104 @@ export function registerQuickOpenCommand(
         );
       };
       const buildInitialQuickPickItems = (): QuickOpenItem[] => {
+        const traceStartedAt = Date.now();
+        const measureStep = <T>(label: string, run: () => T): T => {
+          const startedAt = Date.now();
+          const result = run();
+          log.info('[QuickOpen][trace] Initial shell step completed', {
+            durationMs: Date.now() - startedAt,
+            label,
+            timeSinceShellStartMs: Date.now() - traceStartedAt,
+          });
+          return result;
+        };
         const config = configService.getConfig();
-        const favoriteState = buildFavoriteBuildState(favoritesProvider);
-        const pinnedUris = favoriteState.pinnedUris.slice(0, config.maxPinned);
-        const pinnedNormSet = new Set(
-          pinnedUris.map((uri) => normalizeFsPath(uri.fsPath)),
+        const favoriteState = measureStep('buildFavoriteBuildState', () =>
+          buildFavoriteBuildState(favoritesProvider),
         );
-        const recentFavUris = favoriteState.recentFavoriteUris
-          .filter((uri, index, list) => {
-            const norm = normalizeFsPath(uri.fsPath);
-            return (
-              !pinnedNormSet.has(norm) &&
-              list.findIndex(
-                (candidate) =>
-                  normalizeFsPath(candidate.fsPath) === norm,
-              ) === index
-            );
-          })
-          .slice(0, config.maxRecentFavorites);
-        const recentFavNormSet = new Set(
-          recentFavUris.map((uri) => normalizeFsPath(uri.fsPath)),
+        const pinnedUris = measureStep('slicePinnedUris', () =>
+          favoriteState.pinnedUris.slice(0, config.maxPinned),
         );
-        const rawRecent: unknown[] = (mruService.getRecentFiles?.() as any) ?? [];
-        const recentUris = rawRecent
-          .map((value) => toSafeFileUri(value, logger))
-          .filter((uri): uri is vscode.Uri => !!uri)
-          .filter(
-            (uri) =>
-              uri.scheme === 'file' &&
-              !!vscode.workspace.getWorkspaceFolder(uri),
-          )
-          .filter((uri, index, list) => {
-            const norm = normalizeFsPath(uri.fsPath);
-            return (
-              !pinnedNormSet.has(norm) &&
-              !recentFavNormSet.has(norm) &&
-              list.findIndex(
-                (candidate) =>
-                  normalizeFsPath(candidate.fsPath) === norm,
-              ) === index
-            );
-          })
-          .slice(0, config.maxRecentFiles);
+        const pinnedNormSet = measureStep('buildPinnedNormSet', () =>
+          new Set(pinnedUris.map((uri) => normalizeFsPath(uri.fsPath))),
+        );
+        const recentFavUris = measureStep('buildRecentFavoriteUris', () => {
+          const uniqueRecentFavoriteUris: vscode.Uri[] = [];
+          const seenRecentFavoriteNorms = new Set<string>();
 
-        const pinnedItems = buildPinnedItems(
-          pinnedUris,
-          favoriteState,
-          config,
+          for (const uri of favoriteState.recentFavoriteUris) {
+            const norm = normalizeFsPath(uri.fsPath);
+            if (pinnedNormSet.has(norm) || seenRecentFavoriteNorms.has(norm)) {
+              continue;
+            }
+
+            seenRecentFavoriteNorms.add(norm);
+            uniqueRecentFavoriteUris.push(uri);
+
+            if (uniqueRecentFavoriteUris.length >= config.maxRecentFavorites) {
+              break;
+            }
+          }
+
+          return uniqueRecentFavoriteUris;
+        });
+        const recentFavNormSet = measureStep('buildRecentFavoriteNormSet', () =>
+          new Set(recentFavUris.map((uri) => normalizeFsPath(uri.fsPath))),
         );
-        const recentFavItems = buildRecentFavoriteItems(
-          recentFavUris,
-          favoriteState,
-          config,
+        const rawRecent: unknown[] = measureStep('getRawRecentFiles', () =>
+          (mruService.getRecentFiles?.() as any) ?? [],
         );
-        const recentItems = buildRecentItems(
-          recentUris,
-          favoriteState,
-          config,
+        const recentUris = measureStep('buildRecentUris', () =>
+          rawRecent
+            .map((value) => toSafeFileUri(value, logger))
+            .filter((uri): uri is vscode.Uri => !!uri)
+            .filter(
+              (uri) =>
+                uri.scheme === 'file' &&
+                !!vscode.workspace.getWorkspaceFolder(uri),
+            )
+            .filter((uri, index, list) => {
+              const norm = normalizeFsPath(uri.fsPath);
+              return (
+                !pinnedNormSet.has(norm) &&
+                !recentFavNormSet.has(norm) &&
+                list.findIndex(
+                  (candidate) =>
+                    normalizeFsPath(candidate.fsPath) === norm,
+                ) === index
+              );
+            })
+            .slice(0, config.maxRecentFiles),
         );
-        applyQuickOpenResultPathHints([
-          ...pinnedItems,
-          ...recentFavItems,
-          ...recentItems,
-        ]);
+
+        const pinnedItems = measureStep('buildPinnedItems', () =>
+          buildPinnedItems(
+            pinnedUris,
+            favoriteState,
+            config,
+          ),
+        );
+        const recentFavItems = measureStep('buildRecentFavoriteItems', () =>
+          buildRecentFavoriteItems(
+            recentFavUris,
+            favoriteState,
+            config,
+          ),
+        );
+        const recentItems = measureStep('buildRecentItems', () =>
+          buildRecentItems(
+            recentUris,
+            favoriteState,
+            config,
+          ),
+        );
+        measureStep('applyQuickOpenResultPathHints', () =>
+          applyQuickOpenResultPathHints([
+            ...pinnedItems,
+            ...recentFavItems,
+            ...recentItems,
+          ]),
+        );
 
         const items: QuickOpenItem[] = [];
         if (pinnedItems.length > 0) {
@@ -1670,6 +1706,15 @@ export function registerQuickOpenCommand(
             detail: '',
           });
         }
+
+        log.info('[QuickOpen][trace] Initial shell composition finished', {
+          favoriteCount: favoriteState.allFavoriteUris.length,
+          itemCount: items.length,
+          pinnedCount: pinnedUris.length,
+          recentCount: recentUris.length,
+          recentFavoriteCount: recentFavUris.length,
+          totalDurationMs: Date.now() - traceStartedAt,
+        });
 
         return items;
       };
@@ -1872,6 +1917,18 @@ export function registerQuickOpenCommand(
         const normalizedSearch = searchQuery.trim();
         const isSearching = normalizedSearch.length > 0;
         const buildStartedAt = Date.now();
+        const buildStepStartedAt = Date.now();
+        const logBuildStep = (label: string, startedAt: number, extra?: Record<string, unknown>): void => {
+          log.info('[QuickOpen][trace] BuildItems step completed', {
+            buildId,
+            durationMs: Date.now() - startedAt,
+            isSearching,
+            label,
+            normalizedSearch,
+            timeSinceBuildStartMs: Date.now() - buildStepStartedAt,
+            ...extra,
+          });
+        };
         const buildStartMemory = process.memoryUsage();
         let buildOutcome = 'started';
         let appliedItemCount = 0;
@@ -1951,6 +2008,7 @@ export function registerQuickOpenCommand(
 
           let recentUris: vscode.Uri[] = [];
           if (!isSearching) {
+            const recentFetchStartedAt = Date.now();
             log.debug('[QuickOpen] Fetching recent files from MRU...');
             const rawRecent: unknown[] =
               (mruService.getRecentFiles?.() as any) ?? [];
@@ -1964,13 +2022,23 @@ export function registerQuickOpenCommand(
                 u.scheme === 'file' && !!vscode.workspace.getWorkspaceFolder(u)
               );
             });
+            logBuildStep('loadRecentUris', recentFetchStartedAt, {
+              rawRecentCount: rawRecent.length,
+              recentCount: recentUris.length,
+            });
           } else {
             log.debug('[QuickOpen][trace] Skipping MRU fetch in active search mode', {
               buildId,
               normalizedSearch,
             });
           }
+          const favoriteStateStartedAt = Date.now();
           const favoriteState = buildFavoriteBuildState(favoritesProvider);
+          logBuildStep('buildFavoriteState', favoriteStateStartedAt, {
+            favoriteCount: favoriteState.allFavoriteUris.length,
+            pinnedCount: favoriteState.pinnedUris.length,
+            recentFavoriteCount: favoriteState.recentFavoriteUris.length,
+          });
           const allFavoriteUris = favoriteState.allFavoriteUris;
           log.debug('[QuickOpen][trace] Favorite state prepared for QuickOpen build', {
             buildId,
@@ -2022,18 +2090,32 @@ export function registerQuickOpenCommand(
                 const norm = normalizeFsPath(uri.fsPath);
                 return !pinnedNormSet.has(norm);
               })
-            : favoriteState.recentFavoriteUris
-                .filter((uri, index, list) => {
+            : (() => {
+                const uniqueRecentFavoriteUris: vscode.Uri[] = [];
+                const seenRecentFavoriteNorms = new Set<string>();
+
+                for (const uri of favoriteState.recentFavoriteUris) {
                   const norm = normalizeFsPath(uri.fsPath);
-                  return (
-                    !pinnedNormSet.has(norm) &&
-                    list.findIndex(
-                      (candidate) =>
-                        normalizeFsPath(candidate.fsPath) === norm,
-                    ) === index
-                  );
-                })
-                .slice(0, config.maxRecentFavorites);
+                  if (
+                    pinnedNormSet.has(norm) ||
+                    seenRecentFavoriteNorms.has(norm)
+                  ) {
+                    continue;
+                  }
+
+                  seenRecentFavoriteNorms.add(norm);
+                  uniqueRecentFavoriteUris.push(uri);
+
+                  if (
+                    uniqueRecentFavoriteUris.length >=
+                    config.maxRecentFavorites
+                  ) {
+                    break;
+                  }
+                }
+
+                return uniqueRecentFavoriteUris;
+              })();
           const recentFavNormSet = new Set(
             recentFavUris.map((u) => normalizeFsPath(u.fsPath)),
           );
@@ -2043,6 +2125,12 @@ export function registerQuickOpenCommand(
               ? [...allPinnedUris, ...recentFavUris]
               : [...allPinnedUris, ...recentFavUris, ...recentUris],
           );
+          logBuildStep('prepareVisibleUriPools', buildStartedAt, {
+            candidateCount: allUrisToDisplay.length,
+            pinnedCount: allPinnedUris.length,
+            recentCount: recentUris.length,
+            recentFavoriteCount: recentFavUris.length,
+          });
           log.debug('[QuickOpen][trace] Local QuickOpen candidate pool prepared', {
             buildId,
             normalizedSearch,
@@ -2085,6 +2173,7 @@ export function registerQuickOpenCommand(
             return !pinnedNormSet.has(norm) && !recentFavNormSet.has(norm);
           });
 
+          const itemBuildStartedAt = Date.now();
           const pinnedItems = buildPinnedItems(
             visiblePinnedUris,
             favoriteState,
@@ -2100,6 +2189,11 @@ export function registerQuickOpenCommand(
             favoriteState,
             config,
           );
+          logBuildStep('buildVisibleItems', itemBuildStartedAt, {
+            pinnedItemCount: pinnedItems.length,
+            recentFavoriteItemCount: recentFavItems.length,
+            recentItemCount: recentItems.length,
+          });
 
           const items: QuickOpenItem[] = [];
           const favoriteSectionItems: QuickOpenItem[] = [];
@@ -2410,6 +2504,7 @@ export function registerQuickOpenCommand(
           log.debug(
             `[QuickOpen] Checking collisions for ${allFileItems.length} items...`,
           );
+          const collisionLabelsStartedAt = Date.now();
           await applyCollisionLabels(
             allFileItems,
             (item) => item.internalUri,
@@ -2423,6 +2518,9 @@ export function registerQuickOpenCommand(
             token,
             logger,
           );
+          logBuildStep('applyCollisionLabels', collisionLabelsStartedAt, {
+            fileItemCount: allFileItems.length,
+          });
           if (!isSearchValueCurrent()) {
             buildOutcome = 'stale-search-value';
             log.debug(
@@ -2552,6 +2650,22 @@ export function registerQuickOpenCommand(
               resultadosWorkspace: workspaceResultCount,
             });
           }
+          if (!isSearching && buildOutcome === 'applied-initial-results') {
+            const activeItem =
+              quickPick.activeItems.length > 0 &&
+              isFileItem(quickPick.activeItems[0])
+                ? (quickPick.activeItems[0] as FileQuickPickItem)
+                : null;
+            log.info('[QuickOpen][trace] Initial QuickOpen results applied', {
+              activeItemLabel: activeItem?.label ?? null,
+              activeItemPath: activeItem?.internalUri.fsPath ?? null,
+              itemCount: quickPick.items.length,
+              timeSinceCommandMs: Date.now() - commandStartedAt,
+              timeSinceVisibleMs: quickPickVisibleAt
+                ? Date.now() - quickPickVisibleAt
+                : null,
+            });
+          }
           log.info('[QuickOpen][trace] Build search cycle finished', {
             buildId,
             normalizedSearch,
@@ -2580,7 +2694,14 @@ export function registerQuickOpenCommand(
       };
 
       log.info('[QuickOpen] Preparing initial QuickPick shell...');
-      quickPick.items = buildInitialQuickPickItems();
+      const initialShellStartedAt = Date.now();
+      const initialShellItems = buildInitialQuickPickItems();
+      quickPick.items = initialShellItems;
+      log.info('[QuickOpen][trace] Initial QuickPick shell prepared', {
+        commandLatencyMs: Date.now() - commandStartedAt,
+        durationMs: Date.now() - initialShellStartedAt,
+        itemCount: initialShellItems.length,
+      });
 
       if (isDisposed || activeQuickOpenSession?.sessionId !== sessionId) {
         log.info('[QuickOpen] Aborting QuickPick show because session is no longer active', {
@@ -2596,10 +2717,11 @@ export function registerQuickOpenCommand(
       quickPick.value = '';
       quickPick.busy = false;
       quickPick.show();
+      quickPickVisibleAt = Date.now();
       log.info('[QuickOpen][traza] QuickOpen visible', {
         sessionId,
         origen: 'comando-o-atajo',
-        tiempoDesdeInvocacionMs: Date.now() - commandStartedAt,
+        tiempoDesdeInvocacionMs: quickPickVisibleAt - commandStartedAt,
       });
       log.info(
         '[QuickOpen] ✓ QuickPick visible and ready for user interaction',
@@ -2954,6 +3076,16 @@ export function registerQuickOpenCommand(
           log.info(
             `[QuickOpen] Selected item: ${(selected as any).label || '(no label)'}`,
           );
+          log.info('[QuickOpen][trace] Accepting current QuickPick item', {
+            activeQuery: quickPick.value,
+            selectedDescription: selected.description ?? '',
+            selectedDetail: selected.detail ?? '',
+            selectedLabel: selected.label,
+            timeSinceCommandMs: Date.now() - commandStartedAt,
+            timeSinceVisibleMs: quickPickVisibleAt
+              ? Date.now() - quickPickVisibleAt
+              : null,
+          });
 
           const actionItem = selected as unknown as ActionQuickPickItem;
           if (actionItem.action === 'clearRecents') {

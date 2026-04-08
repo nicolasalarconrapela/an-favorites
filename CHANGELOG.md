@@ -1,4 +1,17 @@
 # Changelog
+ 
+## [1.3.1] - 2026-04-08
+ 
+### Added
+ 
+- **Diagnostics**: Detailed performance tracing (`[QuickOpen][trace]`) for monitoring latency in shell creation, build phases, and item interaction.
+- **Documentation**: New `TASK.md` documenting the Quick Open performance investigation and results.
+ 
+### Changed
+ 
+- **Performance**: Optimized Quick Open startup by replacing quadratic duplicate filtering with single-pass `Set`-based deduplication.
+- **Diagnostics**: Added memory usage monitoring during search build cycles.
+
 
 ## [1.3.0] - 2026-04-06
 

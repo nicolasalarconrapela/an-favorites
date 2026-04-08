@@ -89,9 +89,14 @@ export class ReleaseChangesPanel {
   private async _loadContent(): Promise<void> {
     await this._getMarkdownSource();
     try {
-      const packageUri = vscode.Uri.joinPath(this._extensionUri, 'package.json');
+      const packageUri = vscode.Uri.joinPath(
+        this._extensionUri,
+        'package.json',
+      );
       const bytes = await vscode.workspace.fs.readFile(packageUri);
-      const pkg = JSON.parse(Buffer.from(bytes).toString('utf8')) as { version: string };
+      const pkg = JSON.parse(Buffer.from(bytes).toString('utf8')) as {
+        version: string;
+      };
       this._packageVersion = pkg.version;
     } catch {}
   }
@@ -159,9 +164,12 @@ export class ReleaseChangesPanel {
       this._panel.title = tabTitle;
     }
 
-    const urlGithub = 'https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/develop/';
-    const backgroundDarkUri = urlGithub + 'resources/background_mosaic_dark.webp';
-    const backgroundLightUri = urlGithub + 'resources/background_mosaic_light.webp';
+    const urlGithub =
+      'https://raw.githubusercontent.com/nicolasalarconrapela/an-favorites/refs/heads/develop/';
+    const backgroundDarkUri =
+      urlGithub + 'resources/background_mosaic_dark.webp';
+    const backgroundLightUri =
+      urlGithub + 'resources/background_mosaic_light.webp';
 
     const releaseDateStr =
       this._lastReleaseDate || new Date().toISOString().split('T')[0];
@@ -415,11 +423,11 @@ export class ReleaseChangesPanel {
           <div class="release-footer">
               <p>${vscode.l10n.t('Dear user:')}</p>
               <p>${vscode.l10n.t('Thank you for trusting this application.')}</p>
-              <p>${vscode.l10n.t('Whether you are one or a thousand: THANK YOU. And thank you for those first 500 downloads :).')}</p>
+              <p>${vscode.l10n.t('Whether you are one or a thousand: THANK YOU. And thank you for those first 1000 downloads :).')}</p>
               <p>${vscode.l10n.t("I apologize if something doesn't work as it should.")}</p>
               <p>${vscode.l10n.t('I appreciate feedback (constructive criticism) as this extension is not mine, but yours.')}</p>
               <p>${vscode.l10n.t('Sincerely:')}</p>
-              <p><strong>${vscode.l10n.t('@anappwilos')}</strong></p>
+              <p><strong>${vscode.l10n.t('CEO @anappwilos')}</strong></p>
           </div>
 
           <div class="cta-container">
