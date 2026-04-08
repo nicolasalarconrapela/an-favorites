@@ -884,9 +884,7 @@ async function promptExistingCommandTemplate(
 
       let finished = false;
       const disposables: vscode.Disposable[] = [];
-      const done = (
-        result: CommandCreationMode['template'] | Back | undefined,
-      ) => {
+      const done = (result: CommandCreationMode['template'] | Back | undefined) => {
         if (finished) return;
         finished = true;
         disposables.forEach((d) => d.dispose());
@@ -1003,9 +1001,7 @@ async function promptOpenSourceTemplate(
 
       let finished = false;
       const disposables: vscode.Disposable[] = [];
-      const done = (
-        result: CommandCreationMode['template'] | Back | undefined,
-      ) => {
+      const done = (result: CommandCreationMode['template'] | Back | undefined) => {
         if (finished) return;
         finished = true;
         disposables.forEach((d) => d.dispose());
@@ -1291,21 +1287,23 @@ async function promptSaveOpenSourceFlow(
 async function promptAddCommandCreationFlow(
   provider: FavoritesTreeDataProvider,
 ): Promise<CommandFlowResult | undefined> {
-  const TOTAL = 7;
+  type State = 'scope' | 'source' | 'personalized-mode' | 'opensource-language' | 'template';
+  type ChoiceItem = vscode.QuickPickItem & {
+    nextState?: State;
+    value?: string;
+    template?: {
+      label: string;
+      command: string;
+      cwd?: string;
+      background: boolean;
+      language?: string;
+    };
+  };
 
-  const scope = await promptCommandScope('local', TOTAL, 1);
-  if (!scope || isBack(scope)) {
-    return undefined;
-  }
-
-  const sourceType = await promptCommandSourceType(TOTAL, 2);
-  if (!sourceType) {
-    return undefined;
-  }
-  if (isBack(sourceType)) {
-    return promptAddCommandCreationFlow(provider);
-  }
-
+  let state: State = 'scope';
+  let scope: 'local' | 'global' = 'local';
+  let sourceType: 'personalized' | 'opensource' = 'personalized';
+  let language = 'generic';
   let seed:
     | {
         label: string;
@@ -1315,59 +1313,221 @@ async function promptAddCommandCreationFlow(
         language?: string;
       }
     | undefined;
+  const history: State[] = [];
 
-  if (sourceType === 'personalized') {
-    const personalizedMode = await promptPersonalizedMode(TOTAL, 3);
-    if (!personalizedMode) {
-      return undefined;
-    }
-    if (isBack(personalizedMode)) {
-      return promptAddCommandCreationFlow(provider);
-    }
-
-    if (personalizedMode === 'existing') {
-      const template = await promptExistingCommandTemplate(provider, TOTAL, 4);
-      if (!template) {
-        return undefined;
+  const selection = await new Promise<
+    | {
+        scope: 'local' | 'global';
+        seed: {
+          label: string;
+          command: string;
+          cwd?: string;
+          background: boolean;
+          language?: string;
+        };
       }
-      if (isBack(template)) {
-        return promptAddCommandCreationFlow(provider);
-      }
-      seed = template;
-    } else {
-      seed = {
-        label: '',
-        command: '',
-        background: false,
-        language: 'generic',
-      };
-    }
-  } else {
-    const language = await promptOpenSourceLanguage(provider, TOTAL, 3);
-    if (!language) {
-      return undefined;
-    }
-    if (isBack(language)) {
-      return promptAddCommandCreationFlow(provider);
-    }
+    | undefined
+  >((resolve) => {
+    const quickPick = vscode.window.createQuickPick<ChoiceItem>();
+    quickPick.ignoreFocusOut = true;
 
-    const template = await promptOpenSourceTemplate(provider, language, TOTAL, 4);
-    if (!template) {
-      return undefined;
-    }
-    if (isBack(template)) {
-      return promptAddCommandCreationFlow(provider);
-    }
-    seed = template;
+    const update = () => {
+      quickPick.buttons = history.length > 0 ? [BACK_BUTTON] : [];
+
+      if (state === 'scope') {
+        quickPick.title = `${t('Add Command Favorite')} (1/4)`;
+        quickPick.placeholder = t('Select command scope');
+        quickPick.items = COMMAND_SCOPE_OPTIONS.map((option) => ({
+          label: option.label,
+          description: option.description,
+          nextState: 'source',
+          value: option.value,
+        }));
+        return;
+      }
+
+      if (state === 'source') {
+        quickPick.title = `${t('Add Command Favorite')} (2/4)`;
+        quickPick.placeholder = t('Select command source');
+        quickPick.items = [
+          {
+            label: t('Personalized'),
+            description: t('Create your own command or reuse an existing one'),
+            nextState: 'personalized-mode',
+            value: 'personalized',
+          },
+          {
+            label: t('OpenSource Templates'),
+            description: t('Start from reusable templates grouped by language'),
+            nextState: 'opensource-language',
+            value: 'opensource',
+          },
+        ];
+        return;
+      }
+
+      if (state === 'personalized-mode') {
+        quickPick.title = `${t('Add Command Favorite')} (3/4)`;
+        quickPick.placeholder = t('Choose how to start your personalized command');
+        quickPick.items = [
+          {
+            label: t('New'),
+            description: t('Create a personalized command from scratch'),
+            template: {
+              label: '',
+              command: '',
+              background: false,
+              language: 'generic',
+            },
+          },
+          {
+            label: t('Existing'),
+            description: t('Reuse one of your existing commands as a base'),
+            nextState: 'template',
+            value: 'existing',
+          },
+        ];
+        return;
+      }
+
+      if (state === 'opensource-language') {
+        quickPick.title = `${t('Add Command Favorite')} (3/4)`;
+        quickPick.placeholder = t('Select OpenSource template language');
+        quickPick.items = Array.from(
+          new Set(
+            provider
+              .getCommandsByScope('opensource')
+              .map((command) => command.language)
+              .sort(),
+          ),
+        ).map((value) => ({
+          label:
+            COMMAND_LANGUAGE_OPTIONS.find((option) => option.value === value)?.label ??
+            value,
+          nextState: 'template',
+          value,
+        }));
+        return;
+      }
+
+      quickPick.title = `${t('Add Command Favorite')} (4/4)`;
+      quickPick.placeholder =
+        sourceType === 'opensource'
+          ? t('Select OpenSource template')
+          : t('Select an existing command');
+      const commands =
+        sourceType === 'opensource'
+          ? provider
+              .getCommandsByScope('opensource')
+              .filter((command) => command.language === language)
+          : provider
+              .getCommands()
+              .filter((command) => command.scope !== 'opensource')
+              .sort((a, b) => a.label.localeCompare(b.label));
+      quickPick.items = commands.map((command) => ({
+        label: command.label,
+        description:
+          sourceType === 'opensource'
+            ? undefined
+            : `${command.scope === 'global' ? t('Global') : t('Local')} • ${
+                command.language === 'generic'
+                  ? t('Personalized')
+                  : FavoritesTreeDataProvider.getLanguageDisplayName(
+                      command.language,
+                    )
+              }`,
+        detail: command.command,
+        template: {
+          label: command.label,
+          command: command.command,
+          cwd: command.cwd,
+          background: command.background,
+          language: command.language,
+        },
+      }));
+    };
+
+    const goBack = () => {
+      const previous = history.pop();
+      if (!previous) return;
+      state = previous;
+      update();
+      quickPick.show();
+    };
+
+    const disposables: vscode.Disposable[] = [];
+    let finished = false;
+    const done = (
+      result:
+        | {
+            scope: 'local' | 'global';
+            seed: {
+              label: string;
+              command: string;
+              cwd?: string;
+              background: boolean;
+              language?: string;
+            };
+          }
+        | undefined,
+    ) => {
+      if (finished) return;
+      finished = true;
+      disposables.forEach((d) => d.dispose());
+      quickPick.dispose();
+      resolve(result);
+    };
+
+    disposables.push(
+      quickPick.onDidTriggerButton((button) => {
+        if (button === BACK_BUTTON) {
+          goBack();
+        }
+      }),
+    );
+    disposables.push(
+      quickPick.onDidAccept(() => {
+        const item = quickPick.selectedItems[0];
+        if (!item) return;
+
+        if (state === 'scope' && item.value) {
+          scope = item.value as 'local' | 'global';
+        } else if (state === 'source' && item.value) {
+          sourceType = item.value as 'personalized' | 'opensource';
+        } else if (state === 'opensource-language' && item.value) {
+          language = item.value;
+        }
+
+        if (item.template) {
+          done({ scope, seed: item.template });
+          return;
+        }
+
+        if (item.nextState) {
+          history.push(state);
+          state = item.nextState;
+          update();
+          quickPick.show();
+        }
+      }),
+    );
+    disposables.push(quickPick.onDidHide(() => done(undefined)));
+
+    update();
+    quickPick.show();
+  });
+
+  if (!selection) {
+    return undefined;
   }
 
   const result = await promptCommandFlow(provider, {
-    label: seed?.label ?? '',
-    command: seed?.command ?? '',
-    cwd: seed?.cwd,
-    background: seed?.background ?? false,
-    scope,
-    language: seed?.language ?? 'generic',
+    label: selection.seed.label ?? '',
+    command: selection.seed.command ?? '',
+    cwd: selection.seed.cwd,
+    background: selection.seed.background ?? false,
+    scope: selection.scope,
+    language: selection.seed.language ?? 'generic',
   });
 
   if (!result) {
@@ -1376,11 +1536,8 @@ async function promptAddCommandCreationFlow(
 
   return {
     ...result,
-    scope,
-    language:
-      sourceType === 'personalized' && !seed?.language
-        ? 'generic'
-        : result.language,
+    scope: selection.scope,
+    language: selection.seed.language ?? result.language ?? 'generic',
   };
 }
 

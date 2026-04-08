@@ -68,25 +68,27 @@ export class CommandItem extends vscode.TreeItem {
     this.id = `command:${data.scope}:${data.id}`;
     const isVscode = data.type === 'vscode';
     const scopeLabel = FavoritesTreeDataProvider.getScopeDisplayName(data.scope);
-    const languageLabel = FavoritesTreeDataProvider.getLanguageDisplayName(
-      data.language,
-    );
+    const locationLabel = data.cwd ? `[${data.cwd}]` : `[${t('Workspace root')}]`;
 
     if (isVscode) {
       this.tooltip = data.command;
-      this.description = `${scopeLabel} • ${languageLabel}`;
+      this.description = `${locationLabel} • ${scopeLabel}`;
       this.detail = data.command;
-      this.iconPath = new vscode.ThemeIcon('symbol-event');
     } else {
       this.tooltip = data.background
         ? `${data.command}${data.cwd ? ` (${data.cwd})` : ''} — ${t('Background')}`
         : `${data.command}${data.cwd ? ` (${data.cwd})` : ''} — ${t('Foreground')}`;
-      this.description = `${scopeLabel} • ${languageLabel}`;
-      this.detail = data.cwd ? `${data.command} [${data.cwd}]` : data.command;
-      this.iconPath = new vscode.ThemeIcon(
-        data.background ? 'server-process' : 'terminal',
-      );
+      this.description = `${locationLabel} • ${scopeLabel}`;
+      this.detail = data.command;
     }
+
+    this.iconPath = new vscode.ThemeIcon(
+      data.scope === 'local'
+        ? 'folder-library'
+        : data.scope === 'global'
+          ? 'globe'
+          : 'library',
+    );
 
     let ctx = `commandItem:${data.scope}:${data.language}`;
     ctx += data.scope === 'opensource' ? ':readonly' : ':editable';
@@ -110,6 +112,42 @@ export class CommandScopeItem extends vscode.TreeItem {
     this.contextValue = `commandScopeItem:${scope}`;
     this.iconPath = new vscode.ThemeIcon(
       scope === 'local' ? 'folder-library' : scope === 'global' ? 'globe' : 'library',
+    );
+  }
+}
+
+export class CommandSectionItem extends vscode.TreeItem {
+  constructor(
+    public readonly section:
+      | 'commands'
+      | 'personalized'
+      | 'predefined'
+      | 'globals'
+      | 'opensource',
+    collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Expanded,
+  ) {
+    super(
+      section === 'commands'
+        ? t('Commands')
+        : section === 'personalized'
+          ? t('Personalized')
+          : section === 'predefined'
+            ? t('Predefined')
+            : section === 'globals'
+              ? t('Global Commands')
+              : t('OpenSource'),
+      collapsibleState,
+    );
+    this.id = `command-section:${section}`;
+    this.contextValue = `commandSectionItem:${section}`;
+    this.iconPath = new vscode.ThemeIcon(
+      section === 'commands'
+        ? 'terminal'
+        : section === 'personalized'
+          ? 'symbol-misc'
+          : section === 'globals'
+            ? 'globe'
+            : 'library',
     );
   }
 }
@@ -239,6 +277,7 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
+      | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
     >,
@@ -247,6 +286,7 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
+      | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
     >,
@@ -258,6 +298,7 @@ export class FavoritesTreeDataProvider
     | FavoriteItem
     | WorkspaceItem
     | CommandItem
+    | CommandSectionItem
     | CommandScopeItem
     | CommandLanguageItem
     | undefined
@@ -268,6 +309,7 @@ export class FavoritesTreeDataProvider
     | FavoriteItem
     | WorkspaceItem
     | CommandItem
+    | CommandSectionItem
     | CommandScopeItem
     | CommandLanguageItem
     | undefined
@@ -280,6 +322,7 @@ export class FavoritesTreeDataProvider
     | FavoriteItem
     | WorkspaceItem
     | CommandItem
+    | CommandSectionItem
     | CommandScopeItem
     | CommandLanguageItem
     | undefined
@@ -318,9 +361,9 @@ export class FavoritesTreeDataProvider
   public static getScopeDisplayName(
     scope: CommandFavoriteData['scope'],
   ): string {
-    if (scope === 'local') return t('Local Commands');
-    if (scope === 'global') return t('Global Commands');
-    return t('OpenSource Commands');
+    if (scope === 'local') return t('Local');
+    if (scope === 'global') return t('Global');
+    return t('OpenSource');
   }
 
   public static getLanguageDisplayName(language: string): string {
@@ -409,6 +452,7 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
+      | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem,
   ): vscode.TreeItem {
@@ -421,6 +465,7 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
+      | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem,
   ): Promise<
@@ -429,6 +474,7 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
+      | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
     )[]
@@ -464,13 +510,69 @@ export class FavoritesTreeDataProvider
         }
       });
 
-      const commandScopes: CommandScopeItem[] = (
-        ['local', 'global', 'opensource'] as const
-      )
-        .filter((scope) => this.getCommandsByScope(scope).length > 0)
-        .map((scope) => new CommandScopeItem(scope));
+      const hasCommands = this.getCommands().length > 0;
+      return Promise.resolve(
+        hasCommands ? [...groups, new CommandSectionItem('commands')] : groups,
+      );
+    }
 
-      return Promise.resolve([...groups, ...commandScopes]);
+    if (element instanceof CommandSectionItem) {
+      if (element.section === 'commands') {
+        const sections: (CommandSectionItem | CommandLanguageItem)[] = [];
+        if (this.localCommands.length > 0) {
+          sections.push(new CommandSectionItem('personalized'));
+        }
+        if (
+          this.globalCommands.length > 0 ||
+          this.openSourceCommands.length > 0
+        ) {
+          sections.push(new CommandSectionItem('predefined'));
+        }
+        return Promise.resolve(sections);
+      }
+
+      if (element.section === 'personalized') {
+        return Promise.resolve(
+          [...this.localCommands]
+            .sort((a, b) => b.addedAt - a.addedAt || a.label.localeCompare(b.label))
+            .map((command) => new CommandItem(command)),
+        );
+      }
+
+      if (element.section === 'predefined') {
+        const sections: CommandSectionItem[] = [];
+        if (this.globalCommands.length > 0) {
+          sections.push(new CommandSectionItem('globals'));
+        }
+        if (this.openSourceCommands.length > 0) {
+          sections.push(new CommandSectionItem('opensource'));
+        }
+        return Promise.resolve(sections);
+      }
+
+      if (element.section === 'globals') {
+        return Promise.resolve(
+          [...this.globalCommands]
+            .sort((a, b) => b.addedAt - a.addedAt || a.label.localeCompare(b.label))
+            .map((command) => new CommandItem(command)),
+        );
+      }
+
+      if (element.section === 'opensource') {
+        return Promise.resolve(
+          Array.from(
+            new Set(
+              this.openSourceCommands
+                .map((command) => command.language.trim().toLowerCase() || 'generic')
+                .sort(),
+            ),
+          ).map((language) => new CommandLanguageItem('opensource', language)),
+        );
+      }
+
+      return Promise.resolve(
+        [],
+      );
     }
 
     if (element instanceof GroupItem) {
@@ -925,6 +1027,7 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
+      | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
     )[],
@@ -953,6 +1056,7 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
+      | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
       | undefined,
