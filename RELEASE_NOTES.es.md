@@ -1,5 +1,18 @@
 # Notas de la versión
 
+## v1.3.1 - Optimización de rendimiento en Quick Open
+
+_Fecha de lanzamiento: 08 de Abril de 2026_
+
+Esta actualización se centra en el **rendimiento de Quick Open**. Hemos eliminado cuellos de botella computacionales que causaban latencia al inicio en espacios de trabajo grandes. Con nuestra nueva **lógica de deduplicación optimizada**, el despliegue inicial de favoritos ahora es significativamente más rápido. También hemos introducido **trazas de rendimiento en tiempo real** para asegurar la mejor experiencia posible.
+
+### Mejoras 🛠️
+
+- **Deduplicación Optimizada**: Sustitución de filtros ineficientes por un sistema basado en `Set` de una sola pasada, reduciendo drásticamente el tiempo de carga de Quick Open.
+- **Trazas de Rendimiento**: Nueva infraestructura de registros internos para monitorizar la latencia de comandos y la salud de la memoria en tiempo real.
+- **Investigación Detallada**: Nuevo archivo [`TASK.md`](./TASK.md) disponible para desarrolladores interesados en nuestras pruebas de rendimiento y estrategia de optimización.
+
+
 ## v1.3.0 - Búsqueda Nativa Ripgrep y Gestor interactivo .gitignore
 
 _Fecha de lanzamiento: 06 de Abril de 2026_

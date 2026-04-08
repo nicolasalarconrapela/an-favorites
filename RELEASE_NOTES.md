@@ -1,5 +1,18 @@
 # Release Notes
 
+## v1.3.1 - Quick Open Performance Optimization
+
+_Release Date: April 08, 2026_
+
+This update focuses on **Quick Open performance**. We've eliminated computational bottlenecks that caused startup latency in large workspaces. With our new **optimized deduplication logic**, the initial favorites shell now renders significantly faster. We've also introduced **real-time performance tracing** to ensure the smoothest experience possible.
+
+### Improvements 🛠️
+
+- **Optimized Deduplication**: Replaced inefficient filtering with a single-pass `Set` approach, drastically reducing startup time for Quick Open.
+- **Performance Tracing**: New internal logging infrastructure to monitor command latency and memory health in real-time.
+- **Detailed Investigation**: New [`TASK.md`](./TASK.md) available for developers interested in our performance benchmarks and optimization strategy.
+
+
 ## v1.3.0 - Native Ripgrep Search & Interactive gitignore Manager
 
 _Release Date: April 06, 2026_
