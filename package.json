@@ -171,6 +171,24 @@
         "icon": "$(symbol-event)"
       },
       {
+        "command": "anfavorites.saveOpenSourceCommandAsLocal",
+        "title": "%command.saveOpenSourceCommandAsLocal.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(save)"
+      },
+      {
+        "command": "anfavorites.saveOpenSourceCommandAsGlobal",
+        "title": "%command.saveOpenSourceCommandAsGlobal.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "anfavorites.hideOpenSourceCommand",
+        "title": "%command.hideOpenSourceCommand.title%",
+        "category": "%command.category.anfavorites%",
+        "icon": "$(eye-closed)"
+      },
+      {
         "command": "anfavorites.clearCache",
         "title": "Clear Extension Cache",
         "category": "%command.category.anfavorites%",
@@ -256,11 +274,6 @@
           "command": "anfavorites.addCommandFavorite",
           "when": "view == anfavorites.favoritesView",
           "group": "navigation"
-        },
-        {
-          "command": "anfavorites.addVSCodeCommandFavorite",
-          "when": "view == anfavorites.favoritesView",
-          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -290,11 +303,6 @@
           "group": "favorites@1"
         },
         {
-          "command": "anfavorites.moveFavorite",
-          "when": "view == anfavorites.favoritesView && viewItem =~ /^commandItem/",
-          "group": "inline@3"
-        },
-        {
           "command": "anfavorites.renameGroup",
           "when": "view == anfavorites.favoritesView && viewItem =~ /groupItem/",
           "group": "inline"
@@ -321,13 +329,28 @@
         },
         {
           "command": "anfavorites.editCommandFavorite",
-          "when": "view == anfavorites.favoritesView && viewItem =~ /^commandItem/",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /:editable$/",
           "group": "inline@1"
         },
         {
           "command": "anfavorites.removeCommandFavorite",
-          "when": "view == anfavorites.favoritesView && viewItem =~ /^commandItem/",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /:editable$/",
           "group": "inline@2"
+        },
+        {
+          "command": "anfavorites.saveOpenSourceCommandAsLocal",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /:readonly$/",
+          "group": "inline@1"
+        },
+        {
+          "command": "anfavorites.saveOpenSourceCommandAsGlobal",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /:readonly$/",
+          "group": "inline@2"
+        },
+        {
+          "command": "anfavorites.hideOpenSourceCommand",
+          "when": "view == anfavorites.favoritesView && viewItem =~ /:readonly$/",
+          "group": "inline@3"
         }
       ],
       "commandPalette": [
@@ -393,6 +416,18 @@
         },
         {
           "command": "anfavorites.removeCommandFavorite",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.saveOpenSourceCommandAsLocal",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.saveOpenSourceCommandAsGlobal",
+          "when": "false"
+        },
+        {
+          "command": "anfavorites.hideOpenSourceCommand",
           "when": "false"
         },
         {
@@ -607,6 +642,12 @@
       {
         "title": "%config.quickOpen.title%",
         "properties": {
+          "anfavorites.commands.openSourceCatalogPath": {
+            "type": "string",
+            "default": "",
+            "scope": "window",
+            "description": "%config.commands.openSourceCatalogPath.description%"
+          },
           "anfavorites.quickOpen.pathDetailLocation": {
             "type": "string",
             "default": "description",

@@ -9,6 +9,11 @@ import { t } from '../utils/l10n';
 
 const VALIDATION_CONCURRENCY = 12;
 const DEFAULT_GROUP_ID = 'Sin Grupo';
+const LOCAL_COMMANDS_STORAGE_KEY = 'anfavorites.commands.local.v1';
+const GLOBAL_COMMANDS_STORAGE_KEY = 'anfavorites.commands.global.v1';
+const LEGACY_COMMANDS_STORAGE_KEY = 'anfavorites.commands.v1';
+const HIDDEN_OPENSOURCE_COMMANDS_STORAGE_KEY =
+  'anfavorites.commands.opensource.hidden.v1';
 
 function getDefaultGroupLabel(): string {
   return t('Ungrouped');
@@ -49,42 +54,42 @@ export interface CommandFavoriteData {
   cwd?: string;
   background: boolean;
   addedAt: number;
-  group?: string;
   type?: 'shell' | 'vscode';
+  scope: 'local' | 'global' | 'opensource';
+  language: string;
+  readonly?: boolean;
+  source?: 'builtin' | 'file';
 }
 
 export class CommandItem extends vscode.TreeItem {
   constructor(public readonly data: CommandFavoriteData) {
     super(data.label, vscode.TreeItemCollapsibleState.None);
 
-    this.id = `command:${data.id}`;
-    const groupName = data.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
+    this.id = `command:${data.scope}:${data.id}`;
     const isVscode = data.type === 'vscode';
+    const scopeLabel = FavoritesTreeDataProvider.getScopeDisplayName(data.scope);
+    const languageLabel = FavoritesTreeDataProvider.getLanguageDisplayName(
+      data.language,
+    );
 
     if (isVscode) {
       this.tooltip = data.command;
-      this.description = data.command;
+      this.description = `${scopeLabel} • ${languageLabel}`;
+      this.detail = data.command;
       this.iconPath = new vscode.ThemeIcon('symbol-event');
     } else {
       this.tooltip = data.background
         ? `${data.command}${data.cwd ? ` (${data.cwd})` : ''} — ${t('Background')}`
         : `${data.command}${data.cwd ? ` (${data.cwd})` : ''} — ${t('Foreground')}`;
-      this.description = data.cwd
-        ? `${data.command} [${data.cwd}]`
-        : data.command;
+      this.description = `${scopeLabel} • ${languageLabel}`;
+      this.detail = data.cwd ? `${data.command} [${data.cwd}]` : data.command;
       this.iconPath = new vscode.ThemeIcon(
         data.background ? 'server-process' : 'terminal',
       );
     }
 
-    let ctx = isVscode
-      ? 'commandItem:vscode'
-      : data.background
-        ? 'commandItem:background'
-        : 'commandItem';
-    if (groupName !== FavoritesTreeDataProvider.DEFAULT_GROUP) {
-      ctx += ':grouped';
-    }
+    let ctx = `commandItem:${data.scope}:${data.language}`;
+    ctx += data.scope === 'opensource' ? ':readonly' : ':editable';
     this.contextValue = ctx;
 
     this.command = {
@@ -92,6 +97,36 @@ export class CommandItem extends vscode.TreeItem {
       title: t('Run Command'),
       arguments: [this],
     };
+  }
+}
+
+export class CommandScopeItem extends vscode.TreeItem {
+  constructor(
+    public readonly scope: CommandFavoriteData['scope'],
+    collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Expanded,
+  ) {
+    super(FavoritesTreeDataProvider.getScopeDisplayName(scope), collapsibleState);
+    this.id = `command-scope:${scope}`;
+    this.contextValue = `commandScopeItem:${scope}`;
+    this.iconPath = new vscode.ThemeIcon(
+      scope === 'local' ? 'folder-library' : scope === 'global' ? 'globe' : 'library',
+    );
+  }
+}
+
+export class CommandLanguageItem extends vscode.TreeItem {
+  constructor(
+    public readonly scope: CommandFavoriteData['scope'],
+    public readonly language: string,
+    collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Expanded,
+  ) {
+    super(
+      FavoritesTreeDataProvider.getLanguageDisplayName(language),
+      collapsibleState,
+    );
+    this.id = `command-language:${scope}:${language}`;
+    this.contextValue = `commandLanguageItem:${scope}:${language}`;
+    this.iconPath = new vscode.ThemeIcon('symbol-string');
   }
 }
 
@@ -200,10 +235,20 @@ interface FavoriteMetadata {
 export class FavoritesTreeDataProvider
   implements
     vscode.TreeDataProvider<
-      GroupItem | FavoriteItem | WorkspaceItem | CommandItem
+      | GroupItem
+      | FavoriteItem
+      | WorkspaceItem
+      | CommandItem
+      | CommandScopeItem
+      | CommandLanguageItem
     >,
     vscode.TreeDragAndDropController<
-      GroupItem | FavoriteItem | WorkspaceItem | CommandItem
+      | GroupItem
+      | FavoriteItem
+      | WorkspaceItem
+      | CommandItem
+      | CommandScopeItem
+      | CommandLanguageItem
     >,
     vscode.Disposable
 {
@@ -213,6 +258,8 @@ export class FavoritesTreeDataProvider
     | FavoriteItem
     | WorkspaceItem
     | CommandItem
+    | CommandScopeItem
+    | CommandLanguageItem
     | undefined
     | null
     | void
@@ -221,6 +268,8 @@ export class FavoritesTreeDataProvider
     | FavoriteItem
     | WorkspaceItem
     | CommandItem
+    | CommandScopeItem
+    | CommandLanguageItem
     | undefined
     | null
     | void
@@ -231,6 +280,8 @@ export class FavoritesTreeDataProvider
     | FavoriteItem
     | WorkspaceItem
     | CommandItem
+    | CommandScopeItem
+    | CommandLanguageItem
     | undefined
     | null
     | void
@@ -243,7 +294,10 @@ export class FavoritesTreeDataProvider
   ];
 
   private favorites: Map<string, FavoriteMetadata> = new Map();
-  private commands: CommandFavoriteData[] = [];
+  private localCommands: CommandFavoriteData[] = [];
+  private globalCommands: CommandFavoriteData[] = [];
+  private openSourceCommands: CommandFavoriteData[] = [];
+  private hiddenOpenSourceCommandIds = new Set<string>();
 
   private groups: Set<string> = new Set([
     FavoritesTreeDataProvider.DEFAULT_GROUP,
@@ -259,6 +313,27 @@ export class FavoritesTreeDataProvider
 
   public static getGroupDisplayName(groupName: string): string {
     return getGroupDisplayName(groupName);
+  }
+
+  public static getScopeDisplayName(
+    scope: CommandFavoriteData['scope'],
+  ): string {
+    if (scope === 'local') return t('Local Commands');
+    if (scope === 'global') return t('Global Commands');
+    return t('OpenSource Commands');
+  }
+
+  public static getLanguageDisplayName(language: string): string {
+    switch (language.trim().toLowerCase()) {
+      case 'python':
+        return t('Python');
+      case 'node':
+        return t('Node');
+      case 'java':
+        return t('Java');
+      default:
+        return t('Generic');
+    }
   }
 
   constructor(
@@ -329,14 +404,35 @@ export class FavoritesTreeDataProvider
   }
 
   getTreeItem(
-    element: GroupItem | FavoriteItem | WorkspaceItem | CommandItem,
+    element:
+      | GroupItem
+      | FavoriteItem
+      | WorkspaceItem
+      | CommandItem
+      | CommandScopeItem
+      | CommandLanguageItem,
   ): vscode.TreeItem {
     return element;
   }
 
   async getChildren(
-    element?: GroupItem | FavoriteItem | WorkspaceItem | CommandItem,
-  ): Promise<(GroupItem | FavoriteItem | WorkspaceItem | CommandItem)[]> {
+    element?:
+      | GroupItem
+      | FavoriteItem
+      | WorkspaceItem
+      | CommandItem
+      | CommandScopeItem
+      | CommandLanguageItem,
+  ): Promise<
+    (
+      | GroupItem
+      | FavoriteItem
+      | WorkspaceItem
+      | CommandItem
+      | CommandScopeItem
+      | CommandLanguageItem
+    )[]
+  > {
     const t0 = Date.now();
 
     if (!element) {
@@ -344,7 +440,7 @@ export class FavoritesTreeDataProvider
       const groupMap = this.getGroupMap();
 
       groupMap.forEach((filePaths, groupName) => {
-        // Check if group has visible files or commands
+        // Check if group has visible files
         let hasVisibleFiles = false;
         for (const filePath of filePaths) {
           const uri = vscode.Uri.file(filePath);
@@ -354,13 +450,8 @@ export class FavoritesTreeDataProvider
           }
         }
 
-        const hasCommands = this.commands.some((cmd) => {
-          const cmdGroup = cmd.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
-          return cmdGroup === groupName;
-        });
-
-        const isEmpty = filePaths.length === 0 && !hasCommands;
-        const included = hasVisibleFiles || hasCommands || isEmpty;
+        const isEmpty = filePaths.length === 0;
+        const included = hasVisibleFiles || isEmpty;
 
         if (included) {
           groups.push(
@@ -373,7 +464,13 @@ export class FavoritesTreeDataProvider
         }
       });
 
-      return Promise.resolve(groups);
+      const commandScopes: CommandScopeItem[] = (
+        ['local', 'global', 'opensource'] as const
+      )
+        .filter((scope) => this.getCommandsByScope(scope).length > 0)
+        .map((scope) => new CommandScopeItem(scope));
+
+      return Promise.resolve([...groups, ...commandScopes]);
     }
 
     if (element instanceof GroupItem) {
@@ -425,16 +522,7 @@ export class FavoritesTreeDataProvider
           }
         }
 
-        // After workspace sub-items, also append commands for this group
-        const cmdItems: CommandItem[] = [];
-        this.commands.forEach((cmd) => {
-          const cmdGroup = cmd.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
-          if (cmdGroup === element.groupName) {
-            cmdItems.push(new CommandItem(cmd));
-          }
-        });
-
-        return Promise.resolve([...workspaceItems, ...cmdItems]);
+        return Promise.resolve(workspaceItems);
       }
 
       const favoriteItems: FavoriteItem[] = [];
@@ -459,16 +547,7 @@ export class FavoritesTreeDataProvider
 
       await this._resolveCollisions(favoriteItems, element.groupName);
 
-      // Commands in this group
-      const cmdItems: CommandItem[] = [];
-      this.commands.forEach((cmd) => {
-        const cmdGroup = cmd.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
-        if (cmdGroup === element.groupName) {
-          cmdItems.push(new CommandItem(cmd));
-        }
-      });
-
-      return Promise.resolve([...favoriteItems, ...cmdItems]);
+      return Promise.resolve(favoriteItems);
     }
 
     if (element instanceof WorkspaceItem) {
@@ -497,6 +576,33 @@ export class FavoritesTreeDataProvider
         `${element.groupName}:${element.name}`,
       );
       return Promise.resolve(items);
+    }
+
+    if (element instanceof CommandScopeItem) {
+      const languages = Array.from(
+        new Set(
+          this.getCommandsByScope(element.scope)
+            .map((command) => command.language.trim().toLowerCase() || 'generic')
+            .sort(),
+        ),
+      );
+
+      return Promise.resolve(
+        languages.map((language) => new CommandLanguageItem(element.scope, language)),
+      );
+    }
+
+    if (element instanceof CommandLanguageItem) {
+      return Promise.resolve(
+        this.getCommandsByScope(element.scope)
+          .filter(
+            (command) =>
+              (command.language.trim().toLowerCase() || 'generic') ===
+              element.language,
+          )
+          .sort((a, b) => b.addedAt - a.addedAt || a.label.localeCompare(b.label))
+          .map((command) => new CommandItem(command)),
+      );
     }
 
     return Promise.resolve([]);
@@ -552,14 +658,6 @@ export class FavoritesTreeDataProvider
         groupMap.set(metadata.group, []);
       }
       groupMap.get(metadata.group)!.push(filePath);
-    });
-
-    this.commands.forEach((cmd) => {
-      const g = cmd.group || FavoritesTreeDataProvider.DEFAULT_GROUP;
-      if (!groupMap.has(g)) {
-        this.groups.add(g);
-        groupMap.set(g, []);
-      }
     });
 
     return groupMap;
@@ -642,12 +740,6 @@ export class FavoritesTreeDataProvider
       }
     });
 
-    this.commands.forEach((cmd) => {
-      if (cmd.group === groupName) {
-        cmd.group = FavoritesTreeDataProvider.DEFAULT_GROUP;
-      }
-    });
-
     this.saveFavorites();
     this.refresh();
   }
@@ -722,15 +814,6 @@ export class FavoritesTreeDataProvider
       }
     });
 
-    this.commands.forEach((cmd) => {
-      if (cmd.group === groupName) {
-        cmd.group = FavoritesTreeDataProvider.DEFAULT_GROUP;
-        this.logger.debug(`[groups] Moved command to default`, {
-          label: cmd.label,
-        });
-      }
-    });
-
     this.groups.delete(groupName);
     this.saveFavorites();
     this.refresh();
@@ -764,16 +847,6 @@ export class FavoritesTreeDataProvider
         metadata.group = newName;
         this.logger.debug(`[groups] Updated favorite group`, {
           filePath,
-          newName,
-        });
-      }
-    });
-
-    this.commands.forEach((cmd) => {
-      if (cmd.group === oldName) {
-        cmd.group = newName;
-        this.logger.debug(`[groups] Updated command group`, {
-          label: cmd.label,
           newName,
         });
       }
@@ -847,7 +920,14 @@ export class FavoritesTreeDataProvider
   }
 
   handleDrag(
-    source: (GroupItem | FavoriteItem | WorkspaceItem | CommandItem)[],
+    source: (
+      | GroupItem
+      | FavoriteItem
+      | WorkspaceItem
+      | CommandItem
+      | CommandScopeItem
+      | CommandLanguageItem
+    )[],
     dataTransfer: vscode.DataTransfer,
     token: vscode.CancellationToken,
   ): void | Thenable<void> {
@@ -857,13 +937,9 @@ export class FavoritesTreeDataProvider
       .filter((item): item is FavoriteItem => item instanceof FavoriteItem)
       .map((item) => item.resourceUri.fsPath);
 
-    const draggedCommands = source
-      .filter((item): item is CommandItem => item instanceof CommandItem)
-      .map((item) => item.data.id);
+    const payload = { files: draggedFiles };
 
-    const payload = { files: draggedFiles, commands: draggedCommands };
-
-    if (draggedFiles.length > 0 || draggedCommands.length > 0) {
+    if (draggedFiles.length > 0) {
       dataTransfer.set(
         'application/vnd.code.tree.favorites',
         new vscode.DataTransferItem(JSON.stringify(payload)),
@@ -872,7 +948,14 @@ export class FavoritesTreeDataProvider
   }
 
   async handleDrop(
-    target: GroupItem | FavoriteItem | WorkspaceItem | undefined,
+    target:
+      | GroupItem
+      | FavoriteItem
+      | WorkspaceItem
+      | CommandItem
+      | CommandScopeItem
+      | CommandLanguageItem
+      | undefined,
     dataTransfer: vscode.DataTransfer,
     token: vscode.CancellationToken,
   ): Promise<void> {
@@ -901,21 +984,19 @@ export class FavoritesTreeDataProvider
             ? treeItem.value
             : await treeItem.asString();
 
-        let payload: { files?: string[]; commands?: string[] };
+        let payload: { files?: string[] };
 
         // Support both old format (string[]) and new format ({ files, commands })
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          payload = { files: parsed, commands: [] };
+          payload = { files: parsed };
         } else {
           payload = parsed;
         }
 
         const filePaths = payload.files || [];
-        const commandIds = payload.commands || [];
-
         this.logger.debug(
-          `[dnd] Moving ${filePaths.length} files + ${commandIds.length} commands to "${targetGroupName}"`,
+          `[dnd] Moving ${filePaths.length} files to "${targetGroupName}"`,
         );
 
         let movedCount = 0;
@@ -924,14 +1005,6 @@ export class FavoritesTreeDataProvider
           const metadata = this.favorites.get(filePath);
           if (metadata && metadata.group !== targetGroupName) {
             metadata.group = targetGroupName;
-            movedCount++;
-          }
-        });
-
-        commandIds.forEach((cmdId) => {
-          const cmd = this.commands.find((c) => c.id === cmdId);
-          if (cmd && cmd.group !== targetGroupName) {
-            cmd.group = targetGroupName;
             movedCount++;
           }
         });
@@ -1029,6 +1102,10 @@ export class FavoritesTreeDataProvider
     this.favorites.clear();
     this.groups.clear();
     this.groups.add(FavoritesTreeDataProvider.DEFAULT_GROUP);
+    this.localCommands = [];
+    this.globalCommands = [];
+    this.openSourceCommands = [];
+    this.hiddenOpenSourceCommandIds.clear();
     this.loadFavorites();
   }
 
@@ -1037,20 +1114,11 @@ export class FavoritesTreeDataProvider
       'anfavorites.favorites.v2',
     );
     const sharedGroups = this.storage.get<string[]>('anfavorites.groups');
-    const sharedCommands = this.storage.get<CommandFavoriteData[]>(
-      'anfavorites.commands.v1',
-    );
 
     if (sharedGroups) {
       sharedGroups.forEach((g) => this.groups.add(g));
     }
-
-    if (sharedCommands) {
-      this.commands = sharedCommands;
-      sharedCommands.forEach((cmd) => {
-        if (cmd.group) this.groups.add(cmd.group);
-      });
-    }
+    this.loadCommands();
 
     if (sharedData) {
       this.logger.debug(
@@ -1128,6 +1196,145 @@ export class FavoritesTreeDataProvider
     this.checkForDuplicateNames();
   }
 
+  private loadCommands(): void {
+    this.localCommands = this.normalizeCommands(
+      this.context.workspaceState.get<CommandFavoriteData[]>(
+        LOCAL_COMMANDS_STORAGE_KEY,
+        [],
+      ),
+      'local',
+    );
+    this.globalCommands = this.normalizeCommands(
+      this.context.globalState.get<CommandFavoriteData[]>(
+        GLOBAL_COMMANDS_STORAGE_KEY,
+        [],
+      ),
+      'global',
+    );
+    this.hiddenOpenSourceCommandIds = new Set(
+      this.context.globalState.get<string[]>(
+        HIDDEN_OPENSOURCE_COMMANDS_STORAGE_KEY,
+        [],
+      ),
+    );
+
+    const legacyCommands =
+      this.storage.get<CommandFavoriteData[]>(LEGACY_COMMANDS_STORAGE_KEY) ??
+      this.context.workspaceState.get<CommandFavoriteData[]>(
+        LEGACY_COMMANDS_STORAGE_KEY,
+        [],
+      );
+    if (legacyCommands.length > 0 && this.localCommands.length === 0) {
+      this.localCommands = this.normalizeCommands(legacyCommands, 'local');
+      void this.context.workspaceState.update(
+        LOCAL_COMMANDS_STORAGE_KEY,
+        this.localCommands,
+      );
+      void this.context.workspaceState.update(LEGACY_COMMANDS_STORAGE_KEY, undefined);
+    }
+
+    this.openSourceCommands = this.loadOpenSourceCatalog();
+  }
+
+  private normalizeCommands(
+    commands: CommandFavoriteData[],
+    scope: CommandFavoriteData['scope'],
+  ): CommandFavoriteData[] {
+    return commands.map((command) => ({
+      ...command,
+      scope: command.scope ?? scope,
+      language: command.language ?? 'generic',
+    }));
+  }
+
+  private loadOpenSourceCatalog(): CommandFavoriteData[] {
+    const builtins: CommandFavoriteData[] = [
+      {
+        id: 'opensource:npm-init',
+        label: 'npm init',
+        command: 'npm init',
+        background: false,
+        addedAt: 0,
+        type: 'shell',
+        scope: 'opensource',
+        language: 'node',
+        readonly: true,
+        source: 'builtin',
+      },
+      {
+        id: 'opensource:mvn-clean-install-package',
+        label: 'mvn clean install package',
+        command: 'mvn clean install package',
+        background: true,
+        addedAt: 0,
+        type: 'shell',
+        scope: 'opensource',
+        language: 'java',
+        readonly: true,
+        source: 'builtin',
+      },
+      {
+        id: 'opensource:py-env',
+        label: 'py env',
+        command: 'py env',
+        background: false,
+        addedAt: 0,
+        type: 'shell',
+        scope: 'opensource',
+        language: 'python',
+        readonly: true,
+        source: 'builtin',
+      },
+    ];
+
+    const configuredPath = vscode.workspace
+      .getConfiguration('anfavorites.commands')
+      .get<string>('openSourceCatalogPath', '')
+      .trim();
+    const merged = new Map<string, CommandFavoriteData>(
+      builtins.map((command) => [command.id, command]),
+    );
+
+    if (configuredPath) {
+      try {
+        const fs = require('fs') as typeof import('fs');
+        const resolvedPath = path.isAbsolute(configuredPath)
+          ? configuredPath
+          : path.join(
+              vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '',
+              configuredPath,
+            );
+        const raw = fs.readFileSync(resolvedPath, 'utf8');
+        const fileCommands = JSON.parse(raw) as Array<
+          Partial<CommandFavoriteData> & { id: string; label: string; command: string }
+        >;
+        for (const command of fileCommands) {
+          merged.set(command.id, {
+            id: command.id,
+            label: command.label,
+            command: command.command,
+            background: command.background ?? false,
+            addedAt: 0,
+            type: command.type ?? 'shell',
+            scope: 'opensource',
+            language: command.language ?? 'generic',
+            readonly: true,
+            source: 'file',
+          });
+        }
+      } catch (error) {
+        this.logger.warn('[commands] Failed to load OpenSource catalog file', {
+          configuredPath,
+          error,
+        });
+      }
+    }
+
+    return Array.from(merged.values()).filter(
+      (command) => !this.hiddenOpenSourceCommandIds.has(command.id),
+    );
+  }
+
   private checkForDuplicateNames(): void {
     const nameMap = new Map<string, string[]>();
     const configSearch =
@@ -1186,7 +1393,6 @@ export class FavoritesTreeDataProvider
       this.storage.updateMany({
         'anfavorites.favorites.v2': favoritesArray,
         'anfavorites.groups': Array.from(this.groups),
-        'anfavorites.commands.v1': this.commands,
       });
     } finally {
       this._isSaving = false;
@@ -1303,7 +1509,36 @@ export class FavoritesTreeDataProvider
   // ── Command management (Merged from CommandFavoritesTreeDataProvider) ──
 
   getCommands(): CommandFavoriteData[] {
-    return [...this.commands];
+    return [
+      ...this.localCommands,
+      ...this.globalCommands,
+      ...this.openSourceCommands,
+    ];
+  }
+
+  getCommandsByScope(
+    scope: CommandFavoriteData['scope'],
+  ): CommandFavoriteData[] {
+    if (scope === 'local') return [...this.localCommands];
+    if (scope === 'global') return [...this.globalCommands];
+    return [...this.openSourceCommands];
+  }
+
+  private async saveCommands(): Promise<void> {
+    await Promise.all([
+      this.context.workspaceState.update(
+        LOCAL_COMMANDS_STORAGE_KEY,
+        this.localCommands,
+      ),
+      this.context.globalState.update(
+        GLOBAL_COMMANDS_STORAGE_KEY,
+        this.globalCommands,
+      ),
+      this.context.globalState.update(
+        HIDDEN_OPENSOURCE_COMMANDS_STORAGE_KEY,
+        Array.from(this.hiddenOpenSourceCommandIds),
+      ),
+    ]);
   }
 
   addCommand(
@@ -1313,55 +1548,119 @@ export class FavoritesTreeDataProvider
       ...data,
       id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`,
       addedAt: Date.now(),
-      group: data.group || FavoritesTreeDataProvider.DEFAULT_GROUP,
+      scope: data.scope === 'global' ? 'global' : 'local',
+      language: data.language ?? 'generic',
     };
-    this.commands.push(newCmd);
-    this.saveFavorites();
+
+    if (newCmd.scope === 'global') {
+      this.globalCommands.push(newCmd);
+    } else {
+      this.localCommands.push(newCmd);
+    }
+
+    void this.saveCommands();
     this.refresh();
     this.logger.debug(`[commands] addCommand -> "${newCmd.label}"`);
     return newCmd;
   }
 
   removeCommand(id: string): void {
-    const before = this.commands.length;
-    this.commands = this.commands.filter((c) => c.id !== id);
-    if (this.commands.length !== before) {
-      this.saveFavorites();
+    const localBefore = this.localCommands.length;
+    const globalBefore = this.globalCommands.length;
+    this.localCommands = this.localCommands.filter((c) => c.id !== id);
+    this.globalCommands = this.globalCommands.filter((c) => c.id !== id);
+    if (
+      this.localCommands.length !== localBefore ||
+      this.globalCommands.length !== globalBefore
+    ) {
+      void this.saveCommands();
       this.refresh();
       this.logger.debug(`[commands] removeCommand -> id=${id}`);
     }
   }
 
-  moveCommand(id: string, newGroup: string): void {
-    const cmd = this.commands.find((c) => c.id === id);
-    if (!cmd) {
-      this.logger.warn(`[commands] moveCommand FAILED (not found) -> id=${id}`);
-      return;
+  saveOpenSourceCommandAs(
+    id: string,
+    scope: 'local' | 'global',
+    overrides?: Partial<Omit<CommandFavoriteData, 'id' | 'addedAt' | 'scope'>>,
+  ): CommandFavoriteData | undefined {
+    const source = this.openSourceCommands.find((command) => command.id === id);
+    if (!source) {
+      this.logger.warn(
+        `[commands] saveOpenSourceCommandAs FAILED (not found) -> id=${id}`,
+      );
+      return undefined;
     }
 
-    this.logger.debug(`[commands] moveCommand -> id=${id}`, {
-      from: cmd.group,
-      to: newGroup,
+    return this.addCommand({
+      label: overrides?.label ?? source.label,
+      command: overrides?.command ?? source.command,
+      cwd: overrides?.cwd ?? source.cwd,
+      background: overrides?.background ?? source.background,
+      type: overrides?.type ?? source.type,
+      language: overrides?.language ?? source.language,
+      scope,
+      readonly: false,
+      source: undefined,
     });
-    cmd.group = newGroup;
-
-    this.saveFavorites();
-    this.refresh();
   }
 
   editCommand(
     id: string,
     data: Partial<Omit<CommandFavoriteData, 'id' | 'addedAt'>>,
   ): boolean {
-    const idx = this.commands.findIndex((c) => c.id === id);
-    if (idx === -1) {
+    const existing = [...this.localCommands, ...this.globalCommands].find(
+      (command) => command.id === id,
+    );
+    if (!existing) {
       this.logger.warn(`[commands] editCommand FAILED (not found) -> id=${id}`);
       return false;
     }
-    this.commands[idx] = { ...this.commands[idx], ...data };
-    this.saveFavorites();
+
+    const updated: CommandFavoriteData = {
+      ...existing,
+      ...data,
+      scope:
+        data.scope === 'global'
+          ? 'global'
+          : data.scope === 'local'
+            ? 'local'
+            : existing.scope,
+      language: data.language ?? existing.language ?? 'generic',
+    };
+
+    this.localCommands = this.localCommands.filter((command) => command.id !== id);
+    this.globalCommands = this.globalCommands.filter(
+      (command) => command.id !== id,
+    );
+
+    if (updated.scope === 'global') {
+      this.globalCommands.push(updated);
+    } else {
+      updated.scope = 'local';
+      this.localCommands.push(updated);
+    }
+
+    void this.saveCommands();
     this.refresh();
     this.logger.debug(`[commands] editCommand -> id=${id}`);
+    return true;
+  }
+
+  hideOpenSourceCommand(id: string): boolean {
+    const exists = this.openSourceCommands.some((command) => command.id === id);
+    if (!exists) {
+      this.logger.warn(
+        `[commands] hideOpenSourceCommand FAILED (not found) -> id=${id}`,
+      );
+      return false;
+    }
+
+    this.hiddenOpenSourceCommandIds.add(id);
+    this.openSourceCommands = this.loadOpenSourceCatalog();
+    void this.saveCommands();
+    this.refresh();
+    this.logger.debug(`[commands] hideOpenSourceCommand -> id=${id}`);
     return true;
   }
 

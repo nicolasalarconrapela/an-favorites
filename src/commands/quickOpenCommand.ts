@@ -2208,22 +2208,33 @@ export function registerQuickOpenCommand(
           const otherItems: FileQuickPickItem[] = [];
           let searchNoticeItem: QuickOpenItem | null = null;
 
-          // Commands section
-          const allCommands = favoritesProvider.getCommands();
-          const visibleCommands = isSearching
-            ? allCommands.filter((command) =>
-                matchesCommandSearchText(command, normalizedSearch),
-              )
-            : allCommands;
-          if (visibleCommands.length > 0) {
+          // Commands sections by scope
+          const commandScopes: Array<{
+            scope: 'local' | 'global' | 'opensource';
+            label: string;
+          }> = [
+            { scope: 'local', label: t('Local Commands') },
+            { scope: 'global', label: t('Global Commands') },
+            { scope: 'opensource', label: t('OpenSource Commands') },
+          ];
+          for (const { scope, label } of commandScopes) {
+            const scopedCommands = favoritesProvider.getCommandsByScope(scope);
+            const visibleCommands = isSearching
+              ? scopedCommands.filter((command) =>
+                  matchesCommandSearchText(command, normalizedSearch),
+                )
+              : scopedCommands;
+
+            if (visibleCommands.length === 0) {
+              continue;
+            }
+
             const commandQuickPickItems = visibleCommands
-              .sort((a, b) => b.addedAt - a.addedAt)
-              .map((data) => {
-                const item = new CommandItem(data);
-                return new CommandQuickPickItem(item);
-              });
+              .sort((a, b) => b.addedAt - a.addedAt || a.label.localeCompare(b.label))
+              .map((data) => new CommandQuickPickItem(new CommandItem(data)));
+
             items.push({
-              label: t('Commands'),
+              label,
               kind: vscode.QuickPickItemKind.Separator,
             });
             items.push(...commandQuickPickItems);

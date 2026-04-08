@@ -593,6 +593,122 @@ type PreviewResult =
   | { action: 'edit' }
   | undefined;
 
+const COMMAND_SCOPE_OPTIONS: Array<{
+  value: 'local' | 'global';
+  label: string;
+  description: string;
+}> = [
+  {
+    value: 'local',
+    label: t('Local'),
+    description: t('Only visible in this workspace'),
+  },
+  {
+    value: 'global',
+    label: t('Global'),
+    description: t('Available in other workspaces in this VS Code profile'),
+  },
+];
+
+const COMMAND_LANGUAGE_OPTIONS: Array<{
+  value: string;
+  label: string;
+}> = [
+  { value: 'python', label: t('Python') },
+  { value: 'node', label: t('Node') },
+  { value: 'java', label: t('Java') },
+  { value: 'generic', label: t('Generic') },
+];
+
+async function promptCommandScope(
+  currentScope: 'local' | 'global' = 'local',
+  totalSteps: number,
+  stepNumber: number,
+): Promise<'local' | 'global' | Back | undefined> {
+  interface ScopeItem extends vscode.QuickPickItem {
+    scope: 'local' | 'global';
+  }
+
+  return new Promise<'local' | 'global' | Back | undefined>((resolve) => {
+    const quickPick = vscode.window.createQuickPick<ScopeItem>();
+    quickPick.title = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps})`;
+    quickPick.placeholder = t('Select command scope');
+    quickPick.ignoreFocusOut = true;
+    quickPick.buttons = stepNumber > 1 ? [BACK_BUTTON] : [];
+    quickPick.items = COMMAND_SCOPE_OPTIONS.map((option) => ({
+      label: option.label,
+      description: option.description,
+      scope: option.value,
+      picked: option.value === currentScope,
+    }));
+
+    let finished = false;
+    const disposables: vscode.Disposable[] = [];
+    const done = (result: 'local' | 'global' | Back | undefined) => {
+      if (finished) return;
+      finished = true;
+      disposables.forEach((d) => d.dispose());
+      quickPick.dispose();
+      resolve(result);
+    };
+
+    disposables.push(
+      quickPick.onDidAccept(() => done(quickPick.selectedItems[0]?.scope)),
+    );
+    disposables.push(
+      quickPick.onDidTriggerButton((button) => {
+        if (button === BACK_BUTTON) done(BACK);
+      }),
+    );
+    disposables.push(quickPick.onDidHide(() => done(undefined)));
+    quickPick.show();
+  });
+}
+
+async function promptCommandLanguage(
+  currentLanguage: string = 'generic',
+  totalSteps: number,
+  stepNumber: number,
+): Promise<string | Back | undefined> {
+  interface LanguageItem extends vscode.QuickPickItem {
+    language: string;
+  }
+
+  return new Promise<string | Back | undefined>((resolve) => {
+    const quickPick = vscode.window.createQuickPick<LanguageItem>();
+    quickPick.title = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps})`;
+    quickPick.placeholder = t('Select command language');
+    quickPick.ignoreFocusOut = true;
+    quickPick.buttons = [BACK_BUTTON];
+    quickPick.items = COMMAND_LANGUAGE_OPTIONS.map((option) => ({
+      label: option.label,
+      language: option.value,
+      picked: option.value === currentLanguage,
+    }));
+
+    let finished = false;
+    const disposables: vscode.Disposable[] = [];
+    const done = (result: string | Back | undefined) => {
+      if (finished) return;
+      finished = true;
+      disposables.forEach((d) => d.dispose());
+      quickPick.dispose();
+      resolve(result);
+    };
+
+    disposables.push(
+      quickPick.onDidAccept(() => done(quickPick.selectedItems[0]?.language)),
+    );
+    disposables.push(
+      quickPick.onDidTriggerButton((button) => {
+        if (button === BACK_BUTTON) done(BACK);
+      }),
+    );
+    disposables.push(quickPick.onDidHide(() => done(undefined)));
+    quickPick.show();
+  });
+}
+
 async function runPreviewStep(
   title: string,
   command: string,
@@ -728,6 +844,8 @@ interface CommandFlowResult {
   command: string;
   cwd?: string;
   background: boolean;
+  scope: 'local' | 'global';
+  language: string;
 }
 
 async function promptCommandFlow(
@@ -737,19 +855,22 @@ async function promptCommandFlow(
     command: string;
     cwd?: string;
     background: boolean;
-    group?: string;
+    scope?: 'local' | 'global';
+    language?: string;
   },
 ): Promise<CommandFlowResult | undefined> {
-  const TOTAL = 4;
+  const TOTAL = 6;
   let step = 1;
 
   // Accumulated state — pre-populated from existing when editing
   let stepLabel = existing?.label ?? '';
+  let stepScope: 'local' | 'global' = existing?.scope ?? 'local';
+  let stepLanguage = existing?.language ?? 'generic';
   let stepCommand = existing?.command ?? '';
   let stepCwd: string | null = existing?.cwd ?? null;
   let stepBackground = existing?.background ?? false;
 
-  while (step >= 1 && step <= 4) {
+  while (step >= 1 && step <= TOTAL) {
     switch (step) {
       case 1: {
         const r = await createTextStep({
@@ -767,27 +888,24 @@ async function promptCommandFlow(
         break;
       }
       case 2: {
-        const r = await runModeStep(
-          `${t('Add Command Favorite')} (2/${TOTAL})`,
-          stepBackground,
-        );
+        const r = await promptCommandScope(stepScope, TOTAL, 2);
         if (r === undefined) return undefined;
         if (isBack(r)) {
           step = 1;
           break;
         }
-        stepBackground = r;
+        stepScope = r;
         step = 3;
         break;
       }
       case 3: {
-        const r = await promptCwd(stepCwd ?? undefined, TOTAL, 3);
+        const r = await promptCommandLanguage(stepLanguage, TOTAL, 3);
         if (r === undefined) return undefined;
         if (isBack(r)) {
-          step = 2; // Return to Mode selection
+          step = 2;
           break;
         }
-        stepCwd = r; // null = workspace root, string = path
+        stepLanguage = r;
         step = 4;
         break;
       }
@@ -817,6 +935,8 @@ async function promptCommandFlow(
           command: r.command.trim(),
           cwd,
           background: r.background,
+          scope: stepScope,
+          language: stepLanguage,
         };
       }
     }
@@ -825,6 +945,27 @@ async function promptCommandFlow(
 }
 
 // ── Command registration ────────────────────────────────────────────────────
+
+async function promptSaveOpenSourceFlow(
+  provider: FavoritesTreeDataProvider,
+  item: CommandItem,
+  scope: 'local' | 'global',
+): Promise<CommandFlowResult | undefined> {
+  const result = await promptCommandFlow(provider, {
+    label: item.data.label,
+    command: item.data.command,
+    cwd: item.data.cwd,
+    background: item.data.background,
+    scope,
+    language: item.data.language,
+  });
+
+  if (!result) {
+    return undefined;
+  }
+
+  return { ...result, scope };
+}
 
 export function registerCommandFavoritesCommands(
   context: vscode.ExtensionContext,
@@ -855,11 +996,25 @@ export function registerCommandFavoritesCommands(
         const result = await promptCommandFlow(commandsProvider);
 
         if (result) {
+          const scope = await promptCommandScope(result.scope ?? 'local', 2, 1);
+          if (!scope || isBack(scope)) {
+            return;
+          }
+          const language = await promptCommandLanguage(
+            result.language ?? 'generic',
+            2,
+            2,
+          );
+          if (!language || isBack(language)) {
+            return;
+          }
           commandsProvider.addCommand({
             label: result.label,
             command: result.command,
             cwd: result.cwd,
             background: result.background,
+            scope,
+            language,
           });
           vscode.window.showInformationMessage(
             t('Command "{0}" added.', result.label),
@@ -884,6 +1039,8 @@ export function registerCommandFavoritesCommands(
           command: item.data.command,
           cwd: item.data.cwd,
           background: item.data.background,
+          scope: item.data.scope === 'global' ? 'global' : 'local',
+          language: item.data.language,
         });
 
         if (result) {
@@ -892,6 +1049,8 @@ export function registerCommandFavoritesCommands(
             command: result.command,
             cwd: result.cwd,
             background: result.background,
+            scope: result.scope,
+            language: result.language,
           });
           if (ok) {
             vscode.window.showInformationMessage(
@@ -968,11 +1127,19 @@ export function registerCommandFavoritesCommands(
 
         if (!label) return;
 
+        const scope = await promptCommandScope('local', 2, 1);
+        if (!scope || isBack(scope)) return;
+
+        const language = await promptCommandLanguage('generic', 2, 2);
+        if (!language || isBack(language)) return;
+
         commandsProvider.addCommand({
           label: label.trim(),
           command: commandId,
           background: false,
           type: 'vscode',
+          scope,
+          language,
         });
 
         vscode.window.showInformationMessage(
@@ -981,6 +1148,82 @@ export function registerCommandFavoritesCommands(
         logger.info(
           `[commandFavorites] Added VS Code command: "${label.trim()}" (${commandId})`,
         );
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'anfavorites.saveOpenSourceCommandAsLocal',
+      async (item?: CommandItem) => {
+        if (!item || item.data.scope !== 'opensource') return;
+
+        const result = await promptSaveOpenSourceFlow(
+          commandsProvider,
+          item,
+          'local',
+        );
+        if (!result) return;
+
+        commandsProvider.addCommand({
+          label: result.label,
+          command: result.command,
+          cwd: result.cwd,
+          background: result.background,
+          type: item.data.type,
+          scope: 'local',
+          language: result.language,
+        });
+        vscode.window.showInformationMessage(
+          t('Command "{0}" added.', result.label),
+        );
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'anfavorites.saveOpenSourceCommandAsGlobal',
+      async (item?: CommandItem) => {
+        if (!item || item.data.scope !== 'opensource') return;
+
+        const result = await promptSaveOpenSourceFlow(
+          commandsProvider,
+          item,
+          'global',
+        );
+        if (!result) return;
+
+        commandsProvider.addCommand({
+          label: result.label,
+          command: result.command,
+          cwd: result.cwd,
+          background: result.background,
+          type: item.data.type,
+          scope: 'global',
+          language: result.language,
+        });
+        vscode.window.showInformationMessage(
+          t('Command "{0}" added.', result.label),
+        );
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'anfavorites.hideOpenSourceCommand',
+      async (item?: CommandItem) => {
+        if (!item || item.data.scope !== 'opensource') return;
+
+        const confirm = await vscode.window.showWarningMessage(
+          t('Hide command "{0}"?', item.data.label),
+          { modal: true },
+          t('Hide'),
+        );
+        if (confirm !== t('Hide')) return;
+
+        commandsProvider.hideOpenSourceCommand(item.data.id);
       },
     ),
   );

@@ -3,7 +3,6 @@ import {
   FavoritesTreeDataProvider,
   GroupItem,
   FavoriteItem,
-  CommandItem,
 } from '../views/FavoritesTreeDataProvider';
 import { Logger } from '../logging/logger';
 import { t } from '../utils/l10n';
@@ -269,17 +268,14 @@ export function registerManageGroupsCommands(
     vscode.commands.registerCommand(
       'anfavorites.moveFavorite',
       async (
-        item?: FavoriteItem | CommandItem,
-        selectedItems?: (FavoriteItem | CommandItem)[],
+        item?: FavoriteItem,
+        selectedItems?: FavoriteItem[],
       ) => {
         const allItems = selectedItems || (item ? [item] : []);
         const favoriteItems = allItems.filter(
           (i): i is FavoriteItem => i instanceof FavoriteItem,
         );
-        const commandItems = allItems.filter(
-          (i): i is CommandItem => i instanceof CommandItem,
-        );
-        const totalItems = favoriteItems.length + commandItems.length;
+        const totalItems = favoriteItems.length;
 
         if (totalItems === 0) {
           vscode.window.showWarningMessage(t('Select a favorite to move'));
@@ -306,8 +302,7 @@ export function registerManageGroupsCommands(
         const currentGroupName =
           favoriteItems.length > 0
             ? favoriteItems[0].group
-            : commandItems[0].data.group ||
-              FavoritesTreeDataProvider.DEFAULT_GROUP;
+            : FavoritesTreeDataProvider.DEFAULT_GROUP;
 
         const selected = await vscode.window.showQuickPick(items, {
           placeHolder:
@@ -368,13 +363,6 @@ export function registerManageGroupsCommands(
           favoritesProvider.moveFavorite(f.resourceUri, targetGroup);
         }
 
-        for (const c of commandItems) {
-          logger.debug(
-            `Moving command "${c.data.label}" to group "${targetGroup}"`,
-          );
-          favoritesProvider.moveCommand(c.data.id, targetGroup);
-        }
-
         vscode.window.showInformationMessage(
           totalItems === 1
             ? t('Favorite moved to "{0}"', targetGroupDisplayName)
@@ -431,17 +419,14 @@ export function registerManageGroupsCommands(
     vscode.commands.registerCommand(
       'anfavorites.removeFromGroup',
       async (
-        item?: FavoriteItem | CommandItem,
-        selectedItems?: (FavoriteItem | CommandItem)[],
+        item?: FavoriteItem,
+        selectedItems?: FavoriteItem[],
       ) => {
         const allItems = selectedItems || (item ? [item] : []);
         const favoriteItems = allItems.filter(
           (i): i is FavoriteItem => i instanceof FavoriteItem,
         );
-        const commandItems = allItems.filter(
-          (i): i is CommandItem => i instanceof CommandItem,
-        );
-        const totalItems = favoriteItems.length + commandItems.length;
+        const totalItems = favoriteItems.length;
 
         if (totalItems === 0) {
           return;
@@ -456,16 +441,6 @@ export function registerManageGroupsCommands(
             `Removing from group: ${f.resourceUri.fsPath} (group: ${f.group})`,
           );
           favoritesProvider.resetFavoriteGroup(f.resourceUri);
-        }
-
-        for (const c of commandItems) {
-          logger.debug(
-            `Removing command from group: "${c.data.label}" (group: ${c.data.group})`,
-          );
-          favoritesProvider.moveCommand(
-            c.data.id,
-            FavoritesTreeDataProvider.DEFAULT_GROUP,
-          );
         }
 
         if (totalItems > 1) {
