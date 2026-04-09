@@ -184,6 +184,16 @@
   "Available in other workspaces in this VS Code profile": "Disponible en otros workspaces de este perfil de VS Code",
   "Select command scope": "Seleccionar ámbito del comando",
   "Select command language": "Seleccionar lenguaje del comando",
+  "Command scope": "Alcance del comando",
+  "Command type": "Tipo de comando",
+  "Command language": "Lenguaje del comando",
+  "Template language": "Lenguaje de plantilla",
+  "Template selection": "Selección de plantilla",
+  "Existing command": "Comando existente",
+  "Command name": "Nombre del comando",
+  "Execution type": "Tipo de ejecución",
+  "Location selection": "Selección de ubicación",
+  "Command creation": "Creación de comando",
   "Hide": "Ocultar",
   "Hide command \"{0}\"?": "¿Ocultar el comando \"{0}\"?",
   "The .gitignore integration can only be enabled/configured at the Workspace level. Global (User) configuration for this feature is ignored.": "La integración con .gitignore solo se puede habilitar/configurar a nivel de Workspace. La configuración de Usuario para esta función es ignorada.",
@@ -213,3 +223,4 @@
   "Sincerely:": "Atentamente:",
   "@anappwilos": "@anappwilos"
 }
+

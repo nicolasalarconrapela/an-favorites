@@ -70,6 +70,49 @@ function inputButtons(
   return btns;
 }
 
+function buildCommandStepTitle(
+  action: string,
+  step: number | string,
+  totalSteps: number,
+): string {
+  return `${t('Add Command Favorite')} - ${action} (${step}/${totalSteps})`;
+}
+
+function getCommandStepAction(key:
+  | 'scope'
+  | 'source'
+  | 'language'
+  | 'templateLanguage'
+  | 'template'
+  | 'existing'
+  | 'name'
+  | 'executionType'
+  | 'location'
+  | 'preview') {
+  switch (key) {
+    case 'scope':
+      return t('Command scope');
+    case 'source':
+      return t('Command type');
+    case 'language':
+      return t('Command language');
+    case 'templateLanguage':
+      return t('Template language');
+    case 'template':
+      return t('Template selection');
+    case 'existing':
+      return t('Existing command');
+    case 'name':
+      return t('Command name');
+    case 'executionType':
+      return t('Execution type');
+    case 'location':
+      return t('Location selection');
+    case 'preview':
+      return t('Command creation');
+  }
+}
+
 // ── Step helpers ────────────────────────────────────────────────────────────
 
 /**
@@ -191,7 +234,7 @@ async function promptCwd(
   const folders = vscode.workspace.workspaceFolders;
   const isMultiRoot = folders && folders.length > 1;
   const workspaceType = isMultiRoot ? t('Multi-root') : t('Workspace');
-  const stepTitle = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps}) — ${t('Select working directory')} [${workspaceType}]`;
+  const stepTitle = `${buildCommandStepTitle(getCommandStepAction('location'), stepNumber, totalSteps)} [${workspaceType}]`;
 
   // No workspace folders: fallback to manual InputBox with back + next buttons
   if (!folders || folders.length === 0) {
@@ -346,7 +389,7 @@ async function promptCwd(
           suppressHide = true;
           quickPick.hide();
           const manualValue = await createTextStep({
-            title: `${t('Add Command Favorite')} (${stepNumber}.1/${totalSteps}) ${t('Select working directory')} [${workspaceType}]`,
+            title: `${buildCommandStepTitle(getCommandStepAction('location'), `${stepNumber}.1`, totalSteps)} [${workspaceType}]`,
             prompt: t('Enter the folder name under the workspace root'),
             placeholder: t('e.g.: frontend'),
             emptyWarning: t('The folder name cannot be empty.'),
@@ -763,7 +806,11 @@ async function promptCommandScope(
 
   return new Promise<'local' | 'global' | Back | undefined>((resolve) => {
     const quickPick = vscode.window.createQuickPick<ScopeItem>();
-    quickPick.title = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps})`;
+    quickPick.title = buildCommandStepTitle(
+      getCommandStepAction('scope'),
+      stepNumber,
+      totalSteps,
+    );
     quickPick.placeholder = t('Select command scope');
     quickPick.ignoreFocusOut = true;
     quickPick.buttons = stepNumber > 1 ? [BACK_BUTTON] : [];
@@ -808,7 +855,11 @@ async function promptCommandLanguage(
 
   return new Promise<string | Back | undefined>((resolve) => {
     const quickPick = vscode.window.createQuickPick<LanguageItem>();
-    quickPick.title = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps})`;
+    quickPick.title = buildCommandStepTitle(
+      getCommandStepAction('language'),
+      stepNumber,
+      totalSteps,
+    );
     quickPick.placeholder = t('Select command language');
     quickPick.ignoreFocusOut = true;
     quickPick.buttons = [BACK_BUTTON];
@@ -852,7 +903,11 @@ async function promptCommandSourceType(
   return new Promise<'personalized' | 'opensource' | Back | undefined>(
     (resolve) => {
       const quickPick = vscode.window.createQuickPick<SourceItem>();
-      quickPick.title = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps})`;
+      quickPick.title = buildCommandStepTitle(
+        getCommandStepAction('source'),
+        stepNumber,
+        totalSteps,
+      );
       quickPick.placeholder = t('Select command source');
       quickPick.ignoreFocusOut = true;
       quickPick.buttons = [BACK_BUTTON];
@@ -935,7 +990,11 @@ async function promptExistingCommandTemplate(
   return new Promise<ExistingCommandItem['template'] | Back | undefined>(
     (resolve) => {
       const quickPick = vscode.window.createQuickPick<ExistingCommandItem>();
-      quickPick.title = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps})`;
+      quickPick.title = buildCommandStepTitle(
+        getCommandStepAction('existing'),
+        stepNumber,
+        totalSteps,
+      );
       quickPick.placeholder = t('Select an existing command');
       quickPick.ignoreFocusOut = true;
       quickPick.buttons = [BACK_BUTTON];
@@ -999,7 +1058,11 @@ async function promptOpenSourceLanguage(
 
   return new Promise<string | Back | undefined>((resolve) => {
     const quickPick = vscode.window.createQuickPick<TemplateLanguageItem>();
-    quickPick.title = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps})`;
+    quickPick.title = buildCommandStepTitle(
+      getCommandStepAction('templateLanguage'),
+      stepNumber,
+      totalSteps,
+    );
     quickPick.placeholder = t('Select OpenSource template language');
     quickPick.ignoreFocusOut = true;
     quickPick.buttons = [BACK_BUTTON];
@@ -1069,7 +1132,11 @@ async function promptOpenSourceTemplate(
   return new Promise<TemplateItem['template'] | Back | undefined>(
     (resolve) => {
       const quickPick = vscode.window.createQuickPick<TemplateItem>();
-      quickPick.title = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps})`;
+      quickPick.title = buildCommandStepTitle(
+        getCommandStepAction('template'),
+        stepNumber,
+        totalSteps,
+      );
       quickPick.placeholder = t('Select OpenSource template');
       quickPick.ignoreFocusOut = true;
       quickPick.buttons = [BACK_BUTTON];
@@ -1143,15 +1210,21 @@ async function runPreviewStep(
     inputBox.value = internalCommand;
     inputBox.ignoreFocusOut = true;
 
-    function updateUI() {
-      inputBox.prompt = undefined;
-
+    function updateValidationState(value: string, showMessage: boolean) {
+      const isValid = !!value.trim();
+      inputBox.validationMessage =
+        !isValid && showMessage ? t('Command cannot be empty.') : undefined;
       inputBox.buttons = [
         BACK_BUTTON,
         internalBackground ? MODE_BG_BTN : MODE_FG_BTN,
         TEST_BTN,
-        SAVE_BTN,
+        ...(isValid ? [SAVE_BTN] : []),
       ];
+    }
+
+    function updateUI() {
+      inputBox.prompt = undefined;
+      updateValidationState(inputBox.value, false);
     }
 
     updateUI();
@@ -1162,7 +1235,7 @@ async function runPreviewStep(
       inputBox.onDidAccept(() => {
         const val = inputBox.value.trim();
         if (!val) {
-          vscode.window.showWarningMessage(t('Command cannot be empty.'));
+          updateValidationState(inputBox.value, true);
           return;
         }
         internalCommand = val;
@@ -1173,6 +1246,12 @@ async function runPreviewStep(
           command: internalCommand,
           background: internalBackground,
         });
+      }),
+    );
+
+    disposables.push(
+      inputBox.onDidChangeValue((value) => {
+        updateValidationState(value, false);
       }),
     );
 
@@ -1188,7 +1267,7 @@ async function runPreviewStep(
         if (btn === SAVE_BTN) {
           const val = inputBox.value.trim();
           if (!val) {
-            vscode.window.showWarningMessage(t('Command cannot be empty.'));
+            updateValidationState(inputBox.value, true);
             return;
           }
           internalCommand = val;
@@ -1205,7 +1284,7 @@ async function runPreviewStep(
         if (btn === TEST_BTN) {
           const val = inputBox.value.trim();
           if (!val) {
-            vscode.window.showWarningMessage(t('Command cannot be empty.'));
+            updateValidationState(inputBox.value, true);
             return;
           }
           const resolvedCwd = resolveWorkspaceCwd(cwd);
@@ -1275,7 +1354,7 @@ async function promptCommandFlow(
     switch (step) {
       case 1: {
         const r = await createTextStep({
-          title: `${t('Add Command Favorite')} (1/${TOTAL})`,
+          title: buildCommandStepTitle(getCommandStepAction('name'), 1, TOTAL),
           prompt: t('Name as it will appear in the favorites list'),
           placeholder: t('e.g.: Start Dev Server'),
           emptyWarning: t('The command name cannot be empty.'),
@@ -1290,7 +1369,7 @@ async function promptCommandFlow(
       }
       case 2: {
         const r = await runModeStep(
-          `${t('Add Command Favorite')} (2/${TOTAL})`,
+          buildCommandStepTitle(getCommandStepAction('executionType'), 2, TOTAL),
           stepBackground,
         );
         if (r === undefined) return undefined;
@@ -1321,12 +1400,11 @@ async function promptCommandFlow(
       case 4: {
         const cwd = stepCwd === null ? undefined : stepCwd;
         const r = await runPreviewStep(
-          `${t('Add Command Favorite')} (4/${TOTAL}) — ${t('Command & Preview')}`,
+          buildCommandStepTitle(getCommandStepAction('preview'), 4, TOTAL),
           stepCommand,
           cwd,
           stepBackground,
         );
-
         if (r === undefined) return undefined; // cancelled
         if (isBack(r)) {
           step = 3; // Return to Directory selection
@@ -1427,7 +1505,7 @@ async function promptAddCommandCreationFlow(
       quickPick.buttons = history.length > 0 ? [BACK_BUTTON] : [];
 
       if (state === 'scope') {
-        quickPick.title = `${t('Add Command Favorite')} (1/4)`;
+        quickPick.title = buildCommandStepTitle(getCommandStepAction('scope'), 1, 4);
         quickPick.placeholder = t('Select command scope');
         quickPick.items = COMMAND_SCOPE_OPTIONS.map((option) => ({
           label: option.label,
@@ -1439,7 +1517,7 @@ async function promptAddCommandCreationFlow(
       }
 
       if (state === 'source') {
-        quickPick.title = `${t('Add Command Favorite')} (2/3)`;
+        quickPick.title = buildCommandStepTitle(getCommandStepAction('source'), 2, 3);
         quickPick.placeholder = t('Select command source');
         quickPick.items = [
           {
@@ -1464,7 +1542,11 @@ async function promptAddCommandCreationFlow(
       }
 
       if (state === 'opensource-language') {
-        quickPick.title = `${t('Add Command Favorite')} (3/3)`;
+        quickPick.title = buildCommandStepTitle(
+          getCommandStepAction('templateLanguage'),
+          3,
+          3,
+        );
         quickPick.placeholder = t('Select OpenSource template language');
         quickPick.items = Array.from(
           new Set(
@@ -1483,7 +1565,13 @@ async function promptAddCommandCreationFlow(
         return;
       }
 
-      quickPick.title = `${t('Add Command Favorite')} (3/3)`;
+      quickPick.title = buildCommandStepTitle(
+        sourceType === 'opensource'
+          ? getCommandStepAction('template')
+          : getCommandStepAction('existing'),
+        3,
+        3,
+      );
       quickPick.placeholder =
         sourceType === 'opensource'
           ? t('Select OpenSource template')
