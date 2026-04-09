@@ -178,6 +178,7 @@ async function promptCwd(
   currentCwd?: string,
   totalSteps: number = 5,
   stepNumber: number = 3,
+  scope: 'local' | 'global' = 'local',
 ): Promise<string | null | undefined | Back> {
   const folders = vscode.workspace.workspaceFolders;
   const isMultiRoot = folders && folders.length > 1;
@@ -186,6 +187,9 @@ async function promptCwd(
 
   // No workspace folders: fallback to manual InputBox with back + next buttons
   if (!folders || folders.length === 0) {
+    if (scope === 'global') {
+      return null;
+    }
     return new Promise<string | null | undefined | Back>((resolve) => {
       const inputBox = vscode.window.createInputBox();
       inputBox.title = stepTitle;
@@ -263,11 +267,113 @@ async function promptCwd(
 
   let userMovedSelection = false;
   let ignoreNextActiveChange = false;
+  const isGlobalScope = scope === 'global';
+
+  if (isGlobalScope) {
+    type GlobalChoice =
+      | { kind: 'root' }
+      | { kind: 'manual' }
+      | { kind: 'listed' };
+    interface GlobalScopeItem extends vscode.QuickPickItem {
+      choice: GlobalChoice;
+      cwdValue?: string | null;
+    }
+
+    const listedFolders: GlobalScopeItem[] = [];
+
+    return new Promise<string | null | undefined | Back>((resolve) => {
+      const quickPick = vscode.window.createQuickPick<GlobalScopeItem>();
+      quickPick.title = stepTitle;
+      quickPick.placeholder = t('Select working directory mode');
+      quickPick.ignoreFocusOut = true;
+      quickPick.buttons = [BACK_BUTTON];
+      quickPick.items = [
+        {
+          label: `$(root-folder) ${t('Workspace root')}`,
+          description: t('Run from workspace root'),
+          choice: { kind: 'root' },
+          cwdValue: null,
+        },
+        {
+          label: `$(edit) ${t('Enter folder name')}`,
+          description: t('Type the folder name under the workspace root'),
+          choice: { kind: 'manual' },
+        },
+      ];
+
+      let finished = false;
+      let suppressHide = false;
+      const disposables: vscode.Disposable[] = [];
+      const done = (result: string | null | undefined | Back) => {
+        if (finished) return;
+        finished = true;
+        disposables.forEach((d) => d.dispose());
+        quickPick.dispose();
+        resolve(result);
+      };
+
+      disposables.push(
+        quickPick.onDidTriggerButton((button) => {
+          if (button === BACK_BUTTON) {
+            done(BACK);
+          }
+        }),
+      );
+
+      disposables.push(
+        quickPick.onDidAccept(async () => {
+          const item = quickPick.selectedItems[0];
+          if (!item) return;
+
+          if (item.choice.kind === 'root') {
+            done(null);
+            return;
+          }
+
+          if (item.choice.kind === 'listed') {
+            done(item.cwdValue ?? null);
+            return;
+          }
+
+          suppressHide = true;
+          quickPick.hide();
+          const manualValue = await createTextStep({
+            title: `${t('Add Command Favorite')} (${stepNumber}.1/${totalSteps}) â€” ${t('Select working directory')} [${workspaceType}]`,
+            prompt: t('Enter the folder name under the workspace root'),
+            placeholder: t('e.g.: frontend'),
+            emptyWarning: t('Folder name cannot be empty.'),
+            currentValue: currentCwd ?? '',
+            showBack: true,
+          });
+
+          suppressHide = false;
+
+          if (manualValue === undefined) {
+            quickPick.show();
+            return;
+          }
+          if (isBack(manualValue)) {
+            quickPick.show();
+            return;
+          }
+
+          done(manualValue.trim());
+        }),
+      );
+
+      disposables.push(
+        quickPick.onDidHide(() => {
+          if (suppressHide) return;
+          done(undefined);
+        }),
+      );
+      quickPick.show();
+    });
+  }
 
   async function buildItems() {
     quickPick.busy = true;
     const items: NavItem[] = [];
-
     if (currentAbsPath === null && folders) {
       // Multi-root top level: show each workspace folder as navigable entry
       for (const folder of folders) {
@@ -342,14 +448,13 @@ async function promptCwd(
   }
 
   function updateButtons() {
-    const selectedItem = quickPick.selectedItems[0] as NavItem | undefined;
     const buttons: vscode.QuickInputButton[] = [];
 
     // Back button (left): always show to go back to previous step
     buttons.push(BACK_BUTTON);
 
     // Next button (right): show when we have a navigated path to accept
-    if (currentAbsPath !== null) {
+    if (isGlobalScope || currentAbsPath !== null) {
       buttons.push(NEXT_BUTTON);
     }
 
@@ -407,6 +512,16 @@ async function promptCwd(
 
         // If Enter was pressed on the input box (value matches path and selection hasn't moved),
         // we accept the path in the box.
+        if (isGlobalScope) {
+          const item = quickPick.selectedItems[0] as NavItem | undefined;
+          if (item?.navCwd !== undefined) {
+            done(item.navCwd);
+            return;
+          }
+          done(null);
+          return;
+        }
+
         if (!userMovedSelection && currentAbsPath !== null) {
           done(getStoredCwd(currentAbsPath));
           return;
@@ -421,6 +536,10 @@ async function promptCwd(
           }
 
           if (item && item.navType === 'enterFolder') {
+            if (isGlobalScope) {
+              done(item.navCwd ?? null);
+              return;
+            }
             currentFolder = item.navFolder!;
             currentAbsPath = item.navAbsPath!;
             quickPick.value = currentAbsPath;
@@ -451,6 +570,11 @@ async function promptCwd(
           // Back button always goes to previous step
           done(BACK);
         } else if (button === NEXT_BUTTON) {
+          if (isGlobalScope) {
+            const item = quickPick.selectedItems[0] as NavItem | undefined;
+            done(item?.navCwd ?? null);
+            return;
+          }
           done(getStoredCwd(currentAbsPath));
         }
       }),
@@ -620,31 +744,6 @@ const COMMAND_LANGUAGE_OPTIONS: Array<{
   { value: 'generic', label: t('Personalized') },
 ];
 
-type CommandCreationMode =
-  | { kind: 'personalized-new' }
-  | {
-      kind: 'personalized-existing';
-      template: {
-        label: string;
-        command: string;
-        cwd?: string;
-        background: boolean;
-        language: string;
-        type?: 'shell' | 'vscode';
-      };
-    }
-  | {
-      kind: 'opensource-template';
-      template: {
-        label: string;
-        command: string;
-        cwd?: string;
-        background: boolean;
-        language: string;
-        type?: 'shell' | 'vscode';
-      };
-    };
-
 async function promptCommandScope(
   currentScope: 'local' | 'global' = 'local',
   totalSteps: number,
@@ -788,67 +887,31 @@ async function promptCommandSourceType(
   );
 }
 
-async function promptPersonalizedMode(
-  totalSteps: number,
-  stepNumber: number,
-): Promise<'new' | 'existing' | Back | undefined> {
-  interface PersonalizedModeItem extends vscode.QuickPickItem {
-    mode: 'new' | 'existing';
-  }
-
-  return new Promise<'new' | 'existing' | Back | undefined>((resolve) => {
-    const quickPick = vscode.window.createQuickPick<PersonalizedModeItem>();
-    quickPick.title = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps})`;
-    quickPick.placeholder = t('Choose how to start your personalized command');
-    quickPick.ignoreFocusOut = true;
-    quickPick.buttons = [BACK_BUTTON];
-    quickPick.items = [
-      {
-        label: t('New'),
-        description: t('Create a personalized command from scratch'),
-        mode: 'new',
-      },
-      {
-        label: t('Existing'),
-        description: t('Reuse one of your existing commands as a base'),
-        mode: 'existing',
-      },
-    ];
-
-    let finished = false;
-    const disposables: vscode.Disposable[] = [];
-    const done = (result: 'new' | 'existing' | Back | undefined) => {
-      if (finished) return;
-      finished = true;
-      disposables.forEach((d) => d.dispose());
-      quickPick.dispose();
-      resolve(result);
-    };
-
-    disposables.push(
-      quickPick.onDidAccept(() => done(quickPick.selectedItems[0]?.mode)),
-    );
-    disposables.push(
-      quickPick.onDidTriggerButton((button) => {
-        if (button === BACK_BUTTON) done(BACK);
-      }),
-    );
-    disposables.push(quickPick.onDidHide(() => done(undefined)));
-    quickPick.show();
-  });
-}
-
 async function promptExistingCommandTemplate(
   provider: FavoritesTreeDataProvider,
   totalSteps: number,
   stepNumber: number,
 ): Promise<
-  | CommandCreationMode['template']
+  | {
+      label: string;
+      command: string;
+      cwd?: string;
+      background: boolean;
+      language: string;
+      type?: 'shell' | 'vscode';
+    }
   | Back
   | undefined
 > {
   interface ExistingCommandItem extends vscode.QuickPickItem {
-    template: CommandCreationMode['template'];
+    template: {
+      label: string;
+      command: string;
+      cwd?: string;
+      background: boolean;
+      language: string;
+      type?: 'shell' | 'vscode';
+    };
   }
 
   const editableCommands = provider
@@ -861,7 +924,7 @@ async function promptExistingCommandTemplate(
     return BACK;
   }
 
-  return new Promise<CommandCreationMode['template'] | Back | undefined>(
+  return new Promise<ExistingCommandItem['template'] | Back | undefined>(
     (resolve) => {
       const quickPick = vscode.window.createQuickPick<ExistingCommandItem>();
       quickPick.title = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps})`;
@@ -966,12 +1029,26 @@ async function promptOpenSourceTemplate(
   totalSteps: number,
   stepNumber: number,
 ): Promise<
-  | CommandCreationMode['template']
+  | {
+      label: string;
+      command: string;
+      cwd?: string;
+      background: boolean;
+      language: string;
+      type?: 'shell' | 'vscode';
+    }
   | Back
   | undefined
 > {
   interface TemplateItem extends vscode.QuickPickItem {
-    template: CommandCreationMode['template'];
+    template: {
+      label: string;
+      command: string;
+      cwd?: string;
+      background: boolean;
+      language: string;
+      type?: 'shell' | 'vscode';
+    };
   }
 
   const templates = provider
@@ -979,7 +1056,7 @@ async function promptOpenSourceTemplate(
     .filter((command) => command.language === language)
     .sort((a, b) => a.label.localeCompare(b.label));
 
-  return new Promise<CommandCreationMode['template'] | Back | undefined>(
+  return new Promise<TemplateItem['template'] | Back | undefined>(
     (resolve) => {
       const quickPick = vscode.window.createQuickPick<TemplateItem>();
       quickPick.title = `${t('Add Command Favorite')} (${stepNumber}/${totalSteps})`;
@@ -1216,7 +1293,12 @@ async function promptCommandFlow(
         break;
       }
       case 3: {
-        const r = await promptCwd(stepCwd ?? undefined, TOTAL, 3);
+        const r = await promptCwd(
+          stepCwd ?? undefined,
+          TOTAL,
+          3,
+          stepScope,
+        );
         if (r === undefined) return undefined;
         if (isBack(r)) {
           step = 2;
@@ -1287,7 +1369,7 @@ async function promptSaveOpenSourceFlow(
 async function promptAddCommandCreationFlow(
   provider: FavoritesTreeDataProvider,
 ): Promise<CommandFlowResult | undefined> {
-  type State = 'scope' | 'source' | 'personalized-mode' | 'opensource-language' | 'template';
+  type State = 'scope' | 'source' | 'opensource-language' | 'template';
   type ChoiceItem = vscode.QuickPickItem & {
     nextState?: State;
     value?: string;
@@ -1347,13 +1429,18 @@ async function promptAddCommandCreationFlow(
       }
 
       if (state === 'source') {
-        quickPick.title = `${t('Add Command Favorite')} (2/4)`;
+        quickPick.title = `${t('Add Command Favorite')} (2/3)`;
         quickPick.placeholder = t('Select command source');
         quickPick.items = [
           {
             label: t('Personalized'),
             description: t('Create your own command or reuse an existing one'),
-            nextState: 'personalized-mode',
+            template: {
+              label: '',
+              command: '',
+              background: false,
+              language: 'generic',
+            },
             value: 'personalized',
           },
           {
@@ -1366,32 +1453,8 @@ async function promptAddCommandCreationFlow(
         return;
       }
 
-      if (state === 'personalized-mode') {
-        quickPick.title = `${t('Add Command Favorite')} (3/4)`;
-        quickPick.placeholder = t('Choose how to start your personalized command');
-        quickPick.items = [
-          {
-            label: t('New'),
-            description: t('Create a personalized command from scratch'),
-            template: {
-              label: '',
-              command: '',
-              background: false,
-              language: 'generic',
-            },
-          },
-          {
-            label: t('Existing'),
-            description: t('Reuse one of your existing commands as a base'),
-            nextState: 'template',
-            value: 'existing',
-          },
-        ];
-        return;
-      }
-
       if (state === 'opensource-language') {
-        quickPick.title = `${t('Add Command Favorite')} (3/4)`;
+        quickPick.title = `${t('Add Command Favorite')} (3/3)`;
         quickPick.placeholder = t('Select OpenSource template language');
         quickPick.items = Array.from(
           new Set(
@@ -1410,7 +1473,7 @@ async function promptAddCommandCreationFlow(
         return;
       }
 
-      quickPick.title = `${t('Add Command Favorite')} (4/4)`;
+      quickPick.title = `${t('Add Command Favorite')} (3/3)`;
       quickPick.placeholder =
         sourceType === 'opensource'
           ? t('Select OpenSource template')
@@ -1420,10 +1483,7 @@ async function promptAddCommandCreationFlow(
           ? provider
               .getCommandsByScope('opensource')
               .filter((command) => command.language === language)
-          : provider
-              .getCommands()
-              .filter((command) => command.scope !== 'opensource')
-              .sort((a, b) => a.label.localeCompare(b.label));
+          : [];
       quickPick.items = commands.map((command) => ({
         label: command.label,
         description:

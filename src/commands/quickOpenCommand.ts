@@ -858,10 +858,15 @@ class CommandQuickPickItem implements vscode.QuickPickItem {
     this.commandItemRef = commandItem;
     const data = commandItem.data;
     this.label = data.label;
+    const locationLabel = data.cwd ? data.cwd : t('Workspace root');
     this.description = data.command;
-    this.detail = data.cwd ? ` ${data.cwd}` : undefined;
+    this.detail = `[${locationLabel}]`;
     this.iconPath = new vscode.ThemeIcon(
-      data.background ? 'server-process' : 'terminal',
+      data.scope === 'local'
+        ? 'folder-library'
+        : data.scope === 'global'
+          ? 'globe'
+          : 'library',
     );
   }
 }
@@ -2208,33 +2213,26 @@ export function registerQuickOpenCommand(
           const otherItems: FileQuickPickItem[] = [];
           let searchNoticeItem: QuickOpenItem | null = null;
 
-          // Commands sections by scope
-          const commandScopes: Array<{
-            scope: 'local' | 'global' | 'opensource';
-            label: string;
-          }> = [
-            { scope: 'local', label: t('Local Commands') },
-            { scope: 'global', label: t('Global Commands') },
-            { scope: 'opensource', label: t('OpenSource Commands') },
+          const personalizedCommands = [
+            ...favoritesProvider.getCommandsByScope('local'),
+            ...favoritesProvider.getCommandsByScope('global'),
           ];
-          for (const { scope, label } of commandScopes) {
-            const scopedCommands = favoritesProvider.getCommandsByScope(scope);
-            const visibleCommands = isSearching
-              ? scopedCommands.filter((command) =>
-                  matchesCommandSearchText(command, normalizedSearch),
-                )
-              : scopedCommands;
+          const searchableCommands = isSearching
+            ? [...personalizedCommands, ...favoritesProvider.getCommandsByScope('opensource')]
+            : personalizedCommands;
+          const visibleCommands = isSearching
+            ? searchableCommands.filter((command) =>
+                matchesCommandSearchText(command, normalizedSearch),
+              )
+            : searchableCommands;
 
-            if (visibleCommands.length === 0) {
-              continue;
-            }
-
+          if (visibleCommands.length > 0) {
             const commandQuickPickItems = visibleCommands
               .sort((a, b) => b.addedAt - a.addedAt || a.label.localeCompare(b.label))
               .map((data) => new CommandQuickPickItem(new CommandItem(data)));
 
             items.push({
-              label,
+              label: t('Commands'),
               kind: vscode.QuickPickItemKind.Separator,
             });
             items.push(...commandQuickPickItems);

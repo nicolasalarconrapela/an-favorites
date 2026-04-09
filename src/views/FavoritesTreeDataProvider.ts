@@ -67,19 +67,18 @@ export class CommandItem extends vscode.TreeItem {
 
     this.id = `command:${data.scope}:${data.id}`;
     const isVscode = data.type === 'vscode';
-    const scopeLabel = FavoritesTreeDataProvider.getScopeDisplayName(data.scope);
-    const locationLabel = data.cwd ? `[${data.cwd}]` : `[${t('Workspace root')}]`;
+    const locationLabel = data.cwd ? data.cwd : t('Workspace root');
 
     if (isVscode) {
       this.tooltip = data.command;
-      this.description = `${locationLabel} • ${scopeLabel}`;
-      this.detail = data.command;
+      this.description = `${data.command} [${locationLabel}]`;
+      this.detail = undefined;
     } else {
       this.tooltip = data.background
         ? `${data.command}${data.cwd ? ` (${data.cwd})` : ''} — ${t('Background')}`
         : `${data.command}${data.cwd ? ` (${data.cwd})` : ''} — ${t('Foreground')}`;
-      this.description = `${locationLabel} • ${scopeLabel}`;
-      this.detail = data.command;
+      this.description = `${data.command} [${locationLabel}]`;
+      this.detail = undefined;
     }
 
     this.iconPath = new vscode.ThemeIcon(
@@ -401,7 +400,10 @@ export class FavoritesTreeDataProvider
 
     this.disposables.push(
       vscode.workspace.onDidChangeWorkspaceFolders(() => {
-        this.logger.debug('[workspace] Workspace folders changed -> refresh()');
+        this.logger.debug(
+          '[workspace] Workspace folders changed -> reloadFavorites() + refresh()',
+        );
+        this.reloadFavorites();
         this.refresh();
       }),
     );
