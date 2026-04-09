@@ -97,9 +97,15 @@ async function createTextStep(opts: {
     inputBox.ignoreFocusOut = true;
 
     const showBack = opts.showBack ?? false;
+    const updateValidationState = (value: string, showMessage: boolean) => {
+      const isValid = !!value.trim();
+      inputBox.validationMessage =
+        !isValid && showMessage ? opts.emptyWarning : undefined;
+      inputBox.buttons = inputButtons(showBack, isValid);
+    };
 
     // Set initial buttons based on pre-filled value
-    inputBox.buttons = inputButtons(showBack, !!opts.currentValue?.trim());
+    updateValidationState(opts.currentValue ?? '', false);
 
     let finished = false;
     const disposables: vscode.Disposable[] = [];
@@ -115,7 +121,7 @@ async function createTextStep(opts: {
     // Update Next button visibility as user types
     disposables.push(
       inputBox.onDidChangeValue((value) => {
-        inputBox.buttons = inputButtons(showBack, !!value.trim());
+        updateValidationState(value, false);
       }),
     );
 
@@ -123,6 +129,7 @@ async function createTextStep(opts: {
       inputBox.onDidAccept(() => {
         const value = inputBox.value.trim();
         if (!value) {
+          updateValidationState(inputBox.value, true);
           vscode.window.showWarningMessage(opts.emptyWarning);
           return;
         }
@@ -141,6 +148,7 @@ async function createTextStep(opts: {
           if (value) {
             done(value);
           } else {
+            updateValidationState(inputBox.value, true);
             vscode.window.showWarningMessage(opts.emptyWarning);
           }
         }
@@ -338,10 +346,10 @@ async function promptCwd(
           suppressHide = true;
           quickPick.hide();
           const manualValue = await createTextStep({
-            title: `${t('Add Command Favorite')} (${stepNumber}.1/${totalSteps}) â€” ${t('Select working directory')} [${workspaceType}]`,
+            title: `${t('Add Command Favorite')} (${stepNumber}.1/${totalSteps}) ${t('Select working directory')} [${workspaceType}]`,
             prompt: t('Enter the folder name under the workspace root'),
             placeholder: t('e.g.: frontend'),
-            emptyWarning: t('Folder name cannot be empty.'),
+            emptyWarning: t('The folder name cannot be empty.'),
             currentValue: currentCwd ?? '',
             showBack: true,
           });
@@ -947,7 +955,9 @@ async function promptExistingCommandTemplate(
 
       let finished = false;
       const disposables: vscode.Disposable[] = [];
-      const done = (result: CommandCreationMode['template'] | Back | undefined) => {
+      const done = (
+        result: ExistingCommandItem['template'] | Back | undefined,
+      ) => {
         if (finished) return;
         finished = true;
         disposables.forEach((d) => d.dispose());
@@ -1078,7 +1088,7 @@ async function promptOpenSourceTemplate(
 
       let finished = false;
       const disposables: vscode.Disposable[] = [];
-      const done = (result: CommandCreationMode['template'] | Back | undefined) => {
+      const done = (result: TemplateItem['template'] | Back | undefined) => {
         if (finished) return;
         finished = true;
         disposables.forEach((d) => d.dispose());
@@ -1268,7 +1278,7 @@ async function promptCommandFlow(
           title: `${t('Add Command Favorite')} (1/${TOTAL})`,
           prompt: t('Name as it will appear in the favorites list'),
           placeholder: t('e.g.: Start Dev Server'),
-          emptyWarning: t('Label cannot be empty.'),
+          emptyWarning: t('The command name cannot be empty.'),
           currentValue: stepLabel,
           showBack: false,
         });
