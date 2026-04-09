@@ -93,11 +93,6 @@ export class CommandItem extends vscode.TreeItem {
     ctx += data.scope === 'opensource' ? ':readonly' : ':editable';
     this.contextValue = ctx;
 
-    this.command = {
-      command: 'anfavorites.runCommandFavorite',
-      title: t('Run Command'),
-      arguments: [this],
-    };
   }
 }
 
