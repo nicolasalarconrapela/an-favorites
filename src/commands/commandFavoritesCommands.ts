@@ -1328,6 +1328,12 @@ interface CommandFlowResult {
   language: string;
 }
 
+interface CommandFlowOptions {
+  totalSteps?: number;
+  stepOffset?: number;
+  showBackOnFirstStep?: boolean;
+}
+
 async function promptCommandFlow(
   provider: FavoritesTreeDataProvider,
   existing?: {
@@ -1338,13 +1344,16 @@ async function promptCommandFlow(
     scope?: 'local' | 'global';
     language?: string;
   },
-): Promise<CommandFlowResult | undefined> {
-  const TOTAL = 4;
+  options?: CommandFlowOptions,
+): Promise<CommandFlowResult | Back | undefined> {
+  const TOTAL = options?.totalSteps ?? 5;
+  const STEP_OFFSET = options?.stepOffset ?? 0;
+  const SHOW_BACK_ON_FIRST_STEP = options?.showBackOnFirstStep ?? false;
   let step = 1;
 
   // Accumulated state — pre-populated from existing when editing
   let stepLabel = existing?.label ?? '';
-  const stepScope: 'local' | 'global' = existing?.scope ?? 'local';
+  let stepScope: 'local' | 'global' = existing?.scope ?? 'local';
   const stepLanguage = existing?.language ?? 'generic';
   let stepCommand = existing?.command ?? '';
   let stepCwd: string | null = existing?.cwd ?? null;
@@ -1354,60 +1363,83 @@ async function promptCommandFlow(
     switch (step) {
       case 1: {
         const r = await createTextStep({
-          title: buildCommandStepTitle(getCommandStepAction('name'), 1, TOTAL),
+          title: buildCommandStepTitle(
+            getCommandStepAction('name'),
+            STEP_OFFSET + 1,
+            TOTAL,
+          ),
           prompt: t('Name as it will appear in the favorites list'),
           placeholder: t('e.g.: Start Dev Server'),
           emptyWarning: t('The command name cannot be empty.'),
           currentValue: stepLabel,
-          showBack: false,
+          showBack: SHOW_BACK_ON_FIRST_STEP,
         });
         if (r === undefined) return undefined; // cancelled
-        if (isBack(r)) return undefined; // step 1 has no real back
+        if (isBack(r)) return BACK;
         stepLabel = r;
         step = 2;
         break;
       }
       case 2: {
-        const r = await runModeStep(
-          buildCommandStepTitle(getCommandStepAction('executionType'), 2, TOTAL),
-          stepBackground,
-        );
+        const r = await promptCommandScope(stepScope, TOTAL, STEP_OFFSET + 2);
         if (r === undefined) return undefined;
         if (isBack(r)) {
           step = 1;
           break;
         }
-        stepBackground = r;
+        stepScope = r;
         step = 3;
         break;
       }
       case 3: {
-        const r = await promptCwd(
-          stepCwd ?? undefined,
-          TOTAL,
-          3,
-          stepScope,
+        const r = await runModeStep(
+          buildCommandStepTitle(
+            getCommandStepAction('executionType'),
+            STEP_OFFSET + 3,
+            TOTAL,
+          ),
+          stepBackground,
         );
         if (r === undefined) return undefined;
         if (isBack(r)) {
           step = 2;
           break;
         }
-        stepCwd = r;
+        stepBackground = r;
         step = 4;
         break;
       }
       case 4: {
+        const r = await promptCwd(
+          stepCwd ?? undefined,
+          TOTAL,
+          STEP_OFFSET + 4,
+          stepScope,
+        );
+        if (r === undefined) return undefined;
+        if (isBack(r)) {
+          step = 3;
+          break;
+        }
+        stepCwd = r;
+        step = 5;
+        break;
+      }
+      case 5: {
         const cwd = stepCwd === null ? undefined : stepCwd;
         const r = await runPreviewStep(
-          buildCommandStepTitle(getCommandStepAction('preview'), 4, TOTAL),
+          buildCommandStepTitle(
+            getCommandStepAction('preview'),
+            STEP_OFFSET + 5,
+            TOTAL,
+          ),
           stepCommand,
           cwd,
           stepBackground,
         );
         if (r === undefined) return undefined; // cancelled
         if (isBack(r)) {
-          step = 3; // Return to Directory selection
+          step = 4; // Return to Directory selection
           break;
         }
 
@@ -1433,31 +1465,10 @@ async function promptCommandFlow(
 
 // ── Command registration ────────────────────────────────────────────────────
 
-async function promptSaveOpenSourceFlow(
-  provider: FavoritesTreeDataProvider,
-  item: CommandItem,
-  scope: 'local' | 'global',
-): Promise<CommandFlowResult | undefined> {
-  const result = await promptCommandFlow(provider, {
-    label: item.data.label,
-    command: item.data.command,
-    cwd: item.data.cwd,
-    background: item.data.background,
-    scope,
-    language: item.data.language,
-  });
-
-  if (!result) {
-    return undefined;
-  }
-
-  return { ...result, scope };
-}
-
 async function promptAddCommandCreationFlow(
   provider: FavoritesTreeDataProvider,
 ): Promise<CommandFlowResult | undefined> {
-  type State = 'scope' | 'source' | 'opensource-language' | 'template';
+  type State = 'source' | 'opensource-language' | 'template';
   type ChoiceItem = vscode.QuickPickItem & {
     nextState?: State;
     value?: string;
@@ -1470,235 +1481,215 @@ async function promptAddCommandCreationFlow(
     };
   };
 
-  let state: State = 'scope';
-  let scope: 'local' | 'global' = 'local';
+  let state: State = 'source';
   let sourceType: 'personalized' | 'opensource' = 'personalized';
   let language = 'generic';
-  let seed:
-    | {
-        label: string;
-        command: string;
-        cwd?: string;
-        background: boolean;
-        language?: string;
-      }
-    | undefined;
   const history: State[] = [];
 
-  const selection = await new Promise<
-    | {
-        scope: 'local' | 'global';
-        seed: {
-          label: string;
-          command: string;
-          cwd?: string;
-          background: boolean;
-          language?: string;
-        };
-      }
-    | undefined
-  >((resolve) => {
-    const quickPick = vscode.window.createQuickPick<ChoiceItem>();
-    quickPick.ignoreFocusOut = true;
-
-    const update = () => {
-      quickPick.buttons = history.length > 0 ? [BACK_BUTTON] : [];
-
-      if (state === 'scope') {
-        quickPick.title = buildCommandStepTitle(getCommandStepAction('scope'), 1, 4);
-        quickPick.placeholder = t('Select command scope');
-        quickPick.items = COMMAND_SCOPE_OPTIONS.map((option) => ({
-          label: option.label,
-          description: option.description,
-          nextState: 'source',
-          value: option.value,
-        }));
-        return;
-      }
-
-      if (state === 'source') {
-        quickPick.title = buildCommandStepTitle(getCommandStepAction('source'), 2, 3);
-        quickPick.placeholder = t('Select command source');
-        quickPick.items = [
-          {
-            label: t('Personalized'),
-            description: t('Create your own command or reuse an existing one'),
-            template: {
-              label: '',
-              command: '',
-              background: false,
-              language: 'generic',
-            },
-            value: 'personalized',
-          },
-          {
-            label: t('OpenSource Templates'),
-            description: t('Start from reusable templates grouped by language'),
-            nextState: 'opensource-language',
-            value: 'opensource',
-          },
-        ];
-        return;
-      }
-
-      if (state === 'opensource-language') {
-        quickPick.title = buildCommandStepTitle(
-          getCommandStepAction('templateLanguage'),
-          3,
-          3,
-        );
-        quickPick.placeholder = t('Select OpenSource template language');
-        quickPick.items = Array.from(
-          new Set(
-            provider
-              .getCommandsByScope('opensource')
-              .map((command) => command.language)
-              .sort(),
-          ),
-        ).map((value) => ({
-          label:
-            COMMAND_LANGUAGE_OPTIONS.find((option) => option.value === value)?.label ??
-            value,
-          nextState: 'template',
-          value,
-        }));
-        return;
-      }
-
-      quickPick.title = buildCommandStepTitle(
-        sourceType === 'opensource'
-          ? getCommandStepAction('template')
-          : getCommandStepAction('existing'),
-        3,
-        3,
-      );
-      quickPick.placeholder =
-        sourceType === 'opensource'
-          ? t('Select OpenSource template')
-          : t('Select an existing command');
-      const commands =
-        sourceType === 'opensource'
-          ? provider
-              .getCommandsByScope('opensource')
-              .filter((command) => command.language === language)
-          : [];
-      quickPick.items = commands.map((command) => ({
-        label: command.label,
-        description:
-          sourceType === 'opensource'
-            ? undefined
-            : `${command.scope === 'global' ? t('Global') : t('Local')} • ${
-                command.language === 'generic'
-                  ? t('Personalized')
-                  : FavoritesTreeDataProvider.getLanguageDisplayName(
-                      command.language,
-                    )
-              }`,
-        detail: command.command,
-        template: {
-          label: command.label,
-          command: command.command,
-          cwd: command.cwd,
-          background: command.background,
-          language: command.language,
-        },
-      }));
-    };
-
-    const goBack = () => {
-      const previous = history.pop();
-      if (!previous) return;
-      state = previous;
-      update();
-      quickPick.show();
-    };
-
-    const disposables: vscode.Disposable[] = [];
-    let finished = false;
-    const done = (
-      result:
-        | {
-            scope: 'local' | 'global';
-            seed: {
-              label: string;
-              command: string;
-              cwd?: string;
-              background: boolean;
-              language?: string;
-            };
-          }
-        | undefined,
-    ) => {
-      if (finished) return;
-      finished = true;
-      disposables.forEach((d) => d.dispose());
-      quickPick.dispose();
-      resolve(result);
-    };
-
-    disposables.push(
-      quickPick.onDidTriggerButton((button) => {
-        if (button === BACK_BUTTON) {
-          goBack();
+  while (true) {
+    const selection = await new Promise<
+      | {
+          seed: {
+            label: string;
+            command: string;
+            cwd?: string;
+            background: boolean;
+            language?: string;
+          };
         }
-      }),
-    );
-    disposables.push(
-      quickPick.onDidAccept(() => {
-        const item = quickPick.selectedItems[0];
-        if (!item) return;
+      | undefined
+    >((resolve) => {
+      const quickPick = vscode.window.createQuickPick<ChoiceItem>();
+      quickPick.ignoreFocusOut = true;
 
-        if (state === 'scope' && item.value) {
-          scope = item.value as 'local' | 'global';
-        } else if (state === 'source' && item.value) {
+      const totalSteps = sourceType === 'opensource' ? 8 : 6;
+
+      const update = () => {
+        quickPick.buttons = history.length > 0 ? [BACK_BUTTON] : [];
+
+        if (state === 'source') {
+          quickPick.title = buildCommandStepTitle(
+            getCommandStepAction('source'),
+            1,
+            totalSteps,
+          );
+          quickPick.placeholder = t('Select command source');
+          quickPick.items = [
+            {
+              label: t('Personalized'),
+              description: t('Create your own command or reuse an existing one'),
+              template: {
+                label: '',
+                command: '',
+                background: false,
+                language: 'generic',
+              },
+              value: 'personalized',
+            },
+            {
+              label: t('OpenSource Templates'),
+              description: t('Start from reusable templates grouped by language'),
+              nextState: 'opensource-language',
+              value: 'opensource',
+            },
+          ];
+          return;
+        }
+
+        if (state === 'opensource-language') {
+          quickPick.title = buildCommandStepTitle(
+            getCommandStepAction('templateLanguage'),
+            2,
+            totalSteps,
+          );
+          quickPick.placeholder = t('Select OpenSource template language');
+          quickPick.items = Array.from(
+            new Set(
+              provider
+                .getCommandsByScope('opensource')
+                .map((command) => command.language)
+                .sort(),
+            ),
+          ).map((value) => ({
+            label:
+              COMMAND_LANGUAGE_OPTIONS.find((option) => option.value === value)?.label ??
+              value,
+            nextState: 'template',
+            value,
+          }));
+          return;
+        }
+
+        quickPick.title = buildCommandStepTitle(
+          getCommandStepAction('template'),
+          3,
+          totalSteps,
+        );
+        quickPick.placeholder = t('Select OpenSource template');
+        quickPick.items = provider
+          .getCommandsByScope('opensource')
+          .filter((command) => command.language === language)
+          .map((command) => ({
+            label: command.label,
+            detail: command.command,
+            template: {
+              label: command.label,
+              command: command.command,
+              cwd: command.cwd,
+              background: command.background,
+              language: command.language,
+            },
+          }));
+      };
+
+      const goBack = () => {
+        const previous = history.pop();
+        if (!previous) return;
+        state = previous;
+        update();
+        quickPick.show();
+      };
+
+      const disposables: vscode.Disposable[] = [];
+      let finished = false;
+      const done = (
+        result:
+          | {
+              seed: {
+                label: string;
+                command: string;
+                cwd?: string;
+                background: boolean;
+                language?: string;
+              };
+            }
+          | undefined,
+      ) => {
+        if (finished) return;
+        finished = true;
+        disposables.forEach((d) => d.dispose());
+        quickPick.dispose();
+        resolve(result);
+      };
+
+      disposables.push(
+        quickPick.onDidTriggerButton((button) => {
+          if (button === BACK_BUTTON) {
+            goBack();
+          }
+        }),
+      );
+      disposables.push(
+        quickPick.onDidAccept(() => {
+          const item = quickPick.selectedItems[0];
+          if (!item) return;
+
+        if (state === 'source' && item.value) {
           sourceType = item.value as 'personalized' | 'opensource';
+          if (sourceType === 'personalized') {
+            language = 'generic';
+          }
         } else if (state === 'opensource-language' && item.value) {
           language = item.value;
         }
 
-        if (item.template) {
-          done({ scope, seed: item.template });
-          return;
-        }
+          if (item.template) {
+            done({ seed: item.template });
+            return;
+          }
 
-        if (item.nextState) {
-          history.push(state);
-          state = item.nextState;
-          update();
-          quickPick.show();
-        }
-      }),
+          if (item.nextState) {
+            history.push(state);
+            state = item.nextState;
+            update();
+            quickPick.show();
+          }
+        }),
+      );
+      disposables.push(quickPick.onDidHide(() => done(undefined)));
+
+      update();
+      quickPick.show();
+    });
+
+    if (!selection) {
+      return undefined;
+    }
+
+    const flowSourceType: 'personalized' | 'opensource' = sourceType;
+
+    const result = await promptCommandFlow(
+      provider,
+      {
+        label: selection.seed.label ?? '',
+        command: selection.seed.command ?? '',
+        cwd: selection.seed.cwd,
+        background: selection.seed.background ?? false,
+        scope: 'local',
+        language: selection.seed.language ?? 'generic',
+      },
+      {
+        totalSteps: flowSourceType === 'opensource' ? 8 : 6,
+        stepOffset: flowSourceType === 'opensource' ? 3 : 1,
+        showBackOnFirstStep: true,
+      },
     );
-    disposables.push(quickPick.onDidHide(() => done(undefined)));
 
-    update();
-    quickPick.show();
-  });
+    if (result === undefined) {
+      return undefined;
+    }
 
-  if (!selection) {
-    return undefined;
+    if (isBack(result)) {
+      state = flowSourceType === 'opensource' ? 'template' : 'source';
+      continue;
+    }
+
+    return {
+      ...result,
+      language: selection.seed.language ?? result.language ?? 'generic',
+    };
   }
-
-  const result = await promptCommandFlow(provider, {
-    label: selection.seed.label ?? '',
-    command: selection.seed.command ?? '',
-    cwd: selection.seed.cwd,
-    background: selection.seed.background ?? false,
-    scope: selection.scope,
-    language: selection.seed.language ?? 'generic',
-  });
-
-  if (!result) {
-    return undefined;
-  }
-
-  return {
-    ...result,
-    scope: selection.scope,
-    language: selection.seed.language ?? result.language ?? 'generic',
-  };
 }
-
 export function registerCommandFavoritesCommands(
   context: vscode.ExtensionContext,
   commandsProvider: FavoritesTreeDataProvider,
@@ -1763,7 +1754,7 @@ export function registerCommandFavoritesCommands(
           language: item.data.language,
         });
 
-        if (result) {
+        if (result && !isBack(result)) {
           const ok = commandsProvider.editCommand(item.data.id, {
             label: result.label,
             command: result.command,
@@ -1878,12 +1869,19 @@ export function registerCommandFavoritesCommands(
       async (item?: CommandItem) => {
         if (!item || item.data.scope !== 'opensource') return;
 
-        const result = await promptSaveOpenSourceFlow(
+        const result = await promptCommandFlow(
           commandsProvider,
-          item,
-          'local',
+          {
+            label: item.data.label,
+            command: item.data.command,
+            cwd: item.data.cwd,
+            background: item.data.background,
+            scope: 'local',
+            language: item.data.language,
+          },
         );
         if (!result) return;
+        if (isBack(result)) return;
 
         commandsProvider.addCommand({
           label: result.label,
@@ -1891,7 +1889,7 @@ export function registerCommandFavoritesCommands(
           cwd: result.cwd,
           background: result.background,
           type: item.data.type,
-          scope: 'local',
+          scope: result.scope,
           language: result.language,
         });
         vscode.window.showInformationMessage(
@@ -1907,12 +1905,19 @@ export function registerCommandFavoritesCommands(
       async (item?: CommandItem) => {
         if (!item || item.data.scope !== 'opensource') return;
 
-        const result = await promptSaveOpenSourceFlow(
+        const result = await promptCommandFlow(
           commandsProvider,
-          item,
-          'global',
+          {
+            label: item.data.label,
+            command: item.data.command,
+            cwd: item.data.cwd,
+            background: item.data.background,
+            scope: 'global',
+            language: item.data.language,
+          },
         );
         if (!result) return;
+        if (isBack(result)) return;
 
         commandsProvider.addCommand({
           label: result.label,
@@ -1920,7 +1925,7 @@ export function registerCommandFavoritesCommands(
           cwd: result.cwd,
           background: result.background,
           type: item.data.type,
-          scope: 'global',
+          scope: result.scope,
           language: result.language,
         });
         vscode.window.showInformationMessage(
