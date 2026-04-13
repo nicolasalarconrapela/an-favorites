@@ -291,6 +291,15 @@ export class FavoritesTreeDataProvider
     >,
     vscode.Disposable
 {
+  private readonly commandSectionItems = {
+    favorites: new CommandSectionItem('favorites'),
+    commands: new CommandSectionItem('commands'),
+    personalized: new CommandSectionItem('personalized'),
+    predefined: new CommandSectionItem('predefined'),
+    globals: new CommandSectionItem('globals'),
+    opensource: new CommandSectionItem('opensource'),
+  } as const;
+
   private readonly disposables: vscode.Disposable[] = [];
   private _onDidChangeTreeData: vscode.EventEmitter<
     | GroupItem
@@ -345,6 +354,17 @@ export class FavoritesTreeDataProvider
   private cachedWorkspaceFolderByPath = new Map<
     string,
     vscode.WorkspaceFolder | null
+  >();
+  private pendingCommandRenderTraces = new Map<
+    string,
+    {
+      startedAt: number;
+      scope: 'local' | 'global';
+      label: string;
+      refreshFiredAt?: number;
+      commandsSectionSeenAt?: number;
+      scopeSectionSeenAt?: number;
+    }
   >();
 
   private groups: Set<string> = new Set([
@@ -406,7 +426,7 @@ export class FavoritesTreeDataProvider
       | 'globals'
       | 'opensource',
   ): CommandSectionItem {
-    return new CommandSectionItem(section);
+    return this.commandSectionItems[section];
   }
 
   public createGroupItem(groupName: string): GroupItem {
@@ -469,13 +489,35 @@ export class FavoritesTreeDataProvider
   refresh(): void {
     this.logger.debug('[tree] refresh() fired');
     this.invalidateTreeCaches();
+    const refreshAt = Date.now();
+    for (const trace of this.pendingCommandRenderTraces.values()) {
+      if (!trace.refreshFiredAt) {
+        trace.refreshFiredAt = refreshAt;
+      }
+    }
     this._onDidChangeTreeData.fire();
   }
 
   refreshSection(section: 'favorites' | 'commands'): void {
     this.logger.debug(`[tree] refreshSection(${section}) fired`);
     this.invalidateTreeCaches();
-    this._onDidChangeTreeData.fire(new CommandSectionItem(section));
+    this._onDidChangeTreeData.fire(this.commandSectionItems[section]);
+  }
+
+  private refreshTreeElement(
+    element:
+      | GroupItem
+      | FavoriteItem
+      | WorkspaceItem
+      | CommandItem
+      | CommandSectionItem
+      | CommandScopeItem
+      | CommandLanguageItem,
+    traceLabel: string,
+  ): void {
+    this.logger.debug(`[tree] ${traceLabel} fired`);
+    this.invalidateTreeCaches();
+    this._onDidChangeTreeData.fire(element);
   }
 
   private invalidateTreeCaches(): void {
@@ -579,19 +621,19 @@ export class FavoritesTreeDataProvider
         element.section === 'personalized' ||
         element.section === 'predefined'
       ) {
-        return new CommandSectionItem('commands');
+        return this.commandSectionItems.commands;
       }
 
       if (
         element.section === 'globals' ||
         element.section === 'opensource'
       ) {
-        return new CommandSectionItem('predefined');
+        return this.commandSectionItems.predefined;
       }
     }
 
     if (element instanceof GroupItem) {
-      return new CommandSectionItem('favorites');
+      return this.commandSectionItems.favorites;
     }
 
     if (element instanceof WorkspaceItem) {
@@ -648,15 +690,15 @@ export class FavoritesTreeDataProvider
     }
 
     if (element instanceof CommandLanguageItem) {
-      return new CommandSectionItem('opensource');
+      return this.commandSectionItems.opensource;
     }
 
     if (element instanceof CommandItem) {
       if (element.data.scope === 'local') {
-        return new CommandSectionItem('personalized');
+        return this.commandSectionItems.personalized;
       }
       if (element.data.scope === 'global') {
-        return new CommandSectionItem('globals');
+        return this.commandSectionItems.globals;
       }
       return new CommandLanguageItem(
         'opensource',
@@ -691,9 +733,9 @@ export class FavoritesTreeDataProvider
 
     if (!element) {
       const rootItems: (GroupItem | CommandSectionItem)[] = [];
-      rootItems.push(new CommandSectionItem('favorites'));
+      rootItems.push(this.commandSectionItems.favorites);
       if (this.getCommands().length > 0) {
-        rootItems.push(new CommandSectionItem('commands'));
+        rootItems.push(this.commandSectionItems.commands);
       }
       return Promise.resolve(rootItems);
     }
@@ -704,44 +746,102 @@ export class FavoritesTreeDataProvider
       }
 
       if (element.section === 'commands') {
+        const now = Date.now();
+        for (const trace of this.pendingCommandRenderTraces.values()) {
+          if (!trace.commandsSectionSeenAt) {
+            trace.commandsSectionSeenAt = now;
+            this.logger.info(
+              `[perf][commands] commands root requested for "${trace.label}" after ${now - trace.startedAt}ms` +
+                (trace.refreshFiredAt
+                  ? ` (${now - trace.refreshFiredAt}ms since refresh)`
+                  : ''),
+            );
+          }
+        }
         const sections: (CommandSectionItem | CommandLanguageItem)[] = [];
         if (this.localCommands.length > 0) {
-          sections.push(new CommandSectionItem('personalized'));
+          sections.push(this.commandSectionItems.personalized);
         }
         if (
           this.globalCommands.length > 0 ||
           this.openSourceCommands.length > 0
         ) {
-          sections.push(new CommandSectionItem('predefined'));
+          sections.push(this.commandSectionItems.predefined);
         }
         return Promise.resolve(sections);
       }
 
       if (element.section === 'personalized') {
-        return Promise.resolve(
-          [...this.localCommands]
-            .sort((a, b) => b.addedAt - a.addedAt || a.label.localeCompare(b.label))
-            .map((command) => new CommandItem(command)),
+        const sectionStartedAt = Date.now();
+        for (const trace of this.pendingCommandRenderTraces.values()) {
+          if (trace.scope === 'local' && !trace.scopeSectionSeenAt) {
+            trace.scopeSectionSeenAt = sectionStartedAt;
+            this.logger.info(
+              `[perf][commands] personalized section requested for "${trace.label}" after ${sectionStartedAt - trace.startedAt}ms` +
+                (trace.refreshFiredAt
+                  ? ` (${sectionStartedAt - trace.refreshFiredAt}ms since refresh)`
+                  : ''),
+            );
+          }
+        }
+        const commands = [...this.localCommands]
+          .sort((a, b) => b.addedAt - a.addedAt || a.label.localeCompare(b.label));
+        const sectionDurationMs = Date.now() - sectionStartedAt;
+        this.logger.debug(
+          `[perf][commands] getChildren(personalized) returned ${commands.length} items in ${sectionDurationMs}ms`,
         );
+        for (const command of commands) {
+          const trace = this.pendingCommandRenderTraces.get(command.id);
+          if (trace) {
+            this.logger.info(
+              `[perf][commands] tree materialized local command "${trace.label}" in ${Date.now() - trace.startedAt}ms`,
+            );
+            this.pendingCommandRenderTraces.delete(command.id);
+          }
+        }
+        return Promise.resolve(commands.map((command) => new CommandItem(command)));
       }
 
       if (element.section === 'predefined') {
         const sections: CommandSectionItem[] = [];
         if (this.globalCommands.length > 0) {
-          sections.push(new CommandSectionItem('globals'));
+          sections.push(this.commandSectionItems.globals);
         }
         if (this.openSourceCommands.length > 0) {
-          sections.push(new CommandSectionItem('opensource'));
+          sections.push(this.commandSectionItems.opensource);
         }
         return Promise.resolve(sections);
       }
 
       if (element.section === 'globals') {
-        return Promise.resolve(
-          [...this.globalCommands]
-            .sort((a, b) => b.addedAt - a.addedAt || a.label.localeCompare(b.label))
-            .map((command) => new CommandItem(command)),
+        const sectionStartedAt = Date.now();
+        for (const trace of this.pendingCommandRenderTraces.values()) {
+          if (trace.scope === 'global' && !trace.scopeSectionSeenAt) {
+            trace.scopeSectionSeenAt = sectionStartedAt;
+            this.logger.info(
+              `[perf][commands] globals section requested for "${trace.label}" after ${sectionStartedAt - trace.startedAt}ms` +
+                (trace.refreshFiredAt
+                  ? ` (${sectionStartedAt - trace.refreshFiredAt}ms since refresh)`
+                  : ''),
+            );
+          }
+        }
+        const commands = [...this.globalCommands]
+          .sort((a, b) => b.addedAt - a.addedAt || a.label.localeCompare(b.label));
+        const sectionDurationMs = Date.now() - sectionStartedAt;
+        this.logger.debug(
+          `[perf][commands] getChildren(globals) returned ${commands.length} items in ${sectionDurationMs}ms`,
         );
+        for (const command of commands) {
+          const trace = this.pendingCommandRenderTraces.get(command.id);
+          if (trace) {
+            this.logger.info(
+              `[perf][commands] tree materialized global command "${trace.label}" in ${Date.now() - trace.startedAt}ms`,
+            );
+            this.pendingCommandRenderTraces.delete(command.id);
+          }
+        }
+        return Promise.resolve(commands.map((command) => new CommandItem(command)));
       }
 
       if (element.section === 'opensource') {
@@ -1834,6 +1934,11 @@ export class FavoritesTreeDataProvider
   addCommand(
     data: Omit<CommandFavoriteData, 'id' | 'addedAt'>,
   ): CommandFavoriteData {
+    const startedAt = Date.now();
+    const hadAnyCommands = this.getCommands().length > 0;
+    const hadLocalCommands = this.localCommands.length > 0;
+    const hadGlobalCommands = this.globalCommands.length > 0;
+    const hadOpenSourceCommands = this.openSourceCommands.length > 0;
     const newCmd: CommandFavoriteData = {
       ...data,
       id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`,
@@ -1848,9 +1953,46 @@ export class FavoritesTreeDataProvider
       this.localCommands.push(newCmd);
     }
 
+    this.pendingCommandRenderTraces.set(newCmd.id, {
+      startedAt,
+      scope: newCmd.scope,
+      label: newCmd.label,
+    });
+
     void this.saveCommands();
-    this.refresh();
-    this.logger.debug(`[commands] addCommand -> "${newCmd.label}"`);
+    if (!hadAnyCommands) {
+      this.refreshSection('commands');
+    } else if (newCmd.scope === 'local') {
+      if (hadLocalCommands) {
+        this.refreshTreeElement(
+          this.commandSectionItems.personalized,
+          'refreshElement(personalized)',
+        );
+      } else {
+        this.refreshTreeElement(
+          this.commandSectionItems.commands,
+          'refreshElement(commands)',
+        );
+      }
+    } else if (hadGlobalCommands) {
+      this.refreshTreeElement(
+        this.commandSectionItems.globals,
+        'refreshElement(globals)',
+      );
+    } else if (hadOpenSourceCommands) {
+      this.refreshTreeElement(
+        this.commandSectionItems.predefined,
+        'refreshElement(predefined)',
+      );
+    } else {
+      this.refreshTreeElement(
+        this.commandSectionItems.commands,
+        'refreshElement(commands)',
+      );
+    }
+    this.logger.info(
+      `[perf][commands] addCommand queued "${newCmd.label}" scope=${newCmd.scope} in ${Date.now() - startedAt}ms`,
+    );
     return newCmd;
   }
 

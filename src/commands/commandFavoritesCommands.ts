@@ -1777,6 +1777,7 @@ export function registerCommandFavoritesCommands(
     vscode.commands.registerCommand(
       'anfavorites.addCommandFavorite',
       async () => {
+        const startedAt = Date.now();
         const result = await promptAddCommandCreationFlow(commandsProvider);
 
         if (result) {
@@ -1788,11 +1789,13 @@ export function registerCommandFavoritesCommands(
             scope: result.scope,
             language: result.language,
           });
+          logger.info(
+            `[perf][commands] addCommandFavorite flow completed for "${result.label}" in ${Date.now() - startedAt}ms`,
+          );
           showTemporaryInfo(t('Command "{0}" added.', result.label));
           logger.info(`[commandFavorites] Added command: "${result.label}"`);
         }
 
-        vscode.commands.executeCommand('anfavorites.quickOpen');
       },
     ),
   );
@@ -1828,7 +1831,6 @@ export function registerCommandFavoritesCommands(
           }
         }
 
-        vscode.commands.executeCommand('anfavorites.quickOpen');
       },
     ),
   );
