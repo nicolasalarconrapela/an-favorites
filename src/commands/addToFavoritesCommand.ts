@@ -6,6 +6,7 @@ import { t } from '../utils/l10n';
 export function registerAddToFavoritesCommand(
   context: vscode.ExtensionContext,
   favoritesProvider: FavoritesTreeDataProvider,
+  treeView: vscode.TreeView<any>,
   logger: Logger,
 ): void {
   const log = logger.withContext?.({ scope: 'AddToFavoritesCommand' }) ?? logger;
@@ -62,6 +63,27 @@ export function registerAddToFavoritesCommand(
           groupName,
         });
         favoritesProvider.addFavorite(targetUri, groupName);
+        await treeView.reveal(
+          favoritesProvider.createCommandSectionItem('favorites'),
+          {
+            expand: 1,
+            focus: false,
+            select: false,
+          },
+        );
+        await treeView.reveal(favoritesProvider.createGroupItem(groupName), {
+          expand: 1,
+          focus: false,
+          select: false,
+        });
+        await treeView.reveal(
+          favoritesProvider.createFavoriteItem(targetUri, groupName),
+          {
+            expand: false,
+            focus: false,
+            select: false,
+          },
+        );
 
         vscode.window.showInformationMessage(
           t(

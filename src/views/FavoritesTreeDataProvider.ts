@@ -340,6 +340,12 @@ export class FavoritesTreeDataProvider
   private globalCommands: CommandFavoriteData[] = [];
   private openSourceCommands: CommandFavoriteData[] = [];
   private hiddenOpenSourceCommandIds = new Set<string>();
+  private cachedGroupMap?: Map<string, string[]>;
+  private cachedVisibleFavoriteGroups?: GroupItem[];
+  private cachedWorkspaceFolderByPath = new Map<
+    string,
+    vscode.WorkspaceFolder | null
+  >();
 
   private groups: Set<string> = new Set([
     FavoritesTreeDataProvider.DEFAULT_GROUP,
@@ -376,6 +382,39 @@ export class FavoritesTreeDataProvider
       default:
         return t('Personalized');
     }
+  }
+
+  public createFavoriteItem(
+    uri: vscode.Uri,
+    group: string,
+    isPinned = false,
+  ): FavoriteItem {
+    return new FavoriteItem(
+      uri,
+      group,
+      vscode.TreeItemCollapsibleState.None,
+      isPinned,
+    );
+  }
+
+  public createCommandSectionItem(
+    section:
+      | 'favorites'
+      | 'commands'
+      | 'personalized'
+      | 'predefined'
+      | 'globals'
+      | 'opensource',
+  ): CommandSectionItem {
+    return new CommandSectionItem(section);
+  }
+
+  public createGroupItem(groupName: string): GroupItem {
+    return new GroupItem(
+      groupName,
+      vscode.TreeItemCollapsibleState.Expanded,
+      groupName === FavoritesTreeDataProvider.DEFAULT_GROUP,
+    );
   }
 
   constructor(
@@ -429,7 +468,62 @@ export class FavoritesTreeDataProvider
 
   refresh(): void {
     this.logger.debug('[tree] refresh() fired');
+    this.invalidateTreeCaches();
     this._onDidChangeTreeData.fire();
+  }
+
+  refreshSection(section: 'favorites' | 'commands'): void {
+    this.logger.debug(`[tree] refreshSection(${section}) fired`);
+    this.invalidateTreeCaches();
+    this._onDidChangeTreeData.fire(new CommandSectionItem(section));
+  }
+
+  private invalidateTreeCaches(): void {
+    this.cachedGroupMap = undefined;
+    this.cachedVisibleFavoriteGroups = undefined;
+    this.cachedWorkspaceFolderByPath.clear();
+  }
+
+  private getWorkspaceFolderCached(
+    filePath: string,
+  ): vscode.WorkspaceFolder | undefined {
+    const cached = this.cachedWorkspaceFolderByPath.get(filePath);
+    if (cached !== undefined) {
+      return cached ?? undefined;
+    }
+
+    const workspaceFolder =
+      vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath)) ?? null;
+    this.cachedWorkspaceFolderByPath.set(filePath, workspaceFolder);
+    return workspaceFolder ?? undefined;
+  }
+
+  private getVisibleFavoriteGroups(): GroupItem[] {
+    if (this.cachedVisibleFavoriteGroups) {
+      return this.cachedVisibleFavoriteGroups;
+    }
+
+    const groups: GroupItem[] = [];
+    const groupMap = this.getGroupMap();
+
+    groupMap.forEach((filePaths, groupName) => {
+      const hasVisibleFiles = filePaths.some(
+        (filePath) => !!this.getWorkspaceFolderCached(filePath),
+      );
+
+      if (hasVisibleFiles || filePaths.length === 0) {
+        groups.push(
+          new GroupItem(
+            groupName,
+            vscode.TreeItemCollapsibleState.Expanded,
+            groupName === FavoritesTreeDataProvider.DEFAULT_GROUP,
+          ),
+        );
+      }
+    });
+
+    this.cachedVisibleFavoriteGroups = groups;
+    return groups;
   }
 
   public getFavoritePaths(): string[] {
@@ -596,34 +690,6 @@ export class FavoritesTreeDataProvider
     const t0 = Date.now();
 
     if (!element) {
-      const groups: GroupItem[] = [];
-      const groupMap = this.getGroupMap();
-
-      groupMap.forEach((filePaths, groupName) => {
-        // Check if group has visible files
-        let hasVisibleFiles = false;
-        for (const filePath of filePaths) {
-          const uri = vscode.Uri.file(filePath);
-          if (vscode.workspace.getWorkspaceFolder(uri)) {
-            hasVisibleFiles = true;
-            break;
-          }
-        }
-
-        const isEmpty = filePaths.length === 0;
-        const included = hasVisibleFiles || isEmpty;
-
-        if (included) {
-          groups.push(
-            new GroupItem(
-              groupName,
-              vscode.TreeItemCollapsibleState.Expanded,
-              groupName === FavoritesTreeDataProvider.DEFAULT_GROUP,
-            ),
-          );
-        }
-      });
-
       const rootItems: (GroupItem | CommandSectionItem)[] = [];
       rootItems.push(new CommandSectionItem('favorites'));
       if (this.getCommands().length > 0) {
@@ -634,34 +700,7 @@ export class FavoritesTreeDataProvider
 
     if (element instanceof CommandSectionItem) {
       if (element.section === 'favorites') {
-        const groups: GroupItem[] = [];
-        const groupMap = this.getGroupMap();
-
-        groupMap.forEach((filePaths, groupName) => {
-          let hasVisibleFiles = false;
-          for (const filePath of filePaths) {
-            const uri = vscode.Uri.file(filePath);
-            if (vscode.workspace.getWorkspaceFolder(uri)) {
-              hasVisibleFiles = true;
-              break;
-            }
-          }
-
-          const isEmpty = filePaths.length === 0;
-          const included = hasVisibleFiles || isEmpty;
-
-          if (included) {
-            groups.push(
-              new GroupItem(
-                groupName,
-                vscode.TreeItemCollapsibleState.Expanded,
-                groupName === FavoritesTreeDataProvider.DEFAULT_GROUP,
-              ),
-            );
-          }
-        });
-
-        return Promise.resolve(groups);
+        return Promise.resolve(this.getVisibleFavoriteGroups());
       }
 
       if (element.section === 'commands') {
@@ -748,15 +787,10 @@ export class FavoritesTreeDataProvider
       if (shouldSeparate) {
         const workspaceItems: WorkspaceItem[] = [];
         for (const wf of workspaceFolders) {
-          let hasFiles = false;
-          this.favorites.forEach((metadata, filePath) => {
-            if (metadata.group === element.groupName) {
-              const uri = vscode.Uri.file(filePath);
-              const fileWf = vscode.workspace.getWorkspaceFolder(uri);
-              if (fileWf && fileWf.uri.toString() === wf.uri.toString()) {
-                hasFiles = true;
-              }
-            }
+          const groupPaths = this.getGroupMap().get(element.groupName) ?? [];
+          const hasFiles = groupPaths.some((filePath) => {
+            const fileWf = this.getWorkspaceFolderCached(filePath);
+            return fileWf?.uri.toString() === wf.uri.toString();
           });
 
           if (hasFiles) {
@@ -776,23 +810,22 @@ export class FavoritesTreeDataProvider
 
       const favoriteItems: FavoriteItem[] = [];
       this.logger.debug(`[getChildren:group] Start "${element.groupName}"`);
-
-      this.favorites.forEach((metadata, filePath) => {
-        if (metadata.group !== element.groupName) return;
-
-        const uri = vscode.Uri.file(filePath);
-        const wf = vscode.workspace.getWorkspaceFolder(uri);
-        if (!wf) return;
+      const groupPaths = this.getGroupMap().get(element.groupName) ?? [];
+      for (const filePath of groupPaths) {
+        const metadata = this.favorites.get(filePath);
+        if (!metadata) continue;
+        const wf = this.getWorkspaceFolderCached(filePath);
+        if (!wf) continue;
 
         favoriteItems.push(
           new FavoriteItem(
-            uri,
+            vscode.Uri.file(filePath),
             element.groupName,
             vscode.TreeItemCollapsibleState.None,
             metadata.isPinned,
           ),
         );
-      });
+      }
 
       await this._resolveCollisions(favoriteItems, element.groupName);
 
@@ -801,24 +834,24 @@ export class FavoritesTreeDataProvider
 
     if (element instanceof WorkspaceItem) {
       const items: FavoriteItem[] = [];
-      this.favorites.forEach((metadata, filePath) => {
-        if (metadata.group !== element.groupName) return;
-        const uri = vscode.Uri.file(filePath);
-        const wf = vscode.workspace.getWorkspaceFolder(uri);
-        if (
-          wf &&
-          wf.uri.toString() === element.workspaceFolder.uri.toString()
-        ) {
-          items.push(
-            new FavoriteItem(
-              uri,
-              element.groupName,
-              vscode.TreeItemCollapsibleState.None,
-              metadata.isPinned,
-            ),
-          );
+      const groupPaths = this.getGroupMap().get(element.groupName) ?? [];
+      for (const filePath of groupPaths) {
+        const metadata = this.favorites.get(filePath);
+        if (!metadata) continue;
+        const wf = this.getWorkspaceFolderCached(filePath);
+        if (wf?.uri.toString() !== element.workspaceFolder.uri.toString()) {
+          continue;
         }
-      });
+
+        items.push(
+          new FavoriteItem(
+            vscode.Uri.file(filePath),
+            element.groupName,
+            vscode.TreeItemCollapsibleState.None,
+            metadata.isPinned,
+          ),
+        );
+      }
 
       await this._resolveCollisions(
         items.filter((i): i is FavoriteItem => i instanceof FavoriteItem),
@@ -892,6 +925,10 @@ export class FavoritesTreeDataProvider
   }
 
   private getGroupMap(): Map<string, string[]> {
+    if (this.cachedGroupMap) {
+      return this.cachedGroupMap;
+    }
+
     const groupMap = new Map<string, string[]>();
 
     this.groups.forEach((g) => groupMap.set(g, []));
@@ -909,6 +946,7 @@ export class FavoritesTreeDataProvider
       groupMap.get(metadata.group)!.push(filePath);
     });
 
+    this.cachedGroupMap = groupMap;
     return groupMap;
   }
 
@@ -927,7 +965,7 @@ export class FavoritesTreeDataProvider
     });
 
     this.saveFavorites();
-    this.refresh();
+    this.refreshSection('favorites');
   }
 
   setPinned(
@@ -1350,6 +1388,7 @@ export class FavoritesTreeDataProvider
 
   reloadFavorites(): void {
     this.logger.debug('[storage] reloadFavorites()');
+    this.invalidateTreeCaches();
     this.favorites.clear();
     this.groups.clear();
     this.groups.add(FavoritesTreeDataProvider.DEFAULT_GROUP);

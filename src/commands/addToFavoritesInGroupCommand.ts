@@ -8,6 +8,7 @@ type GroupQuickPickItem = vscode.QuickPickItem & { groupName: string };
 export function registerAddToFavoritesInGroupCommand(
   context: vscode.ExtensionContext,
   favoritesProvider: FavoritesTreeDataProvider,
+  treeView: vscode.TreeView<any>,
   logger: Logger,
 ): void {
   const log =
@@ -101,6 +102,27 @@ export function registerAddToFavoritesInGroupCommand(
           groupName: targetGroup,
         });
         favoritesProvider.addFavorite(targetUri, targetGroup);
+        await treeView.reveal(
+          favoritesProvider.createCommandSectionItem('favorites'),
+          {
+            expand: 1,
+            focus: false,
+            select: false,
+          },
+        );
+        await treeView.reveal(favoritesProvider.createGroupItem(targetGroup), {
+          expand: 1,
+          focus: false,
+          select: false,
+        });
+        await treeView.reveal(
+          favoritesProvider.createFavoriteItem(targetUri, targetGroup),
+          {
+            expand: false,
+            focus: false,
+            select: false,
+          },
+        );
         const targetGroupDisplayName =
           FavoritesTreeDataProvider.getGroupDisplayName(targetGroup);
 

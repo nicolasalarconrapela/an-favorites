@@ -137,8 +137,13 @@ export function activate(context: vscode.ExtensionContext): void {
 
   logger.debug('Registering favorites commands...');
 
-  registerAddToFavoritesCommand(context, favoritesProvider, logger);
-  registerAddToFavoritesInGroupCommand(context, favoritesProvider, logger);
+  registerAddToFavoritesCommand(context, favoritesProvider, treeView, logger);
+  registerAddToFavoritesInGroupCommand(
+    context,
+    favoritesProvider,
+    treeView,
+    logger,
+  );
   registerRemoveFromFavoritesCommand(context, favoritesProvider, logger);
 
   registerManageGroupsCommands(context, favoritesProvider, logger);
