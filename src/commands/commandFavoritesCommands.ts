@@ -1852,6 +1852,46 @@ export function registerCommandFavoritesCommands(
       },
     ),
   );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'anfavorites.removeAllLocalCommands',
+      async () => {
+        const count = commandsProvider.getCommandsByScope('local').length;
+        if (count === 0) return;
+
+        const confirm = await vscode.window.showWarningMessage(
+          t('Remove all local commands? ({0})', count),
+          { modal: true },
+          t('Remove'),
+        );
+        if (confirm !== t('Remove')) return;
+
+        commandsProvider.removeCommandsByScope('local');
+        showTemporaryInfo(t('{0} local commands removed.', count));
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'anfavorites.removeAllGlobalCommands',
+      async () => {
+        const count = commandsProvider.getCommandsByScope('global').length;
+        if (count === 0) return;
+
+        const confirm = await vscode.window.showWarningMessage(
+          t('Remove all global commands? ({0})', count),
+          { modal: true },
+          t('Remove'),
+        );
+        if (confirm !== t('Remove')) return;
+
+        commandsProvider.removeCommandsByScope('global');
+        showTemporaryInfo(t('{0} global commands removed.', count));
+      },
+    ),
+  );
   // ── Add VS Code command as favorite ─────────────────────────────────
   context.subscriptions.push(
     vscode.commands.registerCommand(

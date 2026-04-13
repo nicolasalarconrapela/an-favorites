@@ -1830,6 +1830,28 @@ export class FavoritesTreeDataProvider
     }
   }
 
+  removeCommandsByScope(scope: 'local' | 'global'): number {
+    const removedCount =
+      scope === 'local' ? this.localCommands.length : this.globalCommands.length;
+
+    if (removedCount === 0) {
+      return 0;
+    }
+
+    if (scope === 'local') {
+      this.localCommands = [];
+    } else {
+      this.globalCommands = [];
+    }
+
+    void this.saveCommands();
+    this.refresh();
+    this.logger.debug(
+      `[commands] removeCommandsByScope -> scope=${scope} removed=${removedCount}`,
+    );
+    return removedCount;
+  }
+
   saveOpenSourceCommandAs(
     id: string,
     scope: 'local' | 'global',

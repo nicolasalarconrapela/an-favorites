@@ -109,6 +109,10 @@
   "Command \"{0}\" added.": "Comando \"{0}\" añadido.",
   "Command \"{0}\" updated.": "Comando \"{0}\" actualizado.",
   "Remove command \"{0}\"?": "¿Eliminar el comando \"{0}\"?",
+  "Remove all local commands? ({0})": "¿Eliminar todos los comandos locales? ({0})",
+  "{0} local commands removed.": "Se eliminaron {0} comandos locales.",
+  "Remove all global commands? ({0})": "¿Eliminar todos los comandos globales? ({0})",
+  "{0} global commands removed.": "Se eliminaron {0} comandos globales.",
   "Commands": "Comandos",
   "Enter directory manually...": "Introducir directorio manualmente...",
   "Type a relative or absolute path": "Escribe una ruta relativa o absoluta",
@@ -224,5 +228,4 @@
   "Sincerely:": "Atentamente:",
   "@anappwilos": "@anappwilos"
 }
-
 
