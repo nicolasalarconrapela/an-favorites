@@ -39,7 +39,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const configuredLevel = loggingConfig.get<LogLevel>('level', 'info');
   const logLevel: LogLevel =
     configuredLevel &&
-    ['debug', 'info', 'warn', 'error'].includes(configuredLevel)
+    ['trace', 'debug', 'info', 'warn', 'error'].includes(configuredLevel)
       ? configuredLevel
       : 'info';
   const maxRotatedFiles = loggingConfig.get<number>('maxRotatedFiles', 5);

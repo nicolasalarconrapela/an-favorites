@@ -750,8 +750,8 @@ export class FavoritesTreeDataProvider
         for (const trace of this.pendingCommandRenderTraces.values()) {
           if (!trace.commandsSectionSeenAt) {
             trace.commandsSectionSeenAt = now;
-            this.logger.info(
-              `[perf][commands] commands root requested for "${trace.label}" after ${now - trace.startedAt}ms` +
+            this.logger.trace(
+              `[commands][trace] commands root requested for "${trace.label}" after ${now - trace.startedAt}ms` +
                 (trace.refreshFiredAt
                   ? ` (${now - trace.refreshFiredAt}ms since refresh)`
                   : ''),
@@ -776,8 +776,8 @@ export class FavoritesTreeDataProvider
         for (const trace of this.pendingCommandRenderTraces.values()) {
           if (trace.scope === 'local' && !trace.scopeSectionSeenAt) {
             trace.scopeSectionSeenAt = sectionStartedAt;
-            this.logger.info(
-              `[perf][commands] personalized section requested for "${trace.label}" after ${sectionStartedAt - trace.startedAt}ms` +
+            this.logger.trace(
+              `[commands][trace] personalized section requested for "${trace.label}" after ${sectionStartedAt - trace.startedAt}ms` +
                 (trace.refreshFiredAt
                   ? ` (${sectionStartedAt - trace.refreshFiredAt}ms since refresh)`
                   : ''),
@@ -787,14 +787,14 @@ export class FavoritesTreeDataProvider
         const commands = [...this.localCommands]
           .sort((a, b) => b.addedAt - a.addedAt || a.label.localeCompare(b.label));
         const sectionDurationMs = Date.now() - sectionStartedAt;
-        this.logger.debug(
-          `[perf][commands] getChildren(personalized) returned ${commands.length} items in ${sectionDurationMs}ms`,
+        this.logger.trace(
+          `[commands][trace] getChildren(personalized) returned ${commands.length} items in ${sectionDurationMs}ms`,
         );
         for (const command of commands) {
           const trace = this.pendingCommandRenderTraces.get(command.id);
           if (trace) {
-            this.logger.info(
-              `[perf][commands] tree materialized local command "${trace.label}" in ${Date.now() - trace.startedAt}ms`,
+            this.logger.trace(
+              `[commands][trace] tree materialized local command "${trace.label}" in ${Date.now() - trace.startedAt}ms`,
             );
             this.pendingCommandRenderTraces.delete(command.id);
           }
@@ -818,8 +818,8 @@ export class FavoritesTreeDataProvider
         for (const trace of this.pendingCommandRenderTraces.values()) {
           if (trace.scope === 'global' && !trace.scopeSectionSeenAt) {
             trace.scopeSectionSeenAt = sectionStartedAt;
-            this.logger.info(
-              `[perf][commands] globals section requested for "${trace.label}" after ${sectionStartedAt - trace.startedAt}ms` +
+            this.logger.trace(
+              `[commands][trace] globals section requested for "${trace.label}" after ${sectionStartedAt - trace.startedAt}ms` +
                 (trace.refreshFiredAt
                   ? ` (${sectionStartedAt - trace.refreshFiredAt}ms since refresh)`
                   : ''),
@@ -829,14 +829,14 @@ export class FavoritesTreeDataProvider
         const commands = [...this.globalCommands]
           .sort((a, b) => b.addedAt - a.addedAt || a.label.localeCompare(b.label));
         const sectionDurationMs = Date.now() - sectionStartedAt;
-        this.logger.debug(
-          `[perf][commands] getChildren(globals) returned ${commands.length} items in ${sectionDurationMs}ms`,
+        this.logger.trace(
+          `[commands][trace] getChildren(globals) returned ${commands.length} items in ${sectionDurationMs}ms`,
         );
         for (const command of commands) {
           const trace = this.pendingCommandRenderTraces.get(command.id);
           if (trace) {
-            this.logger.info(
-              `[perf][commands] tree materialized global command "${trace.label}" in ${Date.now() - trace.startedAt}ms`,
+            this.logger.trace(
+              `[commands][trace] tree materialized global command "${trace.label}" in ${Date.now() - trace.startedAt}ms`,
             );
             this.pendingCommandRenderTraces.delete(command.id);
           }
@@ -1990,8 +1990,8 @@ export class FavoritesTreeDataProvider
         'refreshElement(commands)',
       );
     }
-    this.logger.info(
-      `[perf][commands] addCommand queued "${newCmd.label}" scope=${newCmd.scope} in ${Date.now() - startedAt}ms`,
+    this.logger.trace(
+      `[commands][trace] addCommand queued "${newCmd.label}" scope=${newCmd.scope} in ${Date.now() - startedAt}ms`,
     );
     return newCmd;
   }

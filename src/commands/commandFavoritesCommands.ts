@@ -1789,8 +1789,8 @@ export function registerCommandFavoritesCommands(
             scope: result.scope,
             language: result.language,
           });
-          logger.info(
-            `[perf][commands] addCommandFavorite flow completed for "${result.label}" in ${Date.now() - startedAt}ms`,
+          logger.trace(
+            `[commands][trace] addCommandFavorite flow completed for "${result.label}" in ${Date.now() - startedAt}ms`,
           );
           showTemporaryInfo(t('Command "{0}" added.', result.label));
           logger.info(`[commandFavorites] Added command: "${result.label}"`);

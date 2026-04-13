@@ -1,4 +1,4 @@
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 
 export type LogMessage = string | (() => string);
 export type LogMetadata = unknown | (() => unknown);
@@ -10,6 +10,7 @@ export interface LogContext {
 }
 
 export interface Logger {
+  trace(message: LogMessage, metadata?: LogMetadata): void;
   debug(message: LogMessage, metadata?: LogMetadata): void;
   info(message: LogMessage, metadata?: LogMetadata): void;
   warn(message: LogMessage, metadata?: LogMetadata): void;

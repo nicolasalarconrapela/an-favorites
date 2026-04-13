@@ -16,6 +16,7 @@ type InternalLogLevel = LogLevel | 'off';
 
 const LEVEL_PRIORITY: Record<InternalLogLevel, number> = {
   off: 0,
+  trace: 5,
   debug: 10,
   info: 20,
   warn: 30,
@@ -23,6 +24,7 @@ const LEVEL_PRIORITY: Record<InternalLogLevel, number> = {
 };
 
 const LEVEL_ICONS: Record<LogLevel, string> = {
+  trace: 'TRACE',
   debug: '🔍',
   info: 'ℹ️',
   warn: '⚠️',
@@ -30,6 +32,7 @@ const LEVEL_ICONS: Record<LogLevel, string> = {
 };
 
 const LEVEL_COLORS: Record<LogLevel, string> = {
+  trace: '⚪',
   debug: '🔵',
   info: '🟢',
   warn: '🟡',
@@ -262,6 +265,10 @@ export class LoggingModule implements Logger {
     }
 
     this.write(level, message, metadata);
+  }
+
+  trace(message: LogMessage, metadata?: LogMetadata): void {
+    this.write('trace', message, metadata);
   }
 
   debug(message: LogMessage, metadata?: LogMetadata): void {
@@ -799,6 +806,10 @@ class ContextualLogger implements Logger {
     private readonly base: LoggingModule,
     private readonly context: LogContext,
   ) {}
+
+  trace(message: LogMessage, metadata?: LogMetadata): void {
+    this.base.trace(message, this.mergeMetadata(metadata));
+  }
 
   debug(message: LogMessage, metadata?: LogMetadata): void {
     this.base.debug(message, this.mergeMetadata(metadata));
