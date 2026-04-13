@@ -82,11 +82,16 @@ function buildSelectionOnlyPlaceholder(label: string): string {
   return `${label} (${t('selection only')})`;
 }
 
+function showTemporaryInfo(message: string, timeoutMs = 1500) {
+  void vscode.window.setStatusBarMessage(message, timeoutMs);
+}
+
 function enforceSelectionOnlyQuickPick<T extends vscode.QuickPickItem>(
   quickPick: vscode.QuickPick<T>,
 ) {
+  const warningTimeoutMs = 1500;
   let suppressChange = false;
-  let warned = false;
+  let lastWarningAt = 0;
 
   return quickPick.onDidChangeValue((value) => {
     if (suppressChange || !value) return;
@@ -95,10 +100,12 @@ function enforceSelectionOnlyQuickPick<T extends vscode.QuickPickItem>(
     quickPick.value = '';
     suppressChange = false;
 
-    if (!warned) {
-      warned = true;
-      void vscode.window.showWarningMessage(
+    const now = Date.now();
+    if (now - lastWarningAt >= warningTimeoutMs) {
+      lastWarningAt = now;
+      showTemporaryInfo(
         t('This step only allows selecting an option from the list.'),
+        warningTimeoutMs,
       );
     }
   });
@@ -1781,9 +1788,7 @@ export function registerCommandFavoritesCommands(
             scope: result.scope,
             language: result.language,
           });
-          vscode.window.showInformationMessage(
-            t('Command "{0}" added.', result.label),
-          );
+          showTemporaryInfo(t('Command "{0}" added.', result.label));
           logger.info(`[commandFavorites] Added command: "${result.label}"`);
         }
 
@@ -1818,9 +1823,7 @@ export function registerCommandFavoritesCommands(
             language: result.language,
           });
           if (ok) {
-            vscode.window.showInformationMessage(
-              t('Command "{0}" updated.', result.label),
-            );
+            showTemporaryInfo(t('Command "{0}" updated.', result.label));
             logger.info(`[commandFavorites] Edited command id=${item.data.id}`);
           }
         }
@@ -1907,9 +1910,7 @@ export function registerCommandFavoritesCommands(
           language,
         });
 
-        vscode.window.showInformationMessage(
-          t('Command "{0}" added.', label.trim()),
-        );
+        showTemporaryInfo(t('Command "{0}" added.', label.trim()));
         logger.info(
           `[commandFavorites] Added VS Code command: "${label.trim()}" (${commandId})`,
         );
@@ -1946,9 +1947,7 @@ export function registerCommandFavoritesCommands(
           scope: result.scope,
           language: result.language,
         });
-        vscode.window.showInformationMessage(
-          t('Command "{0}" added.', result.label),
-        );
+        showTemporaryInfo(t('Command "{0}" added.', result.label));
       },
     ),
   );
@@ -1982,9 +1981,7 @@ export function registerCommandFavoritesCommands(
           scope: result.scope,
           language: result.language,
         });
-        vscode.window.showInformationMessage(
-          t('Command "{0}" added.', result.label),
-        );
+        showTemporaryInfo(t('Command "{0}" added.', result.label));
       },
     ),
   );
