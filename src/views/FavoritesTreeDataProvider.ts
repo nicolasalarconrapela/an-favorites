@@ -113,6 +113,7 @@ export class CommandScopeItem extends vscode.TreeItem {
 export class CommandSectionItem extends vscode.TreeItem {
   constructor(
     public readonly section:
+      | 'favorites'
       | 'commands'
       | 'personalized'
       | 'predefined'
@@ -121,7 +122,9 @@ export class CommandSectionItem extends vscode.TreeItem {
     collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Expanded,
   ) {
     super(
-      section === 'commands'
+      section === 'favorites'
+        ? t('Favorites')
+        : section === 'commands'
         ? t('Commands')
         : section === 'personalized'
           ? t('Personalized')
@@ -135,7 +138,9 @@ export class CommandSectionItem extends vscode.TreeItem {
     this.id = `command-section:${section}`;
     this.contextValue = `commandSectionItem:${section}`;
     this.iconPath = new vscode.ThemeIcon(
-      section === 'commands'
+      section === 'favorites'
+        ? 'star-full'
+        : section === 'commands'
         ? 'terminal'
         : section === 'personalized'
           ? 'symbol-misc'
@@ -456,6 +461,118 @@ export class FavoritesTreeDataProvider
     return element;
   }
 
+  getParent(
+    element:
+      | GroupItem
+      | FavoriteItem
+      | WorkspaceItem
+      | CommandItem
+      | CommandSectionItem
+      | CommandScopeItem
+      | CommandLanguageItem,
+  ):
+    | GroupItem
+    | WorkspaceItem
+    | CommandSectionItem
+    | CommandLanguageItem
+    | undefined {
+    if (element instanceof CommandSectionItem) {
+      if (element.section === 'favorites' || element.section === 'commands') {
+        return undefined;
+      }
+
+      if (
+        element.section === 'personalized' ||
+        element.section === 'predefined'
+      ) {
+        return new CommandSectionItem('commands');
+      }
+
+      if (
+        element.section === 'globals' ||
+        element.section === 'opensource'
+      ) {
+        return new CommandSectionItem('predefined');
+      }
+    }
+
+    if (element instanceof GroupItem) {
+      return new CommandSectionItem('favorites');
+    }
+
+    if (element instanceof WorkspaceItem) {
+      return new GroupItem(
+        element.groupName,
+        vscode.TreeItemCollapsibleState.Expanded,
+        element.groupName === FavoritesTreeDataProvider.DEFAULT_GROUP,
+      );
+    }
+
+    if (element instanceof FavoriteItem) {
+      const groupName = element.group;
+      const config = vscode.workspace.getConfiguration('anfavorites.multiroot');
+      const separationMode = config.get<string>('separation', 'none');
+      const workspaceFolders = vscode.workspace.workspaceFolders || [];
+      const isMultiRoot = workspaceFolders.length > 1;
+
+      let shouldSeparate = false;
+      if (isMultiRoot) {
+        if (separationMode === 'both') {
+          shouldSeparate = true;
+        } else if (
+          separationMode === 'ungrouped' &&
+          groupName === FavoritesTreeDataProvider.DEFAULT_GROUP
+        ) {
+          shouldSeparate = true;
+        } else if (
+          separationMode === 'groups' &&
+          groupName !== FavoritesTreeDataProvider.DEFAULT_GROUP
+        ) {
+          shouldSeparate = true;
+        }
+      }
+
+      if (shouldSeparate) {
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(
+          element.resourceUri,
+        );
+        if (workspaceFolder) {
+          return new WorkspaceItem(
+            workspaceFolder.name,
+            groupName,
+            vscode.TreeItemCollapsibleState.Expanded,
+            workspaceFolder,
+          );
+        }
+      }
+
+      return new GroupItem(
+        groupName,
+        vscode.TreeItemCollapsibleState.Expanded,
+        groupName === FavoritesTreeDataProvider.DEFAULT_GROUP,
+      );
+    }
+
+    if (element instanceof CommandLanguageItem) {
+      return new CommandSectionItem('opensource');
+    }
+
+    if (element instanceof CommandItem) {
+      if (element.data.scope === 'local') {
+        return new CommandSectionItem('personalized');
+      }
+      if (element.data.scope === 'global') {
+        return new CommandSectionItem('globals');
+      }
+      return new CommandLanguageItem(
+        'opensource',
+        element.data.language.trim().toLowerCase() || 'generic',
+      );
+    }
+
+    return undefined;
+  }
+
   async getChildren(
     element?:
       | GroupItem
@@ -507,13 +624,46 @@ export class FavoritesTreeDataProvider
         }
       });
 
-      const hasCommands = this.getCommands().length > 0;
-      return Promise.resolve(
-        hasCommands ? [...groups, new CommandSectionItem('commands')] : groups,
-      );
+      const rootItems: (GroupItem | CommandSectionItem)[] = [];
+      rootItems.push(new CommandSectionItem('favorites'));
+      if (this.getCommands().length > 0) {
+        rootItems.push(new CommandSectionItem('commands'));
+      }
+      return Promise.resolve(rootItems);
     }
 
     if (element instanceof CommandSectionItem) {
+      if (element.section === 'favorites') {
+        const groups: GroupItem[] = [];
+        const groupMap = this.getGroupMap();
+
+        groupMap.forEach((filePaths, groupName) => {
+          let hasVisibleFiles = false;
+          for (const filePath of filePaths) {
+            const uri = vscode.Uri.file(filePath);
+            if (vscode.workspace.getWorkspaceFolder(uri)) {
+              hasVisibleFiles = true;
+              break;
+            }
+          }
+
+          const isEmpty = filePaths.length === 0;
+          const included = hasVisibleFiles || isEmpty;
+
+          if (included) {
+            groups.push(
+              new GroupItem(
+                groupName,
+                vscode.TreeItemCollapsibleState.Expanded,
+                groupName === FavoritesTreeDataProvider.DEFAULT_GROUP,
+              ),
+            );
+          }
+        });
+
+        return Promise.resolve(groups);
+      }
+
       if (element.section === 'commands') {
         const sections: (CommandSectionItem | CommandLanguageItem)[] = [];
         if (this.localCommands.length > 0) {

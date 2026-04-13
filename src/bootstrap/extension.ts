@@ -80,10 +80,60 @@ export function activate(context: vscode.ExtensionContext): void {
     treeDataProvider: favoritesProvider,
     dragAndDropController: favoritesProvider,
     canSelectMany: true,
+    showCollapseAll: false,
   });
 
   context.subscriptions.push(treeView);
   activationTrace.step('tree view registrada');
+
+  let treeExpanded = true;
+  void vscode.commands.executeCommand(
+    'setContext',
+    'anfavorites.treeExpanded',
+    treeExpanded,
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand('anfavorites.toggleTreeExpansion', async () => {
+      if (treeExpanded) {
+        await vscode.commands.executeCommand(
+          'workbench.actions.treeView.anfavorites.favoritesView.collapseAll',
+        );
+        treeExpanded = false;
+        await vscode.commands.executeCommand(
+          'setContext',
+          'anfavorites.treeExpanded',
+          treeExpanded,
+        );
+        return;
+      }
+
+      await vscode.commands.executeCommand('anfavorites.favoritesView.focus');
+      const rootItems = await favoritesProvider.getChildren();
+      for (const rootItem of rootItems) {
+        await treeView.reveal(rootItem, {
+          expand: 1,
+          focus: false,
+          select: false,
+        });
+      }
+      treeExpanded = true;
+      await vscode.commands.executeCommand(
+        'setContext',
+        'anfavorites.treeExpanded',
+        treeExpanded,
+      );
+    }),
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand('anfavorites.toggleTreeExpansionExpand', async () => {
+      await vscode.commands.executeCommand('anfavorites.toggleTreeExpansion');
+    }),
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand('anfavorites.toggleTreeExpansionCollapse', async () => {
+      await vscode.commands.executeCommand('anfavorites.toggleTreeExpansion');
+    }),
+  );
 
   logger.debug('Registering favorites commands...');
 
