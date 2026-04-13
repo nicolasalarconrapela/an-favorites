@@ -78,6 +78,32 @@ function buildCommandStepTitle(
   return `${t('Add Command Favorite')} - ${action} (${step}/${totalSteps})`;
 }
 
+function buildSelectionOnlyPlaceholder(label: string): string {
+  return `${label} (${t('selection only')})`;
+}
+
+function enforceSelectionOnlyQuickPick<T extends vscode.QuickPickItem>(
+  quickPick: vscode.QuickPick<T>,
+) {
+  let suppressChange = false;
+  let warned = false;
+
+  return quickPick.onDidChangeValue((value) => {
+    if (suppressChange || !value) return;
+
+    suppressChange = true;
+    quickPick.value = '';
+    suppressChange = false;
+
+    if (!warned) {
+      warned = true;
+      void vscode.window.showWarningMessage(
+        t('This step only allows selecting an option from the list.'),
+      );
+    }
+  });
+}
+
 function getCommandStepAction(key:
   | 'scope'
   | 'source'
@@ -699,7 +725,9 @@ async function runModeStep(
 
     const quickPick = vscode.window.createQuickPick<ModeItem>();
     quickPick.title = title;
-    quickPick.placeholder = t('How should this command run?');
+    quickPick.placeholder = buildSelectionOnlyPlaceholder(
+      t('How should this command run?'),
+    );
     quickPick.ignoreFocusOut = true;
     // Built-in back button → appears on the LEFT
     quickPick.buttons = [BACK_BUTTON];
@@ -736,6 +764,7 @@ async function runModeStep(
         done(item.isBackground);
       }),
     );
+    disposables.push(enforceSelectionOnlyQuickPick(quickPick));
 
     disposables.push(
       quickPick.onDidTriggerButton((button) => {
@@ -811,7 +840,9 @@ async function promptCommandScope(
       stepNumber,
       totalSteps,
     );
-    quickPick.placeholder = t('Select command scope');
+    quickPick.placeholder = buildSelectionOnlyPlaceholder(
+      t('Select command scope'),
+    );
     quickPick.ignoreFocusOut = true;
     quickPick.buttons = stepNumber > 1 ? [BACK_BUTTON] : [];
     quickPick.items = COMMAND_SCOPE_OPTIONS.map((option) => ({
@@ -834,6 +865,7 @@ async function promptCommandScope(
     disposables.push(
       quickPick.onDidAccept(() => done(quickPick.selectedItems[0]?.scope)),
     );
+    disposables.push(enforceSelectionOnlyQuickPick(quickPick));
     disposables.push(
       quickPick.onDidTriggerButton((button) => {
         if (button === BACK_BUTTON) done(BACK);
@@ -860,7 +892,9 @@ async function promptCommandLanguage(
       stepNumber,
       totalSteps,
     );
-    quickPick.placeholder = t('Select command language');
+    quickPick.placeholder = buildSelectionOnlyPlaceholder(
+      t('Select command language'),
+    );
     quickPick.ignoreFocusOut = true;
     quickPick.buttons = [BACK_BUTTON];
     quickPick.items = COMMAND_LANGUAGE_OPTIONS.map((option) => ({
@@ -882,6 +916,7 @@ async function promptCommandLanguage(
     disposables.push(
       quickPick.onDidAccept(() => done(quickPick.selectedItems[0]?.language)),
     );
+    disposables.push(enforceSelectionOnlyQuickPick(quickPick));
     disposables.push(
       quickPick.onDidTriggerButton((button) => {
         if (button === BACK_BUTTON) done(BACK);
@@ -908,7 +943,9 @@ async function promptCommandSourceType(
         stepNumber,
         totalSteps,
       );
-      quickPick.placeholder = t('Select command source');
+      quickPick.placeholder = buildSelectionOnlyPlaceholder(
+        t('Select command source'),
+      );
       quickPick.ignoreFocusOut = true;
       quickPick.buttons = [BACK_BUTTON];
       quickPick.items = [
@@ -939,6 +976,7 @@ async function promptCommandSourceType(
       disposables.push(
         quickPick.onDidAccept(() => done(quickPick.selectedItems[0]?.sourceType)),
       );
+      disposables.push(enforceSelectionOnlyQuickPick(quickPick));
       disposables.push(
         quickPick.onDidTriggerButton((button) => {
           if (button === BACK_BUTTON) done(BACK);
@@ -995,7 +1033,9 @@ async function promptExistingCommandTemplate(
         stepNumber,
         totalSteps,
       );
-      quickPick.placeholder = t('Select an existing command');
+      quickPick.placeholder = buildSelectionOnlyPlaceholder(
+        t('Select an existing command'),
+      );
       quickPick.ignoreFocusOut = true;
       quickPick.buttons = [BACK_BUTTON];
       quickPick.items = editableCommands.map((command) => ({
@@ -1027,6 +1067,7 @@ async function promptExistingCommandTemplate(
       disposables.push(
         quickPick.onDidAccept(() => done(quickPick.selectedItems[0]?.template)),
       );
+      disposables.push(enforceSelectionOnlyQuickPick(quickPick));
       disposables.push(
         quickPick.onDidTriggerButton((button) => {
           if (button === BACK_BUTTON) done(BACK);
@@ -1063,7 +1104,9 @@ async function promptOpenSourceLanguage(
       stepNumber,
       totalSteps,
     );
-    quickPick.placeholder = t('Select OpenSource template language');
+    quickPick.placeholder = buildSelectionOnlyPlaceholder(
+      t('Select OpenSource template language'),
+    );
     quickPick.ignoreFocusOut = true;
     quickPick.buttons = [BACK_BUTTON];
     quickPick.items = languages.map((language) => ({
@@ -1086,6 +1129,7 @@ async function promptOpenSourceLanguage(
     disposables.push(
       quickPick.onDidAccept(() => done(quickPick.selectedItems[0]?.language)),
     );
+    disposables.push(enforceSelectionOnlyQuickPick(quickPick));
     disposables.push(
       quickPick.onDidTriggerButton((button) => {
         if (button === BACK_BUTTON) done(BACK);
@@ -1137,7 +1181,9 @@ async function promptOpenSourceTemplate(
         stepNumber,
         totalSteps,
       );
-      quickPick.placeholder = t('Select OpenSource template');
+      quickPick.placeholder = buildSelectionOnlyPlaceholder(
+        t('Select OpenSource template'),
+      );
       quickPick.ignoreFocusOut = true;
       quickPick.buttons = [BACK_BUTTON];
       quickPick.items = templates.map((command) => ({
@@ -1166,6 +1212,7 @@ async function promptOpenSourceTemplate(
       disposables.push(
         quickPick.onDidAccept(() => done(quickPick.selectedItems[0]?.template)),
       );
+      disposables.push(enforceSelectionOnlyQuickPick(quickPick));
       disposables.push(
         quickPick.onDidTriggerButton((button) => {
           if (button === BACK_BUTTON) done(BACK);
@@ -1513,7 +1560,9 @@ async function promptAddCommandCreationFlow(
             1,
             totalSteps,
           );
-          quickPick.placeholder = t('Select command source');
+          quickPick.placeholder = buildSelectionOnlyPlaceholder(
+            t('Select command source'),
+          );
           quickPick.items = [
             {
               label: t('Personalized'),
@@ -1542,7 +1591,9 @@ async function promptAddCommandCreationFlow(
             2,
             totalSteps,
           );
-          quickPick.placeholder = t('Select OpenSource template language');
+          quickPick.placeholder = buildSelectionOnlyPlaceholder(
+            t('Select OpenSource template language'),
+          );
           quickPick.items = Array.from(
             new Set(
               provider
@@ -1565,7 +1616,9 @@ async function promptAddCommandCreationFlow(
           3,
           totalSteps,
         );
-        quickPick.placeholder = t('Select OpenSource template');
+        quickPick.placeholder = buildSelectionOnlyPlaceholder(
+          t('Select OpenSource template'),
+        );
         quickPick.items = provider
           .getCommandsByScope('opensource')
           .filter((command) => command.language === language)
@@ -1646,6 +1699,7 @@ async function promptAddCommandCreationFlow(
           }
         }),
       );
+      disposables.push(enforceSelectionOnlyQuickPick(quickPick));
       disposables.push(quickPick.onDidHide(() => done(undefined)));
 
       update();

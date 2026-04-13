@@ -89,7 +89,7 @@
   "Foreground": "Primer plano",
   "Run Command": "Ejecutar comando",
   "Error executing command: {0}": "Error al ejecutar el comando: {0}",
-  "Add Command Favorite": "Añadir Comando Favorito",
+  "Add Command Favorite": "Añadir comando",
   "Command name (shown in the list)": "Nombre del comando (visible en la lista)",
   "e.g.: Start backend": "Ej.: Iniciar backend",
   "Shell command to execute": "Comando de shell a ejecutar",
@@ -158,10 +158,9 @@
   "Generic": "Genérico",
   "Personalized": "Personalizado",
   "Predefined": "Predefinidos",
-  "OpenSource Templates": "Plantillas OpenSource",
-  "Create your own command or reuse an existing one": "Crea tu propio comando o reutiliza uno existente",
-  "Start from reusable templates grouped by language": "Empieza desde plantillas reutilizables agrupadas por lenguaje",
-  "Select command source": "Seleccionar origen del comando",
+  "OpenSource Templates": "Plantillas",
+  "Create your own command or reuse an existing one": "Crea tu propio comando personalizado",
+  "Start from reusable templates grouped by language": "Comienza con comandos ya existentes agrupados por lenguaje",
   "Select working directory mode": "Seleccionar modo de directorio de trabajo",
   "Manual": "Manual",
   "Enter folder name": "Introducir nombre de carpeta...",
@@ -194,6 +193,8 @@
   "Execution type": "Tipo de ejecución",
   "Location selection": "Selección de ubicación",
   "Command creation": "Creación de comando",
+  "selection only": "solo selección",
+  "This step only allows selecting an option from the list.": "En este paso solo puedes seleccionar una opción de la lista.",
   "Hide": "Ocultar",
   "Hide command \"{0}\"?": "¿Ocultar el comando \"{0}\"?",
   "The .gitignore integration can only be enabled/configured at the Workspace level. Global (User) configuration for this feature is ignored.": "La integración con .gitignore solo se puede habilitar/configurar a nivel de Workspace. La configuración de Usuario para esta función es ignorada.",
@@ -223,4 +224,5 @@
   "Sincerely:": "Atentamente:",
   "@anappwilos": "@anappwilos"
 }
+
 
