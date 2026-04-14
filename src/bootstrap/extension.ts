@@ -86,11 +86,33 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(treeView);
   activationTrace.step('tree view registrada');
 
-  let treeExpanded = true;
-  void vscode.commands.executeCommand(
-    'setContext',
-    'anfavorites.treeExpanded',
-    treeExpanded,
+  const syncTreeExpandedContext = async () => {
+    treeExpanded = favoritesProvider.isTreeExpanded();
+    await vscode.commands.executeCommand(
+      'setContext',
+      'anfavorites.treeExpanded',
+      treeExpanded,
+    );
+  };
+
+  let treeExpanded = favoritesProvider.isTreeExpanded();
+  void syncTreeExpandedContext();
+  context.subscriptions.push(
+    treeView.onDidExpandElement((event) => {
+      favoritesProvider.setTreeItemExpanded(event.element, true);
+      void syncTreeExpandedContext();
+    }),
+  );
+  context.subscriptions.push(
+    treeView.onDidCollapseElement((event) => {
+      favoritesProvider.setTreeItemExpanded(event.element, false);
+      void syncTreeExpandedContext();
+    }),
+  );
+  context.subscriptions.push(
+    favoritesProvider.onDidChangeTreeData(() => {
+      void syncTreeExpandedContext();
+    }),
   );
   context.subscriptions.push(
     vscode.commands.registerCommand('anfavorites.toggleTreeExpansion', async () => {
@@ -98,30 +120,21 @@ export function activate(context: vscode.ExtensionContext): void {
         await vscode.commands.executeCommand(
           'workbench.actions.treeView.anfavorites.favoritesView.collapseAll',
         );
-        treeExpanded = false;
-        await vscode.commands.executeCommand(
-          'setContext',
-          'anfavorites.treeExpanded',
-          treeExpanded,
-        );
+        await syncTreeExpandedContext();
         return;
       }
 
-      await vscode.commands.executeCommand('anfavorites.favoritesView.focus');
       const rootItems = await favoritesProvider.getChildren();
-      for (const rootItem of rootItems) {
-        await treeView.reveal(rootItem, {
+      await Promise.all(
+        rootItems.map((rootItem) =>
+          treeView.reveal(rootItem, {
           expand: 1,
           focus: false,
           select: false,
-        });
-      }
-      treeExpanded = true;
-      await vscode.commands.executeCommand(
-        'setContext',
-        'anfavorites.treeExpanded',
-        treeExpanded,
+          }),
+        ),
       );
+      await syncTreeExpandedContext();
     }),
   );
   context.subscriptions.push(

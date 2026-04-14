@@ -14,6 +14,7 @@ const GLOBAL_COMMANDS_STORAGE_KEY = 'anfavorites.commands.global.v1';
 const LEGACY_COMMANDS_STORAGE_KEY = 'anfavorites.commands.v1';
 const HIDDEN_OPENSOURCE_COMMANDS_STORAGE_KEY =
   'anfavorites.commands.opensource.hidden.v1';
+const TREE_EXPANSION_STATE_STORAGE_KEY = 'anfavorites.tree.expanded.v1';
 
 function getDefaultGroupLabel(): string {
   return t('Ungrouped');
@@ -99,7 +100,7 @@ export class CommandItem extends vscode.TreeItem {
 export class CommandScopeItem extends vscode.TreeItem {
   constructor(
     public readonly scope: CommandFavoriteData['scope'],
-    collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Expanded,
+    collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
   ) {
     super(FavoritesTreeDataProvider.getScopeDisplayName(scope), collapsibleState);
     this.id = `command-scope:${scope}`;
@@ -119,7 +120,7 @@ export class CommandSectionItem extends vscode.TreeItem {
       | 'predefined'
       | 'globals'
       | 'opensource',
-    collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Expanded,
+    collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
   ) {
     super(
       section === 'favorites'
@@ -155,7 +156,7 @@ export class CommandLanguageItem extends vscode.TreeItem {
   constructor(
     public readonly scope: CommandFavoriteData['scope'],
     public readonly language: string,
-    collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Expanded,
+    collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
   ) {
     super(
       FavoritesTreeDataProvider.getLanguageDisplayName(language),
@@ -349,6 +350,7 @@ export class FavoritesTreeDataProvider
   private globalCommands: CommandFavoriteData[] = [];
   private openSourceCommands: CommandFavoriteData[] = [];
   private hiddenOpenSourceCommandIds = new Set<string>();
+  private expandedTreeItemIds = new Set<string>();
   private cachedGroupMap?: Map<string, string[]>;
   private cachedVisibleFavoriteGroups?: GroupItem[];
   private cachedWorkspaceFolderByPath = new Map<
@@ -432,7 +434,7 @@ export class FavoritesTreeDataProvider
   public createGroupItem(groupName: string): GroupItem {
     return new GroupItem(
       groupName,
-      vscode.TreeItemCollapsibleState.Expanded,
+      this.getPersistedCollapsibleState(`group:${groupName}`),
       groupName === FavoritesTreeDataProvider.DEFAULT_GROUP,
     );
   }
@@ -442,6 +444,13 @@ export class FavoritesTreeDataProvider
     private logger: Logger,
     private storage: SharedStorageService,
   ) {
+    this.expandedTreeItemIds = new Set(
+      this.context.workspaceState.get<string[]>(
+        TREE_EXPANSION_STATE_STORAGE_KEY,
+        [],
+      ),
+    );
+    this.applyStaticTreeExpansionState();
     this.loadFavorites();
     this.disposables.push(
       this.storage.onDidChange(() => {
@@ -496,6 +505,66 @@ export class FavoritesTreeDataProvider
       }
     }
     this._onDidChangeTreeData.fire();
+  }
+
+  private applyStaticTreeExpansionState(): void {
+    for (const item of Object.values(this.commandSectionItems)) {
+      item.collapsibleState = this.getPersistedCollapsibleState(item.id);
+    }
+  }
+
+  private getPersistedCollapsibleState(
+    itemId: string | undefined,
+  ): vscode.TreeItemCollapsibleState {
+    if (!itemId) {
+      return vscode.TreeItemCollapsibleState.Collapsed;
+    }
+
+    return this.expandedTreeItemIds.has(itemId)
+      ? vscode.TreeItemCollapsibleState.Expanded
+      : vscode.TreeItemCollapsibleState.Collapsed;
+  }
+
+  private persistExpandedTreeState(): void {
+    void this.context.workspaceState.update(
+      TREE_EXPANSION_STATE_STORAGE_KEY,
+      Array.from(this.expandedTreeItemIds),
+    );
+  }
+
+  public setTreeItemExpanded(
+    element:
+      | GroupItem
+      | FavoriteItem
+      | WorkspaceItem
+      | CommandItem
+      | CommandSectionItem
+      | CommandScopeItem
+      | CommandLanguageItem,
+    expanded: boolean,
+  ): void {
+    if (!element.id || element.collapsibleState === vscode.TreeItemCollapsibleState.None) {
+      return;
+    }
+
+    if (expanded) {
+      this.expandedTreeItemIds.add(element.id);
+      element.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+    } else {
+      this.expandedTreeItemIds.delete(element.id);
+      element.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+    }
+
+    this.persistExpandedTreeState();
+  }
+
+  public isTreeExpanded(): boolean {
+    const rootIds = [this.commandSectionItems.favorites.id];
+    if (this.getCommands().length > 0) {
+      rootIds.push(this.commandSectionItems.commands.id);
+    }
+
+    return rootIds.every((id) => !!id && this.expandedTreeItemIds.has(id));
   }
 
   refreshSection(section: 'favorites' | 'commands'): void {
@@ -557,7 +626,7 @@ export class FavoritesTreeDataProvider
         groups.push(
           new GroupItem(
             groupName,
-            vscode.TreeItemCollapsibleState.Expanded,
+            this.getPersistedCollapsibleState(`group:${groupName}`),
             groupName === FavoritesTreeDataProvider.DEFAULT_GROUP,
           ),
         );
@@ -639,7 +708,7 @@ export class FavoritesTreeDataProvider
     if (element instanceof WorkspaceItem) {
       return new GroupItem(
         element.groupName,
-        vscode.TreeItemCollapsibleState.Expanded,
+        this.getPersistedCollapsibleState(`group:${element.groupName}`),
         element.groupName === FavoritesTreeDataProvider.DEFAULT_GROUP,
       );
     }
@@ -676,7 +745,9 @@ export class FavoritesTreeDataProvider
           return new WorkspaceItem(
             workspaceFolder.name,
             groupName,
-            vscode.TreeItemCollapsibleState.Expanded,
+            this.getPersistedCollapsibleState(
+              `workspace:${groupName}:${workspaceFolder.uri.toString()}`,
+            ),
             workspaceFolder,
           );
         }
@@ -684,7 +755,7 @@ export class FavoritesTreeDataProvider
 
       return new GroupItem(
         groupName,
-        vscode.TreeItemCollapsibleState.Expanded,
+        this.getPersistedCollapsibleState(`group:${groupName}`),
         groupName === FavoritesTreeDataProvider.DEFAULT_GROUP,
       );
     }
@@ -703,6 +774,9 @@ export class FavoritesTreeDataProvider
       return new CommandLanguageItem(
         'opensource',
         element.data.language.trim().toLowerCase() || 'generic',
+        this.getPersistedCollapsibleState(
+          `command-language:opensource:${element.data.language.trim().toLowerCase() || 'generic'}`,
+        ),
       );
     }
 
@@ -852,7 +926,16 @@ export class FavoritesTreeDataProvider
                 .map((command) => command.language.trim().toLowerCase() || 'generic')
                 .sort(),
             ),
-          ).map((language) => new CommandLanguageItem('opensource', language)),
+          ).map(
+            (language) =>
+              new CommandLanguageItem(
+                'opensource',
+                language,
+                this.getPersistedCollapsibleState(
+                  `command-language:opensource:${language}`,
+                ),
+              ),
+          ),
         );
       }
 
@@ -898,7 +981,9 @@ export class FavoritesTreeDataProvider
               new WorkspaceItem(
                 wf.name,
                 element.groupName,
-                vscode.TreeItemCollapsibleState.Expanded,
+                this.getPersistedCollapsibleState(
+                  `workspace:${element.groupName}:${wf.uri.toString()}`,
+                ),
                 wf,
               ),
             );
@@ -970,7 +1055,16 @@ export class FavoritesTreeDataProvider
       );
 
       return Promise.resolve(
-        languages.map((language) => new CommandLanguageItem(element.scope, language)),
+        languages.map(
+          (language) =>
+            new CommandLanguageItem(
+              element.scope,
+              language,
+              this.getPersistedCollapsibleState(
+                `command-language:${element.scope}:${language}`,
+              ),
+            ),
+        ),
       );
     }
 
