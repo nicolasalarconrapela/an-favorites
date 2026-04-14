@@ -99,12 +99,20 @@ export function activate(context: vscode.ExtensionContext): void {
   void syncTreeExpandedContext();
   context.subscriptions.push(
     treeView.onDidExpandElement((event) => {
+      logger.trace('[tree][trace] onDidExpandElement fired', {
+        elementId: event.element.id,
+        label: event.element.label,
+      });
       favoritesProvider.setTreeItemExpanded(event.element, true);
       void syncTreeExpandedContext();
     }),
   );
   context.subscriptions.push(
     treeView.onDidCollapseElement((event) => {
+      logger.trace('[tree][trace] onDidCollapseElement fired', {
+        elementId: event.element.id,
+        label: event.element.label,
+      });
       favoritesProvider.setTreeItemExpanded(event.element, false);
       void syncTreeExpandedContext();
     }),
@@ -115,16 +123,31 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   );
   context.subscriptions.push(
+    vscode.window.onDidChangeWindowState((state) => {
+      if (!state.focused) {
+        void favoritesProvider.flushExpandedTreeState();
+      }
+    }),
+  );
+  context.subscriptions.push(
     vscode.commands.registerCommand('anfavorites.toggleTreeExpansion', async () => {
+      const startedAt = Date.now();
       if (treeExpanded) {
         await vscode.commands.executeCommand(
           'workbench.actions.treeView.anfavorites.favoritesView.collapseAll',
         );
         await syncTreeExpandedContext();
+        logger.trace('[tree][trace] toggleTreeExpansion collapsed all', {
+          durationMs: Date.now() - startedAt,
+        });
         return;
       }
 
       const rootItems = await favoritesProvider.getChildren();
+      logger.trace('[tree][trace] toggleTreeExpansion expanding root items', {
+        rootItemCount: rootItems.length,
+        rootItemIds: rootItems.map((item) => item.id),
+      });
       await Promise.all(
         rootItems.map((rootItem) =>
           treeView.reveal(rootItem, {
@@ -135,6 +158,10 @@ export function activate(context: vscode.ExtensionContext): void {
         ),
       );
       await syncTreeExpandedContext();
+      logger.trace('[tree][trace] toggleTreeExpansion expanded root items', {
+        durationMs: Date.now() - startedAt,
+        rootItemCount: rootItems.length,
+      });
     }),
   );
   context.subscriptions.push(

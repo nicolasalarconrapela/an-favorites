@@ -351,6 +351,8 @@ export class FavoritesTreeDataProvider
   private openSourceCommands: CommandFavoriteData[] = [];
   private hiddenOpenSourceCommandIds = new Set<string>();
   private expandedTreeItemIds = new Set<string>();
+  private expandedTreeStateDirty = false;
+  private persistExpandedTreeStateTimer: NodeJS.Timeout | undefined;
   private cachedGroupMap?: Map<string, string[]>;
   private cachedVisibleFavoriteGroups?: GroupItem[];
   private cachedWorkspaceFolderByPath = new Map<
@@ -526,10 +528,43 @@ export class FavoritesTreeDataProvider
   }
 
   private persistExpandedTreeState(): void {
-    void this.context.workspaceState.update(
-      TREE_EXPANSION_STATE_STORAGE_KEY,
-      Array.from(this.expandedTreeItemIds),
-    );
+    this.expandedTreeStateDirty = true;
+
+    if (this.persistExpandedTreeStateTimer) {
+      clearTimeout(this.persistExpandedTreeStateTimer);
+    }
+
+    this.persistExpandedTreeStateTimer = setTimeout(() => {
+      this.persistExpandedTreeStateTimer = undefined;
+      void this.flushExpandedTreeState();
+    }, 5000);
+  }
+
+  public async flushExpandedTreeState(): Promise<void> {
+    if (!this.expandedTreeStateDirty) {
+      return;
+    }
+
+    const startedAt = Date.now();
+    const expandedIds = Array.from(this.expandedTreeItemIds);
+    this.expandedTreeStateDirty = false;
+    this.logger.trace('[tree][trace] persistExpandedTreeState started', {
+      expandedItemCount: expandedIds.length,
+    });
+
+    try {
+      await this.context.workspaceState.update(
+        TREE_EXPANSION_STATE_STORAGE_KEY,
+        expandedIds,
+      );
+      this.logger.trace('[tree][trace] persistExpandedTreeState finished', {
+        durationMs: Date.now() - startedAt,
+        expandedItemCount: expandedIds.length,
+      });
+    } catch (error) {
+      this.expandedTreeStateDirty = true;
+      this.logger.error('[tree] persistExpandedTreeState failed', error);
+    }
   }
 
   public setTreeItemExpanded(
@@ -816,7 +851,13 @@ export class FavoritesTreeDataProvider
 
     if (element instanceof CommandSectionItem) {
       if (element.section === 'favorites') {
-        return Promise.resolve(this.getVisibleFavoriteGroups());
+        const sectionStartedAt = Date.now();
+        const groups = this.getVisibleFavoriteGroups();
+        this.logger.trace('[tree][trace] getChildren(favorites) resolved', {
+          durationMs: Date.now() - sectionStartedAt,
+          groupCount: groups.length,
+        });
+        return Promise.resolve(groups);
       }
 
       if (element.section === 'commands') {
@@ -945,6 +986,7 @@ export class FavoritesTreeDataProvider
     }
 
     if (element instanceof GroupItem) {
+      const groupStartedAt = Date.now();
       const config = vscode.workspace.getConfiguration('anfavorites.multiroot');
       const separationMode = config.get<string>('separation', 'none');
       const workspaceFolders = vscode.workspace.workspaceFolders || [];
@@ -990,6 +1032,11 @@ export class FavoritesTreeDataProvider
           }
         }
 
+        this.logger.trace('[tree][trace] getChildren(group->workspaces) resolved', {
+          durationMs: Date.now() - groupStartedAt,
+          groupName: element.groupName,
+          workspaceCount: workspaceItems.length,
+        });
         return Promise.resolve(workspaceItems);
       }
 
@@ -1014,10 +1061,17 @@ export class FavoritesTreeDataProvider
 
       await this._resolveCollisions(favoriteItems, element.groupName);
 
+      this.logger.trace('[tree][trace] getChildren(group->favorites) resolved', {
+        durationMs: Date.now() - groupStartedAt,
+        groupName: element.groupName,
+        favoriteCount: favoriteItems.length,
+      });
+
       return Promise.resolve(favoriteItems);
     }
 
     if (element instanceof WorkspaceItem) {
+      const workspaceStartedAt = Date.now();
       const items: FavoriteItem[] = [];
       const groupPaths = this.getGroupMap().get(element.groupName) ?? [];
       for (const filePath of groupPaths) {
@@ -1042,6 +1096,12 @@ export class FavoritesTreeDataProvider
         items.filter((i): i is FavoriteItem => i instanceof FavoriteItem),
         `${element.groupName}:${element.name}`,
       );
+      this.logger.trace('[tree][trace] getChildren(workspace->favorites) resolved', {
+        durationMs: Date.now() - workspaceStartedAt,
+        groupName: element.groupName,
+        workspaceName: element.name,
+        favoriteCount: items.length,
+      });
       return Promise.resolve(items);
     }
 
@@ -1088,6 +1148,7 @@ export class FavoritesTreeDataProvider
     items: FavoriteItem[],
     groupName: string,
   ): Promise<void> {
+    const startedAt = Date.now();
     const configSearch =
       vscode.workspace.getConfiguration('anfavorites.search');
     const searchExclusions = configSearch.get<string[]>('exclusions', [
@@ -1110,6 +1171,11 @@ export class FavoritesTreeDataProvider
         undefined,
         this.logger,
       );
+      this.logger.trace('[tree][trace] applyCollisionLabels resolved', {
+        durationMs: Date.now() - startedAt,
+        groupName,
+        itemCount: items.length,
+      });
     } catch (err) {
       this.logger.error(
         '[collisions] Error detecting collisions in tree view',
@@ -2284,6 +2350,11 @@ export class FavoritesTreeDataProvider
   }
 
   public dispose(): void {
+    if (this.persistExpandedTreeStateTimer) {
+      clearTimeout(this.persistExpandedTreeStateTimer);
+      this.persistExpandedTreeStateTimer = undefined;
+    }
+    void this.flushExpandedTreeState();
     this.disposables.forEach((disposable) => disposable.dispose());
     this.disposables.length = 0;
     this._onDidChangeTreeData.dispose();
