@@ -102,23 +102,33 @@ export class CommandItem extends vscode.TreeItem {
     public readonly data: CommandFavoriteData,
     collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None,
   ) {
-    super(data.label, collapsibleState);
+    super(data.scope === 'opensource' ? data.command : data.label, collapsibleState);
 
     this.id = `command:${data.scope}:${data.id}`;
     const isVscode = data.type === 'vscode';
-    const locationLabel = data.cwd
-      ? resolveWorkspaceCwd(data.cwd) ?? data.cwd
-      : getDefaultWorkspacePath();
+    const isPredefinedCommand =
+      data.scope === 'global' || data.scope === 'opensource';
+    const locationLabel = isPredefinedCommand
+      ? data.cwd ?? t('Workspace root')
+      : data.cwd
+        ? resolveWorkspaceCwd(data.cwd) ?? data.cwd
+        : getDefaultWorkspacePath();
 
     if (isVscode) {
       this.tooltip = data.command;
-      this.description = `${data.command} [${locationLabel}]`;
+      this.description =
+        data.scope === 'opensource'
+          ? undefined
+          : `${data.command} [${locationLabel}]`;
       this.detail = undefined;
     } else {
       this.tooltip = data.background
         ? `${data.command}${data.cwd ? ` (${data.cwd})` : ''} — ${t('Background')}`
         : `${data.command}${data.cwd ? ` (${data.cwd})` : ''} — ${t('Foreground')}`;
-      this.description = `${data.command} [${locationLabel}]`;
+      this.description =
+        data.scope === 'opensource'
+          ? undefined
+          : `${data.command} [${locationLabel}]`;
       this.detail = undefined;
     }
 

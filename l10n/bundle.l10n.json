@@ -117,7 +117,7 @@
   "Commands": "Commands",
   "Enter directory manually...": "Enter directory manually...",
   "Type a relative or absolute path": "Type a relative or absolute path",
-  "Workspace root": "Workspace root",
+  "Workspace root": " Root",
   "Run from workspace root": "Run from workspace root",
   "Select working directory": "Select working directory",
   "Choose a directory where the command will run": "Choose a directory where the command will run",

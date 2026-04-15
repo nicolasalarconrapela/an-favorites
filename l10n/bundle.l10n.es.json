@@ -116,7 +116,7 @@
   "Commands": "Comandos",
   "Enter directory manually...": "Introducir directorio manualmente...",
   "Type a relative or absolute path": "Escribe una ruta relativa o absoluta",
-  "Workspace root": "Raíz del workspace",
+  "Workspace root": " Raíz ",
   "Run from workspace root": "Ejecutar desde la raíz del workspace",
   "Select working directory": "Seleccionar directorio de trabajo",
   "Choose a directory where the command will run": "Elige un directorio donde ejecutar el comando",
