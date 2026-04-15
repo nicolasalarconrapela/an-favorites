@@ -12,8 +12,6 @@ const DEFAULT_GROUP_ID = 'Sin Grupo';
 const LOCAL_COMMANDS_STORAGE_KEY = 'anfavorites.commands.local.v1';
 const GLOBAL_COMMANDS_STORAGE_KEY = 'anfavorites.commands.global.v1';
 const LEGACY_COMMANDS_STORAGE_KEY = 'anfavorites.commands.v1';
-const HIDDEN_OPENSOURCE_COMMANDS_STORAGE_KEY =
-  'anfavorites.commands.opensource.hidden.v1';
 const TREE_EXPANSION_STATE_STORAGE_KEY = 'anfavorites.tree.expanded.v1';
 
 function getDefaultGroupLabel(): string {
@@ -45,6 +43,15 @@ export function resolveWorkspaceCwd(cwd?: string): string | undefined {
   return path.join(folders[0].uri.fsPath, cwd);
 }
 
+function getDefaultWorkspacePath(): string {
+  const folders = vscode.workspace.workspaceFolders;
+  if (!folders || folders.length === 0) {
+    return t('Workspace root');
+  }
+
+  return folders[0].uri.fsPath;
+}
+
 const getGroupDisplayName = (groupName: string): string =>
   groupName === DEFAULT_GROUP_ID ? getDefaultGroupLabel() : groupName;
 
@@ -72,7 +79,9 @@ export class CommandItem extends vscode.TreeItem {
 
     this.id = `command:${data.scope}:${data.id}`;
     const isVscode = data.type === 'vscode';
-    const locationLabel = data.cwd ? data.cwd : t('Workspace root');
+    const locationLabel = data.cwd
+      ? resolveWorkspaceCwd(data.cwd) ?? data.cwd
+      : getDefaultWorkspacePath();
 
     if (isVscode) {
       this.tooltip = data.command;
@@ -137,7 +146,7 @@ export class CommandSectionItem extends vscode.TreeItem {
             ? t('Predefined')
             : section === 'globals'
               ? t('Global Commands')
-              : t('OpenSource'),
+              : t('Template'),
       collapsibleState,
     );
     this.id = `command-section:${section}`;
@@ -353,7 +362,6 @@ export class FavoritesTreeDataProvider
   private localCommands: CommandFavoriteData[] = [];
   private globalCommands: CommandFavoriteData[] = [];
   private openSourceCommands: CommandFavoriteData[] = [];
-  private hiddenOpenSourceCommandIds = new Set<string>();
   private expandedTreeItemIds = new Set<string>();
   private expandedTreeStateDirty = false;
   private persistExpandedTreeStateTimer: NodeJS.Timeout | undefined;
@@ -396,7 +404,7 @@ export class FavoritesTreeDataProvider
   ): string {
     if (scope === 'local') return t('Local');
     if (scope === 'global') return t('Global');
-    return t('OpenSource');
+    return t('Template');
   }
 
   public static getLanguageDisplayName(language: string): string {
@@ -1671,7 +1679,6 @@ export class FavoritesTreeDataProvider
     this.localCommands = [];
     this.globalCommands = [];
     this.openSourceCommands = [];
-    this.hiddenOpenSourceCommandIds.clear();
     this.loadFavorites();
   }
 
@@ -1777,13 +1784,6 @@ export class FavoritesTreeDataProvider
       ),
       'global',
     );
-    this.hiddenOpenSourceCommandIds = new Set(
-      this.context.globalState.get<string[]>(
-        HIDDEN_OPENSOURCE_COMMANDS_STORAGE_KEY,
-        [],
-      ),
-    );
-
     const legacyCommands =
       this.storage.get<CommandFavoriteData[]>(LEGACY_COMMANDS_STORAGE_KEY) ??
       this.context.workspaceState.get<CommandFavoriteData[]>(
@@ -1896,9 +1896,7 @@ export class FavoritesTreeDataProvider
       }
     }
 
-    return Array.from(merged.values()).filter(
-      (command) => !this.hiddenOpenSourceCommandIds.has(command.id),
-    );
+    return Array.from(merged.values());
   }
 
   private checkForDuplicateNames(): void {
@@ -2100,10 +2098,6 @@ export class FavoritesTreeDataProvider
         GLOBAL_COMMANDS_STORAGE_KEY,
         this.globalCommands,
       ),
-      this.context.globalState.update(
-        HIDDEN_OPENSOURCE_COMMANDS_STORAGE_KEY,
-        Array.from(this.hiddenOpenSourceCommandIds),
-      ),
     ]);
   }
 
@@ -2274,23 +2268,6 @@ export class FavoritesTreeDataProvider
     void this.saveCommands();
     this.refresh();
     this.logger.debug(`[commands] editCommand -> id=${id}`);
-    return true;
-  }
-
-  hideOpenSourceCommand(id: string): boolean {
-    const exists = this.openSourceCommands.some((command) => command.id === id);
-    if (!exists) {
-      this.logger.warn(
-        `[commands] hideOpenSourceCommand FAILED (not found) -> id=${id}`,
-      );
-      return false;
-    }
-
-    this.hiddenOpenSourceCommandIds.add(id);
-    this.openSourceCommands = this.loadOpenSourceCatalog();
-    void this.saveCommands();
-    this.refresh();
-    this.logger.debug(`[commands] hideOpenSourceCommand -> id=${id}`);
     return true;
   }
 

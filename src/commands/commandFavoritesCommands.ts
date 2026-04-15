@@ -2117,23 +2117,5 @@ export function registerCommandFavoritesCommands(
     ),
   );
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      'anfavorites.hideOpenSourceCommand',
-      async (item?: CommandItem) => {
-        if (!item || item.data.scope !== 'opensource') return;
-
-        const confirm = await vscode.window.showWarningMessage(
-          t('Hide command "{0}"?', item.data.label),
-          { modal: true },
-          t('Hide'),
-        );
-        if (confirm !== t('Hide')) return;
-
-        commandsProvider.hideOpenSourceCommand(item.data.id);
-      },
-    ),
-  );
-
   logger.debug('[commandFavorites] Commands registered');
 }
