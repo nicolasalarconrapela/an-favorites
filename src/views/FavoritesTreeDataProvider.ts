@@ -52,6 +52,56 @@ function getDefaultWorkspacePath(): string {
   return folders[0].uri.fsPath;
 }
 
+function getSyntheticIconFileName(language: string): string {
+  const normalized = language.trim().toLowerCase();
+
+  switch (normalized) {
+    case 'java':
+      return 'Main.java';
+    case 'node':
+    case 'javascript':
+      return 'app.js';
+    case 'typescript':
+      return 'extension.ts';
+    case 'python':
+      return 'main.py';
+    case 'json':
+      return 'package.json';
+    case 'xml':
+      return 'pom.xml';
+    case 'yaml':
+    case 'yml':
+      return 'application.yml';
+    case 'properties':
+      return 'application.properties';
+    case 'markdown':
+    case 'md':
+      return 'README.md';
+    case 'gitignore':
+      return '.gitignore';
+    case 'shell':
+    case 'bash':
+      return 'script.sh';
+    case 'powershell':
+      return 'script.ps1';
+    case 'go':
+      return 'main.go';
+    case 'rust':
+      return 'main.rs';
+    case 'generic':
+    default:
+      return 'file.txt';
+  }
+}
+
+function getSyntheticIconResourceUri(language: string): vscode.Uri {
+  const fakeFileName = getSyntheticIconFileName(language);
+  const basePath =
+    vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd();
+
+  return vscode.Uri.file(path.join(basePath, '.anfavorites-icons', fakeFileName));
+}
+
 async function promptWorkspaceRootForCommand(
   label: string,
 ): Promise<string | undefined> {
@@ -214,7 +264,8 @@ export class CommandLanguageItem extends vscode.TreeItem {
     );
     this.id = `command-language:${scope}:${language}`;
     this.contextValue = `commandLanguageItem:${scope}:${language}`;
-    this.iconPath = new vscode.ThemeIcon('symbol-string');
+    this.resourceUri = getSyntheticIconResourceUri(language);
+    this.iconPath = vscode.ThemeIcon.File;
   }
 }
 
