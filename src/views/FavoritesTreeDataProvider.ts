@@ -52,6 +52,33 @@ function getDefaultWorkspacePath(): string {
   return folders[0].uri.fsPath;
 }
 
+async function promptWorkspaceRootForCommand(
+  label: string,
+): Promise<string | undefined> {
+  const folders = vscode.workspace.workspaceFolders;
+  if (!folders || folders.length === 0) {
+    return undefined;
+  }
+
+  if (folders.length === 1) {
+    return folders[0].uri.fsPath;
+  }
+
+  const selected = await vscode.window.showQuickPick(
+    folders.map((folder) => ({
+      label: folder.name,
+      description: folder.uri.fsPath,
+      folder,
+    })),
+    {
+      placeHolder: t('Select workspace root for command "{0}"', label),
+      ignoreFocusOut: true,
+    },
+  );
+
+  return selected?.folder.uri.fsPath;
+}
+
 const getGroupDisplayName = (groupName: string): string =>
   groupName === DEFAULT_GROUP_ID ? getDefaultGroupLabel() : groupName;
 
@@ -2271,7 +2298,7 @@ export class FavoritesTreeDataProvider
     return true;
   }
 
-  runCommand(item: CommandItem): void {
+  async runCommand(item: CommandItem): Promise<void> {
     const data = item.data;
 
     if (data.type === 'vscode') {
@@ -2294,7 +2321,22 @@ export class FavoritesTreeDataProvider
       return;
     }
 
-    const resolvedCwd = resolveWorkspaceCwd(data.cwd);
+    let resolvedCwd = resolveWorkspaceCwd(data.cwd);
+    const workspaceFolders = vscode.workspace.workspaceFolders ?? [];
+    const requiresWorkspaceSelection =
+      !data.cwd &&
+      workspaceFolders.length > 1 &&
+      (data.scope === 'global' || data.scope === 'opensource');
+
+    if (requiresWorkspaceSelection) {
+      resolvedCwd = await promptWorkspaceRootForCommand(data.label);
+      if (!resolvedCwd) {
+        this.logger.debug(
+          `[commands] runCommand cancelled (workspace selection) -> "${data.label}"`,
+        );
+        return;
+      }
+    }
 
     this.logger.debug(
       `[commands] runCommand -> "${data.label}" background=${data.background} cwd=${resolvedCwd ?? '(none)'}`,

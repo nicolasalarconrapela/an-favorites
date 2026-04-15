@@ -166,6 +166,7 @@
   "OpenSource Templates": "Plantillas",
   "Create your own command or reuse an existing one": "Crea tu propio comando personalizado",
   "Start from reusable templates grouped by language": "Comienza con comandos ya existentes agrupados por lenguaje",
+  "Select workspace root for command \"{0}\"": "Seleccionar raíz del workspace para el comando \"{0}\"",
   "Select working directory mode": "Seleccionar modo de directorio de trabajo",
   "Manual": "Manual",
   "Enter folder name": "Introducir nombre de carpeta...",

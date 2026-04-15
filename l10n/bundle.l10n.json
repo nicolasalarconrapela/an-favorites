@@ -168,6 +168,7 @@
   "Create your own command or reuse an existing one": "Create your own custom command",
   "Start from reusable templates grouped by language": "It starts with existing commands grouped by language",
   "Select command source": "Select command source",
+  "Select workspace root for command \"{0}\"": "Select workspace root for command \"{0}\"",
   "Select working directory mode": "Select working directory mode",
   "Manual": "Manual",
   "Enter folder name": "Enter folder name...",
