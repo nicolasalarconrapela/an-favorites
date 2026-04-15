@@ -449,7 +449,7 @@ export class FavoritesTreeDataProvider
   private favorites: Map<string, FavoriteMetadata> = new Map();
   private localCommands: CommandFavoriteData[] = [];
   private globalCommands: CommandFavoriteData[] = [];
-  private openSourceCommands: CommandFavoriteData[] = [];
+  private templateCommands: CommandFavoriteData[] = [];
   private expandedTreeItemIds = new Set<string>();
   private expandedTreeStateDirty = false;
   private persistExpandedTreeStateTimer: NodeJS.Timeout | undefined;
@@ -980,7 +980,7 @@ export class FavoritesTreeDataProvider
         }
         if (
           this.globalCommands.length > 0 ||
-          this.openSourceCommands.length > 0
+          this.templateCommands.length > 0
         ) {
           sections.push(this.commandSectionItems.predefined);
         }
@@ -1021,7 +1021,7 @@ export class FavoritesTreeDataProvider
       if (element.section === 'predefined') {
         const sections: CommandSectionItem[] = [];
         sections.push(this.commandSectionItems.globals);
-        if (this.openSourceCommands.length > 0) {
+        if (this.templateCommands.length > 0) {
           sections.push(this.commandSectionItems.opensource);
         }
         return Promise.resolve(sections);
@@ -1062,7 +1062,7 @@ export class FavoritesTreeDataProvider
         return Promise.resolve(
           Array.from(
             new Set(
-              this.openSourceCommands
+              this.templateCommands
                 .map((command) => command.language.trim().toLowerCase() || 'generic')
                 .sort(),
             ),
@@ -1766,7 +1766,7 @@ export class FavoritesTreeDataProvider
     this.groups.add(FavoritesTreeDataProvider.DEFAULT_GROUP);
     this.localCommands = [];
     this.globalCommands = [];
-    this.openSourceCommands = [];
+    this.templateCommands = [];
     this.loadFavorites();
   }
 
@@ -1887,7 +1887,7 @@ export class FavoritesTreeDataProvider
       void this.context.workspaceState.update(LEGACY_COMMANDS_STORAGE_KEY, undefined);
     }
 
-    this.openSourceCommands = this.loadOpenSourceCatalog();
+    this.templateCommands = this.loadTemplateCatalog();
   }
 
   private normalizeCommands(
@@ -1901,57 +1901,89 @@ export class FavoritesTreeDataProvider
     }));
   }
 
-  private loadOpenSourceCatalog(): CommandFavoriteData[] {
-    const builtins: CommandFavoriteData[] = [
-      {
-        id: 'opensource:npm-init',
-        label: 'npm init',
-        command: 'npm init',
-        background: false,
-        addedAt: 0,
-        type: 'shell',
-        scope: 'opensource',
-        language: 'node',
-        readonly: true,
-        source: 'builtin',
-      },
-      {
-        id: 'opensource:mvn-clean-install-package',
-        label: 'mvn clean install package',
-        command: 'mvn clean install package',
-        background: true,
-        addedAt: 0,
-        type: 'shell',
-        scope: 'opensource',
-        language: 'java',
-        readonly: true,
-        source: 'builtin',
-      },
-      {
-        id: 'opensource:py-env',
-        label: 'py env',
-        command: 'py env',
-        background: false,
-        addedAt: 0,
-        type: 'shell',
-        scope: 'opensource',
-        language: 'python',
-        readonly: true,
-        source: 'builtin',
-      },
-    ];
+  private loadTemplateCatalog(): CommandFavoriteData[] {
+    const fs = require('fs') as typeof import('fs');
+    let builtins: CommandFavoriteData[] = [];
 
-    const configuredPath = vscode.workspace
-      .getConfiguration('anfavorites.commands')
-      .get<string>('openSourceCatalogPath', '')
-      .trim();
+    try {
+      const internalCatalogPath = path.join(
+        this.context.extensionPath,
+        'resources',
+        'template-commands.json',
+      );
+      const rawBuiltins = fs.readFileSync(internalCatalogPath, 'utf8');
+      const parsedBuiltins = JSON.parse(rawBuiltins) as Array<
+        Partial<CommandFavoriteData> & { id: string; label: string; command: string }
+      >;
+      builtins = parsedBuiltins.map((command) => ({
+        id: command.id,
+        label: command.label,
+        command: command.command,
+        background:
+          command.id === 'opensource:mvn-clean-install-package'
+            ? true
+            : command.background ?? false,
+        addedAt: 0,
+        type: command.type ?? 'shell',
+        scope: 'opensource',
+        language: command.language ?? 'generic',
+        readonly: true,
+        source: 'builtin',
+      }));
+    } catch (error) {
+      this.logger.warn('[commands] Failed to load internal Template catalog file', {
+        error,
+      });
+      builtins = [
+        {
+          id: 'opensource:npm-init',
+          label: 'npm init',
+          command: 'npm init',
+          background: false,
+          addedAt: 0,
+          type: 'shell',
+          scope: 'opensource',
+          language: 'node',
+          readonly: true,
+          source: 'builtin',
+        },
+        {
+          id: 'opensource:mvn-clean-install-package',
+          label: 'mvn clean install package',
+          command: 'mvn clean install package',
+          background: true,
+          addedAt: 0,
+          type: 'shell',
+          scope: 'opensource',
+          language: 'java',
+          readonly: true,
+          source: 'builtin',
+        },
+        {
+          id: 'opensource:py-env',
+          label: 'py env',
+          command: 'py env',
+          background: false,
+          addedAt: 0,
+          type: 'shell',
+          scope: 'opensource',
+          language: 'python',
+          readonly: true,
+          source: 'builtin',
+        },
+      ];
+    }
+
+    const commandsConfig = vscode.workspace.getConfiguration('anfavorites.commands');
+    const configuredPath =
+      commandsConfig.get<string>('templateCatalogPath', '').trim() ||
+      commandsConfig.get<string>('openSourceCatalogPath', '').trim();
     const merged = new Map<string, CommandFavoriteData>(
       builtins.map((command) => [command.id, command]),
     );
 
     if (configuredPath) {
       try {
-        const fs = require('fs') as typeof import('fs');
         const resolvedPath = path.isAbsolute(configuredPath)
           ? configuredPath
           : path.join(
@@ -1977,7 +2009,7 @@ export class FavoritesTreeDataProvider
           });
         }
       } catch (error) {
-        this.logger.warn('[commands] Failed to load OpenSource catalog file', {
+        this.logger.warn('[commands] Failed to load Template catalog file', {
           configuredPath,
           error,
         });
@@ -2164,7 +2196,7 @@ export class FavoritesTreeDataProvider
     return [
       ...this.localCommands,
       ...this.globalCommands,
-      ...this.openSourceCommands,
+      ...this.templateCommands,
     ];
   }
 
@@ -2173,7 +2205,7 @@ export class FavoritesTreeDataProvider
   ): CommandFavoriteData[] {
     if (scope === 'local') return [...this.localCommands];
     if (scope === 'global') return [...this.globalCommands];
-    return [...this.openSourceCommands];
+    return [...this.templateCommands];
   }
 
   private async saveCommands(): Promise<void> {
@@ -2196,7 +2228,7 @@ export class FavoritesTreeDataProvider
     const hadAnyCommands = this.getCommands().length > 0;
     const hadLocalCommands = this.localCommands.length > 0;
     const hadGlobalCommands = this.globalCommands.length > 0;
-    const hadOpenSourceCommands = this.openSourceCommands.length > 0;
+    const hadTemplateCommands = this.templateCommands.length > 0;
     const newCmd: CommandFavoriteData = {
       ...data,
       id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`,
@@ -2237,7 +2269,7 @@ export class FavoritesTreeDataProvider
         this.commandSectionItems.globals,
         'refreshElement(globals)',
       );
-    } else if (hadOpenSourceCommands) {
+    } else if (hadTemplateCommands) {
       this.refreshTreeElement(
         this.commandSectionItems.predefined,
         'refreshElement(predefined)',
@@ -2296,7 +2328,7 @@ export class FavoritesTreeDataProvider
     scope: 'local' | 'global',
     overrides?: Partial<Omit<CommandFavoriteData, 'id' | 'addedAt' | 'scope'>>,
   ): CommandFavoriteData | undefined {
-    const source = this.openSourceCommands.find((command) => command.id === id);
+    const source = this.templateCommands.find((command) => command.id === id);
     if (!source) {
       this.logger.warn(
         `[commands] saveOpenSourceCommandAs FAILED (not found) -> id=${id}`,

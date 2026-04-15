@@ -1,0 +1,20 @@
+[
+  {
+    "id": "opensource:npm-init",
+    "label": "npm init",
+    "command": "npm init",
+    "language": "node"
+  },
+  {
+    "id": "opensource:mvn-clean-install-package",
+    "label": "mvn clean install package",
+    "command": "mvn clean install package",
+    "language": "java"
+  },
+  {
+    "id": "opensource:py-env",
+    "label": "py env",
+    "command": "py env",
+    "language": "python"
+  }
+]

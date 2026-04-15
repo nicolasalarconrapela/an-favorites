@@ -41,6 +41,7 @@
   "config.storage.title": "Almacenamiento",
   "config.search.title": "Búsqueda",
   "config.quickOpen.title": "Quick Open",
+  "config.commands.templateCatalogPath.description": "Ruta opcional a un archivo JSON que amplía o sobrescribe el catálogo de comandos Template.",
   "config.commands.openSourceCatalogPath.description": "Ruta opcional a un archivo JSON que amplía o sobrescribe el catálogo de comandos OpenSource.",
   "config.logging.level.description": "Nivel mínimo de logs que se escriben en el canal y archivos.",
   "config.logging.maxRotatedFiles.description": "Cantidad máxima de archivos de log rotados que se conservarán.",

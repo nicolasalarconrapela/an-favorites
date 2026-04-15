@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.3.29",
+  "version": "1.3.30",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -679,6 +679,12 @@
       {
         "title": "%config.quickOpen.title%",
         "properties": {
+          "anfavorites.commands.templateCatalogPath": {
+            "type": "string",
+            "default": "",
+            "scope": "window",
+            "description": "%config.commands.templateCatalogPath.description%"
+          },
           "anfavorites.commands.openSourceCatalogPath": {
             "type": "string",
             "default": "",

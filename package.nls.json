@@ -41,6 +41,7 @@
   "config.storage.title": "Storage",
   "config.search.title": "Search",
   "config.quickOpen.title": "Quick Open",
+  "config.commands.templateCatalogPath.description": "Optional path to a JSON file that extends or overrides the Template command catalog.",
   "config.commands.openSourceCatalogPath.description": "Optional path to a JSON file that extends or overrides the OpenSource command catalog.",
   "config.logging.level.description": "Minimum log level written to the output channel and files.",
   "config.logging.maxRotatedFiles.description": "Maximum number of rotated log files to keep.",
