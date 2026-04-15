@@ -60,11 +60,15 @@ export interface CommandFavoriteData {
   language: string;
   readonly?: boolean;
   source?: 'builtin' | 'file';
+  templateSourceId?: string;
 }
 
 export class CommandItem extends vscode.TreeItem {
-  constructor(public readonly data: CommandFavoriteData) {
-    super(data.label, vscode.TreeItemCollapsibleState.None);
+  constructor(
+    public readonly data: CommandFavoriteData,
+    collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None,
+  ) {
+    super(data.label, collapsibleState);
 
     this.id = `command:${data.scope}:${data.id}`;
     const isVscode = data.type === 'vscode';
@@ -91,7 +95,7 @@ export class CommandItem extends vscode.TreeItem {
     );
 
     let ctx = `commandItem:${data.scope}:${data.language}`;
-    ctx += data.scope === 'opensource' ? ':readonly' : ':editable';
+    ctx += data.readonly ? ':readonly' : ':editable';
     this.contextValue = ctx;
 
   }
@@ -715,6 +719,7 @@ export class FavoritesTreeDataProvider
     | WorkspaceItem
     | CommandSectionItem
     | CommandLanguageItem
+    | CommandItem
     | undefined {
     if (element instanceof CommandSectionItem) {
       if (element.section === 'favorites' || element.section === 'commands') {
@@ -919,9 +924,7 @@ export class FavoritesTreeDataProvider
 
       if (element.section === 'predefined') {
         const sections: CommandSectionItem[] = [];
-        if (this.globalCommands.length > 0) {
-          sections.push(this.commandSectionItems.globals);
-        }
+        sections.push(this.commandSectionItems.globals);
         if (this.openSourceCommands.length > 0) {
           sections.push(this.commandSectionItems.opensource);
         }
@@ -1129,6 +1132,19 @@ export class FavoritesTreeDataProvider
     }
 
     if (element instanceof CommandLanguageItem) {
+      if (element.scope === 'opensource') {
+        return Promise.resolve(
+          this.getCommandsByScope(element.scope)
+            .filter(
+              (command) =>
+                (command.language.trim().toLowerCase() || 'generic') ===
+                element.language,
+            )
+            .sort((a, b) => b.addedAt - a.addedAt || a.label.localeCompare(b.label))
+            .map((command) => new CommandItem(command)),
+        );
+      }
+
       return Promise.resolve(
         this.getCommandsByScope(element.scope)
           .filter(
@@ -2216,6 +2232,7 @@ export class FavoritesTreeDataProvider
       scope,
       readonly: false,
       source: undefined,
+      templateSourceId: overrides?.templateSourceId ?? source.id,
     });
   }
 
@@ -2247,7 +2264,6 @@ export class FavoritesTreeDataProvider
     this.globalCommands = this.globalCommands.filter(
       (command) => command.id !== id,
     );
-
     if (updated.scope === 'global') {
       this.globalCommands.push(updated);
     } else {

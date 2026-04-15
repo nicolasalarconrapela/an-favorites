@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.3.23",
+  "version": "1.3.24",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -184,16 +184,10 @@
         "icon": "$(symbol-event)"
       },
       {
-        "command": "anfavorites.saveOpenSourceCommandAsLocal",
-        "title": "%command.saveOpenSourceCommandAsLocal.title%",
+        "command": "anfavorites.copyOpenSourceCommand",
+        "title": "%command.copyOpenSourceCommand.title%",
         "category": "%command.category.anfavorites%",
-        "icon": "$(save)"
-      },
-      {
-        "command": "anfavorites.saveOpenSourceCommandAsGlobal",
-        "title": "%command.saveOpenSourceCommandAsGlobal.title%",
-        "category": "%command.category.anfavorites%",
-        "icon": "$(cloud-upload)"
+        "icon": "$(copy)"
       },
       {
         "command": "anfavorites.hideOpenSourceCommand",
@@ -324,6 +318,16 @@
           "group": "inline@0"
         },
         {
+          "command": "anfavorites.addCommandFavorite",
+          "when": "view == anfavorites.favoritesView && viewItem == commandSectionItem:personalized",
+          "group": "inline@0"
+        },
+        {
+          "command": "anfavorites.addCommandFavorite",
+          "when": "view == anfavorites.favoritesView && viewItem == commandSectionItem:globals",
+          "group": "inline@0"
+        },
+        {
           "command": "anfavorites.removeAllLocalCommands",
           "when": "view == anfavorites.favoritesView && viewItem == commandSectionItem:personalized",
           "group": "inline@9"
@@ -394,19 +398,14 @@
           "group": "inline@2"
         },
         {
-          "command": "anfavorites.saveOpenSourceCommandAsLocal",
+          "command": "anfavorites.copyOpenSourceCommand",
           "when": "view == anfavorites.favoritesView && viewItem =~ /:readonly$/",
           "group": "inline@1"
         },
         {
-          "command": "anfavorites.saveOpenSourceCommandAsGlobal",
-          "when": "view == anfavorites.favoritesView && viewItem =~ /:readonly$/",
-          "group": "inline@2"
-        },
-        {
           "command": "anfavorites.hideOpenSourceCommand",
           "when": "view == anfavorites.favoritesView && viewItem =~ /:readonly$/",
-          "group": "inline@3"
+          "group": "inline@2"
         }
       ],
       "commandPalette": [
@@ -475,11 +474,7 @@
           "when": "false"
         },
         {
-          "command": "anfavorites.saveOpenSourceCommandAsLocal",
-          "when": "false"
-        },
-        {
-          "command": "anfavorites.saveOpenSourceCommandAsGlobal",
+          "command": "anfavorites.copyOpenSourceCommand",
           "when": "false"
         },
         {

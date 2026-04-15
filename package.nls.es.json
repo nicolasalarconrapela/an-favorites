@@ -24,6 +24,7 @@
   "command.addVSCodeCommandFavorite.title": "Añadir comando de VS Code",
   "command.saveOpenSourceCommandAsLocal.title": "Guardar Comando OpenSource como Local",
   "command.saveOpenSourceCommandAsGlobal.title": "Guardar Comando OpenSource como Global",
+  "command.copyOpenSourceCommand.title": "Copiar Comando OpenSource",
   "command.hideOpenSourceCommand.title": "Ocultar Comando OpenSource",
   "viewsContainer.anfavorites.title": "AnFavorites",
   "view.favoritesView.name": "Favoritos",
