@@ -52,6 +52,15 @@ function getDefaultWorkspacePath(): string {
   return folders[0].uri.fsPath;
 }
 
+function resolveConfiguredCommandsPath(configuredPath: string): string {
+  if (path.isAbsolute(configuredPath)) {
+    return configuredPath;
+  }
+
+  const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
+  return path.join(workspaceRoot, configuredPath);
+}
+
 function getSyntheticIconFileName(language: string): string {
   const normalized = language.trim().toLowerCase();
 
@@ -1858,13 +1867,7 @@ export class FavoritesTreeDataProvider
   }
 
   private loadCommands(): void {
-    this.localCommands = this.normalizeCommands(
-      this.context.workspaceState.get<CommandFavoriteData[]>(
-        LOCAL_COMMANDS_STORAGE_KEY,
-        [],
-      ),
-      'local',
-    );
+    this.localCommands = this.loadPersonalizedCommands();
     this.globalCommands = this.normalizeCommands(
       this.context.globalState.get<CommandFavoriteData[]>(
         GLOBAL_COMMANDS_STORAGE_KEY,
@@ -1888,6 +1891,41 @@ export class FavoritesTreeDataProvider
     }
 
     this.templateCommands = this.loadTemplateCatalog();
+  }
+
+  private loadPersonalizedCommands(): CommandFavoriteData[] {
+    const commandsConfig = vscode.workspace.getConfiguration('anfavorites.commands');
+    const configuredPath = commandsConfig
+      .get<string>('personalizedCommandsPath', '')
+      .trim();
+
+    if (!configuredPath) {
+      return this.normalizeCommands(
+        this.context.workspaceState.get<CommandFavoriteData[]>(
+          LOCAL_COMMANDS_STORAGE_KEY,
+          [],
+        ),
+        'local',
+      );
+    }
+
+    try {
+      const fs = require('fs') as typeof import('fs');
+      const resolvedPath = resolveConfiguredCommandsPath(configuredPath);
+      if (!fs.existsSync(resolvedPath)) {
+        return [];
+      }
+
+      const raw = fs.readFileSync(resolvedPath, 'utf8');
+      const fileCommands = JSON.parse(raw) as CommandFavoriteData[];
+      return this.normalizeCommands(fileCommands, 'local');
+    } catch (error) {
+      this.logger.warn('[commands] Failed to load Personalized commands file', {
+        configuredPath,
+        error,
+      });
+      return [];
+    }
   }
 
   private normalizeCommands(
@@ -1974,49 +2012,7 @@ export class FavoritesTreeDataProvider
       ];
     }
 
-    const commandsConfig = vscode.workspace.getConfiguration('anfavorites.commands');
-    const configuredPath =
-      commandsConfig.get<string>('templateCatalogPath', '').trim() ||
-      commandsConfig.get<string>('openSourceCatalogPath', '').trim();
-    const merged = new Map<string, CommandFavoriteData>(
-      builtins.map((command) => [command.id, command]),
-    );
-
-    if (configuredPath) {
-      try {
-        const resolvedPath = path.isAbsolute(configuredPath)
-          ? configuredPath
-          : path.join(
-              vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '',
-              configuredPath,
-            );
-        const raw = fs.readFileSync(resolvedPath, 'utf8');
-        const fileCommands = JSON.parse(raw) as Array<
-          Partial<CommandFavoriteData> & { id: string; label: string; command: string }
-        >;
-        for (const command of fileCommands) {
-          merged.set(command.id, {
-            id: command.id,
-            label: command.label,
-            command: command.command,
-            background: command.background ?? false,
-            addedAt: 0,
-            type: command.type ?? 'shell',
-            scope: 'opensource',
-            language: command.language ?? 'generic',
-            readonly: true,
-            source: 'file',
-          });
-        }
-      } catch (error) {
-        this.logger.warn('[commands] Failed to load Template catalog file', {
-          configuredPath,
-          error,
-        });
-      }
-    }
-
-    return Array.from(merged.values());
+    return builtins;
   }
 
   private checkForDuplicateNames(): void {
@@ -2209,6 +2205,29 @@ export class FavoritesTreeDataProvider
   }
 
   private async saveCommands(): Promise<void> {
+    const commandsConfig = vscode.workspace.getConfiguration('anfavorites.commands');
+    const configuredPath = commandsConfig
+      .get<string>('personalizedCommandsPath', '')
+      .trim();
+
+    if (configuredPath) {
+      try {
+        const fs = require('fs') as typeof import('fs');
+        const resolvedPath = resolveConfiguredCommandsPath(configuredPath);
+        fs.mkdirSync(path.dirname(resolvedPath), { recursive: true });
+        fs.writeFileSync(
+          resolvedPath,
+          JSON.stringify(this.localCommands, null, 2),
+          'utf8',
+        );
+      } catch (error) {
+        this.logger.error('[commands] Failed to save Personalized commands file', {
+          configuredPath,
+          error,
+        });
+      }
+    }
+
     await Promise.all([
       this.context.workspaceState.update(
         LOCAL_COMMANDS_STORAGE_KEY,

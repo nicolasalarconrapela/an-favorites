@@ -1,9 +1,945 @@
 [
   {
+    "id": "opensource:git-init",
+    "label": "git init",
+    "command": "git init",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-clone-github-com-user-repo-git",
+    "label": "git clone https://github.com/user/repo.git",
+    "command": "git clone https://github.com/user/repo.git",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-status",
+    "label": "git status",
+    "command": "git status",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-add",
+    "label": "git add .",
+    "command": "git add .",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-add-a",
+    "label": "git add -A",
+    "command": "git add -A",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-commit-m-initial-commit",
+    "label": "git commit -m \"initial commit\"",
+    "command": "git commit -m \"initial commit\"",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-commit-amend",
+    "label": "git commit --amend",
+    "command": "git commit --amend",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-pull",
+    "label": "git pull",
+    "command": "git pull",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-pull-rebase",
+    "label": "git pull --rebase",
+    "command": "git pull --rebase",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-push",
+    "label": "git push",
+    "command": "git push",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-push-u-origin-main",
+    "label": "git push -u origin main",
+    "command": "git push -u origin main",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-checkout-b-feature-new-feature",
+    "label": "git checkout -b feature/new-feature",
+    "command": "git checkout -b feature/new-feature",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-switch-c-feature-new-feature",
+    "label": "git switch -c feature/new-feature",
+    "command": "git switch -c feature/new-feature",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-branch",
+    "label": "git branch",
+    "command": "git branch",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-branch-a",
+    "label": "git branch -a",
+    "command": "git branch -a",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-merge-develop",
+    "label": "git merge develop",
+    "command": "git merge develop",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-rebase-main",
+    "label": "git rebase main",
+    "command": "git rebase main",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-fetch-all",
+    "label": "git fetch --all",
+    "command": "git fetch --all",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-log-oneline-graph-decorate",
+    "label": "git log --oneline --graph --decorate",
+    "command": "git log --oneline --graph --decorate",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-diff",
+    "label": "git diff",
+    "command": "git diff",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-diff-staged",
+    "label": "git diff --staged",
+    "command": "git diff --staged",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-stash",
+    "label": "git stash",
+    "command": "git stash",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-stash-pop",
+    "label": "git stash pop",
+    "command": "git stash pop",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-reset-soft-head~1",
+    "label": "git reset --soft HEAD~1",
+    "command": "git reset --soft HEAD~1",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-reset-hard-head",
+    "label": "git reset --hard HEAD",
+    "command": "git reset --hard HEAD",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-clean-fd",
+    "label": "git clean -fd",
+    "command": "git clean -fd",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-remote-v",
+    "label": "git remote -v",
+    "command": "git remote -v",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-remote-add-origin-github-com-user-repo-git",
+    "label": "git remote add origin https://github.com/user/repo.git",
+    "command": "git remote add origin https://github.com/user/repo.git",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-tag",
+    "label": "git tag",
+    "command": "git tag",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-tag-v1-0-0",
+    "label": "git tag v1.0.0",
+    "command": "git tag v1.0.0",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-push-origin-tags",
+    "label": "git push origin --tags",
+    "command": "git push origin --tags",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-cherry-pick-head",
+    "label": "git cherry-pick HEAD",
+    "command": "git cherry-pick HEAD",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-revert-head",
+    "label": "git revert HEAD",
+    "command": "git revert HEAD",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-blame-readme-md",
+    "label": "git blame README.md",
+    "command": "git blame README.md",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-show-head",
+    "label": "git show HEAD",
+    "command": "git show HEAD",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-reflog",
+    "label": "git reflog",
+    "command": "git reflog",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-bisect-start",
+    "label": "git bisect start",
+    "command": "git bisect start",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-bisect-bad",
+    "label": "git bisect bad",
+    "command": "git bisect bad",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-bisect-good",
+    "label": "git bisect good",
+    "command": "git bisect good",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-submodule-update-init-recursive",
+    "label": "git submodule update --init --recursive",
+    "command": "git submodule update --init --recursive",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-ls-files",
+    "label": "git ls-files",
+    "command": "git ls-files",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-restore",
+    "label": "git restore .",
+    "command": "git restore .",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-restore-staged",
+    "label": "git restore --staged .",
+    "command": "git restore --staged .",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-mv-old-txt-new-txt",
+    "label": "git mv old.txt new.txt",
+    "command": "git mv old.txt new.txt",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-rm-file-txt",
+    "label": "git rm file.txt",
+    "command": "git rm file.txt",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-archive-format-zip-output-repo-zip-head",
+    "label": "git archive --format zip --output repo.zip HEAD",
+    "command": "git archive --format zip --output repo.zip HEAD",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-shortlog-sn",
+    "label": "git shortlog -sn",
+    "command": "git shortlog -sn",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-describe-tags",
+    "label": "git describe --tags",
+    "command": "git describe --tags",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-worktree-list",
+    "label": "git worktree list",
+    "command": "git worktree list",
+    "language": "git"
+  },
+  {
+    "id": "opensource:git-worktree-add-repo-feature-feature-new-feature",
+    "label": "git worktree add ../repo-feature feature/new-feature",
+    "command": "git worktree add ../repo-feature feature/new-feature",
+    "language": "git"
+  },
+  {
     "id": "opensource:npm-init",
     "label": "npm init",
     "command": "npm init",
     "language": "node"
+  },
+  {
+    "id": "opensource:npm-init-y",
+    "label": "npm init -y",
+    "command": "npm init -y",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-install",
+    "label": "npm install",
+    "command": "npm install",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-install-express",
+    "label": "npm install express",
+    "command": "npm install express",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-install-save-dev-typescript",
+    "label": "npm install --save-dev typescript",
+    "command": "npm install --save-dev typescript",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-uninstall-express",
+    "label": "npm uninstall express",
+    "command": "npm uninstall express",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-update",
+    "label": "npm update",
+    "command": "npm update",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-audit",
+    "label": "npm audit",
+    "command": "npm audit",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-audit-fix",
+    "label": "npm audit fix",
+    "command": "npm audit fix",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-run-dev",
+    "label": "npm run dev",
+    "command": "npm run dev",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-run-build",
+    "label": "npm run build",
+    "command": "npm run build",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-run-test",
+    "label": "npm run test",
+    "command": "npm run test",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-run-lint",
+    "label": "npm run lint",
+    "command": "npm run lint",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-run-format",
+    "label": "npm run format",
+    "command": "npm run format",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-start",
+    "label": "npm start",
+    "command": "npm start",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-pack",
+    "label": "npm pack",
+    "command": "npm pack",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-publish",
+    "label": "npm publish",
+    "command": "npm publish",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-version-patch",
+    "label": "npm version patch",
+    "command": "npm version patch",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-version-minor",
+    "label": "npm version minor",
+    "command": "npm version minor",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-version-major",
+    "label": "npm version major",
+    "command": "npm version major",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-cache-clean-force",
+    "label": "npm cache clean --force",
+    "command": "npm cache clean --force",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-ci",
+    "label": "npm ci",
+    "command": "npm ci",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-doctor",
+    "label": "npm doctor",
+    "command": "npm doctor",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-fund",
+    "label": "npm fund",
+    "command": "npm fund",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-list-depth-0",
+    "label": "npm list --depth=0",
+    "command": "npm list --depth=0",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-outdated",
+    "label": "npm outdated",
+    "command": "npm outdated",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-prune",
+    "label": "npm prune",
+    "command": "npm prune",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-dedupe",
+    "label": "npm dedupe",
+    "command": "npm dedupe",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-root-g",
+    "label": "npm root -g",
+    "command": "npm root -g",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-login",
+    "label": "npm login",
+    "command": "npm login",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-whoami",
+    "label": "npm whoami",
+    "command": "npm whoami",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-config-list",
+    "label": "npm config list",
+    "command": "npm config list",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-config-get-registry",
+    "label": "npm config get registry",
+    "command": "npm config get registry",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-config-set-registry-registry-npmjs-org",
+    "label": "npm config set registry https://registry.npmjs.org/",
+    "command": "npm config set registry https://registry.npmjs.org/",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npm-exec-eslint",
+    "label": "npm exec eslint .",
+    "command": "npm exec eslint .",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npx-create-react-app-my-app",
+    "label": "npx create-react-app my-app",
+    "command": "npx create-react-app my-app",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npx-vite-latest",
+    "label": "npx vite@latest",
+    "command": "npx vite@latest",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npx-ts-node-src-index-ts",
+    "label": "npx ts-node src/index.ts",
+    "command": "npx ts-node src/index.ts",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npx-eslint",
+    "label": "npx eslint .",
+    "command": "npx eslint .",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npx-prettier-write",
+    "label": "npx prettier --write .",
+    "command": "npx prettier --write .",
+    "language": "node"
+  },
+  {
+    "id": "opensource:npx-jest",
+    "label": "npx jest",
+    "command": "npx jest",
+    "language": "node"
+  },
+  {
+    "id": "opensource:node-v",
+    "label": "node -v",
+    "command": "node -v",
+    "language": "node"
+  },
+  {
+    "id": "opensource:node-src-index-js",
+    "label": "node src/index.js",
+    "command": "node src/index.js",
+    "language": "node"
+  },
+  {
+    "id": "opensource:node-watch-src-index-js",
+    "label": "node --watch src/index.js",
+    "command": "node --watch src/index.js",
+    "language": "node"
+  },
+  {
+    "id": "opensource:node-inspect-src-index-js",
+    "label": "node --inspect src/index.js",
+    "command": "node --inspect src/index.js",
+    "language": "node"
+  },
+  {
+    "id": "opensource:corepack-enable",
+    "label": "corepack enable",
+    "command": "corepack enable",
+    "language": "node"
+  },
+  {
+    "id": "opensource:pnpm-install",
+    "label": "pnpm install",
+    "command": "pnpm install",
+    "language": "node"
+  },
+  {
+    "id": "opensource:pnpm-dev",
+    "label": "pnpm dev",
+    "command": "pnpm dev",
+    "language": "node"
+  },
+  {
+    "id": "opensource:yarn-install",
+    "label": "yarn install",
+    "command": "yarn install",
+    "language": "node"
+  },
+  {
+    "id": "opensource:yarn-dev",
+    "label": "yarn dev",
+    "command": "yarn dev",
+    "language": "node"
+  },
+  {
+    "id": "opensource:tsc-init",
+    "label": "tsc --init",
+    "command": "tsc --init",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:tsc-p",
+    "label": "tsc -p .",
+    "command": "tsc -p .",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:tsc-watch",
+    "label": "tsc --watch",
+    "command": "tsc --watch",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:tsc-src-index-ts",
+    "label": "tsc src/index.ts",
+    "command": "tsc src/index.ts",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:tsc-noemit",
+    "label": "tsc --noEmit",
+    "command": "tsc --noEmit",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:tsc-build",
+    "label": "tsc --build",
+    "command": "tsc --build",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:ts-node-src-index-ts",
+    "label": "ts-node src/index.ts",
+    "command": "ts-node src/index.ts",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:tsx-src-index-ts",
+    "label": "tsx src/index.ts",
+    "command": "tsx src/index.ts",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:npm-run-typecheck",
+    "label": "npm run typecheck",
+    "command": "npm run typecheck",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:npx-typedoc-src-index-ts",
+    "label": "npx typedoc src/index.ts",
+    "command": "npx typedoc src/index.ts",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:npx-eslint-src-ts",
+    "label": "npx eslint \"src/**/*.ts\"",
+    "command": "npx eslint \"src/**/*.ts\"",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:npx-prettier-write-src-ts",
+    "label": "npx prettier --write \"src/**/*.ts\"",
+    "command": "npx prettier --write \"src/**/*.ts\"",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:vitest",
+    "label": "vitest",
+    "command": "vitest",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:vitest-run",
+    "label": "vitest run",
+    "command": "vitest run",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:vitest-watch",
+    "label": "vitest watch",
+    "command": "vitest watch",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:jest-config-jest-config-ts",
+    "label": "jest --config jest.config.ts",
+    "command": "jest --config jest.config.ts",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:webpack-config-webpack-config-ts",
+    "label": "webpack --config webpack.config.ts",
+    "command": "webpack --config webpack.config.ts",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:rollup-c",
+    "label": "rollup -c",
+    "command": "rollup -c",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:esbuild-src-index-ts-bundle-outfile-dist-index-js",
+    "label": "esbuild src/index.ts --bundle --outfile=dist/index.js",
+    "command": "esbuild src/index.ts --bundle --outfile=dist/index.js",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:swc-src-d-dist",
+    "label": "swc src -d dist",
+    "command": "swc src -d dist",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:nest-new-my-app",
+    "label": "nest new my-app",
+    "command": "nest new my-app",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:nest-start",
+    "label": "nest start",
+    "command": "nest start",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:nest-start-watch",
+    "label": "nest start --watch",
+    "command": "nest start --watch",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:nest-build",
+    "label": "nest build",
+    "command": "nest build",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:nest-test",
+    "label": "nest test",
+    "command": "nest test",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:next-dev",
+    "label": "next dev",
+    "command": "next dev",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:next-build",
+    "label": "next build",
+    "command": "next build",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:next-start",
+    "label": "next start",
+    "command": "next start",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:remix-dev",
+    "label": "remix dev",
+    "command": "remix dev",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:astro-dev",
+    "label": "astro dev",
+    "command": "astro dev",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:astro-build",
+    "label": "astro build",
+    "command": "astro build",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:vite",
+    "label": "vite",
+    "command": "vite",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:vite-build",
+    "label": "vite build",
+    "command": "vite build",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:vite-preview",
+    "label": "vite preview",
+    "command": "vite preview",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:ng-new-my-app",
+    "label": "ng new my-app",
+    "command": "ng new my-app",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:ng-serve",
+    "label": "ng serve",
+    "command": "ng serve",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:ng-build",
+    "label": "ng build",
+    "command": "ng build",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:ng-test",
+    "label": "ng test",
+    "command": "ng test",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:ng-lint",
+    "label": "ng lint",
+    "command": "ng lint",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:npm-run-migration-generate",
+    "label": "npm run migration:generate",
+    "command": "npm run migration:generate",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:npm-run-migration-run",
+    "label": "npm run migration:run",
+    "command": "npm run migration:run",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:npm-run-seed",
+    "label": "npm run seed",
+    "command": "npm run seed",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:npm-run-storybook",
+    "label": "npm run storybook",
+    "command": "npm run storybook",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:npm-run-cypress-open",
+    "label": "npm run cypress:open",
+    "command": "npm run cypress:open",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:npm-run-cypress-run",
+    "label": "npm run cypress:run",
+    "command": "npm run cypress:run",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:deno-run-main-ts",
+    "label": "deno run main.ts",
+    "command": "deno run main.ts",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:deno-test",
+    "label": "deno test",
+    "command": "deno test",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:deno-fmt",
+    "label": "deno fmt",
+    "command": "deno fmt",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:deno-lint",
+    "label": "deno lint",
+    "command": "deno lint",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:npm-run-docs",
+    "label": "npm run docs",
+    "command": "npm run docs",
+    "language": "typescript"
+  },
+  {
+    "id": "opensource:mvn-clean",
+    "label": "mvn clean",
+    "command": "mvn clean",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-compile",
+    "label": "mvn compile",
+    "command": "mvn compile",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-test",
+    "label": "mvn test",
+    "command": "mvn test",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-package",
+    "label": "mvn package",
+    "command": "mvn package",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-install",
+    "label": "mvn install",
+    "command": "mvn install",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-clean-install",
+    "label": "mvn clean install",
+    "command": "mvn clean install",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-clean-package",
+    "label": "mvn clean package",
+    "command": "mvn clean package",
+    "language": "java"
   },
   {
     "id": "opensource:mvn-clean-install-package",
@@ -12,9 +948,5055 @@
     "language": "java"
   },
   {
-    "id": "opensource:py-env",
-    "label": "py env",
-    "command": "py env",
+    "id": "opensource:mvn-spring-boot-run",
+    "label": "mvn spring-boot:run",
+    "command": "mvn spring-boot:run",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-dependency-tree",
+    "label": "mvn dependency:tree",
+    "command": "mvn dependency:tree",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-dependency-resolve",
+    "label": "mvn dependency:resolve",
+    "command": "mvn dependency:resolve",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-versions-display-dependency-updates",
+    "label": "mvn versions:display-dependency-updates",
+    "command": "mvn versions:display-dependency-updates",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-versions-set-dnewversion-1-0-0",
+    "label": "mvn versions:set -DnewVersion=1.0.0",
+    "command": "mvn versions:set -DnewVersion=1.0.0",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-verify",
+    "label": "mvn verify",
+    "command": "mvn verify",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-site",
+    "label": "mvn site",
+    "command": "mvn site",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-jacoco-report",
+    "label": "mvn jacoco:report",
+    "command": "mvn jacoco:report",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-failsafe-integration-test",
+    "label": "mvn failsafe:integration-test",
+    "command": "mvn failsafe:integration-test",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-failsafe-verify",
+    "label": "mvn failsafe:verify",
+    "command": "mvn failsafe:verify",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-help-effective-pom",
+    "label": "mvn help:effective-pom",
+    "command": "mvn help:effective-pom",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-clean-install-dskiptests",
+    "label": "mvn clean install -DskipTests",
+    "command": "mvn clean install -DskipTests",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-test-dtest-mytest",
+    "label": "mvn test -Dtest=MyTest",
+    "command": "mvn test -Dtest=MyTest",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-archetype-generate",
+    "label": "mvn archetype:generate",
+    "command": "mvn archetype:generate",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-release-prepare",
+    "label": "mvn release:prepare",
+    "command": "mvn release:prepare",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-release-perform",
+    "label": "mvn release:perform",
+    "command": "mvn release:perform",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-dependency-analyze",
+    "label": "mvn dependency:analyze",
+    "command": "mvn dependency:analyze",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-enforcer-enforce",
+    "label": "mvn enforcer:enforce",
+    "command": "mvn enforcer:enforce",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-spotless-apply",
+    "label": "mvn spotless:apply",
+    "command": "mvn spotless:apply",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-spotless-check",
+    "label": "mvn spotless:check",
+    "command": "mvn spotless:check",
+    "language": "java"
+  },
+  {
+    "id": "opensource:gradlew-build",
+    "label": "./gradlew build",
+    "command": "./gradlew build",
+    "language": "java"
+  },
+  {
+    "id": "opensource:gradlew-test",
+    "label": "./gradlew test",
+    "command": "./gradlew test",
+    "language": "java"
+  },
+  {
+    "id": "opensource:gradlew-clean-build",
+    "label": "./gradlew clean build",
+    "command": "./gradlew clean build",
+    "language": "java"
+  },
+  {
+    "id": "opensource:gradlew-bootrun",
+    "label": "./gradlew bootRun",
+    "command": "./gradlew bootRun",
+    "language": "java"
+  },
+  {
+    "id": "opensource:gradlew-dependencies",
+    "label": "./gradlew dependencies",
+    "command": "./gradlew dependencies",
+    "language": "java"
+  },
+  {
+    "id": "opensource:gradlew-tasks",
+    "label": "./gradlew tasks",
+    "command": "./gradlew tasks",
+    "language": "java"
+  },
+  {
+    "id": "opensource:gradlew-jar",
+    "label": "./gradlew jar",
+    "command": "./gradlew jar",
+    "language": "java"
+  },
+  {
+    "id": "opensource:gradlew-bootjar",
+    "label": "./gradlew bootJar",
+    "command": "./gradlew bootJar",
+    "language": "java"
+  },
+  {
+    "id": "opensource:gradlew-check",
+    "label": "./gradlew check",
+    "command": "./gradlew check",
+    "language": "java"
+  },
+  {
+    "id": "opensource:gradlew-spotlessapply",
+    "label": "./gradlew spotlessApply",
+    "command": "./gradlew spotlessApply",
+    "language": "java"
+  },
+  {
+    "id": "opensource:gradlew-spotlesscheck",
+    "label": "./gradlew spotlessCheck",
+    "command": "./gradlew spotlessCheck",
+    "language": "java"
+  },
+  {
+    "id": "opensource:gradlew-test-tests-myservicetest",
+    "label": "./gradlew test --tests MyServiceTest",
+    "command": "./gradlew test --tests MyServiceTest",
+    "language": "java"
+  },
+  {
+    "id": "opensource:java-version",
+    "label": "java -version",
+    "command": "java -version",
+    "language": "java"
+  },
+  {
+    "id": "opensource:javac-main-java",
+    "label": "javac Main.java",
+    "command": "javac Main.java",
+    "language": "java"
+  },
+  {
+    "id": "opensource:java-main",
+    "label": "java Main",
+    "command": "java Main",
+    "language": "java"
+  },
+  {
+    "id": "opensource:jshell",
+    "label": "jshell",
+    "command": "jshell",
+    "language": "java"
+  },
+  {
+    "id": "opensource:javadoc-d-docs-src-java",
+    "label": "javadoc -d docs src/*.java",
+    "command": "javadoc -d docs src/*.java",
+    "language": "java"
+  },
+  {
+    "id": "opensource:spring-init-dependencies-web-data-jpa-my-app",
+    "label": "spring init --dependencies=web,data-jpa my-app",
+    "command": "spring init --dependencies=web,data-jpa my-app",
+    "language": "java"
+  },
+  {
+    "id": "opensource:sdk-list-java",
+    "label": "sdk list java",
+    "command": "sdk list java",
+    "language": "java"
+  },
+  {
+    "id": "opensource:sdk-use-java-21-0-0-tem",
+    "label": "sdk use java 21.0.0-tem",
+    "command": "sdk use java 21.0.0-tem",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-q-dskiptests-package",
+    "label": "mvn -q -DskipTests package",
+    "command": "mvn -q -DskipTests package",
+    "language": "java"
+  },
+  {
+    "id": "opensource:mvn-dependency-sources",
+    "label": "mvn dependency:sources",
+    "command": "mvn dependency:sources",
+    "language": "java"
+  },
+  {
+    "id": "opensource:python-version",
+    "label": "python --version",
+    "command": "python --version",
     "language": "python"
+  },
+  {
+    "id": "opensource:python-main-py",
+    "label": "python main.py",
+    "command": "python main.py",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-venv-venv",
+    "label": "python -m venv .venv",
+    "command": "python -m venv .venv",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-pip-install-r-requirements-txt",
+    "label": "python -m pip install -r requirements.txt",
+    "command": "python -m pip install -r requirements.txt",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-pip-install-pytest",
+    "label": "python -m pip install pytest",
+    "command": "python -m pip install pytest",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-pytest",
+    "label": "python -m pytest",
+    "command": "python -m pytest",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-pytest-q",
+    "label": "python -m pytest -q",
+    "command": "python -m pytest -q",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-unittest",
+    "label": "python -m unittest",
+    "command": "python -m unittest",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-pip-list",
+    "label": "python -m pip list",
+    "command": "python -m pip list",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-pip-freeze",
+    "label": "python -m pip freeze",
+    "command": "python -m pip freeze",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-pip-freeze-requirements-txt",
+    "label": "python -m pip freeze > requirements.txt",
+    "command": "python -m pip freeze > requirements.txt",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-pip-install-upgrade-pip",
+    "label": "python -m pip install --upgrade pip",
+    "command": "python -m pip install --upgrade pip",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-black",
+    "label": "python -m black .",
+    "command": "python -m black .",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-isort",
+    "label": "python -m isort .",
+    "command": "python -m isort .",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-flake8",
+    "label": "python -m flake8 .",
+    "command": "python -m flake8 .",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-mypy",
+    "label": "python -m mypy .",
+    "command": "python -m mypy .",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-http-server",
+    "label": "python -m http.server",
+    "command": "python -m http.server",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-build",
+    "label": "python -m build",
+    "command": "python -m build",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-twine-upload-dist",
+    "label": "python -m twine upload dist/*",
+    "command": "python -m twine upload dist/*",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-uvicorn-app-app-reload",
+    "label": "python -m uvicorn app:app --reload",
+    "command": "python -m uvicorn app:app --reload",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-gunicorn-app-app",
+    "label": "python -m gunicorn app:app",
+    "command": "python -m gunicorn app:app",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-manage-py-runserver",
+    "label": "python manage.py runserver",
+    "command": "python manage.py runserver",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-manage-py-makemigrations",
+    "label": "python manage.py makemigrations",
+    "command": "python manage.py makemigrations",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-manage-py-migrate",
+    "label": "python manage.py migrate",
+    "command": "python manage.py migrate",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-manage-py-createsuperuser",
+    "label": "python manage.py createsuperuser",
+    "command": "python manage.py createsuperuser",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-manage-py-test",
+    "label": "python manage.py test",
+    "command": "python manage.py test",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-pip-install-django",
+    "label": "python -m pip install django",
+    "command": "python -m pip install django",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-pip-install-fastapi-uvicorn",
+    "label": "python -m pip install fastapi uvicorn",
+    "command": "python -m pip install fastapi uvicorn",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-pip-install-pandas",
+    "label": "python -m pip install pandas",
+    "command": "python -m pip install pandas",
+    "language": "python"
+  },
+  {
+    "id": "opensource:jupyter-notebook",
+    "label": "jupyter notebook",
+    "command": "jupyter notebook",
+    "language": "python"
+  },
+  {
+    "id": "opensource:jupyter-lab",
+    "label": "jupyter lab",
+    "command": "jupyter lab",
+    "language": "python"
+  },
+  {
+    "id": "opensource:ipython",
+    "label": "ipython",
+    "command": "ipython",
+    "language": "python"
+  },
+  {
+    "id": "opensource:pipenv-install",
+    "label": "pipenv install",
+    "command": "pipenv install",
+    "language": "python"
+  },
+  {
+    "id": "opensource:pipenv-shell",
+    "label": "pipenv shell",
+    "command": "pipenv shell",
+    "language": "python"
+  },
+  {
+    "id": "opensource:poetry-init",
+    "label": "poetry init",
+    "command": "poetry init",
+    "language": "python"
+  },
+  {
+    "id": "opensource:poetry-install",
+    "label": "poetry install",
+    "command": "poetry install",
+    "language": "python"
+  },
+  {
+    "id": "opensource:poetry-run-pytest",
+    "label": "poetry run pytest",
+    "command": "poetry run pytest",
+    "language": "python"
+  },
+  {
+    "id": "opensource:poetry-add-requests",
+    "label": "poetry add requests",
+    "command": "poetry add requests",
+    "language": "python"
+  },
+  {
+    "id": "opensource:poetry-build",
+    "label": "poetry build",
+    "command": "poetry build",
+    "language": "python"
+  },
+  {
+    "id": "opensource:poetry-publish",
+    "label": "poetry publish",
+    "command": "poetry publish",
+    "language": "python"
+  },
+  {
+    "id": "opensource:conda-create-n-myenv-python-3-11",
+    "label": "conda create -n myenv python=3.11",
+    "command": "conda create -n myenv python=3.11",
+    "language": "python"
+  },
+  {
+    "id": "opensource:conda-activate-myenv",
+    "label": "conda activate myenv",
+    "command": "conda activate myenv",
+    "language": "python"
+  },
+  {
+    "id": "opensource:conda-install-numpy",
+    "label": "conda install numpy",
+    "command": "conda install numpy",
+    "language": "python"
+  },
+  {
+    "id": "opensource:ruff-check",
+    "label": "ruff check .",
+    "command": "ruff check .",
+    "language": "python"
+  },
+  {
+    "id": "opensource:ruff-format",
+    "label": "ruff format .",
+    "command": "ruff format .",
+    "language": "python"
+  },
+  {
+    "id": "opensource:pytest-tests-test_app-py-q",
+    "label": "pytest tests/test_app.py -q",
+    "command": "pytest tests/test_app.py -q",
+    "language": "python"
+  },
+  {
+    "id": "opensource:alembic-upgrade-head",
+    "label": "alembic upgrade head",
+    "command": "alembic upgrade head",
+    "language": "python"
+  },
+  {
+    "id": "opensource:alembic-revision-autogenerate-m-init",
+    "label": "alembic revision --autogenerate -m \"init\"",
+    "command": "alembic revision --autogenerate -m \"init\"",
+    "language": "python"
+  },
+  {
+    "id": "opensource:uv-pip-install-r-requirements-txt",
+    "label": "uv pip install -r requirements.txt",
+    "command": "uv pip install -r requirements.txt",
+    "language": "python"
+  },
+  {
+    "id": "opensource:python-m-pip-check",
+    "label": "python -m pip check",
+    "command": "python -m pip check",
+    "language": "python"
+  },
+  {
+    "id": "opensource:docker-version",
+    "label": "docker --version",
+    "command": "docker --version",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-build-t-my-app",
+    "label": "docker build -t my-app .",
+    "command": "docker build -t my-app .",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-run-my-app",
+    "label": "docker run my-app",
+    "command": "docker run my-app",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-run-p-8080-8080-my-app",
+    "label": "docker run -p 8080:8080 my-app",
+    "command": "docker run -p 8080:8080 my-app",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-ps",
+    "label": "docker ps",
+    "command": "docker ps",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-ps-a",
+    "label": "docker ps -a",
+    "command": "docker ps -a",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-images",
+    "label": "docker images",
+    "command": "docker images",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-pull-nginx",
+    "label": "docker pull nginx",
+    "command": "docker pull nginx",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-exec-it-container_id-sh",
+    "label": "docker exec -it container_id sh",
+    "command": "docker exec -it container_id sh",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-logs-container_id",
+    "label": "docker logs container_id",
+    "command": "docker logs container_id",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-stop-container_id",
+    "label": "docker stop container_id",
+    "command": "docker stop container_id",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-start-container_id",
+    "label": "docker start container_id",
+    "command": "docker start container_id",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-restart-container_id",
+    "label": "docker restart container_id",
+    "command": "docker restart container_id",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-rm-container_id",
+    "label": "docker rm container_id",
+    "command": "docker rm container_id",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-rmi-image_id",
+    "label": "docker rmi image_id",
+    "command": "docker rmi image_id",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-system-prune-f",
+    "label": "docker system prune -f",
+    "command": "docker system prune -f",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-volume-ls",
+    "label": "docker volume ls",
+    "command": "docker volume ls",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-volume-prune-f",
+    "label": "docker volume prune -f",
+    "command": "docker volume prune -f",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-network-ls",
+    "label": "docker network ls",
+    "command": "docker network ls",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-compose-up",
+    "label": "docker compose up",
+    "command": "docker compose up",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-compose-up-d",
+    "label": "docker compose up -d",
+    "command": "docker compose up -d",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-compose-down",
+    "label": "docker compose down",
+    "command": "docker compose down",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-compose-build",
+    "label": "docker compose build",
+    "command": "docker compose build",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-compose-logs-f",
+    "label": "docker compose logs -f",
+    "command": "docker compose logs -f",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-compose-ps",
+    "label": "docker compose ps",
+    "command": "docker compose ps",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-compose-restart",
+    "label": "docker compose restart",
+    "command": "docker compose restart",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-tag-my-app-user-my-app-latest",
+    "label": "docker tag my-app user/my-app:latest",
+    "command": "docker tag my-app user/my-app:latest",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-login",
+    "label": "docker login",
+    "command": "docker login",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-push-user-my-app-latest",
+    "label": "docker push user/my-app:latest",
+    "command": "docker push user/my-app:latest",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-inspect-container_id",
+    "label": "docker inspect container_id",
+    "command": "docker inspect container_id",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-stats",
+    "label": "docker stats",
+    "command": "docker stats",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-top-container_id",
+    "label": "docker top container_id",
+    "command": "docker top container_id",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-cp-file-txt-container_id-tmp-file-txt",
+    "label": "docker cp file.txt container_id:/tmp/file.txt",
+    "command": "docker cp file.txt container_id:/tmp/file.txt",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-save-my-app-o-my-app-tar",
+    "label": "docker save my-app -o my-app.tar",
+    "command": "docker save my-app -o my-app.tar",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-load-i-my-app-tar",
+    "label": "docker load -i my-app.tar",
+    "command": "docker load -i my-app.tar",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-history-my-app",
+    "label": "docker history my-app",
+    "command": "docker history my-app",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-image-prune-f",
+    "label": "docker image prune -f",
+    "command": "docker image prune -f",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-container-prune-f",
+    "label": "docker container prune -f",
+    "command": "docker container prune -f",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-buildx-ls",
+    "label": "docker buildx ls",
+    "command": "docker buildx ls",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-buildx-build-platform-linux-amd64-t-my-app",
+    "label": "docker buildx build --platform linux/amd64 -t my-app .",
+    "command": "docker buildx build --platform linux/amd64 -t my-app .",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-compose-exec-app-bash",
+    "label": "docker compose exec app bash",
+    "command": "docker compose exec app bash",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-attach-container_id",
+    "label": "docker attach container_id",
+    "command": "docker attach container_id",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-rename-old_name-new_name",
+    "label": "docker rename old_name new_name",
+    "command": "docker rename old_name new_name",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-kill-container_id",
+    "label": "docker kill container_id",
+    "command": "docker kill container_id",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-update-restart-unless-stopped-container_id",
+    "label": "docker update --restart unless-stopped container_id",
+    "command": "docker update --restart unless-stopped container_id",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-diff-container_id",
+    "label": "docker diff container_id",
+    "command": "docker diff container_id",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-events",
+    "label": "docker events",
+    "command": "docker events",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-info",
+    "label": "docker info",
+    "command": "docker info",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-context-ls",
+    "label": "docker context ls",
+    "command": "docker context ls",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:docker-builder-prune-f",
+    "label": "docker builder prune -f",
+    "command": "docker builder prune -f",
+    "language": "docker"
+  },
+  {
+    "id": "opensource:kubectl-version-client",
+    "label": "kubectl version --client",
+    "command": "kubectl version --client",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-config-get-contexts",
+    "label": "kubectl config get-contexts",
+    "command": "kubectl config get-contexts",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-config-use-context-minikube",
+    "label": "kubectl config use-context minikube",
+    "command": "kubectl config use-context minikube",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-get-pods",
+    "label": "kubectl get pods",
+    "command": "kubectl get pods",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-get-services",
+    "label": "kubectl get services",
+    "command": "kubectl get services",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-get-deployments",
+    "label": "kubectl get deployments",
+    "command": "kubectl get deployments",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-get-nodes",
+    "label": "kubectl get nodes",
+    "command": "kubectl get nodes",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-get-namespaces",
+    "label": "kubectl get namespaces",
+    "command": "kubectl get namespaces",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-create-namespace-dev",
+    "label": "kubectl create namespace dev",
+    "command": "kubectl create namespace dev",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-apply-f-deployment-yaml",
+    "label": "kubectl apply -f deployment.yaml",
+    "command": "kubectl apply -f deployment.yaml",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-delete-f-deployment-yaml",
+    "label": "kubectl delete -f deployment.yaml",
+    "command": "kubectl delete -f deployment.yaml",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-describe-pod-my-pod",
+    "label": "kubectl describe pod my-pod",
+    "command": "kubectl describe pod my-pod",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-logs-my-pod",
+    "label": "kubectl logs my-pod",
+    "command": "kubectl logs my-pod",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-logs-f-my-pod",
+    "label": "kubectl logs -f my-pod",
+    "command": "kubectl logs -f my-pod",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-exec-it-my-pod-sh",
+    "label": "kubectl exec -it my-pod -- sh",
+    "command": "kubectl exec -it my-pod -- sh",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-port-forward-svc-my-service-8080-80",
+    "label": "kubectl port-forward svc/my-service 8080:80",
+    "command": "kubectl port-forward svc/my-service 8080:80",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-rollout-status-deployment-my-app",
+    "label": "kubectl rollout status deployment/my-app",
+    "command": "kubectl rollout status deployment/my-app",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-rollout-restart-deployment-my-app",
+    "label": "kubectl rollout restart deployment/my-app",
+    "command": "kubectl rollout restart deployment/my-app",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-scale-deployment-my-app-replicas-3",
+    "label": "kubectl scale deployment my-app --replicas=3",
+    "command": "kubectl scale deployment my-app --replicas=3",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-edit-deployment-my-app",
+    "label": "kubectl edit deployment my-app",
+    "command": "kubectl edit deployment my-app",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-expose-deployment-my-app-type-loadbalancer-port-80",
+    "label": "kubectl expose deployment my-app --type=LoadBalancer --port=80",
+    "command": "kubectl expose deployment my-app --type=LoadBalancer --port=80",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-top-pods",
+    "label": "kubectl top pods",
+    "command": "kubectl top pods",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-top-nodes",
+    "label": "kubectl top nodes",
+    "command": "kubectl top nodes",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-get-ingress",
+    "label": "kubectl get ingress",
+    "command": "kubectl get ingress",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-get-configmaps",
+    "label": "kubectl get configmaps",
+    "command": "kubectl get configmaps",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-get-secrets",
+    "label": "kubectl get secrets",
+    "command": "kubectl get secrets",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-create-configmap-app-config-from-file-application-yml",
+    "label": "kubectl create configmap app-config --from-file=application.yml",
+    "command": "kubectl create configmap app-config --from-file=application.yml",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-create-secret-generic-app-secret-from-literal-password-secret",
+    "label": "kubectl create secret generic app-secret --from-literal=password=secret",
+    "command": "kubectl create secret generic app-secret --from-literal=password=secret",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-delete-pod-my-pod",
+    "label": "kubectl delete pod my-pod",
+    "command": "kubectl delete pod my-pod",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-get-events-sort-by-metadata-creationtimestamp",
+    "label": "kubectl get events --sort-by=.metadata.creationTimestamp",
+    "command": "kubectl get events --sort-by=.metadata.creationTimestamp",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-drain-node1-ignore-daemonsets",
+    "label": "kubectl drain node1 --ignore-daemonsets",
+    "command": "kubectl drain node1 --ignore-daemonsets",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-cordon-node1",
+    "label": "kubectl cordon node1",
+    "command": "kubectl cordon node1",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-uncordon-node1",
+    "label": "kubectl uncordon node1",
+    "command": "kubectl uncordon node1",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-api-resources",
+    "label": "kubectl api-resources",
+    "command": "kubectl api-resources",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-cluster-info",
+    "label": "kubectl cluster-info",
+    "command": "kubectl cluster-info",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-auth-can-i-create-pods",
+    "label": "kubectl auth can-i create pods",
+    "command": "kubectl auth can-i create pods",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-get-all-n-kube-system",
+    "label": "kubectl get all -n kube-system",
+    "command": "kubectl get all -n kube-system",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-label-pod-my-pod-env-dev",
+    "label": "kubectl label pod my-pod env=dev",
+    "command": "kubectl label pod my-pod env=dev",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-annotate-pod-my-pod-description-test",
+    "label": "kubectl annotate pod my-pod description=\"test\"",
+    "command": "kubectl annotate pod my-pod description=\"test\"",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-patch-deployment-my-app-p-spec-replicas-2",
+    "label": "kubectl patch deployment my-app -p '{\"spec\":{\"replicas\":2}}'",
+    "command": "kubectl patch deployment my-app -p '{\"spec\":{\"replicas\":2}}'",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:helm-version",
+    "label": "helm version",
+    "command": "helm version",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:helm-repo-add-bitnami-charts-bitnami-com-bitnami",
+    "label": "helm repo add bitnami https://charts.bitnami.com/bitnami",
+    "command": "helm repo add bitnami https://charts.bitnami.com/bitnami",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:helm-repo-update",
+    "label": "helm repo update",
+    "command": "helm repo update",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:helm-install-my-nginx-bitnami-nginx",
+    "label": "helm install my-nginx bitnami/nginx",
+    "command": "helm install my-nginx bitnami/nginx",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:helm-upgrade-my-nginx-bitnami-nginx",
+    "label": "helm upgrade my-nginx bitnami/nginx",
+    "command": "helm upgrade my-nginx bitnami/nginx",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:helm-list",
+    "label": "helm list",
+    "command": "helm list",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:helm-uninstall-my-nginx",
+    "label": "helm uninstall my-nginx",
+    "command": "helm uninstall my-nginx",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:minikube-start",
+    "label": "minikube start",
+    "command": "minikube start",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:minikube-dashboard",
+    "label": "minikube dashboard",
+    "command": "minikube dashboard",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:kubectl-get-pvc",
+    "label": "kubectl get pvc",
+    "command": "kubectl get pvc",
+    "language": "kubernetes"
+  },
+  {
+    "id": "opensource:pwd",
+    "label": "pwd",
+    "command": "pwd",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:ls",
+    "label": "ls",
+    "command": "ls",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:ls-la",
+    "label": "ls -la",
+    "command": "ls -la",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:cd",
+    "label": "cd ..",
+    "command": "cd ..",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:mkdir-project",
+    "label": "mkdir project",
+    "command": "mkdir project",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:touch-readme-md",
+    "label": "touch README.md",
+    "command": "touch README.md",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:cp-file-txt-backup-txt",
+    "label": "cp file.txt backup.txt",
+    "command": "cp file.txt backup.txt",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:mv-old-txt-new-txt",
+    "label": "mv old.txt new.txt",
+    "command": "mv old.txt new.txt",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:rm-file-txt",
+    "label": "rm file.txt",
+    "command": "rm file.txt",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:rm-rf-node_modules",
+    "label": "rm -rf node_modules",
+    "command": "rm -rf node_modules",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:cat-file-txt",
+    "label": "cat file.txt",
+    "command": "cat file.txt",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:less-file-txt",
+    "label": "less file.txt",
+    "command": "less file.txt",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:head-n-20-file-txt",
+    "label": "head -n 20 file.txt",
+    "command": "head -n 20 file.txt",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:tail-f-app-log",
+    "label": "tail -f app.log",
+    "command": "tail -f app.log",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:grep-error-app-log",
+    "label": "grep \"error\" app.log",
+    "command": "grep \"error\" app.log",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:grep-r-todo-src",
+    "label": "grep -R \"TODO\" src",
+    "command": "grep -R \"TODO\" src",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:find-name-ts",
+    "label": "find . -name \"*.ts\"",
+    "command": "find . -name \"*.ts\"",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:find-type-f-wc-l",
+    "label": "find . -type f | wc -l",
+    "command": "find . -type f | wc -l",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:chmod-x-script-sh",
+    "label": "chmod +x script.sh",
+    "command": "chmod +x script.sh",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:chown-user-user-file-txt",
+    "label": "chown user:user file.txt",
+    "command": "chown user:user file.txt",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:ps-aux",
+    "label": "ps aux",
+    "command": "ps aux",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:kill-9-1234",
+    "label": "kill -9 1234",
+    "command": "kill -9 1234",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:top",
+    "label": "top",
+    "command": "top",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:df-h",
+    "label": "df -h",
+    "command": "df -h",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:du-sh",
+    "label": "du -sh .",
+    "command": "du -sh .",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:free-h",
+    "label": "free -h",
+    "command": "free -h",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:uname-a",
+    "label": "uname -a",
+    "command": "uname -a",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:whoami",
+    "label": "whoami",
+    "command": "whoami",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:history",
+    "label": "history",
+    "command": "history",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:curl-example-com",
+    "label": "curl https://example.com",
+    "command": "curl https://example.com",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:wget-example-com-file-zip",
+    "label": "wget https://example.com/file.zip",
+    "command": "wget https://example.com/file.zip",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:tar-xzf-archive-tar-gz",
+    "label": "tar -xzf archive.tar.gz",
+    "command": "tar -xzf archive.tar.gz",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:zip-r-archive-zip",
+    "label": "zip -r archive.zip .",
+    "command": "zip -r archive.zip .",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:unzip-archive-zip",
+    "label": "unzip archive.zip",
+    "command": "unzip archive.zip",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:ssh-user-server",
+    "label": "ssh user@server",
+    "command": "ssh user@server",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:scp-file-txt-user-server-tmp",
+    "label": "scp file.txt user@server:/tmp/",
+    "command": "scp file.txt user@server:/tmp/",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:env",
+    "label": "env",
+    "command": "env",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:export-node_env-production",
+    "label": "export NODE_ENV=production",
+    "command": "export NODE_ENV=production",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:alias-ll-ls-la",
+    "label": "alias ll='ls -la'",
+    "command": "alias ll='ls -la'",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:sed-n-1-20p-file-txt",
+    "label": "sed -n '1,20p' file.txt",
+    "command": "sed -n '1,20p' file.txt",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:awk-print-1-data-txt",
+    "label": "awk '{print $1}' data.txt",
+    "command": "awk '{print $1}' data.txt",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:sort-file-txt",
+    "label": "sort file.txt",
+    "command": "sort file.txt",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:uniq-file-txt",
+    "label": "uniq file.txt",
+    "command": "uniq file.txt",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:xargs-n-1-echo-list-txt",
+    "label": "xargs -n 1 echo < list.txt",
+    "command": "xargs -n 1 echo < list.txt",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:tee-output-txt",
+    "label": "tee output.txt",
+    "command": "tee output.txt",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:which-node",
+    "label": "which node",
+    "command": "which node",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:whereis-java",
+    "label": "whereis java",
+    "command": "whereis java",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:echo-hello-world",
+    "label": "echo \"hello world\"",
+    "command": "echo \"hello world\"",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:clear",
+    "label": "clear",
+    "command": "clear",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:realpath",
+    "label": "realpath .",
+    "command": "realpath .",
+    "language": "shell"
+  },
+  {
+    "id": "opensource:dotnet-info",
+    "label": "dotnet --info",
+    "command": "dotnet --info",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-new-console",
+    "label": "dotnet new console",
+    "command": "dotnet new console",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-new-webapi",
+    "label": "dotnet new webapi",
+    "command": "dotnet new webapi",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-restore",
+    "label": "dotnet restore",
+    "command": "dotnet restore",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-build",
+    "label": "dotnet build",
+    "command": "dotnet build",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-run",
+    "label": "dotnet run",
+    "command": "dotnet run",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-test",
+    "label": "dotnet test",
+    "command": "dotnet test",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-clean",
+    "label": "dotnet clean",
+    "command": "dotnet clean",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-publish-c-release",
+    "label": "dotnet publish -c Release",
+    "command": "dotnet publish -c Release",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-pack",
+    "label": "dotnet pack",
+    "command": "dotnet pack",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-add-package-newtonsoft-json",
+    "label": "dotnet add package Newtonsoft.Json",
+    "command": "dotnet add package Newtonsoft.Json",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-remove-package-newtonsoft-json",
+    "label": "dotnet remove package Newtonsoft.Json",
+    "command": "dotnet remove package Newtonsoft.Json",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-list-package",
+    "label": "dotnet list package",
+    "command": "dotnet list package",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-ef-migrations-add-initialcreate",
+    "label": "dotnet ef migrations add InitialCreate",
+    "command": "dotnet ef migrations add InitialCreate",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-ef-database-update",
+    "label": "dotnet ef database update",
+    "command": "dotnet ef database update",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-watch-run",
+    "label": "dotnet watch run",
+    "command": "dotnet watch run",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-new-sln",
+    "label": "dotnet new sln",
+    "command": "dotnet new sln",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-sln-add-myapp-csproj",
+    "label": "dotnet sln add MyApp.csproj",
+    "command": "dotnet sln add MyApp.csproj",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-add-reference-lib-lib-csproj",
+    "label": "dotnet add reference ../Lib/Lib.csproj",
+    "command": "dotnet add reference ../Lib/Lib.csproj",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-format",
+    "label": "dotnet format",
+    "command": "dotnet format",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-tool-install-g-dotnet-ef",
+    "label": "dotnet tool install -g dotnet-ef",
+    "command": "dotnet tool install -g dotnet-ef",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-tool-restore",
+    "label": "dotnet tool restore",
+    "command": "dotnet tool restore",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-nuget-list-source",
+    "label": "dotnet nuget list source",
+    "command": "dotnet nuget list source",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-nuget-add-source-api-nuget-org-v3-index-json-n-nuget",
+    "label": "dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget",
+    "command": "dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-workload-list",
+    "label": "dotnet workload list",
+    "command": "dotnet workload list",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-workload-install-maui",
+    "label": "dotnet workload install maui",
+    "command": "dotnet workload install maui",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-user-secrets-init",
+    "label": "dotnet user-secrets init",
+    "command": "dotnet user-secrets init",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-user-secrets-set-apikey-secret",
+    "label": "dotnet user-secrets set \"ApiKey\" \"secret\"",
+    "command": "dotnet user-secrets set \"ApiKey\" \"secret\"",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-dev-certs-https-trust",
+    "label": "dotnet dev-certs https --trust",
+    "command": "dotnet dev-certs https --trust",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:msbuild-myapp-sln",
+    "label": "msbuild MyApp.sln",
+    "command": "msbuild MyApp.sln",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:nuget-restore-myapp-sln",
+    "label": "nuget restore MyApp.sln",
+    "command": "nuget restore MyApp.sln",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:csc-program-cs",
+    "label": "csc Program.cs",
+    "command": "csc Program.cs",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:fsc-program-fs",
+    "label": "fsc Program.fs",
+    "command": "fsc Program.fs",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-test-filter-category-unit",
+    "label": "dotnet test --filter Category=Unit",
+    "command": "dotnet test --filter Category=Unit",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-publish-r-win-x64",
+    "label": "dotnet publish -r win-x64",
+    "command": "dotnet publish -r win-x64",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-publish-r-linux-x64",
+    "label": "dotnet publish -r linux-x64",
+    "command": "dotnet publish -r linux-x64",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-build-c-release",
+    "label": "dotnet build -c Release",
+    "command": "dotnet build -c Release",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-run-project-src-myapp",
+    "label": "dotnet run --project src/MyApp",
+    "command": "dotnet run --project src/MyApp",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-add-package-serilog",
+    "label": "dotnet add package Serilog",
+    "command": "dotnet add package Serilog",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-add-package-microsoft-entityframeworkcore",
+    "label": "dotnet add package Microsoft.EntityFrameworkCore",
+    "command": "dotnet add package Microsoft.EntityFrameworkCore",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-ef-migrations-script",
+    "label": "dotnet ef migrations script",
+    "command": "dotnet ef migrations script",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-new-xunit",
+    "label": "dotnet new xunit",
+    "command": "dotnet new xunit",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-new-classlib",
+    "label": "dotnet new classlib",
+    "command": "dotnet new classlib",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-test-collect-xplat-code-coverage",
+    "label": "dotnet test --collect:\"XPlat Code Coverage\"",
+    "command": "dotnet test --collect:\"XPlat Code Coverage\"",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-list-reference",
+    "label": "dotnet list reference",
+    "command": "dotnet list reference",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-sln-list",
+    "label": "dotnet sln list",
+    "command": "dotnet sln list",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-remove-reference-lib-lib-csproj",
+    "label": "dotnet remove reference ../Lib/Lib.csproj",
+    "command": "dotnet remove reference ../Lib/Lib.csproj",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:pwsh-build-ps1",
+    "label": "pwsh ./build.ps1",
+    "command": "pwsh ./build.ps1",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-format-whitespace",
+    "label": "dotnet format whitespace",
+    "command": "dotnet format whitespace",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:dotnet-workload-search-maui",
+    "label": "dotnet workload search maui",
+    "command": "dotnet workload search maui",
+    "language": "dotnet"
+  },
+  {
+    "id": "opensource:go-version",
+    "label": "go version",
+    "command": "go version",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-mod-init-example-com-app",
+    "label": "go mod init example.com/app",
+    "command": "go mod init example.com/app",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-mod-tidy",
+    "label": "go mod tidy",
+    "command": "go mod tidy",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-build",
+    "label": "go build",
+    "command": "go build",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-run",
+    "label": "go run .",
+    "command": "go run .",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-test",
+    "label": "go test ./...",
+    "command": "go test ./...",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-fmt",
+    "label": "go fmt ./...",
+    "command": "go fmt ./...",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-vet",
+    "label": "go vet ./...",
+    "command": "go vet ./...",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-list",
+    "label": "go list ./...",
+    "command": "go list ./...",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-clean",
+    "label": "go clean",
+    "command": "go clean",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-install",
+    "label": "go install ./...",
+    "command": "go install ./...",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-env",
+    "label": "go env",
+    "command": "go env",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-get-github-com-gin-gonic-gin",
+    "label": "go get github.com/gin-gonic/gin",
+    "command": "go get github.com/gin-gonic/gin",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-work-init",
+    "label": "go work init",
+    "command": "go work init",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-work-use",
+    "label": "go work use .",
+    "command": "go work use .",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-generate",
+    "label": "go generate ./...",
+    "command": "go generate ./...",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-test-cover",
+    "label": "go test -cover ./...",
+    "command": "go test -cover ./...",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-test-run-testservice",
+    "label": "go test -run TestService ./...",
+    "command": "go test -run TestService ./...",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-tool-cover-html-coverage-out",
+    "label": "go tool cover -html=coverage.out",
+    "command": "go tool cover -html=coverage.out",
+    "language": "go"
+  },
+  {
+    "id": "opensource:golangci-lint-run",
+    "label": "golangci-lint run",
+    "command": "golangci-lint run",
+    "language": "go"
+  },
+  {
+    "id": "opensource:air",
+    "label": "air",
+    "command": "air",
+    "language": "go"
+  },
+  {
+    "id": "opensource:dlv-debug",
+    "label": "dlv debug",
+    "command": "dlv debug",
+    "language": "go"
+  },
+  {
+    "id": "opensource:gofumpt-w",
+    "label": "gofumpt -w .",
+    "command": "gofumpt -w .",
+    "language": "go"
+  },
+  {
+    "id": "opensource:staticcheck",
+    "label": "staticcheck ./...",
+    "command": "staticcheck ./...",
+    "language": "go"
+  },
+  {
+    "id": "opensource:mockgen-source-service-go-destination-mock_service-go",
+    "label": "mockgen -source=service.go -destination=mock_service.go",
+    "command": "mockgen -source=service.go -destination=mock_service.go",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-mod-download",
+    "label": "go mod download",
+    "command": "go mod download",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-doc-fmt",
+    "label": "go doc fmt",
+    "command": "go doc fmt",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-test-bench",
+    "label": "go test -bench=. ./...",
+    "command": "go test -bench=. ./...",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-build-o-app-cmd-app",
+    "label": "go build -o app ./cmd/app",
+    "command": "go build -o app ./cmd/app",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-run-cmd-app",
+    "label": "go run ./cmd/app",
+    "command": "go run ./cmd/app",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-install-golang-org-x-tools-cmd-stringer-latest",
+    "label": "go install golang.org/x/tools/cmd/stringer@latest",
+    "command": "go install golang.org/x/tools/cmd/stringer@latest",
+    "language": "go"
+  },
+  {
+    "id": "opensource:stringer-type-status",
+    "label": "stringer -type=Status",
+    "command": "stringer -type=Status",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-test-race",
+    "label": "go test -race ./...",
+    "command": "go test -race ./...",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-test-count-1",
+    "label": "go test -count=1 ./...",
+    "command": "go test -count=1 ./...",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-mod-graph",
+    "label": "go mod graph",
+    "command": "go mod graph",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-env-gopath",
+    "label": "go env GOPATH",
+    "command": "go env GOPATH",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-env-gomod",
+    "label": "go env GOMOD",
+    "command": "go env GOMOD",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-env-goos",
+    "label": "go env GOOS",
+    "command": "go env GOOS",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-env-goarch",
+    "label": "go env GOARCH",
+    "command": "go env GOARCH",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-version-m-app",
+    "label": "go version -m ./app",
+    "command": "go version -m ./app",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-clean-cache",
+    "label": "go clean -cache",
+    "command": "go clean -cache",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-clean-modcache",
+    "label": "go clean -modcache",
+    "command": "go clean -modcache",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-tool-pprof-cpu-prof",
+    "label": "go tool pprof cpu.prof",
+    "command": "go tool pprof cpu.prof",
+    "language": "go"
+  },
+  {
+    "id": "opensource:templ-generate",
+    "label": "templ generate",
+    "command": "templ generate",
+    "language": "go"
+  },
+  {
+    "id": "opensource:buf-generate",
+    "label": "buf generate",
+    "command": "buf generate",
+    "language": "go"
+  },
+  {
+    "id": "opensource:buf-lint",
+    "label": "buf lint",
+    "command": "buf lint",
+    "language": "go"
+  },
+  {
+    "id": "opensource:protoc-go_out-go-grpc_out-api-proto",
+    "label": "protoc --go_out=. --go-grpc_out=. api.proto",
+    "command": "protoc --go_out=. --go-grpc_out=. api.proto",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-work-sync",
+    "label": "go work sync",
+    "command": "go work sync",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-get-u",
+    "label": "go get -u ./...",
+    "command": "go get -u ./...",
+    "language": "go"
+  },
+  {
+    "id": "opensource:go-test-json",
+    "label": "go test -json ./...",
+    "command": "go test -json ./...",
+    "language": "go"
+  },
+  {
+    "id": "opensource:rustc-version",
+    "label": "rustc --version",
+    "command": "rustc --version",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-new-my_app",
+    "label": "cargo new my_app",
+    "command": "cargo new my_app",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-init",
+    "label": "cargo init",
+    "command": "cargo init",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-build",
+    "label": "cargo build",
+    "command": "cargo build",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-run",
+    "label": "cargo run",
+    "command": "cargo run",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-test",
+    "label": "cargo test",
+    "command": "cargo test",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-fmt",
+    "label": "cargo fmt",
+    "command": "cargo fmt",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-clippy",
+    "label": "cargo clippy",
+    "command": "cargo clippy",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-clean",
+    "label": "cargo clean",
+    "command": "cargo clean",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-check",
+    "label": "cargo check",
+    "command": "cargo check",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-doc-open",
+    "label": "cargo doc --open",
+    "command": "cargo doc --open",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-update",
+    "label": "cargo update",
+    "command": "cargo update",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-add-serde",
+    "label": "cargo add serde",
+    "command": "cargo add serde",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-add-tokio-features-full",
+    "label": "cargo add tokio --features full",
+    "command": "cargo add tokio --features full",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-tree",
+    "label": "cargo tree",
+    "command": "cargo tree",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-bench",
+    "label": "cargo bench",
+    "command": "cargo bench",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-publish",
+    "label": "cargo publish",
+    "command": "cargo publish",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-install-ripgrep",
+    "label": "cargo install ripgrep",
+    "command": "cargo install ripgrep",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-expand",
+    "label": "cargo expand",
+    "command": "cargo expand",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-audit",
+    "label": "cargo audit",
+    "command": "cargo audit",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-deny-check",
+    "label": "cargo deny check",
+    "command": "cargo deny check",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-watch-x-run",
+    "label": "cargo watch -x run",
+    "command": "cargo watch -x run",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-watch-x-test",
+    "label": "cargo watch -x test",
+    "command": "cargo watch -x test",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:rustup-show",
+    "label": "rustup show",
+    "command": "rustup show",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:rustup-update",
+    "label": "rustup update",
+    "command": "rustup update",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:rustup-default-stable",
+    "label": "rustup default stable",
+    "command": "rustup default stable",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:rustup-target-list",
+    "label": "rustup target list",
+    "command": "rustup target list",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:rustup-target-add-wasm32-unknown-unknown",
+    "label": "rustup target add wasm32-unknown-unknown",
+    "command": "rustup target add wasm32-unknown-unknown",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-build-release",
+    "label": "cargo build --release",
+    "command": "cargo build --release",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-run-release",
+    "label": "cargo run --release",
+    "command": "cargo run --release",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-test-nocapture",
+    "label": "cargo test -- --nocapture",
+    "command": "cargo test -- --nocapture",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-metadata",
+    "label": "cargo metadata",
+    "command": "cargo metadata",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-generate-git-github-com-rust-lang-mdbook",
+    "label": "cargo generate --git https://github.com/rust-lang/mdBook",
+    "command": "cargo generate --git https://github.com/rust-lang/mdBook",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:mdbook-serve",
+    "label": "mdbook serve",
+    "command": "mdbook serve",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:trunk-serve",
+    "label": "trunk serve",
+    "command": "trunk serve",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:wasm-pack-build",
+    "label": "wasm-pack build",
+    "command": "wasm-pack build",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-tarpaulin",
+    "label": "cargo tarpaulin",
+    "command": "cargo tarpaulin",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-machete",
+    "label": "cargo machete",
+    "command": "cargo machete",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-bloat-release",
+    "label": "cargo bloat --release",
+    "command": "cargo bloat --release",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-udeps",
+    "label": "cargo udeps",
+    "command": "cargo udeps",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-install-cargo-edit",
+    "label": "cargo install cargo-edit",
+    "command": "cargo install cargo-edit",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-install-cargo-watch",
+    "label": "cargo install cargo-watch",
+    "command": "cargo install cargo-watch",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-install-cargo-audit",
+    "label": "cargo install cargo-audit",
+    "command": "cargo install cargo-audit",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-install-cargo-deny",
+    "label": "cargo install cargo-deny",
+    "command": "cargo install cargo-deny",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-install-wasm-pack",
+    "label": "cargo install wasm-pack",
+    "command": "cargo install wasm-pack",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-install-trunk",
+    "label": "cargo install trunk",
+    "command": "cargo install trunk",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:rust-analyzer",
+    "label": "rust-analyzer",
+    "command": "rust-analyzer",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-fix",
+    "label": "cargo fix",
+    "command": "cargo fix",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-test-package_name",
+    "label": "cargo test package_name",
+    "command": "cargo test package_name",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:cargo-search-serde",
+    "label": "cargo search serde",
+    "command": "cargo search serde",
+    "language": "rust"
+  },
+  {
+    "id": "opensource:php-v",
+    "label": "php -v",
+    "command": "php -v",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-s-localhost-8000",
+    "label": "php -S localhost:8000",
+    "command": "php -S localhost:8000",
+    "language": "php"
+  },
+  {
+    "id": "opensource:composer-init",
+    "label": "composer init",
+    "command": "composer init",
+    "language": "php"
+  },
+  {
+    "id": "opensource:composer-install",
+    "label": "composer install",
+    "command": "composer install",
+    "language": "php"
+  },
+  {
+    "id": "opensource:composer-update",
+    "label": "composer update",
+    "command": "composer update",
+    "language": "php"
+  },
+  {
+    "id": "opensource:composer-require-laravel-framework",
+    "label": "composer require laravel/framework",
+    "command": "composer require laravel/framework",
+    "language": "php"
+  },
+  {
+    "id": "opensource:composer-dump-autoload",
+    "label": "composer dump-autoload",
+    "command": "composer dump-autoload",
+    "language": "php"
+  },
+  {
+    "id": "opensource:composer-show",
+    "label": "composer show",
+    "command": "composer show",
+    "language": "php"
+  },
+  {
+    "id": "opensource:composer-remove-laravel-framework",
+    "label": "composer remove laravel/framework",
+    "command": "composer remove laravel/framework",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-serve",
+    "label": "php artisan serve",
+    "command": "php artisan serve",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-migrate",
+    "label": "php artisan migrate",
+    "command": "php artisan migrate",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-migrate-fresh",
+    "label": "php artisan migrate:fresh",
+    "command": "php artisan migrate:fresh",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-db-seed",
+    "label": "php artisan db:seed",
+    "command": "php artisan db:seed",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-make-model-post-m",
+    "label": "php artisan make:model Post -m",
+    "command": "php artisan make:model Post -m",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-make-controller-postcontroller",
+    "label": "php artisan make:controller PostController",
+    "command": "php artisan make:controller PostController",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-make-migration-create_posts_table",
+    "label": "php artisan make:migration create_posts_table",
+    "command": "php artisan make:migration create_posts_table",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-route-list",
+    "label": "php artisan route:list",
+    "command": "php artisan route:list",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-config-clear",
+    "label": "php artisan config:clear",
+    "command": "php artisan config:clear",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-cache-clear",
+    "label": "php artisan cache:clear",
+    "command": "php artisan cache:clear",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-test",
+    "label": "php artisan test",
+    "command": "php artisan test",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-tinker",
+    "label": "php artisan tinker",
+    "command": "php artisan tinker",
+    "language": "php"
+  },
+  {
+    "id": "opensource:phpunit",
+    "label": "phpunit",
+    "command": "phpunit",
+    "language": "php"
+  },
+  {
+    "id": "opensource:phpstan-analyse",
+    "label": "phpstan analyse",
+    "command": "phpstan analyse",
+    "language": "php"
+  },
+  {
+    "id": "opensource:pint",
+    "label": "pint",
+    "command": "pint",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-cs-fixer-fix",
+    "label": "php-cs-fixer fix",
+    "command": "php-cs-fixer fix",
+    "language": "php"
+  },
+  {
+    "id": "opensource:symfony-new-my_project",
+    "label": "symfony new my_project",
+    "command": "symfony new my_project",
+    "language": "php"
+  },
+  {
+    "id": "opensource:symfony-server-start",
+    "label": "symfony server:start",
+    "command": "symfony server:start",
+    "language": "php"
+  },
+  {
+    "id": "opensource:symfony-console-cache-clear",
+    "label": "symfony console cache:clear",
+    "command": "symfony console cache:clear",
+    "language": "php"
+  },
+  {
+    "id": "opensource:symfony-console-doctrine-migrations-migrate",
+    "label": "symfony console doctrine:migrations:migrate",
+    "command": "symfony console doctrine:migrations:migrate",
+    "language": "php"
+  },
+  {
+    "id": "opensource:symfony-console-debug-router",
+    "label": "symfony console debug:router",
+    "command": "symfony console debug:router",
+    "language": "php"
+  },
+  {
+    "id": "opensource:wp-core-download",
+    "label": "wp core download",
+    "command": "wp core download",
+    "language": "php"
+  },
+  {
+    "id": "opensource:wp-plugin-list",
+    "label": "wp plugin list",
+    "command": "wp plugin list",
+    "language": "php"
+  },
+  {
+    "id": "opensource:wp-theme-list",
+    "label": "wp theme list",
+    "command": "wp theme list",
+    "language": "php"
+  },
+  {
+    "id": "opensource:pecl-install-xdebug",
+    "label": "pecl install xdebug",
+    "command": "pecl install xdebug",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-m",
+    "label": "php -m",
+    "command": "php -m",
+    "language": "php"
+  },
+  {
+    "id": "opensource:composer-validate",
+    "label": "composer validate",
+    "command": "composer validate",
+    "language": "php"
+  },
+  {
+    "id": "opensource:composer-outdated",
+    "label": "composer outdated",
+    "command": "composer outdated",
+    "language": "php"
+  },
+  {
+    "id": "opensource:composer-create-project-laravel-laravel-my-app",
+    "label": "composer create-project laravel/laravel my-app",
+    "command": "composer create-project laravel/laravel my-app",
+    "language": "php"
+  },
+  {
+    "id": "opensource:composer-create-project-symfony-skeleton-my-app",
+    "label": "composer create-project symfony/skeleton my-app",
+    "command": "composer create-project symfony/skeleton my-app",
+    "language": "php"
+  },
+  {
+    "id": "opensource:laravel-new-my-app",
+    "label": "laravel new my-app",
+    "command": "laravel new my-app",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-queue-work",
+    "label": "php artisan queue:work",
+    "command": "php artisan queue:work",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-schedule-work",
+    "label": "php artisan schedule:work",
+    "command": "php artisan schedule:work",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-storage-link",
+    "label": "php artisan storage:link",
+    "command": "php artisan storage:link",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-key-generate",
+    "label": "php artisan key:generate",
+    "command": "php artisan key:generate",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-optimize",
+    "label": "php artisan optimize",
+    "command": "php artisan optimize",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-optimize-clear",
+    "label": "php artisan optimize:clear",
+    "command": "php artisan optimize:clear",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-vendor-publish",
+    "label": "php artisan vendor:publish",
+    "command": "php artisan vendor:publish",
+    "language": "php"
+  },
+  {
+    "id": "opensource:composer-licenses",
+    "label": "composer licenses",
+    "command": "composer licenses",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-i",
+    "label": "php -i",
+    "command": "php -i",
+    "language": "php"
+  },
+  {
+    "id": "opensource:php-artisan-make-request-storepostrequest",
+    "label": "php artisan make:request StorePostRequest",
+    "command": "php artisan make:request StorePostRequest",
+    "language": "php"
+  },
+  {
+    "id": "opensource:ruby-v",
+    "label": "ruby -v",
+    "command": "ruby -v",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:gem-install-bundler",
+    "label": "gem install bundler",
+    "command": "gem install bundler",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-init",
+    "label": "bundle init",
+    "command": "bundle init",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-install",
+    "label": "bundle install",
+    "command": "bundle install",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-update",
+    "label": "bundle update",
+    "command": "bundle update",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rspec",
+    "label": "bundle exec rspec",
+    "command": "bundle exec rspec",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rake",
+    "label": "bundle exec rake",
+    "command": "bundle exec rake",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rubocop",
+    "label": "bundle exec rubocop",
+    "command": "bundle exec rubocop",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rails-server",
+    "label": "bundle exec rails server",
+    "command": "bundle exec rails server",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rails-console",
+    "label": "bundle exec rails console",
+    "command": "bundle exec rails console",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rails-db-migrate",
+    "label": "bundle exec rails db:migrate",
+    "command": "bundle exec rails db:migrate",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rails-db-seed",
+    "label": "bundle exec rails db:seed",
+    "command": "bundle exec rails db:seed",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rails-generate-model-post-title-string",
+    "label": "bundle exec rails generate model Post title:string",
+    "command": "bundle exec rails generate model Post title:string",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rails-generate-controller-posts-index",
+    "label": "bundle exec rails generate controller Posts index",
+    "command": "bundle exec rails generate controller Posts index",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rails-test",
+    "label": "bundle exec rails test",
+    "command": "bundle exec rails test",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rake-db-create",
+    "label": "bundle exec rake db:create",
+    "command": "bundle exec rake db:create",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rake-db-drop",
+    "label": "bundle exec rake db:drop",
+    "command": "bundle exec rake db:drop",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rake-db-schema-load",
+    "label": "bundle exec rake db:schema:load",
+    "command": "bundle exec rake db:schema:load",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-sidekiq",
+    "label": "bundle exec sidekiq",
+    "command": "bundle exec sidekiq",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:irb",
+    "label": "irb",
+    "command": "irb",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:rake-t",
+    "label": "rake -T",
+    "command": "rake -T",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:gem-list",
+    "label": "gem list",
+    "command": "gem list",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:gem-install-rails",
+    "label": "gem install rails",
+    "command": "gem install rails",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:rails-new-myapp",
+    "label": "rails new myapp",
+    "command": "rails new myapp",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:rails-db-prepare",
+    "label": "rails db:prepare",
+    "command": "rails db:prepare",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:rails-routes",
+    "label": "rails routes",
+    "command": "rails routes",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:rails-credentials-edit",
+    "label": "rails credentials:edit",
+    "command": "rails credentials:edit",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:rails-assets-precompile",
+    "label": "rails assets:precompile",
+    "command": "rails assets:precompile",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:rubocop-a",
+    "label": "rubocop -A",
+    "command": "rubocop -A",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:rspec-spec-models-post_spec-rb",
+    "label": "rspec spec/models/post_spec.rb",
+    "command": "rspec spec/models/post_spec.rb",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-brakeman",
+    "label": "bundle exec brakeman",
+    "command": "bundle exec brakeman",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-solargraph",
+    "label": "bundle exec solargraph",
+    "command": "bundle exec solargraph",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:ruby-script-rb",
+    "label": "ruby script.rb",
+    "command": "ruby script.rb",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:gem-uninstall-rails",
+    "label": "gem uninstall rails",
+    "command": "gem uninstall rails",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:rbenv-versions",
+    "label": "rbenv versions",
+    "command": "rbenv versions",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:rbenv-install-3-3-0",
+    "label": "rbenv install 3.3.0",
+    "command": "rbenv install 3.3.0",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:rbenv-local-3-3-0",
+    "label": "rbenv local 3.3.0",
+    "command": "rbenv local 3.3.0",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:rvm-list",
+    "label": "rvm list",
+    "command": "rvm list",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:rvm-use-3-3-0",
+    "label": "rvm use 3.3.0",
+    "command": "rvm use 3.3.0",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-lock",
+    "label": "bundle lock",
+    "command": "bundle lock",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rake-spec",
+    "label": "bundle exec rake spec",
+    "command": "bundle exec rake spec",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:guard",
+    "label": "guard",
+    "command": "guard",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:spring-stop",
+    "label": "spring stop",
+    "command": "spring stop",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:yard-doc",
+    "label": "yard doc",
+    "command": "yard doc",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:pry",
+    "label": "pry",
+    "command": "pry",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-cucumber",
+    "label": "bundle exec cucumber",
+    "command": "bundle exec cucumber",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rails-db-rollback",
+    "label": "bundle exec rails db:rollback",
+    "command": "bundle exec rails db:rollback",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rails-active_storage-install",
+    "label": "bundle exec rails active_storage:install",
+    "command": "bundle exec rails active_storage:install",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rails-webpacker-install",
+    "label": "bundle exec rails webpacker:install",
+    "command": "bundle exec rails webpacker:install",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:bundle-exec-rails-runner-puts-rails-env",
+    "label": "bundle exec rails runner 'puts Rails.env'",
+    "command": "bundle exec rails runner 'puts Rails.env'",
+    "language": "ruby"
+  },
+  {
+    "id": "opensource:flutter-version",
+    "label": "flutter --version",
+    "command": "flutter --version",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-doctor",
+    "label": "flutter doctor",
+    "command": "flutter doctor",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-create-my_app",
+    "label": "flutter create my_app",
+    "command": "flutter create my_app",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-pub-get",
+    "label": "flutter pub get",
+    "command": "flutter pub get",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-run",
+    "label": "flutter run",
+    "command": "flutter run",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-test",
+    "label": "flutter test",
+    "command": "flutter test",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-build-apk",
+    "label": "flutter build apk",
+    "command": "flutter build apk",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-build-appbundle",
+    "label": "flutter build appbundle",
+    "command": "flutter build appbundle",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-build-ios",
+    "label": "flutter build ios",
+    "command": "flutter build ios",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-clean",
+    "label": "flutter clean",
+    "command": "flutter clean",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-devices",
+    "label": "flutter devices",
+    "command": "flutter devices",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-emulators",
+    "label": "flutter emulators",
+    "command": "flutter emulators",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-emulators-launch-pixel_6",
+    "label": "flutter emulators --launch Pixel_6",
+    "command": "flutter emulators --launch Pixel_6",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-analyze",
+    "label": "flutter analyze",
+    "command": "flutter analyze",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-format",
+    "label": "flutter format .",
+    "command": "flutter format .",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-pub-add-http",
+    "label": "flutter pub add http",
+    "command": "flutter pub add http",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-pub-remove-http",
+    "label": "flutter pub remove http",
+    "command": "flutter pub remove http",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-pub-outdated",
+    "label": "flutter pub outdated",
+    "command": "flutter pub outdated",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-pub-upgrade",
+    "label": "flutter pub upgrade",
+    "command": "flutter pub upgrade",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-pub-run-build_runner-build",
+    "label": "flutter pub run build_runner build",
+    "command": "flutter pub run build_runner build",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:dart-run-build_runner-build-delete-conflicting-outputs",
+    "label": "dart run build_runner build --delete-conflicting-outputs",
+    "command": "dart run build_runner build --delete-conflicting-outputs",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-logs",
+    "label": "flutter logs",
+    "command": "flutter logs",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-attach",
+    "label": "flutter attach",
+    "command": "flutter attach",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-screenshot",
+    "label": "flutter screenshot",
+    "command": "flutter screenshot",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-install",
+    "label": "flutter install",
+    "command": "flutter install",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-drive-target-test_driver-app-dart",
+    "label": "flutter drive --target=test_driver/app.dart",
+    "command": "flutter drive --target=test_driver/app.dart",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-gen-l10n",
+    "label": "flutter gen-l10n",
+    "command": "flutter gen-l10n",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-build-web",
+    "label": "flutter build web",
+    "command": "flutter build web",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-build-windows",
+    "label": "flutter build windows",
+    "command": "flutter build windows",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-build-macos",
+    "label": "flutter build macos",
+    "command": "flutter build macos",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-build-linux",
+    "label": "flutter build linux",
+    "command": "flutter build linux",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-config-enable-web",
+    "label": "flutter config --enable-web",
+    "command": "flutter config --enable-web",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-config-enable-windows-desktop",
+    "label": "flutter config --enable-windows-desktop",
+    "command": "flutter config --enable-windows-desktop",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-config-enable-linux-desktop",
+    "label": "flutter config --enable-linux-desktop",
+    "command": "flutter config --enable-linux-desktop",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-config-enable-macos-desktop",
+    "label": "flutter config --enable-macos-desktop",
+    "command": "flutter config --enable-macos-desktop",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:dart-version",
+    "label": "dart --version",
+    "command": "dart --version",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:dart-pub-get",
+    "label": "dart pub get",
+    "command": "dart pub get",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:dart-run",
+    "label": "dart run",
+    "command": "dart run",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:dart-test",
+    "label": "dart test",
+    "command": "dart test",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:dart-format",
+    "label": "dart format .",
+    "command": "dart format .",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:dart-analyze",
+    "label": "dart analyze",
+    "command": "dart analyze",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-pub-cache-repair",
+    "label": "flutter pub cache repair",
+    "command": "flutter pub cache repair",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-downgrade",
+    "label": "flutter downgrade",
+    "command": "flutter downgrade",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-upgrade",
+    "label": "flutter upgrade",
+    "command": "flutter upgrade",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-precache",
+    "label": "flutter precache",
+    "command": "flutter precache",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-pub-deps",
+    "label": "flutter pub deps",
+    "command": "flutter pub deps",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:dart-create-my_cli",
+    "label": "dart create my_cli",
+    "command": "dart create my_cli",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:dart-compile-exe-bin-main-dart-o-bin-main",
+    "label": "dart compile exe bin/main.dart -o bin/main",
+    "command": "dart compile exe bin/main.dart -o bin/main",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:melos-bootstrap",
+    "label": "melos bootstrap",
+    "command": "melos bootstrap",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:flutter-pub-run-flutter_launcher_icons",
+    "label": "flutter pub run flutter_launcher_icons",
+    "command": "flutter pub run flutter_launcher_icons",
+    "language": "flutter"
+  },
+  {
+    "id": "opensource:ng-version",
+    "label": "ng version",
+    "command": "ng version",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-new-my-app-2",
+    "label": "ng new my-app",
+    "command": "ng new my-app",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-serve-2",
+    "label": "ng serve",
+    "command": "ng serve",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-build-2",
+    "label": "ng build",
+    "command": "ng build",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-build-configuration-production",
+    "label": "ng build --configuration production",
+    "command": "ng build --configuration production",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-test-2",
+    "label": "ng test",
+    "command": "ng test",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-lint-2",
+    "label": "ng lint",
+    "command": "ng lint",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-generate-component-users-list",
+    "label": "ng generate component users/list",
+    "command": "ng generate component users/list",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-generate-service-core-api",
+    "label": "ng generate service core/api",
+    "command": "ng generate service core/api",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-generate-module-admin-routing",
+    "label": "ng generate module admin --routing",
+    "command": "ng generate module admin --routing",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-generate-guard-auth",
+    "label": "ng generate guard auth",
+    "command": "ng generate guard auth",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-generate-interface-shared-models-user",
+    "label": "ng generate interface shared/models/user",
+    "command": "ng generate interface shared/models/user",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-generate-interceptor-auth",
+    "label": "ng generate interceptor auth",
+    "command": "ng generate interceptor auth",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-add-angular-material",
+    "label": "ng add @angular/material",
+    "command": "ng add @angular/material",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-update-angular-core-angular-cli",
+    "label": "ng update @angular/core @angular/cli",
+    "command": "ng update @angular/core @angular/cli",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-cache-clean",
+    "label": "ng cache clean",
+    "command": "ng cache clean",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-analytics-off",
+    "label": "ng analytics off",
+    "command": "ng analytics off",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-config",
+    "label": "ng config",
+    "command": "ng config",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-e2e",
+    "label": "ng e2e",
+    "command": "ng e2e",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npm-run-ng-build",
+    "label": "npm run ng build",
+    "command": "npm run ng build",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npm-run-ng-test",
+    "label": "npm run ng test",
+    "command": "npm run ng test",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npx-nx-graph",
+    "label": "npx nx graph",
+    "command": "npx nx graph",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npx-nx-serve-my-app",
+    "label": "npx nx serve my-app",
+    "command": "npx nx serve my-app",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npx-nx-build-my-app",
+    "label": "npx nx build my-app",
+    "command": "npx nx build my-app",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npx-nx-test-my-app",
+    "label": "npx nx test my-app",
+    "command": "npx nx test my-app",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npx-nx-lint-my-app",
+    "label": "npx nx lint my-app",
+    "command": "npx nx lint my-app",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npx-nx-g-nx-angular-component-feature-shell",
+    "label": "npx nx g @nx/angular:component feature-shell",
+    "command": "npx nx g @nx/angular:component feature-shell",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npx-nx-affected-build",
+    "label": "npx nx affected:build",
+    "command": "npx nx affected:build",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npx-nx-affected-test",
+    "label": "npx nx affected:test",
+    "command": "npx nx affected:test",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npx-nx-affected-lint",
+    "label": "npx nx affected:lint",
+    "command": "npx nx affected:lint",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npx-nx-format-write",
+    "label": "npx nx format:write",
+    "command": "npx nx format:write",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npm-install-rxjs",
+    "label": "npm install rxjs",
+    "command": "npm install rxjs",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npm-install-ngrx-store",
+    "label": "npm install @ngrx/store",
+    "command": "npm install @ngrx/store",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npm-install-ngrx-effects",
+    "label": "npm install @ngrx/effects",
+    "command": "npm install @ngrx/effects",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npm-install-ngrx-entity",
+    "label": "npm install @ngrx/entity",
+    "command": "npm install @ngrx/entity",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npm-install-ngx-translate-core",
+    "label": "npm install @ngx-translate/core",
+    "command": "npm install @ngx-translate/core",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npm-install-jasmine-core",
+    "label": "npm install jasmine-core",
+    "command": "npm install jasmine-core",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npm-install-karma",
+    "label": "npm install karma",
+    "command": "npm install karma",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npm-install-cypress",
+    "label": "npm install cypress",
+    "command": "npm install cypress",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npx-cypress-open",
+    "label": "npx cypress open",
+    "command": "npx cypress open",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:npx-cypress-run",
+    "label": "npx cypress run",
+    "command": "npx cypress run",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-extract-i18n",
+    "label": "ng extract-i18n",
+    "command": "ng extract-i18n",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-deploy",
+    "label": "ng deploy",
+    "command": "ng deploy",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-build-watch",
+    "label": "ng build --watch",
+    "command": "ng build --watch",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-serve-open",
+    "label": "ng serve --open",
+    "command": "ng serve --open",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-add-angular-pwa",
+    "label": "ng add @angular/pwa",
+    "command": "ng add @angular/pwa",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-add-angular-eslint-schematics",
+    "label": "ng add @angular-eslint/schematics",
+    "command": "ng add @angular-eslint/schematics",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-completion-script",
+    "label": "ng completion script",
+    "command": "ng completion script",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-generate-directive-shared-highlight",
+    "label": "ng generate directive shared/highlight",
+    "command": "ng generate directive shared/highlight",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:ng-generate-pipe-shared-date-format",
+    "label": "ng generate pipe shared/date-format",
+    "command": "ng generate pipe shared/date-format",
+    "language": "angular"
+  },
+  {
+    "id": "opensource:psql-u-postgres",
+    "label": "psql -U postgres",
+    "command": "psql -U postgres",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:psql-u-postgres-d-mydb",
+    "label": "psql -U postgres -d mydb",
+    "command": "psql -U postgres -d mydb",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:mysql-u-root-p",
+    "label": "mysql -u root -p",
+    "command": "mysql -u root -p",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:sqlite3-database-db",
+    "label": "sqlite3 database.db",
+    "command": "sqlite3 database.db",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:sqlcmd-s-localhost-e",
+    "label": "sqlcmd -S localhost -E",
+    "command": "sqlcmd -S localhost -E",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:createdb-mydb",
+    "label": "createdb mydb",
+    "command": "createdb mydb",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:dropdb-mydb",
+    "label": "dropdb mydb",
+    "command": "dropdb mydb",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:pg_dump-mydb-backup-sql",
+    "label": "pg_dump mydb > backup.sql",
+    "command": "pg_dump mydb > backup.sql",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:pg_restore-d-mydb-backup-dump",
+    "label": "pg_restore -d mydb backup.dump",
+    "command": "pg_restore -d mydb backup.dump",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:mysqldump-u-root-p-mydb-backup-sql",
+    "label": "mysqldump -u root -p mydb > backup.sql",
+    "command": "mysqldump -u root -p mydb > backup.sql",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:liquibase-update",
+    "label": "liquibase update",
+    "command": "liquibase update",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:liquibase-rollbackcount-1",
+    "label": "liquibase rollbackCount 1",
+    "command": "liquibase rollbackCount 1",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:liquibase-status",
+    "label": "liquibase status",
+    "command": "liquibase status",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:flyway-migrate",
+    "label": "flyway migrate",
+    "command": "flyway migrate",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:flyway-info",
+    "label": "flyway info",
+    "command": "flyway info",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:flyway-clean",
+    "label": "flyway clean",
+    "command": "flyway clean",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:flyway-repair",
+    "label": "flyway repair",
+    "command": "flyway repair",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:sqitch-deploy-db-pg-mydb",
+    "label": "sqitch deploy db:pg:mydb",
+    "command": "sqitch deploy db:pg:mydb",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:sqitch-verify-db-pg-mydb",
+    "label": "sqitch verify db:pg:mydb",
+    "command": "sqitch verify db:pg:mydb",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:dbmate-up",
+    "label": "dbmate up",
+    "command": "dbmate up",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:dbmate-rollback",
+    "label": "dbmate rollback",
+    "command": "dbmate rollback",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:prisma-migrate-dev",
+    "label": "prisma migrate dev",
+    "command": "prisma migrate dev",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:prisma-generate",
+    "label": "prisma generate",
+    "command": "prisma generate",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:prisma-studio",
+    "label": "prisma studio",
+    "command": "prisma studio",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:prisma-db-seed",
+    "label": "prisma db seed",
+    "command": "prisma db seed",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:sequelize-db-migrate",
+    "label": "sequelize db:migrate",
+    "command": "sequelize db:migrate",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:sequelize-db-seed-all",
+    "label": "sequelize db:seed:all",
+    "command": "sequelize db:seed:all",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:sequelize-db-migrate-undo",
+    "label": "sequelize db:migrate:undo",
+    "command": "sequelize db:migrate:undo",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:typeorm-migration-generate-src-migrations-init",
+    "label": "typeorm migration:generate src/migrations/Init",
+    "command": "typeorm migration:generate src/migrations/Init",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:typeorm-migration-run",
+    "label": "typeorm migration:run",
+    "command": "typeorm migration:run",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:typeorm-migration-revert",
+    "label": "typeorm migration:revert",
+    "command": "typeorm migration:revert",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:knex-migrate-latest",
+    "label": "knex migrate:latest",
+    "command": "knex migrate:latest",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:knex-seed-run",
+    "label": "knex seed:run",
+    "command": "knex seed:run",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:knex-migrate-rollback",
+    "label": "knex migrate:rollback",
+    "command": "knex migrate:rollback",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:sqlfluff-lint-sql",
+    "label": "sqlfluff lint sql/",
+    "command": "sqlfluff lint sql/",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:sqlfluff-fix-sql",
+    "label": "sqlfluff fix sql/",
+    "command": "sqlfluff fix sql/",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:psql-f-schema-sql",
+    "label": "psql -f schema.sql",
+    "command": "psql -f schema.sql",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:mysql-u-root-p-mydb-schema-sql",
+    "label": "mysql -u root -p mydb < schema.sql",
+    "command": "mysql -u root -p mydb < schema.sql",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:sqlite3-database-db-schema-sql",
+    "label": "sqlite3 database.db < schema.sql",
+    "command": "sqlite3 database.db < schema.sql",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:pg_isready",
+    "label": "pg_isready",
+    "command": "pg_isready",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:mysqladmin-ping",
+    "label": "mysqladmin ping",
+    "command": "mysqladmin ping",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:pgcli-mydb",
+    "label": "pgcli mydb",
+    "command": "pgcli mydb",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:mycli-mydb",
+    "label": "mycli mydb",
+    "command": "mycli mydb",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:psql-c-select-now",
+    "label": "psql -c \"SELECT now();\"",
+    "command": "psql -c \"SELECT now();\"",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:mysql-e-show-databases",
+    "label": "mysql -e \"SHOW DATABASES;\"",
+    "command": "mysql -e \"SHOW DATABASES;\"",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:sqlite3-database-db-tables",
+    "label": "sqlite3 database.db \".tables\"",
+    "command": "sqlite3 database.db \".tables\"",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:psql-l",
+    "label": "psql -l",
+    "command": "psql -l",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:mysqlshow",
+    "label": "mysqlshow",
+    "command": "mysqlshow",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:pg_dumpall-all_databases-sql",
+    "label": "pg_dumpall > all_databases.sql",
+    "command": "pg_dumpall > all_databases.sql",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:psql-c-dt",
+    "label": "psql -c \"\\dt\"",
+    "command": "psql -c \"\\dt\"",
+    "language": "sql"
+  },
+  {
+    "id": "opensource:g-main-cpp-o-main",
+    "label": "g++ main.cpp -o main",
+    "command": "g++ main.cpp -o main",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:main",
+    "label": "./main",
+    "command": "./main",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:clang-main-cpp-o-main",
+    "label": "clang++ main.cpp -o main",
+    "command": "clang++ main.cpp -o main",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:cmake-s-b-build",
+    "label": "cmake -S . -B build",
+    "command": "cmake -S . -B build",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:cmake-build-build",
+    "label": "cmake --build build",
+    "command": "cmake --build build",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:ctest-test-dir-build",
+    "label": "ctest --test-dir build",
+    "command": "ctest --test-dir build",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:make",
+    "label": "make",
+    "command": "make",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:make-clean",
+    "label": "make clean",
+    "command": "make clean",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:conan-install-output-folder-build-build-missing",
+    "label": "conan install . --output-folder=build --build=missing",
+    "command": "conan install . --output-folder=build --build=missing",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:vcpkg-install-fmt",
+    "label": "vcpkg install fmt",
+    "command": "vcpkg install fmt",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:ninja-c-build",
+    "label": "ninja -C build",
+    "command": "ninja -C build",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:meson-setup-build",
+    "label": "meson setup build",
+    "command": "meson setup build",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:meson-compile-c-build",
+    "label": "meson compile -C build",
+    "command": "meson compile -C build",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:bazel-build",
+    "label": "bazel build //...",
+    "command": "bazel build //...",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:bazel-test",
+    "label": "bazel test //...",
+    "command": "bazel test //...",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:gdb-main",
+    "label": "gdb ./main",
+    "command": "gdb ./main",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:lldb-main",
+    "label": "lldb ./main",
+    "command": "lldb ./main",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:valgrind-main",
+    "label": "valgrind ./main",
+    "command": "valgrind ./main",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:clang-format-i-src-cpp",
+    "label": "clang-format -i src/*.cpp",
+    "command": "clang-format -i src/*.cpp",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:clang-tidy-src-cpp",
+    "label": "clang-tidy src/*.cpp",
+    "command": "clang-tidy src/*.cpp",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:cppcheck",
+    "label": "cppcheck .",
+    "command": "cppcheck .",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:gcov-main-cpp",
+    "label": "gcov main.cpp",
+    "command": "gcov main.cpp",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:lcov-capture-directory-output-file-coverage-info",
+    "label": "lcov --capture --directory . --output-file coverage.info",
+    "command": "lcov --capture --directory . --output-file coverage.info",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:genhtml-coverage-info-output-directory-coverage",
+    "label": "genhtml coverage.info --output-directory coverage",
+    "command": "genhtml coverage.info --output-directory coverage",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:bear-make",
+    "label": "bear -- make",
+    "command": "bear -- make",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:cmake-install-build",
+    "label": "cmake --install build",
+    "command": "cmake --install build",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:cmake-s-b-build-dcmake_build_type-release",
+    "label": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release",
+    "command": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:cmake-build-build-config-release",
+    "label": "cmake --build build --config Release",
+    "command": "cmake --build build --config Release",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:cpack-g-zip",
+    "label": "cpack -G ZIP",
+    "command": "cpack -G ZIP",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:objdump-d-main",
+    "label": "objdump -d main",
+    "command": "objdump -d main",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:nm-main",
+    "label": "nm main",
+    "command": "nm main",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:strings-main",
+    "label": "strings main",
+    "command": "strings main",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:ar-rcs-libmylib-a-file-o",
+    "label": "ar rcs libmylib.a file.o",
+    "command": "ar rcs libmylib.a file.o",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:ranlib-libmylib-a",
+    "label": "ranlib libmylib.a",
+    "command": "ranlib libmylib.a",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:pkg-config-libs-openssl",
+    "label": "pkg-config --libs openssl",
+    "command": "pkg-config --libs openssl",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:pkg-config-cflags-openssl",
+    "label": "pkg-config --cflags openssl",
+    "command": "pkg-config --cflags openssl",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:g-std-c-20-main-cpp-o-main",
+    "label": "g++ -std=c++20 main.cpp -o main",
+    "command": "g++ -std=c++20 main.cpp -o main",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:clang-std-c-20-main-cpp-o-main",
+    "label": "clang++ -std=c++20 main.cpp -o main",
+    "command": "clang++ -std=c++20 main.cpp -o main",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:ccache-g-main-cpp-o-main",
+    "label": "ccache g++ main.cpp -o main",
+    "command": "ccache g++ main.cpp -o main",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:cpplint-src-main-cpp",
+    "label": "cpplint src/main.cpp",
+    "command": "cpplint src/main.cpp",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:doxygen-doxyfile",
+    "label": "doxygen Doxyfile",
+    "command": "doxygen Doxyfile",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:swig-c-python-interface-i",
+    "label": "swig -c++ -python interface.i",
+    "command": "swig -c++ -python interface.i",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:cmake-graphviz-graph-dot-build",
+    "label": "cmake --graphviz=graph.dot build",
+    "command": "cmake --graphviz=graph.dot build",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:addr2line-e-main-0x400123",
+    "label": "addr2line -e main 0x400123",
+    "command": "addr2line -e main 0x400123",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:readelf-a-main",
+    "label": "readelf -a main",
+    "command": "readelf -a main",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:strip-main",
+    "label": "strip main",
+    "command": "strip main",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:perf-record-main",
+    "label": "perf record ./main",
+    "command": "perf record ./main",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:perf-report",
+    "label": "perf report",
+    "command": "perf report",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:ninja-test-c-build",
+    "label": "ninja test -C build",
+    "command": "ninja test -C build",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:cmake-fresh-s-b-build",
+    "label": "cmake --fresh -S . -B build",
+    "command": "cmake --fresh -S . -B build",
+    "language": "cpp"
+  },
+  {
+    "id": "opensource:gcc-main-c-o-main",
+    "label": "gcc main.c -o main",
+    "command": "gcc main.c -o main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:main-2",
+    "label": "./main",
+    "command": "./main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:clang-main-c-o-main",
+    "label": "clang main.c -o main",
+    "command": "clang main.c -o main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:make-2",
+    "label": "make",
+    "command": "make",
+    "language": "c"
+  },
+  {
+    "id": "opensource:make-clean-2",
+    "label": "make clean",
+    "command": "make clean",
+    "language": "c"
+  },
+  {
+    "id": "opensource:cmake-s-b-build-2",
+    "label": "cmake -S . -B build",
+    "command": "cmake -S . -B build",
+    "language": "c"
+  },
+  {
+    "id": "opensource:cmake-build-build-2",
+    "label": "cmake --build build",
+    "command": "cmake --build build",
+    "language": "c"
+  },
+  {
+    "id": "opensource:ctest-test-dir-build-2",
+    "label": "ctest --test-dir build",
+    "command": "ctest --test-dir build",
+    "language": "c"
+  },
+  {
+    "id": "opensource:gdb-main-2",
+    "label": "gdb ./main",
+    "command": "gdb ./main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:valgrind-main-2",
+    "label": "valgrind ./main",
+    "command": "valgrind ./main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:cppcheck-2",
+    "label": "cppcheck .",
+    "command": "cppcheck .",
+    "language": "c"
+  },
+  {
+    "id": "opensource:clang-format-i-src-c",
+    "label": "clang-format -i src/*.c",
+    "command": "clang-format -i src/*.c",
+    "language": "c"
+  },
+  {
+    "id": "opensource:bear-make-2",
+    "label": "bear -- make",
+    "command": "bear -- make",
+    "language": "c"
+  },
+  {
+    "id": "opensource:gcov-main-c",
+    "label": "gcov main.c",
+    "command": "gcov main.c",
+    "language": "c"
+  },
+  {
+    "id": "opensource:lcov-capture-directory-output-file-coverage-info-2",
+    "label": "lcov --capture --directory . --output-file coverage.info",
+    "command": "lcov --capture --directory . --output-file coverage.info",
+    "language": "c"
+  },
+  {
+    "id": "opensource:genhtml-coverage-info-output-directory-coverage-2",
+    "label": "genhtml coverage.info --output-directory coverage",
+    "command": "genhtml coverage.info --output-directory coverage",
+    "language": "c"
+  },
+  {
+    "id": "opensource:ar-rcs-libmylib-a-file-o-2",
+    "label": "ar rcs libmylib.a file.o",
+    "command": "ar rcs libmylib.a file.o",
+    "language": "c"
+  },
+  {
+    "id": "opensource:ranlib-libmylib-a-2",
+    "label": "ranlib libmylib.a",
+    "command": "ranlib libmylib.a",
+    "language": "c"
+  },
+  {
+    "id": "opensource:objdump-d-main-2",
+    "label": "objdump -d main",
+    "command": "objdump -d main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:nm-main-2",
+    "label": "nm main",
+    "command": "nm main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:strings-main-2",
+    "label": "strings main",
+    "command": "strings main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:readelf-a-main-2",
+    "label": "readelf -a main",
+    "command": "readelf -a main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:strip-main-2",
+    "label": "strip main",
+    "command": "strip main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:pkg-config-libs-glib-2-0",
+    "label": "pkg-config --libs glib-2.0",
+    "command": "pkg-config --libs glib-2.0",
+    "language": "c"
+  },
+  {
+    "id": "opensource:pkg-config-cflags-glib-2-0",
+    "label": "pkg-config --cflags glib-2.0",
+    "command": "pkg-config --cflags glib-2.0",
+    "language": "c"
+  },
+  {
+    "id": "opensource:meson-setup-build-2",
+    "label": "meson setup build",
+    "command": "meson setup build",
+    "language": "c"
+  },
+  {
+    "id": "opensource:meson-compile-c-build-2",
+    "label": "meson compile -C build",
+    "command": "meson compile -C build",
+    "language": "c"
+  },
+  {
+    "id": "opensource:ninja-c-build-2",
+    "label": "ninja -C build",
+    "command": "ninja -C build",
+    "language": "c"
+  },
+  {
+    "id": "opensource:perf-record-main-2",
+    "label": "perf record ./main",
+    "command": "perf record ./main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:perf-report-2",
+    "label": "perf report",
+    "command": "perf report",
+    "language": "c"
+  },
+  {
+    "id": "opensource:gcc-wall-wextra-pedantic-main-c-o-main",
+    "label": "gcc -Wall -Wextra -pedantic main.c -o main",
+    "command": "gcc -Wall -Wextra -pedantic main.c -o main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:clang-wall-wextra-pedantic-main-c-o-main",
+    "label": "clang -Wall -Wextra -pedantic main.c -o main",
+    "command": "clang -Wall -Wextra -pedantic main.c -o main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:gcc-fsanitize-address-g-main-c-o-main",
+    "label": "gcc -fsanitize=address -g main.c -o main",
+    "command": "gcc -fsanitize=address -g main.c -o main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:clang-fsanitize-undefined-g-main-c-o-main",
+    "label": "clang -fsanitize=undefined -g main.c -o main",
+    "command": "clang -fsanitize=undefined -g main.c -o main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:hexdump-c-main",
+    "label": "hexdump -C main",
+    "command": "hexdump -C main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:xxd-main",
+    "label": "xxd main",
+    "command": "xxd main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:ldd-main",
+    "label": "ldd main",
+    "command": "ldd main",
+    "language": "c"
+  },
+  {
+    "id": "opensource:man-printf",
+    "label": "man printf",
+    "command": "man printf",
+    "language": "c"
+  },
+  {
+    "id": "opensource:grep-r-malloc-src",
+    "label": "grep -R \"malloc\" src",
+    "command": "grep -R \"malloc\" src",
+    "language": "c"
+  },
+  {
+    "id": "opensource:sed-i-s-foo-bar-g-file-c",
+    "label": "sed -i 's/foo/bar/g' file.c",
+    "command": "sed -i 's/foo/bar/g' file.c",
+    "language": "c"
+  },
+  {
+    "id": "opensource:awk-int-print-0-file-c",
+    "label": "awk '/int/ {print $0}' file.c",
+    "command": "awk '/int/ {print $0}' file.c",
+    "language": "c"
+  },
+  {
+    "id": "opensource:splint-main-c",
+    "label": "splint main.c",
+    "command": "splint main.c",
+    "language": "c"
+  },
+  {
+    "id": "opensource:scan-build-make",
+    "label": "scan-build make",
+    "command": "scan-build make",
+    "language": "c"
+  },
+  {
+    "id": "opensource:autoconf",
+    "label": "autoconf",
+    "command": "autoconf",
+    "language": "c"
+  },
+  {
+    "id": "opensource:automake-add-missing",
+    "label": "automake --add-missing",
+    "command": "automake --add-missing",
+    "language": "c"
+  },
+  {
+    "id": "opensource:configure",
+    "label": "./configure",
+    "command": "./configure",
+    "language": "c"
+  },
+  {
+    "id": "opensource:make-install",
+    "label": "make install",
+    "command": "make install",
+    "language": "c"
+  },
+  {
+    "id": "opensource:indent-src-main-c",
+    "label": "indent src/main.c",
+    "command": "indent src/main.c",
+    "language": "c"
+  },
+  {
+    "id": "opensource:cscope-rbq",
+    "label": "cscope -Rbq",
+    "command": "cscope -Rbq",
+    "language": "c"
+  },
+  {
+    "id": "opensource:ctags-r",
+    "label": "ctags -R .",
+    "command": "ctags -R .",
+    "language": "c"
+  },
+  {
+    "id": "opensource:terraform-version",
+    "label": "terraform version",
+    "command": "terraform version",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:terraform-init",
+    "label": "terraform init",
+    "command": "terraform init",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:terraform-validate",
+    "label": "terraform validate",
+    "command": "terraform validate",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:terraform-plan",
+    "label": "terraform plan",
+    "command": "terraform plan",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:terraform-apply",
+    "label": "terraform apply",
+    "command": "terraform apply",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:terraform-destroy",
+    "label": "terraform destroy",
+    "command": "terraform destroy",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:terraform-fmt",
+    "label": "terraform fmt",
+    "command": "terraform fmt",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:terraform-providers",
+    "label": "terraform providers",
+    "command": "terraform providers",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:terraform-output",
+    "label": "terraform output",
+    "command": "terraform output",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:terraform-state-list",
+    "label": "terraform state list",
+    "command": "terraform state list",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:ansible-version",
+    "label": "ansible --version",
+    "command": "ansible --version",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:ansible-playbook-site-yml",
+    "label": "ansible-playbook site.yml",
+    "command": "ansible-playbook site.yml",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:ansible-inventory-list",
+    "label": "ansible-inventory --list",
+    "command": "ansible-inventory --list",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:ansible-all-m-ping",
+    "label": "ansible all -m ping",
+    "command": "ansible all -m ping",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:packer-init",
+    "label": "packer init .",
+    "command": "packer init .",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:packer-validate",
+    "label": "packer validate .",
+    "command": "packer validate .",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:packer-build-template-pkr-hcl",
+    "label": "packer build template.pkr.hcl",
+    "command": "packer build template.pkr.hcl",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:vault-status",
+    "label": "vault status",
+    "command": "vault status",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:vault-login",
+    "label": "vault login",
+    "command": "vault login",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:vault-kv-get-secret-app",
+    "label": "vault kv get secret/app",
+    "command": "vault kv get secret/app",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:vault-kv-put-secret-app-key-value",
+    "label": "vault kv put secret/app key=value",
+    "command": "vault kv put secret/app key=value",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:aws-configure",
+    "label": "aws configure",
+    "command": "aws configure",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:aws-s3-ls",
+    "label": "aws s3 ls",
+    "command": "aws s3 ls",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:aws-sts-get-caller-identity",
+    "label": "aws sts get-caller-identity",
+    "command": "aws sts get-caller-identity",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:aws-ec2-describe-instances",
+    "label": "aws ec2 describe-instances",
+    "command": "aws ec2 describe-instances",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:aws-lambda-list-functions",
+    "label": "aws lambda list-functions",
+    "command": "aws lambda list-functions",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:aws-ecr-get-login-password",
+    "label": "aws ecr get-login-password",
+    "command": "aws ecr get-login-password",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:az-login",
+    "label": "az login",
+    "command": "az login",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:az-account-show",
+    "label": "az account show",
+    "command": "az account show",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:az-group-list",
+    "label": "az group list",
+    "command": "az group list",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:az-vm-list",
+    "label": "az vm list",
+    "command": "az vm list",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:gcloud-auth-login",
+    "label": "gcloud auth login",
+    "command": "gcloud auth login",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:gcloud-config-list",
+    "label": "gcloud config list",
+    "command": "gcloud config list",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:gcloud-projects-list",
+    "label": "gcloud projects list",
+    "command": "gcloud projects list",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:gcloud-run-deploy-my-service",
+    "label": "gcloud run deploy my-service",
+    "command": "gcloud run deploy my-service",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:serverless-deploy",
+    "label": "serverless deploy",
+    "command": "serverless deploy",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:serverless-remove",
+    "label": "serverless remove",
+    "command": "serverless remove",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:pulumi-up",
+    "label": "pulumi up",
+    "command": "pulumi up",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:pulumi-destroy",
+    "label": "pulumi destroy",
+    "command": "pulumi destroy",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:pulumi-stack-ls",
+    "label": "pulumi stack ls",
+    "command": "pulumi stack ls",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:terragrunt-init",
+    "label": "terragrunt init",
+    "command": "terragrunt init",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:terragrunt-plan",
+    "label": "terragrunt plan",
+    "command": "terragrunt plan",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:terragrunt-apply",
+    "label": "terragrunt apply",
+    "command": "terragrunt apply",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:consul-members",
+    "label": "consul members",
+    "command": "consul members",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:nomad-status",
+    "label": "nomad status",
+    "command": "nomad status",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:helm-lint-chart",
+    "label": "helm lint chart/",
+    "command": "helm lint chart/",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:helm-template-my-app-chart",
+    "label": "helm template my-app chart/",
+    "command": "helm template my-app chart/",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:argocd-app-list",
+    "label": "argocd app list",
+    "command": "argocd app list",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:argocd-app-sync-my-app",
+    "label": "argocd app sync my-app",
+    "command": "argocd app sync my-app",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:flux-get-all",
+    "label": "flux get all",
+    "command": "flux get all",
+    "language": "devops"
+  },
+  {
+    "id": "opensource:pwsh-v",
+    "label": "pwsh -v",
+    "command": "pwsh -v",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-childitem",
+    "label": "Get-ChildItem",
+    "command": "Get-ChildItem",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-childitem-force",
+    "label": "Get-ChildItem -Force",
+    "command": "Get-ChildItem -Force",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:set-location",
+    "label": "Set-Location ..",
+    "command": "Set-Location ..",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:new-item-itemtype-directory-temp",
+    "label": "New-Item -ItemType Directory temp",
+    "command": "New-Item -ItemType Directory temp",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:new-item-readme-md",
+    "label": "New-Item README.md",
+    "command": "New-Item README.md",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:copy-item-file-txt-backup-txt",
+    "label": "Copy-Item file.txt backup.txt",
+    "command": "Copy-Item file.txt backup.txt",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:move-item-old-txt-new-txt",
+    "label": "Move-Item old.txt new.txt",
+    "command": "Move-Item old.txt new.txt",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:remove-item-file-txt",
+    "label": "Remove-Item file.txt",
+    "command": "Remove-Item file.txt",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:remove-item-recurse-force-node_modules",
+    "label": "Remove-Item -Recurse -Force node_modules",
+    "command": "Remove-Item -Recurse -Force node_modules",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-content-file-txt",
+    "label": "Get-Content file.txt",
+    "command": "Get-Content file.txt",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-content-app-log-tail-100-wait",
+    "label": "Get-Content app.log -Tail 100 -Wait",
+    "command": "Get-Content app.log -Tail 100 -Wait",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:select-string-path-app-log-pattern-error",
+    "label": "Select-String -Path app.log -Pattern error",
+    "command": "Select-String -Path app.log -Pattern error",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-process",
+    "label": "Get-Process",
+    "command": "Get-Process",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:stop-process-id-1234-force",
+    "label": "Stop-Process -Id 1234 -Force",
+    "command": "Stop-Process -Id 1234 -Force",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-service",
+    "label": "Get-Service",
+    "command": "Get-Service",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:start-service-spooler",
+    "label": "Start-Service Spooler",
+    "command": "Start-Service Spooler",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:stop-service-spooler",
+    "label": "Stop-Service Spooler",
+    "command": "Stop-Service Spooler",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-date",
+    "label": "Get-Date",
+    "command": "Get-Date",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-history",
+    "label": "Get-History",
+    "command": "Get-History",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:clear-host",
+    "label": "Clear-Host",
+    "command": "Clear-Host",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-command-git",
+    "label": "Get-Command git",
+    "command": "Get-Command git",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-module-listavailable",
+    "label": "Get-Module -ListAvailable",
+    "command": "Get-Module -ListAvailable",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:install-module-pester-scope-currentuser",
+    "label": "Install-Module Pester -Scope CurrentUser",
+    "command": "Install-Module Pester -Scope CurrentUser",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:invoke-webrequest-example-com-outfile-file-zip",
+    "label": "Invoke-WebRequest https://example.com -OutFile file.zip",
+    "command": "Invoke-WebRequest https://example.com -OutFile file.zip",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:expand-archive-file-zip-destinationpath-out",
+    "label": "Expand-Archive file.zip -DestinationPath out",
+    "command": "Expand-Archive file.zip -DestinationPath out",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:compress-archive-path-src-destinationpath-src-zip",
+    "label": "Compress-Archive -Path .\\src -DestinationPath src.zip",
+    "command": "Compress-Archive -Path .\\src -DestinationPath src.zip",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:test-path-readme-md",
+    "label": "Test-Path .\\README.md",
+    "command": "Test-Path .\\README.md",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:resolve-path",
+    "label": "Resolve-Path .",
+    "command": "Resolve-Path .",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-location",
+    "label": "Get-Location",
+    "command": "Get-Location",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-item-env-path",
+    "label": "Get-Item Env:PATH",
+    "command": "Get-Item Env:PATH",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:env-node_env-production",
+    "label": "$env:NODE_ENV='production'",
+    "command": "$env:NODE_ENV='production'",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:environment-setenvironmentvariable-java_home-c-java-user",
+    "label": "[Environment]::SetEnvironmentVariable('JAVA_HOME','C:\\Java','User')",
+    "command": "[Environment]::SetEnvironmentVariable('JAVA_HOME','C:\\Java','User')",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:where-exe-node",
+    "label": "where.exe node",
+    "command": "where.exe node",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-netipaddress",
+    "label": "Get-NetIPAddress",
+    "command": "Get-NetIPAddress",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-executionpolicy",
+    "label": "Get-ExecutionPolicy",
+    "command": "Get-ExecutionPolicy",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:set-executionpolicy-remotesigned-scope-currentuser",
+    "label": "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser",
+    "command": "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-alias",
+    "label": "Get-Alias",
+    "command": "Get-Alias",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:set-alias-ll-get-childitem",
+    "label": "Set-Alias ll Get-ChildItem",
+    "command": "Set-Alias ll Get-ChildItem",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:compare-object-get-content-a-txt-get-content-b-txt",
+    "label": "Compare-Object (Get-Content a.txt) (Get-Content b.txt)",
+    "command": "Compare-Object (Get-Content a.txt) (Get-Content b.txt)",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:measure-object-line-file-txt",
+    "label": "Measure-Object -Line file.txt",
+    "command": "Measure-Object -Line file.txt",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-filehash-file-txt",
+    "label": "Get-FileHash file.txt",
+    "command": "Get-FileHash file.txt",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:start-process-code",
+    "label": "Start-Process code .",
+    "command": "Start-Process code .",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-ciminstance-win32_operatingsystem",
+    "label": "Get-CimInstance Win32_OperatingSystem",
+    "command": "Get-CimInstance Win32_OperatingSystem",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-computerinfo",
+    "label": "Get-ComputerInfo",
+    "command": "Get-ComputerInfo",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-psdrive",
+    "label": "Get-PSDrive",
+    "command": "Get-PSDrive",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-eventlog-logname-application-newest-10",
+    "label": "Get-EventLog -LogName Application -Newest 10",
+    "command": "Get-EventLog -LogName Application -Newest 10",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-content-profile-ps1",
+    "label": "Get-Content profile.ps1",
+    "command": "Get-Content profile.ps1",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:get-clipboard",
+    "label": "Get-Clipboard",
+    "command": "Get-Clipboard",
+    "language": "powershell"
+  },
+  {
+    "id": "opensource:set-clipboard-hello-world",
+    "label": "Set-Clipboard 'hello world'",
+    "command": "Set-Clipboard 'hello world'",
+    "language": "powershell"
   }
 ]
