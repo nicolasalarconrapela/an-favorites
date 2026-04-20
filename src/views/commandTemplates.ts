@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { Logger } from '../logging/logger';
 import { t } from '../utils/l10n';
 
+//#region Types
 export interface TemplateCommandData {
   id: string;
   label: string;
@@ -46,6 +47,9 @@ type TemplateCatalogSplitFile = {
   iconFile?: string;
   commands?: TemplateCatalogEntry[];
 };
+//#endregion
+
+//#region Icon helpers
 
 function getSyntheticIconFileName(
   language: string,
@@ -55,6 +59,8 @@ function getSyntheticIconFileName(
 ): string {
   const resolvedExtension = extension?.trim();
   const resolvedLanguage = iconFile?.trim() || language.trim().toLowerCase();
+
+  // Folder-like templates use a synthetic nested path so VS Code resolves a folder icon.
   if (resolvedExtension) {
     if (resolvedExtension.startsWith('.')) {
       return `template-${(label ?? 'file')
@@ -140,6 +146,9 @@ function getSyntheticIconResourceUri(
 
   return vscode.Uri.file(path.join(basePath, '.anfavorites-icons', fakeFileName));
 }
+//#endregion
+
+//#region Labels
 
 export function getCommandLanguageDisplayName(language: string): string {
   const normalized = language.trim().toLowerCase();
@@ -193,6 +202,9 @@ export function getCommandLanguageDisplayName(language: string): string {
       return language.trim() || t('Personalized');
   }
 }
+//#endregion
+
+//#region Catalog flattening
 
 function flattenTemplateCatalog(
   rawCatalog: TemplateCatalogEntry[] | TemplateCatalogTree,
@@ -217,6 +229,7 @@ function flattenTemplateCatalog(
     const groupExtension = value?.extension;
     const groupIconFile = value?.iconFile;
 
+    // Group metadata acts as defaults for every command inside each subgroup.
     for (const [subgroupKey, commands] of Object.entries(value ?? {})) {
       if (
         subgroupKey === 'language' ||
@@ -282,6 +295,9 @@ function flattenTemplateCatalogDirectory(rootPath: string): TemplateCatalogEntry
 
   return entries;
 }
+//#endregion
+
+//#region Catalog loading
 
 export function loadTemplateCatalog(
   extensionPath: string,
@@ -294,6 +310,7 @@ export function loadTemplateCatalog(
     const splitCatalogPath = path.join(extensionPath, 'resources', 'command');
     let parsedBuiltins = flattenTemplateCatalogDirectory(splitCatalogPath);
 
+    // Keep compatibility with the previous single-file catalog while the new split format rolls out.
     if (parsedBuiltins.length === 0) {
       const internalCatalogPath = path.join(
         extensionPath,
@@ -329,6 +346,7 @@ export function loadTemplateCatalog(
     logger.warn('[commands] Failed to load internal Template catalog', {
       error,
     });
+    // Minimal hardcoded fallback so the commands section still renders if catalog files fail to load.
     builtins = [
       {
         id: 'opensource:npm-init',
@@ -371,8 +389,13 @@ export function loadTemplateCatalog(
 
   return builtins;
 }
+//#endregion
 
-export function getTemplateGroupKey(command: Pick<TemplateCommandData, 'templateGroup' | 'language'>): string {
+//#region Grouping helpers
+
+export function getTemplateGroupKey(
+  command: Pick<TemplateCommandData, 'templateGroup' | 'language'>,
+): string {
   return (command.templateGroup ?? command.language.trim().toLowerCase()) || 'generic';
 }
 
@@ -425,6 +448,9 @@ export function getTemplateCommandsForSubgroup(
     )
     .sort((a, b) => b.addedAt - a.addedAt || a.label.localeCompare(b.label));
 }
+//#endregion
+
+//#region Tree items
 
 export class CommandTemplateGroupItem extends vscode.TreeItem {
   constructor(
@@ -447,6 +473,7 @@ export class CommandTemplateGroupItem extends vscode.TreeItem {
         : vscode.ThemeIcon.File;
   }
 }
+//#endregion
 
 export class CommandTemplateSubgroupItem extends vscode.TreeItem {
   constructor(
