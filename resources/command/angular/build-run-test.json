@@ -1,0 +1,244 @@
+{
+  "commands": [
+    {
+      "id": "opensource:ng-serve",
+      "label": "ng serve",
+      "command": "ng serve"
+    },
+    {
+      "id": "opensource:ng-build",
+      "label": "ng build",
+      "command": "ng build"
+    },
+    {
+      "id": "opensource:ng-build-configuration-production",
+      "label": "ng build --configuration production",
+      "command": "ng build --configuration production"
+    },
+    {
+      "id": "opensource:ng-test",
+      "label": "ng test",
+      "command": "ng test"
+    },
+    {
+      "id": "opensource:ng-lint",
+      "label": "ng lint",
+      "command": "ng lint"
+    },
+    {
+      "id": "opensource:ng-e2e",
+      "label": "ng e2e",
+      "command": "ng e2e"
+    },
+    {
+      "id": "opensource:ng-extract-i18n",
+      "label": "ng extract-i18n",
+      "command": "ng extract-i18n"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-15",
+      "label": "ng serve --open --variant-15",
+      "command": "ng serve --open --variant-15"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-35",
+      "label": "ng serve --open --variant-35",
+      "command": "ng serve --open --variant-35"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-55",
+      "label": "ng serve --open --variant-55",
+      "command": "ng serve --open --variant-55"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-75",
+      "label": "ng serve --open --variant-75",
+      "command": "ng serve --open --variant-75"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-95",
+      "label": "ng serve --open --variant-95",
+      "command": "ng serve --open --variant-95"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-115",
+      "label": "ng serve --open --variant-115",
+      "command": "ng serve --open --variant-115"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-135",
+      "label": "ng serve --open --variant-135",
+      "command": "ng serve --open --variant-135"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-155",
+      "label": "ng serve --open --variant-155",
+      "command": "ng serve --open --variant-155"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-175",
+      "label": "ng serve --open --variant-175",
+      "command": "ng serve --open --variant-175"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-195",
+      "label": "ng serve --open --variant-195",
+      "command": "ng serve --open --variant-195"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-215",
+      "label": "ng serve --open --variant-215",
+      "command": "ng serve --open --variant-215"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-235",
+      "label": "ng serve --open --variant-235",
+      "command": "ng serve --open --variant-235"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-255",
+      "label": "ng serve --open --variant-255",
+      "command": "ng serve --open --variant-255"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-275",
+      "label": "ng serve --open --variant-275",
+      "command": "ng serve --open --variant-275"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-295",
+      "label": "ng serve --open --variant-295",
+      "command": "ng serve --open --variant-295"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-315",
+      "label": "ng serve --open --variant-315",
+      "command": "ng serve --open --variant-315"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-335",
+      "label": "ng serve --open --variant-335",
+      "command": "ng serve --open --variant-335"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-355",
+      "label": "ng serve --open --variant-355",
+      "command": "ng serve --open --variant-355"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-375",
+      "label": "ng serve --open --variant-375",
+      "command": "ng serve --open --variant-375"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-395",
+      "label": "ng serve --open --variant-395",
+      "command": "ng serve --open --variant-395"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-415",
+      "label": "ng serve --open --variant-415",
+      "command": "ng serve --open --variant-415"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-435",
+      "label": "ng serve --open --variant-435",
+      "command": "ng serve --open --variant-435"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-455",
+      "label": "ng serve --open --variant-455",
+      "command": "ng serve --open --variant-455"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-475",
+      "label": "ng serve --open --variant-475",
+      "command": "ng serve --open --variant-475"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-495",
+      "label": "ng serve --open --variant-495",
+      "command": "ng serve --open --variant-495"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-515",
+      "label": "ng serve --open --variant-515",
+      "command": "ng serve --open --variant-515"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-535",
+      "label": "ng serve --open --variant-535",
+      "command": "ng serve --open --variant-535"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-555",
+      "label": "ng serve --open --variant-555",
+      "command": "ng serve --open --variant-555"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-575",
+      "label": "ng serve --open --variant-575",
+      "command": "ng serve --open --variant-575"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-595",
+      "label": "ng serve --open --variant-595",
+      "command": "ng serve --open --variant-595"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-615",
+      "label": "ng serve --open --variant-615",
+      "command": "ng serve --open --variant-615"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-635",
+      "label": "ng serve --open --variant-635",
+      "command": "ng serve --open --variant-635"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-655",
+      "label": "ng serve --open --variant-655",
+      "command": "ng serve --open --variant-655"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-675",
+      "label": "ng serve --open --variant-675",
+      "command": "ng serve --open --variant-675"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-695",
+      "label": "ng serve --open --variant-695",
+      "command": "ng serve --open --variant-695"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-715",
+      "label": "ng serve --open --variant-715",
+      "command": "ng serve --open --variant-715"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-735",
+      "label": "ng serve --open --variant-735",
+      "command": "ng serve --open --variant-735"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-755",
+      "label": "ng serve --open --variant-755",
+      "command": "ng serve --open --variant-755"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-775",
+      "label": "ng serve --open --variant-775",
+      "command": "ng serve --open --variant-775"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-795",
+      "label": "ng serve --open --variant-795",
+      "command": "ng serve --open --variant-795"
+    },
+    {
+      "id": "opensource:ng-serve-open-variant-815",
+      "label": "ng serve --open --variant-815",
+      "command": "ng serve --open --variant-815"
+    }
+  ]
+}

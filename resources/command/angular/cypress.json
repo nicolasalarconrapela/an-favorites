@@ -1,0 +1,14 @@
+{
+  "commands": [
+    {
+      "id": "opensource:npx-cypress-open",
+      "label": "npx cypress open",
+      "command": "npx cypress open"
+    },
+    {
+      "id": "opensource:npx-cypress-run",
+      "label": "npx cypress run",
+      "command": "npx cypress run"
+    }
+  ]
+}
