@@ -6,6 +6,16 @@ import { applyCollisionLabels } from '../utils/collisionUtils';
 import { isExcludedPath } from '../utils/exclusionUtils';
 import { runWithConcurrency } from '../utils/concurrency';
 import { t } from '../utils/l10n';
+import {
+  CommandTemplateGroupItem,
+  CommandTemplateSubgroupItem,
+  getCommandLanguageDisplayName,
+  getRepresentativeTemplateCommand,
+  getTemplateCommandsForSubgroup,
+  getTemplateGroups,
+  getTemplateSubgroups,
+  loadTemplateCatalog,
+} from './commandTemplates';
 
 const VALIDATION_CONCURRENCY = 12;
 const DEFAULT_GROUP_ID = 'Sin Grupo';
@@ -61,35 +71,138 @@ function resolveConfiguredCommandsPath(configuredPath: string): string {
   return path.join(workspaceRoot, configuredPath);
 }
 
-function getSyntheticIconFileName(language: string): string {
-  const normalized = language.trim().toLowerCase();
+function resolveIconAlias(value?: string): string | undefined {
+  const normalized = value?.trim().toLowerCase();
+  if (!normalized) {
+    return undefined;
+  }
 
-  switch (normalized) {
+  return (
+    normalized === 'js' || normalized === 'nodejs'
+      ? 'javascript'
+      : normalized === 'ts'
+        ? 'typescript'
+        : normalized === 'py'
+          ? 'python'
+          : normalized === 'yml'
+            ? 'yaml'
+            : normalized === 'ps'
+              ? 'powershell'
+              : normalized === 'sh'
+                ? 'shell'
+                : normalized === 'md'
+                  ? 'markdown'
+                  : normalized === 'env'
+                    ? 'dotenv'
+                    : normalized === 'spring'
+                      ? 'yaml'
+                      : normalized === 'flutter'
+                        ? 'dart'
+                        : normalized === 'git'
+                          ? 'git'
+                          : normalized === 'kubernates' ||
+                              normalized === 'kubernetes' ||
+                              normalized === 'k8s'
+                            ? 'kubernetes'
+                      : normalized === 'maven'
+                        ? 'xml'
+                        : normalized === 'gradle'
+                          ? 'groovy'
+                            : normalized
+  );
+}
+
+function inferIconAliasFromLabel(label?: string): string | undefined {
+  const normalized = label?.trim().toLowerCase();
+  if (!normalized) {
+    return undefined;
+  }
+
+  if (
+    normalized.includes('kubernetes') ||
+    normalized.includes('kubernates') ||
+    normalized.includes('k8s') ||
+    normalized.includes('kubectl')
+  ) {
+    return 'kubernetes';
+  }
+  if (normalized.includes('flutter') || normalized.includes('dart')) {
+    return 'dart';
+  }
+  if (
+    normalized === 'git' ||
+    normalized.includes('git ') ||
+    normalized.includes('.git') ||
+    normalized.includes('gitignore')
+  ) {
+    return 'git';
+  }
+  if (normalized.includes('maven') || normalized.includes('pom')) {
+    return 'xml';
+  }
+  if (normalized.includes('spring')) {
+    return 'yaml';
+  }
+  if (normalized.includes('docker')) {
+    return 'docker';
+  }
+
+  return undefined;
+}
+
+function getSyntheticIconFileName(
+  language: string,
+  label?: string,
+  iconFile?: string,
+  extension?: string,
+): string {
+  if (extension?.trim()) {
+    const normalizedExtension = extension.trim().toLowerCase();
+    if (normalizedExtension.startsWith('.')) {
+      return `file${normalizedExtension}`;
+    }
+
+    const extensionAlias =
+      resolveIconAlias(normalizedExtension) ??
+      inferIconAliasFromLabel(normalizedExtension) ??
+      normalizedExtension;
+    return extensionAlias;
+  }
+
+  if (iconFile?.trim()) {
+    return iconFile.trim();
+  }
+
+  const alias = resolveIconAlias(language) ?? inferIconAliasFromLabel(label) ?? 'generic';
+
+  switch (alias) {
     case 'java':
       return 'Main.java';
-    case 'node':
     case 'javascript':
       return 'app.js';
     case 'typescript':
       return 'extension.ts';
     case 'python':
       return 'main.py';
+    case 'dart':
+      return 'main.dart';
     case 'json':
       return 'package.json';
     case 'xml':
       return 'pom.xml';
     case 'yaml':
-    case 'yml':
       return 'application.yml';
     case 'properties':
       return 'application.properties';
     case 'markdown':
-    case 'md':
       return 'README.md';
     case 'gitignore':
       return '.gitignore';
+    case 'git':
+      return '.gitignore';
+    case 'dotenv':
+      return '.env';
     case 'shell':
-    case 'bash':
       return 'script.sh';
     case 'powershell':
       return 'script.ps1';
@@ -97,16 +210,46 @@ function getSyntheticIconFileName(language: string): string {
       return 'main.go';
     case 'rust':
       return 'main.rs';
+    case 'groovy':
+      return 'build.gradle';
+    case 'kotlin':
+      return 'build.gradle.kts';
+    case 'docker':
+      return 'Dockerfile';
+    case 'kubernetes':
+      return 'deployment.yaml';
+    case 'html':
+      return 'index.html';
+    case 'css':
+      return 'styles.css';
+    case 'scss':
+      return 'styles.scss';
+    case 'sql':
+      return 'query.sql';
     case 'generic':
     default:
       return 'file.txt';
   }
 }
 
-function getSyntheticIconResourceUri(language: string): vscode.Uri {
-  const fakeFileName = getSyntheticIconFileName(language);
+function getSyntheticIconResourceUri(
+  language: string,
+  label?: string,
+  iconFile?: string,
+  extension?: string,
+): vscode.Uri {
+  const fakeFileName = getSyntheticIconFileName(
+    language,
+    label,
+    iconFile,
+    extension,
+  );
   const basePath =
     vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd();
+
+  if (extension?.trim() && !extension.trim().startsWith('.')) {
+    return vscode.Uri.file(path.join(basePath, '.anfavorites-icons', fakeFileName));
+  }
 
   return vscode.Uri.file(path.join(basePath, '.anfavorites-icons', fakeFileName));
 }
@@ -154,6 +297,10 @@ export interface CommandFavoriteData {
   readonly?: boolean;
   source?: 'builtin' | 'file';
   templateSourceId?: string;
+  iconFile?: string;
+  extension?: string;
+  subgroup?: string;
+  templateGroup?: string;
 }
 
 export class CommandItem extends vscode.TreeItem {
@@ -265,6 +412,9 @@ export class CommandLanguageItem extends vscode.TreeItem {
   constructor(
     public readonly scope: CommandFavoriteData['scope'],
     public readonly language: string,
+    public readonly iconLabel?: string,
+    public readonly iconFile?: string,
+    public readonly extension?: string,
     collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
   ) {
     super(
@@ -273,8 +423,16 @@ export class CommandLanguageItem extends vscode.TreeItem {
     );
     this.id = `command-language:${scope}:${language}`;
     this.contextValue = `commandLanguageItem:${scope}:${language}`;
-    this.resourceUri = getSyntheticIconResourceUri(language);
-    this.iconPath = vscode.ThemeIcon.File;
+    this.resourceUri = getSyntheticIconResourceUri(
+      language,
+      iconLabel,
+      iconFile,
+      extension,
+    );
+    this.iconPath =
+      extension?.trim() && !extension.trim().startsWith('.')
+        ? vscode.ThemeIcon.Folder
+        : vscode.ThemeIcon.File;
   }
 }
 
@@ -505,16 +663,7 @@ export class FavoritesTreeDataProvider
   }
 
   public static getLanguageDisplayName(language: string): string {
-    switch (language.trim().toLowerCase()) {
-      case 'python':
-        return t('Python');
-      case 'node':
-        return t('Node');
-      case 'java':
-        return t('Java');
-      default:
-        return t('Personalized');
-    }
+    return getCommandLanguageDisplayName(language);
   }
 
   public createFavoriteItem(
@@ -805,7 +954,9 @@ export class FavoritesTreeDataProvider
       | CommandItem
       | CommandSectionItem
       | CommandScopeItem
-      | CommandLanguageItem,
+      | CommandLanguageItem
+      | CommandTemplateGroupItem
+      | CommandTemplateSubgroupItem,
   ): vscode.TreeItem {
     return element;
   }
@@ -818,12 +969,16 @@ export class FavoritesTreeDataProvider
       | CommandItem
       | CommandSectionItem
       | CommandScopeItem
-      | CommandLanguageItem,
+      | CommandLanguageItem
+      | CommandTemplateGroupItem
+      | CommandTemplateSubgroupItem,
   ):
     | GroupItem
     | WorkspaceItem
     | CommandSectionItem
     | CommandLanguageItem
+    | CommandTemplateGroupItem
+    | CommandTemplateSubgroupItem
     | CommandItem
     | undefined {
     if (element instanceof CommandSectionItem) {
@@ -909,6 +1064,18 @@ export class FavoritesTreeDataProvider
       return this.commandSectionItems.opensource;
     }
 
+    if (element instanceof CommandTemplateGroupItem) {
+      return this.commandSectionItems.opensource;
+    }
+
+    if (element instanceof CommandTemplateSubgroupItem) {
+      return new CommandTemplateGroupItem(
+        element.groupName,
+        element.extension ?? element.groupName,
+        this.getPersistedCollapsibleState(`command-template-group:${element.groupName}`),
+      );
+    }
+
     if (element instanceof CommandItem) {
       if (element.data.scope === 'local') {
         return this.commandSectionItems.personalized;
@@ -916,11 +1083,14 @@ export class FavoritesTreeDataProvider
       if (element.data.scope === 'global') {
         return this.commandSectionItems.globals;
       }
-      return new CommandLanguageItem(
-        'opensource',
-        element.data.language.trim().toLowerCase() || 'generic',
+      return new CommandTemplateSubgroupItem(
+        (element.data.templateGroup ??
+          element.data.language.trim().toLowerCase()) || 'generic',
+        element.data.subgroup ?? 'general',
+        element.data.extension,
         this.getPersistedCollapsibleState(
-          `command-language:opensource:${element.data.language.trim().toLowerCase() || 'generic'}`,
+          `command-template-subgroup:${(element.data.templateGroup ??
+            element.data.language.trim().toLowerCase()) || 'generic'}:${element.data.subgroup ?? 'general'}`,
         ),
       );
     }
@@ -936,7 +1106,9 @@ export class FavoritesTreeDataProvider
       | CommandItem
       | CommandSectionItem
       | CommandScopeItem
-      | CommandLanguageItem,
+      | CommandLanguageItem
+      | CommandTemplateGroupItem
+      | CommandTemplateSubgroupItem,
   ): Promise<
     (
       | GroupItem
@@ -946,6 +1118,8 @@ export class FavoritesTreeDataProvider
       | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
+      | CommandTemplateGroupItem
+      | CommandTemplateSubgroupItem
     )[]
   > {
     const t0 = Date.now();
@@ -983,7 +1157,11 @@ export class FavoritesTreeDataProvider
             );
           }
         }
-        const sections: (CommandSectionItem | CommandLanguageItem)[] = [];
+        const sections: (
+          | CommandSectionItem
+          | CommandLanguageItem
+          | CommandTemplateGroupItem
+        )[] = [];
         if (this.localCommands.length > 0) {
           sections.push(this.commandSectionItems.personalized);
         }
@@ -1069,22 +1247,19 @@ export class FavoritesTreeDataProvider
 
       if (element.section === 'opensource') {
         return Promise.resolve(
-          Array.from(
-            new Set(
-              this.templateCommands
-                .map((command) => command.language.trim().toLowerCase() || 'generic')
-                .sort(),
-            ),
-          ).map(
-            (language) =>
-              new CommandLanguageItem(
-                'opensource',
-                language,
-                this.getPersistedCollapsibleState(
-                  `command-language:opensource:${language}`,
-                ),
+          getTemplateGroups(this.templateCommands).map((groupName) => {
+            const representative = getRepresentativeTemplateCommand(
+              this.templateCommands,
+              groupName,
+            );
+            return new CommandTemplateGroupItem(
+              groupName,
+              representative?.extension ?? groupName,
+              this.getPersistedCollapsibleState(
+                `command-template-group:${groupName}`,
               ),
-          ),
+            );
+          }),
         );
       }
 
@@ -1213,6 +1388,42 @@ export class FavoritesTreeDataProvider
       return Promise.resolve(items);
     }
 
+    if (element instanceof CommandTemplateGroupItem) {
+      const subgroups = getTemplateSubgroups(
+        this.templateCommands,
+        element.groupName,
+      );
+
+      return Promise.resolve(
+        subgroups.map((subgroup) => {
+          const representative = getRepresentativeTemplateCommand(
+            this.templateCommands,
+            element.groupName,
+            subgroup,
+          );
+          return new CommandTemplateSubgroupItem(
+            element.groupName,
+            subgroup,
+            representative?.extension ?? element.extension,
+            this.getPersistedCollapsibleState(
+              `command-template-subgroup:${element.groupName}:${subgroup}`,
+            ),
+          );
+        }),
+      );
+    }
+
+    if (element instanceof CommandTemplateSubgroupItem) {
+      return Promise.resolve(
+        getTemplateCommandsForSubgroup(
+          this.templateCommands,
+          element.groupName,
+          element.subgroupName,
+        )
+          .map((command) => new CommandItem(command)),
+      );
+    }
+
     if (element instanceof CommandScopeItem) {
       const languages = Array.from(
         new Set(
@@ -1223,16 +1434,22 @@ export class FavoritesTreeDataProvider
       );
 
       return Promise.resolve(
-        languages.map(
-          (language) =>
-            new CommandLanguageItem(
+        languages.map((language) => {
+          const representative = this.getCommandsByScope(element.scope).find(
+            (command) =>
+              (command.language.trim().toLowerCase() || 'generic') === language,
+          );
+          return new CommandLanguageItem(
               element.scope,
               language,
+              representative?.label ?? language,
+              representative?.iconFile,
+              representative?.extension,
               this.getPersistedCollapsibleState(
                 `command-language:${element.scope}:${language}`,
               ),
-            ),
-        ),
+            );
+        }),
       );
     }
 
@@ -1940,79 +2157,7 @@ export class FavoritesTreeDataProvider
   }
 
   private loadTemplateCatalog(): CommandFavoriteData[] {
-    const fs = require('fs') as typeof import('fs');
-    let builtins: CommandFavoriteData[] = [];
-
-    try {
-      const internalCatalogPath = path.join(
-        this.context.extensionPath,
-        'resources',
-        'template-commands.json',
-      );
-      const rawBuiltins = fs.readFileSync(internalCatalogPath, 'utf8');
-      const parsedBuiltins = JSON.parse(rawBuiltins) as Array<
-        Partial<CommandFavoriteData> & { id: string; label: string; command: string }
-      >;
-      builtins = parsedBuiltins.map((command) => ({
-        id: command.id,
-        label: command.label,
-        command: command.command,
-        background:
-          command.id === 'opensource:mvn-clean-install-package'
-            ? true
-            : command.background ?? false,
-        addedAt: 0,
-        type: command.type ?? 'shell',
-        scope: 'opensource',
-        language: command.language ?? 'generic',
-        readonly: true,
-        source: 'builtin',
-      }));
-    } catch (error) {
-      this.logger.warn('[commands] Failed to load internal Template catalog file', {
-        error,
-      });
-      builtins = [
-        {
-          id: 'opensource:npm-init',
-          label: 'npm init',
-          command: 'npm init',
-          background: false,
-          addedAt: 0,
-          type: 'shell',
-          scope: 'opensource',
-          language: 'node',
-          readonly: true,
-          source: 'builtin',
-        },
-        {
-          id: 'opensource:mvn-clean-install-package',
-          label: 'mvn clean install package',
-          command: 'mvn clean install package',
-          background: true,
-          addedAt: 0,
-          type: 'shell',
-          scope: 'opensource',
-          language: 'java',
-          readonly: true,
-          source: 'builtin',
-        },
-        {
-          id: 'opensource:py-env',
-          label: 'py env',
-          command: 'py env',
-          background: false,
-          addedAt: 0,
-          type: 'shell',
-          scope: 'opensource',
-          language: 'python',
-          readonly: true,
-          source: 'builtin',
-        },
-      ];
-    }
-
-    return builtins;
+    return loadTemplateCatalog(this.context.extensionPath, this.logger);
   }
 
   private checkForDuplicateNames(): void {
