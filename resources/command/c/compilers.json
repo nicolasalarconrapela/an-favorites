@@ -1,0 +1,37 @@
+{
+  "language": "c",
+  "extension": ".c",
+  "subgroup": "compilers",
+  "commands": [
+    {
+      "id": "opensource:gcc-main-c-o-main",
+      "label": "gcc main.c -o main",
+      "command": "gcc main.c -o main"
+    },
+    {
+      "id": "opensource:clang-main-c-o-main",
+      "label": "clang main.c -o main",
+      "command": "clang main.c -o main"
+    },
+    {
+      "id": "opensource:gcc-wall-wextra-pedantic-main-c-o-main",
+      "label": "gcc -Wall -Wextra -pedantic main.c -o main",
+      "command": "gcc -Wall -Wextra -pedantic main.c -o main"
+    },
+    {
+      "id": "opensource:clang-wall-wextra-pedantic-main-c-o-main",
+      "label": "clang -Wall -Wextra -pedantic main.c -o main",
+      "command": "clang -Wall -Wextra -pedantic main.c -o main"
+    },
+    {
+      "id": "opensource:gcc-fsanitize-address-g-main-c-o-main",
+      "label": "gcc -fsanitize=address -g main.c -o main",
+      "command": "gcc -fsanitize=address -g main.c -o main"
+    },
+    {
+      "id": "opensource:clang-fsanitize-undefined-g-main-c-o-main",
+      "label": "clang -fsanitize=undefined -g main.c -o main",
+      "command": "clang -fsanitize=undefined -g main.c -o main"
+    }
+  ]
+}

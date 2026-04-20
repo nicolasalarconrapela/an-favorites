@@ -1,0 +1,62 @@
+{
+  "language": "go",
+  "extension": ".go",
+  "subgroup": "build-run",
+  "commands": [
+    {
+      "id": "opensource:go-build",
+      "label": "go build",
+      "command": "go build"
+    },
+    {
+      "id": "opensource:go-run",
+      "label": "go run .",
+      "command": "go run ."
+    },
+    {
+      "id": "opensource:go-install",
+      "label": "go install ./...",
+      "command": "go install ./..."
+    },
+    {
+      "id": "opensource:go-generate",
+      "label": "go generate ./...",
+      "command": "go generate ./..."
+    },
+    {
+      "id": "opensource:go-build-o-app-cmd-app",
+      "label": "go build -o app ./cmd/app",
+      "command": "go build -o app ./cmd/app"
+    },
+    {
+      "id": "opensource:go-run-cmd-app",
+      "label": "go run ./cmd/app",
+      "command": "go run ./cmd/app"
+    },
+    {
+      "id": "opensource:go-install-github-com-gin-gonic-gin",
+      "label": "go install github.com/gin-gonic/gin",
+      "command": "go install github.com/gin-gonic/gin"
+    },
+    {
+      "id": "opensource:go-install-github-com-spf13-cobra",
+      "label": "go install github.com/spf13/cobra",
+      "command": "go install github.com/spf13/cobra"
+    },
+    {
+      "id": "opensource:go-install-github-com-stretchr-testify",
+      "label": "go install github.com/stretchr/testify",
+      "command": "go install github.com/stretchr/testify"
+    },
+    {
+      "id": "opensource:go-install-golang-org-x-tools-cmd-stringer-latest",
+      "label": "go install golang.org/x/tools/cmd/stringer@latest",
+      "command": "go install golang.org/x/tools/cmd/stringer@latest"
+    },
+    {
+      "id": "opensource:go-install-google-golang-org-grpc",
+      "label": "go install google.golang.org/grpc",
+      "command": "go install google.golang.org/grpc"
+    }
+  ]
+}

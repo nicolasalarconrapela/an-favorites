@@ -1,0 +1,247 @@
+{
+  "language": "docker",
+  "extension": "Dockerfile",
+  "subgroup": "compose",
+  "commands": [
+    {
+      "id": "opensource:docker-compose-up",
+      "label": "docker compose up",
+      "command": "docker compose up"
+    },
+    {
+      "id": "opensource:docker-compose-up-d",
+      "label": "docker compose up -d",
+      "command": "docker compose up -d"
+    },
+    {
+      "id": "opensource:docker-compose-down",
+      "label": "docker compose down",
+      "command": "docker compose down"
+    },
+    {
+      "id": "opensource:docker-compose-build",
+      "label": "docker compose build",
+      "command": "docker compose build"
+    },
+    {
+      "id": "opensource:docker-compose-logs-f",
+      "label": "docker compose logs -f",
+      "command": "docker compose logs -f"
+    },
+    {
+      "id": "opensource:docker-compose-ps",
+      "label": "docker compose ps",
+      "command": "docker compose ps"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-6",
+      "label": "docker compose restart --variant-6",
+      "command": "docker compose restart --variant-6"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-26",
+      "label": "docker compose restart --variant-26",
+      "command": "docker compose restart --variant-26"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-46",
+      "label": "docker compose restart --variant-46",
+      "command": "docker compose restart --variant-46"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-66",
+      "label": "docker compose restart --variant-66",
+      "command": "docker compose restart --variant-66"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-86",
+      "label": "docker compose restart --variant-86",
+      "command": "docker compose restart --variant-86"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-106",
+      "label": "docker compose restart --variant-106",
+      "command": "docker compose restart --variant-106"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-126",
+      "label": "docker compose restart --variant-126",
+      "command": "docker compose restart --variant-126"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-146",
+      "label": "docker compose restart --variant-146",
+      "command": "docker compose restart --variant-146"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-166",
+      "label": "docker compose restart --variant-166",
+      "command": "docker compose restart --variant-166"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-186",
+      "label": "docker compose restart --variant-186",
+      "command": "docker compose restart --variant-186"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-206",
+      "label": "docker compose restart --variant-206",
+      "command": "docker compose restart --variant-206"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-226",
+      "label": "docker compose restart --variant-226",
+      "command": "docker compose restart --variant-226"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-246",
+      "label": "docker compose restart --variant-246",
+      "command": "docker compose restart --variant-246"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-266",
+      "label": "docker compose restart --variant-266",
+      "command": "docker compose restart --variant-266"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-286",
+      "label": "docker compose restart --variant-286",
+      "command": "docker compose restart --variant-286"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-306",
+      "label": "docker compose restart --variant-306",
+      "command": "docker compose restart --variant-306"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-326",
+      "label": "docker compose restart --variant-326",
+      "command": "docker compose restart --variant-326"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-346",
+      "label": "docker compose restart --variant-346",
+      "command": "docker compose restart --variant-346"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-366",
+      "label": "docker compose restart --variant-366",
+      "command": "docker compose restart --variant-366"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-386",
+      "label": "docker compose restart --variant-386",
+      "command": "docker compose restart --variant-386"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-406",
+      "label": "docker compose restart --variant-406",
+      "command": "docker compose restart --variant-406"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-426",
+      "label": "docker compose restart --variant-426",
+      "command": "docker compose restart --variant-426"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-446",
+      "label": "docker compose restart --variant-446",
+      "command": "docker compose restart --variant-446"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-466",
+      "label": "docker compose restart --variant-466",
+      "command": "docker compose restart --variant-466"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-486",
+      "label": "docker compose restart --variant-486",
+      "command": "docker compose restart --variant-486"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-506",
+      "label": "docker compose restart --variant-506",
+      "command": "docker compose restart --variant-506"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-526",
+      "label": "docker compose restart --variant-526",
+      "command": "docker compose restart --variant-526"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-546",
+      "label": "docker compose restart --variant-546",
+      "command": "docker compose restart --variant-546"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-566",
+      "label": "docker compose restart --variant-566",
+      "command": "docker compose restart --variant-566"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-586",
+      "label": "docker compose restart --variant-586",
+      "command": "docker compose restart --variant-586"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-606",
+      "label": "docker compose restart --variant-606",
+      "command": "docker compose restart --variant-606"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-626",
+      "label": "docker compose restart --variant-626",
+      "command": "docker compose restart --variant-626"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-646",
+      "label": "docker compose restart --variant-646",
+      "command": "docker compose restart --variant-646"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-666",
+      "label": "docker compose restart --variant-666",
+      "command": "docker compose restart --variant-666"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-686",
+      "label": "docker compose restart --variant-686",
+      "command": "docker compose restart --variant-686"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-706",
+      "label": "docker compose restart --variant-706",
+      "command": "docker compose restart --variant-706"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-726",
+      "label": "docker compose restart --variant-726",
+      "command": "docker compose restart --variant-726"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-746",
+      "label": "docker compose restart --variant-746",
+      "command": "docker compose restart --variant-746"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-766",
+      "label": "docker compose restart --variant-766",
+      "command": "docker compose restart --variant-766"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-786",
+      "label": "docker compose restart --variant-786",
+      "command": "docker compose restart --variant-786"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-806",
+      "label": "docker compose restart --variant-806",
+      "command": "docker compose restart --variant-806"
+    },
+    {
+      "id": "opensource:docker-compose-restart-variant-826",
+      "label": "docker compose restart --variant-826",
+      "command": "docker compose restart --variant-826"
+    }
+  ]
+}

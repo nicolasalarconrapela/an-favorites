@@ -1,0 +1,222 @@
+{
+  "language": "rust",
+  "extension": ".rs",
+  "subgroup": "testing",
+  "commands": [
+    {
+      "id": "opensource:cargo-test",
+      "label": "cargo test",
+      "command": "cargo test"
+    },
+    {
+      "id": "opensource:cargo-bench",
+      "label": "cargo bench",
+      "command": "cargo bench"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-11",
+      "label": "cargo test -- --nocapture --variant-11",
+      "command": "cargo test -- --nocapture --variant-11"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-31",
+      "label": "cargo test -- --nocapture --variant-31",
+      "command": "cargo test -- --nocapture --variant-31"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-51",
+      "label": "cargo test -- --nocapture --variant-51",
+      "command": "cargo test -- --nocapture --variant-51"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-71",
+      "label": "cargo test -- --nocapture --variant-71",
+      "command": "cargo test -- --nocapture --variant-71"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-91",
+      "label": "cargo test -- --nocapture --variant-91",
+      "command": "cargo test -- --nocapture --variant-91"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-111",
+      "label": "cargo test -- --nocapture --variant-111",
+      "command": "cargo test -- --nocapture --variant-111"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-131",
+      "label": "cargo test -- --nocapture --variant-131",
+      "command": "cargo test -- --nocapture --variant-131"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-151",
+      "label": "cargo test -- --nocapture --variant-151",
+      "command": "cargo test -- --nocapture --variant-151"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-171",
+      "label": "cargo test -- --nocapture --variant-171",
+      "command": "cargo test -- --nocapture --variant-171"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-191",
+      "label": "cargo test -- --nocapture --variant-191",
+      "command": "cargo test -- --nocapture --variant-191"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-211",
+      "label": "cargo test -- --nocapture --variant-211",
+      "command": "cargo test -- --nocapture --variant-211"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-231",
+      "label": "cargo test -- --nocapture --variant-231",
+      "command": "cargo test -- --nocapture --variant-231"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-251",
+      "label": "cargo test -- --nocapture --variant-251",
+      "command": "cargo test -- --nocapture --variant-251"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-271",
+      "label": "cargo test -- --nocapture --variant-271",
+      "command": "cargo test -- --nocapture --variant-271"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-291",
+      "label": "cargo test -- --nocapture --variant-291",
+      "command": "cargo test -- --nocapture --variant-291"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-311",
+      "label": "cargo test -- --nocapture --variant-311",
+      "command": "cargo test -- --nocapture --variant-311"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-331",
+      "label": "cargo test -- --nocapture --variant-331",
+      "command": "cargo test -- --nocapture --variant-331"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-351",
+      "label": "cargo test -- --nocapture --variant-351",
+      "command": "cargo test -- --nocapture --variant-351"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-371",
+      "label": "cargo test -- --nocapture --variant-371",
+      "command": "cargo test -- --nocapture --variant-371"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-391",
+      "label": "cargo test -- --nocapture --variant-391",
+      "command": "cargo test -- --nocapture --variant-391"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-411",
+      "label": "cargo test -- --nocapture --variant-411",
+      "command": "cargo test -- --nocapture --variant-411"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-431",
+      "label": "cargo test -- --nocapture --variant-431",
+      "command": "cargo test -- --nocapture --variant-431"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-451",
+      "label": "cargo test -- --nocapture --variant-451",
+      "command": "cargo test -- --nocapture --variant-451"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-471",
+      "label": "cargo test -- --nocapture --variant-471",
+      "command": "cargo test -- --nocapture --variant-471"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-491",
+      "label": "cargo test -- --nocapture --variant-491",
+      "command": "cargo test -- --nocapture --variant-491"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-511",
+      "label": "cargo test -- --nocapture --variant-511",
+      "command": "cargo test -- --nocapture --variant-511"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-531",
+      "label": "cargo test -- --nocapture --variant-531",
+      "command": "cargo test -- --nocapture --variant-531"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-551",
+      "label": "cargo test -- --nocapture --variant-551",
+      "command": "cargo test -- --nocapture --variant-551"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-571",
+      "label": "cargo test -- --nocapture --variant-571",
+      "command": "cargo test -- --nocapture --variant-571"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-591",
+      "label": "cargo test -- --nocapture --variant-591",
+      "command": "cargo test -- --nocapture --variant-591"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-611",
+      "label": "cargo test -- --nocapture --variant-611",
+      "command": "cargo test -- --nocapture --variant-611"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-631",
+      "label": "cargo test -- --nocapture --variant-631",
+      "command": "cargo test -- --nocapture --variant-631"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-651",
+      "label": "cargo test -- --nocapture --variant-651",
+      "command": "cargo test -- --nocapture --variant-651"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-671",
+      "label": "cargo test -- --nocapture --variant-671",
+      "command": "cargo test -- --nocapture --variant-671"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-691",
+      "label": "cargo test -- --nocapture --variant-691",
+      "command": "cargo test -- --nocapture --variant-691"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-711",
+      "label": "cargo test -- --nocapture --variant-711",
+      "command": "cargo test -- --nocapture --variant-711"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-731",
+      "label": "cargo test -- --nocapture --variant-731",
+      "command": "cargo test -- --nocapture --variant-731"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-751",
+      "label": "cargo test -- --nocapture --variant-751",
+      "command": "cargo test -- --nocapture --variant-751"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-771",
+      "label": "cargo test -- --nocapture --variant-771",
+      "command": "cargo test -- --nocapture --variant-771"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-791",
+      "label": "cargo test -- --nocapture --variant-791",
+      "command": "cargo test -- --nocapture --variant-791"
+    },
+    {
+      "id": "opensource:cargo-test-nocapture-variant-811",
+      "label": "cargo test -- --nocapture --variant-811",
+      "command": "cargo test -- --nocapture --variant-811"
+    }
+  ]
+}

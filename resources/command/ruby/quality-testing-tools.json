@@ -1,0 +1,237 @@
+{
+  "language": "ruby",
+  "extension": ".rb",
+  "subgroup": "quality-testing-tools",
+  "commands": [
+    {
+      "id": "opensource:rubocop-a",
+      "label": "rubocop -A",
+      "command": "rubocop -A"
+    },
+    {
+      "id": "opensource:rspec-spec-models-post-spec-rb",
+      "label": "rspec spec/models/post_spec.rb",
+      "command": "rspec spec/models/post_spec.rb"
+    },
+    {
+      "id": "opensource:guard",
+      "label": "guard",
+      "command": "guard"
+    },
+    {
+      "id": "opensource:yard-doc",
+      "label": "yard doc",
+      "command": "yard doc"
+    },
+    {
+      "id": "opensource:pry",
+      "label": "pry",
+      "command": "pry"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-13",
+      "label": "bundle exec rubocop --variant-13",
+      "command": "bundle exec rubocop --variant-13"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-33",
+      "label": "bundle exec rubocop --variant-33",
+      "command": "bundle exec rubocop --variant-33"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-53",
+      "label": "bundle exec rubocop --variant-53",
+      "command": "bundle exec rubocop --variant-53"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-73",
+      "label": "bundle exec rubocop --variant-73",
+      "command": "bundle exec rubocop --variant-73"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-93",
+      "label": "bundle exec rubocop --variant-93",
+      "command": "bundle exec rubocop --variant-93"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-113",
+      "label": "bundle exec rubocop --variant-113",
+      "command": "bundle exec rubocop --variant-113"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-133",
+      "label": "bundle exec rubocop --variant-133",
+      "command": "bundle exec rubocop --variant-133"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-153",
+      "label": "bundle exec rubocop --variant-153",
+      "command": "bundle exec rubocop --variant-153"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-173",
+      "label": "bundle exec rubocop --variant-173",
+      "command": "bundle exec rubocop --variant-173"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-193",
+      "label": "bundle exec rubocop --variant-193",
+      "command": "bundle exec rubocop --variant-193"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-213",
+      "label": "bundle exec rubocop --variant-213",
+      "command": "bundle exec rubocop --variant-213"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-233",
+      "label": "bundle exec rubocop --variant-233",
+      "command": "bundle exec rubocop --variant-233"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-253",
+      "label": "bundle exec rubocop --variant-253",
+      "command": "bundle exec rubocop --variant-253"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-273",
+      "label": "bundle exec rubocop --variant-273",
+      "command": "bundle exec rubocop --variant-273"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-293",
+      "label": "bundle exec rubocop --variant-293",
+      "command": "bundle exec rubocop --variant-293"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-313",
+      "label": "bundle exec rubocop --variant-313",
+      "command": "bundle exec rubocop --variant-313"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-333",
+      "label": "bundle exec rubocop --variant-333",
+      "command": "bundle exec rubocop --variant-333"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-353",
+      "label": "bundle exec rubocop --variant-353",
+      "command": "bundle exec rubocop --variant-353"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-373",
+      "label": "bundle exec rubocop --variant-373",
+      "command": "bundle exec rubocop --variant-373"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-393",
+      "label": "bundle exec rubocop --variant-393",
+      "command": "bundle exec rubocop --variant-393"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-413",
+      "label": "bundle exec rubocop --variant-413",
+      "command": "bundle exec rubocop --variant-413"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-433",
+      "label": "bundle exec rubocop --variant-433",
+      "command": "bundle exec rubocop --variant-433"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-453",
+      "label": "bundle exec rubocop --variant-453",
+      "command": "bundle exec rubocop --variant-453"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-473",
+      "label": "bundle exec rubocop --variant-473",
+      "command": "bundle exec rubocop --variant-473"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-493",
+      "label": "bundle exec rubocop --variant-493",
+      "command": "bundle exec rubocop --variant-493"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-513",
+      "label": "bundle exec rubocop --variant-513",
+      "command": "bundle exec rubocop --variant-513"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-533",
+      "label": "bundle exec rubocop --variant-533",
+      "command": "bundle exec rubocop --variant-533"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-553",
+      "label": "bundle exec rubocop --variant-553",
+      "command": "bundle exec rubocop --variant-553"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-573",
+      "label": "bundle exec rubocop --variant-573",
+      "command": "bundle exec rubocop --variant-573"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-593",
+      "label": "bundle exec rubocop --variant-593",
+      "command": "bundle exec rubocop --variant-593"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-613",
+      "label": "bundle exec rubocop --variant-613",
+      "command": "bundle exec rubocop --variant-613"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-633",
+      "label": "bundle exec rubocop --variant-633",
+      "command": "bundle exec rubocop --variant-633"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-653",
+      "label": "bundle exec rubocop --variant-653",
+      "command": "bundle exec rubocop --variant-653"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-673",
+      "label": "bundle exec rubocop --variant-673",
+      "command": "bundle exec rubocop --variant-673"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-693",
+      "label": "bundle exec rubocop --variant-693",
+      "command": "bundle exec rubocop --variant-693"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-713",
+      "label": "bundle exec rubocop --variant-713",
+      "command": "bundle exec rubocop --variant-713"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-733",
+      "label": "bundle exec rubocop --variant-733",
+      "command": "bundle exec rubocop --variant-733"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-753",
+      "label": "bundle exec rubocop --variant-753",
+      "command": "bundle exec rubocop --variant-753"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-773",
+      "label": "bundle exec rubocop --variant-773",
+      "command": "bundle exec rubocop --variant-773"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-793",
+      "label": "bundle exec rubocop --variant-793",
+      "command": "bundle exec rubocop --variant-793"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop-variant-813",
+      "label": "bundle exec rubocop --variant-813",
+      "command": "bundle exec rubocop --variant-813"
+    }
+  ]
+}

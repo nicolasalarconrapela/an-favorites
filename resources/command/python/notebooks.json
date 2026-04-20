@@ -1,0 +1,22 @@
+{
+  "language": "python",
+  "extension": ".py",
+  "subgroup": "notebooks",
+  "commands": [
+    {
+      "id": "opensource:jupyter-notebook",
+      "label": "jupyter notebook",
+      "command": "jupyter notebook"
+    },
+    {
+      "id": "opensource:jupyter-lab",
+      "label": "jupyter lab",
+      "command": "jupyter lab"
+    },
+    {
+      "id": "opensource:ipython",
+      "label": "ipython",
+      "command": "ipython"
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "language": "node",
+  "extension": ".js",
+  "subgroup": "npm",
+  "commands": [
+    {
+      "id": "opensource:npm-v",
+      "label": "npm -v",
+      "command": "npm -v"
+    },
+    {
+      "id": "opensource:npm-init-y",
+      "label": "npm init -y",
+      "command": "npm init -y"
+    },
+    {
+      "id": "opensource:npm-install",
+      "label": "npm install",
+      "command": "npm install"
+    },
+    {
+      "id": "opensource:npm-ci",
+      "label": "npm ci",
+      "command": "npm ci"
+    },
+    {
+      "id": "opensource:npm-run-dev",
+      "label": "npm run dev",
+      "command": "npm run dev"
+    },
+    {
+      "id": "opensource:npm-run-build",
+      "label": "npm run build",
+      "command": "npm run build"
+    },
+    {
+      "id": "opensource:npm-run-test",
+      "label": "npm run test",
+      "command": "npm run test"
+    },
+    {
+      "id": "opensource:npm-run-lint",
+      "label": "npm run lint",
+      "command": "npm run lint"
+    },
+    {
+      "id": "opensource:npm-run-format",
+      "label": "npm run format",
+      "command": "npm run format"
+    },
+    {
+      "id": "opensource:npm-start",
+      "label": "npm start",
+      "command": "npm start"
+    },
+    {
+      "id": "opensource:npm-pack",
+      "label": "npm pack",
+      "command": "npm pack"
+    },
+    {
+      "id": "opensource:npm-audit",
+      "label": "npm audit",
+      "command": "npm audit"
+    },
+    {
+      "id": "opensource:npm-audit-fix",
+      "label": "npm audit fix",
+      "command": "npm audit fix"
+    },
+    {
+      "id": "opensource:npm-update",
+      "label": "npm update",
+      "command": "npm update"
+    },
+    {
+      "id": "opensource:npm-outdated",
+      "label": "npm outdated",
+      "command": "npm outdated"
+    },
+    {
+      "id": "opensource:npm-prune",
+      "label": "npm prune",
+      "command": "npm prune"
+    },
+    {
+      "id": "opensource:npm-dedupe",
+      "label": "npm dedupe",
+      "command": "npm dedupe"
+    },
+    {
+      "id": "opensource:npm-fund",
+      "label": "npm fund",
+      "command": "npm fund"
+    },
+    {
+      "id": "opensource:npm-doctor",
+      "label": "npm doctor",
+      "command": "npm doctor"
+    },
+    {
+      "id": "opensource:npm-login",
+      "label": "npm login",
+      "command": "npm login"
+    },
+    {
+      "id": "opensource:npm-whoami",
+      "label": "npm whoami",
+      "command": "npm whoami"
+    },
+    {
+      "id": "opensource:npm-exec-eslint",
+      "label": "npm exec eslint .",
+      "command": "npm exec eslint ."
+    }
+  ]
+}

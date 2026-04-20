@@ -1,0 +1,22 @@
+{
+  "language": "powershell",
+  "extension": ".ps1",
+  "subgroup": "network-and-archives",
+  "commands": [
+    {
+      "id": "opensource:invoke-webrequest-https-example-com-outfile-file-zip",
+      "label": "Invoke-WebRequest https://example.com -OutFile file.zip",
+      "command": "Invoke-WebRequest https://example.com -OutFile file.zip"
+    },
+    {
+      "id": "opensource:expand-archive-file-zip-destinationpath-out",
+      "label": "Expand-Archive file.zip -DestinationPath out",
+      "command": "Expand-Archive file.zip -DestinationPath out"
+    },
+    {
+      "id": "opensource:compress-archive-path-src-destinationpath-src-zip",
+      "label": "Compress-Archive -Path .\\src -DestinationPath src.zip",
+      "command": "Compress-Archive -Path .\\src -DestinationPath src.zip"
+    }
+  ]
+}

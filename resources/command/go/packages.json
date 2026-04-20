@@ -1,0 +1,32 @@
+{
+  "language": "go",
+  "extension": ".go",
+  "subgroup": "packages",
+  "commands": [
+    {
+      "id": "opensource:go-get-github-com-gin-gonic-gin",
+      "label": "go get github.com/gin-gonic/gin",
+      "command": "go get github.com/gin-gonic/gin"
+    },
+    {
+      "id": "opensource:go-get-github-com-spf13-cobra",
+      "label": "go get github.com/spf13/cobra",
+      "command": "go get github.com/spf13/cobra"
+    },
+    {
+      "id": "opensource:go-get-github-com-stretchr-testify",
+      "label": "go get github.com/stretchr/testify",
+      "command": "go get github.com/stretchr/testify"
+    },
+    {
+      "id": "opensource:go-get-golang-org-x-tools-cmd-stringer-latest",
+      "label": "go get golang.org/x/tools/cmd/stringer@latest",
+      "command": "go get golang.org/x/tools/cmd/stringer@latest"
+    },
+    {
+      "id": "opensource:go-get-google-golang-org-grpc",
+      "label": "go get google.golang.org/grpc",
+      "command": "go get google.golang.org/grpc"
+    }
+  ]
+}

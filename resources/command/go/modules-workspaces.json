@@ -1,0 +1,27 @@
+{
+  "language": "go",
+  "extension": ".go",
+  "subgroup": "modules-workspaces",
+  "commands": [
+    {
+      "id": "opensource:go-mod-init-example-com-app",
+      "label": "go mod init example.com/app",
+      "command": "go mod init example.com/app"
+    },
+    {
+      "id": "opensource:go-mod-tidy",
+      "label": "go mod tidy",
+      "command": "go mod tidy"
+    },
+    {
+      "id": "opensource:go-mod-download",
+      "label": "go mod download",
+      "command": "go mod download"
+    },
+    {
+      "id": "opensource:go-mod-graph",
+      "label": "go mod graph",
+      "command": "go mod graph"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "language": "kubernetes",
+  "extension": ".yaml",
+  "subgroup": "create",
+  "commands": [
+    {
+      "id": "opensource:kubectl-create-namespace-dev",
+      "label": "kubectl create namespace dev",
+      "command": "kubectl create namespace dev"
+    },
+    {
+      "id": "opensource:kubectl-auth-can-i-create-pods",
+      "label": "kubectl auth can-i create pods",
+      "command": "kubectl auth can-i create pods"
+    }
+  ]
+}

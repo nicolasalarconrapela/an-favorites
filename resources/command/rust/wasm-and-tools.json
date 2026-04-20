@@ -1,0 +1,22 @@
+{
+  "language": "rust",
+  "extension": ".rs",
+  "subgroup": "wasm-and-tools",
+  "commands": [
+    {
+      "id": "opensource:rustc-version",
+      "label": "rustc --version",
+      "command": "rustc --version"
+    },
+    {
+      "id": "opensource:wasm-pack-build",
+      "label": "wasm-pack build",
+      "command": "wasm-pack build"
+    },
+    {
+      "id": "opensource:trunk-serve",
+      "label": "trunk serve",
+      "command": "trunk serve"
+    }
+  ]
+}

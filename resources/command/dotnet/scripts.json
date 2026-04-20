@@ -1,0 +1,12 @@
+{
+  "language": "dotnet",
+  "extension": ".cs",
+  "subgroup": "scripts",
+  "commands": [
+    {
+      "id": "opensource:pwsh-build-ps1",
+      "label": "pwsh ./build.ps1",
+      "command": "pwsh ./build.ps1"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "language": "cpp",
+  "extension": ".cpp",
+  "subgroup": "debug-profiling",
+  "commands": [
+    {
+      "id": "opensource:gdb-main",
+      "label": "gdb ./main",
+      "command": "gdb ./main"
+    },
+    {
+      "id": "opensource:lldb-main",
+      "label": "lldb ./main",
+      "command": "lldb ./main"
+    },
+    {
+      "id": "opensource:valgrind-main",
+      "label": "valgrind ./main",
+      "command": "valgrind ./main"
+    }
+  ]
+}

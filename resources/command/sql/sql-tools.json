@@ -1,0 +1,17 @@
+{
+  "language": "sql",
+  "extension": ".sql",
+  "subgroup": "sql-tools",
+  "commands": [
+    {
+      "id": "opensource:sqlcmd-s-localhost-e",
+      "label": "sqlcmd -S localhost -E",
+      "command": "sqlcmd -S localhost -E"
+    },
+    {
+      "id": "opensource:pgcli-mydb",
+      "label": "pgcli mydb",
+      "command": "pgcli mydb"
+    }
+  ]
+}

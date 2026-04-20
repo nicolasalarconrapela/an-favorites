@@ -1,0 +1,22 @@
+{
+  "language": "kubernetes",
+  "extension": ".yaml",
+  "subgroup": "helm",
+  "commands": [
+    {
+      "id": "opensource:helm-version",
+      "label": "helm version",
+      "command": "helm version"
+    },
+    {
+      "id": "opensource:helm-repo-update",
+      "label": "helm repo update",
+      "command": "helm repo update"
+    },
+    {
+      "id": "opensource:helm-list",
+      "label": "helm list",
+      "command": "helm list"
+    }
+  ]
+}

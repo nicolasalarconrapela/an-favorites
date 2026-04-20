@@ -1,0 +1,42 @@
+{
+  "language": "rust",
+  "extension": ".rs",
+  "subgroup": "build-run",
+  "commands": [
+    {
+      "id": "opensource:cargo-build",
+      "label": "cargo build",
+      "command": "cargo build"
+    },
+    {
+      "id": "opensource:cargo-run",
+      "label": "cargo run",
+      "command": "cargo run"
+    },
+    {
+      "id": "opensource:cargo-clean",
+      "label": "cargo clean",
+      "command": "cargo clean"
+    },
+    {
+      "id": "opensource:cargo-check",
+      "label": "cargo check",
+      "command": "cargo check"
+    },
+    {
+      "id": "opensource:cargo-build-release",
+      "label": "cargo build --release",
+      "command": "cargo build --release"
+    },
+    {
+      "id": "opensource:cargo-run-release",
+      "label": "cargo run --release",
+      "command": "cargo run --release"
+    },
+    {
+      "id": "opensource:cargo-fix",
+      "label": "cargo fix",
+      "command": "cargo fix"
+    }
+  ]
+}

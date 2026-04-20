@@ -1,0 +1,27 @@
+{
+  "language": "php",
+  "extension": ".php",
+  "subgroup": "php-core",
+  "commands": [
+    {
+      "id": "opensource:php-v",
+      "label": "php -v",
+      "command": "php -v"
+    },
+    {
+      "id": "opensource:php-s-localhost-8000",
+      "label": "php -S localhost:8000",
+      "command": "php -S localhost:8000"
+    },
+    {
+      "id": "opensource:php-m",
+      "label": "php -m",
+      "command": "php -m"
+    },
+    {
+      "id": "opensource:php-i",
+      "label": "php -i",
+      "command": "php -i"
+    }
+  ]
+}

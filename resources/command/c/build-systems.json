@@ -1,0 +1,37 @@
+{
+  "language": "c",
+  "extension": ".c",
+  "subgroup": "build-systems",
+  "commands": [
+    {
+      "id": "opensource:make",
+      "label": "make",
+      "command": "make"
+    },
+    {
+      "id": "opensource:make-clean",
+      "label": "make clean",
+      "command": "make clean"
+    },
+    {
+      "id": "opensource:meson-setup-build",
+      "label": "meson setup build",
+      "command": "meson setup build"
+    },
+    {
+      "id": "opensource:ninja-c-build",
+      "label": "ninja -C build",
+      "command": "ninja -C build"
+    },
+    {
+      "id": "opensource:configure",
+      "label": "./configure",
+      "command": "./configure"
+    },
+    {
+      "id": "opensource:make-install",
+      "label": "make install",
+      "command": "make install"
+    }
+  ]
+}

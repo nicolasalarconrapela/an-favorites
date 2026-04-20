@@ -1,0 +1,37 @@
+{
+  "language": "go",
+  "extension": ".go",
+  "subgroup": "go-core",
+  "commands": [
+    {
+      "id": "opensource:go-version",
+      "label": "go version",
+      "command": "go version"
+    },
+    {
+      "id": "opensource:go-fmt",
+      "label": "go fmt ./...",
+      "command": "go fmt ./..."
+    },
+    {
+      "id": "opensource:go-vet",
+      "label": "go vet ./...",
+      "command": "go vet ./..."
+    },
+    {
+      "id": "opensource:go-list",
+      "label": "go list ./...",
+      "command": "go list ./..."
+    },
+    {
+      "id": "opensource:go-clean",
+      "label": "go clean",
+      "command": "go clean"
+    },
+    {
+      "id": "opensource:go-env",
+      "label": "go env",
+      "command": "go env"
+    }
+  ]
+}

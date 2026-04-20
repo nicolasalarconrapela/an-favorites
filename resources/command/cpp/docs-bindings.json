@@ -1,0 +1,12 @@
+{
+  "language": "cpp",
+  "extension": ".cpp",
+  "subgroup": "docs-bindings",
+  "commands": [
+    {
+      "id": "opensource:doxygen-doxyfile",
+      "label": "doxygen Doxyfile",
+      "command": "doxygen Doxyfile"
+    }
+  ]
+}

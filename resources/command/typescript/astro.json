@@ -1,0 +1,22 @@
+{
+  "language": "typescript",
+  "extension": ".ts",
+  "subgroup": "astro",
+  "commands": [
+    {
+      "id": "opensource:astro-dev",
+      "label": "astro dev",
+      "command": "astro dev"
+    },
+    {
+      "id": "opensource:astro-build",
+      "label": "astro build",
+      "command": "astro build"
+    },
+    {
+      "id": "opensource:astro-test",
+      "label": "astro test",
+      "command": "astro test"
+    }
+  ]
+}

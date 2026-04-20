@@ -1,0 +1,122 @@
+{
+  "language": "dotnet",
+  "extension": ".cs",
+  "subgroup": "packages-and-references",
+  "commands": [
+    {
+      "id": "opensource:dotnet-add-package-newtonsoft-json",
+      "label": "dotnet add package Newtonsoft.Json",
+      "command": "dotnet add package Newtonsoft.Json"
+    },
+    {
+      "id": "opensource:dotnet-remove-package-newtonsoft-json",
+      "label": "dotnet remove package Newtonsoft.Json",
+      "command": "dotnet remove package Newtonsoft.Json"
+    },
+    {
+      "id": "opensource:dotnet-list-package",
+      "label": "dotnet list package",
+      "command": "dotnet list package"
+    },
+    {
+      "id": "opensource:dotnet-add-package-serilog",
+      "label": "dotnet add package Serilog",
+      "command": "dotnet add package Serilog"
+    },
+    {
+      "id": "opensource:dotnet-remove-package-serilog",
+      "label": "dotnet remove package Serilog",
+      "command": "dotnet remove package Serilog"
+    },
+    {
+      "id": "opensource:dotnet-add-package-automapper",
+      "label": "dotnet add package AutoMapper",
+      "command": "dotnet add package AutoMapper"
+    },
+    {
+      "id": "opensource:dotnet-remove-package-automapper",
+      "label": "dotnet remove package AutoMapper",
+      "command": "dotnet remove package AutoMapper"
+    },
+    {
+      "id": "opensource:dotnet-add-package-microsoft-entityframeworkcore",
+      "label": "dotnet add package Microsoft.EntityFrameworkCore",
+      "command": "dotnet add package Microsoft.EntityFrameworkCore"
+    },
+    {
+      "id": "opensource:dotnet-remove-package-microsoft-entityframeworkcore",
+      "label": "dotnet remove package Microsoft.EntityFrameworkCore",
+      "command": "dotnet remove package Microsoft.EntityFrameworkCore"
+    },
+    {
+      "id": "opensource:dotnet-add-package-xunit",
+      "label": "dotnet add package xunit",
+      "command": "dotnet add package xunit"
+    },
+    {
+      "id": "opensource:dotnet-remove-package-xunit",
+      "label": "dotnet remove package xunit",
+      "command": "dotnet remove package xunit"
+    },
+    {
+      "id": "opensource:dotnet-add-package-fluentassertions",
+      "label": "dotnet add package FluentAssertions",
+      "command": "dotnet add package FluentAssertions"
+    },
+    {
+      "id": "opensource:dotnet-remove-package-fluentassertions",
+      "label": "dotnet remove package FluentAssertions",
+      "command": "dotnet remove package FluentAssertions"
+    },
+    {
+      "id": "opensource:dotnet-add-package-mediatr",
+      "label": "dotnet add package MediatR",
+      "command": "dotnet add package MediatR"
+    },
+    {
+      "id": "opensource:dotnet-remove-package-mediatr",
+      "label": "dotnet remove package MediatR",
+      "command": "dotnet remove package MediatR"
+    },
+    {
+      "id": "opensource:dotnet-add-package-dapper",
+      "label": "dotnet add package Dapper",
+      "command": "dotnet add package Dapper"
+    },
+    {
+      "id": "opensource:dotnet-remove-package-dapper",
+      "label": "dotnet remove package Dapper",
+      "command": "dotnet remove package Dapper"
+    },
+    {
+      "id": "opensource:dotnet-add-package-bogus",
+      "label": "dotnet add package Bogus",
+      "command": "dotnet add package Bogus"
+    },
+    {
+      "id": "opensource:dotnet-remove-package-bogus",
+      "label": "dotnet remove package Bogus",
+      "command": "dotnet remove package Bogus"
+    },
+    {
+      "id": "opensource:dotnet-add-package-polly",
+      "label": "dotnet add package Polly",
+      "command": "dotnet add package Polly"
+    },
+    {
+      "id": "opensource:dotnet-remove-package-polly",
+      "label": "dotnet remove package Polly",
+      "command": "dotnet remove package Polly"
+    },
+    {
+      "id": "opensource:dotnet-add-package-refit",
+      "label": "dotnet add package Refit",
+      "command": "dotnet add package Refit"
+    },
+    {
+      "id": "opensource:dotnet-remove-package-refit",
+      "label": "dotnet remove package Refit",
+      "command": "dotnet remove package Refit"
+    }
+  ]
+}

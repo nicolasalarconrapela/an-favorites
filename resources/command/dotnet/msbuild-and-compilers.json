@@ -1,0 +1,22 @@
+{
+  "language": "dotnet",
+  "extension": ".cs",
+  "subgroup": "msbuild-and-compilers",
+  "commands": [
+    {
+      "id": "opensource:msbuild-myapp-sln",
+      "label": "msbuild MyApp.sln",
+      "command": "msbuild MyApp.sln"
+    },
+    {
+      "id": "opensource:nuget-restore-myapp-sln",
+      "label": "nuget restore MyApp.sln",
+      "command": "nuget restore MyApp.sln"
+    },
+    {
+      "id": "opensource:csc-program-cs",
+      "label": "csc Program.cs",
+      "command": "csc Program.cs"
+    }
+  ]
+}

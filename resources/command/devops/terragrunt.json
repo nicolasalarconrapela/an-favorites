@@ -1,0 +1,17 @@
+{
+  "language": "devops",
+  "extension": ".yaml",
+  "subgroup": "terragrunt",
+  "commands": [
+    {
+      "id": "opensource:terragrunt-init",
+      "label": "terragrunt init",
+      "command": "terragrunt init"
+    },
+    {
+      "id": "opensource:terragrunt-plan",
+      "label": "terragrunt plan",
+      "command": "terragrunt plan"
+    }
+  ]
+}

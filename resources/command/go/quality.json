@@ -1,0 +1,22 @@
+{
+  "language": "go",
+  "extension": ".go",
+  "subgroup": "quality",
+  "commands": [
+    {
+      "id": "opensource:golangci-lint-run",
+      "label": "golangci-lint run",
+      "command": "golangci-lint run"
+    },
+    {
+      "id": "opensource:gofumpt-w",
+      "label": "gofumpt -w .",
+      "command": "gofumpt -w ."
+    },
+    {
+      "id": "opensource:staticcheck",
+      "label": "staticcheck ./...",
+      "command": "staticcheck ./..."
+    }
+  ]
+}

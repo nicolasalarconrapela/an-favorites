@@ -1,0 +1,127 @@
+{
+  "language": "php",
+  "extension": ".php",
+  "subgroup": "composer",
+  "commands": [
+    {
+      "id": "opensource:composer-init",
+      "label": "composer init",
+      "command": "composer init"
+    },
+    {
+      "id": "opensource:composer-install",
+      "label": "composer install",
+      "command": "composer install"
+    },
+    {
+      "id": "opensource:composer-update",
+      "label": "composer update",
+      "command": "composer update"
+    },
+    {
+      "id": "opensource:composer-require-laravel-framework",
+      "label": "composer require laravel/framework",
+      "command": "composer require laravel/framework"
+    },
+    {
+      "id": "opensource:composer-dump-autoload",
+      "label": "composer dump-autoload",
+      "command": "composer dump-autoload"
+    },
+    {
+      "id": "opensource:composer-show",
+      "label": "composer show",
+      "command": "composer show"
+    },
+    {
+      "id": "opensource:composer-validate",
+      "label": "composer validate",
+      "command": "composer validate"
+    },
+    {
+      "id": "opensource:composer-outdated",
+      "label": "composer outdated",
+      "command": "composer outdated"
+    },
+    {
+      "id": "opensource:composer-require-monolog-monolog",
+      "label": "composer require monolog/monolog",
+      "command": "composer require monolog/monolog"
+    },
+    {
+      "id": "opensource:composer-remove-monolog-monolog",
+      "label": "composer remove monolog/monolog",
+      "command": "composer remove monolog/monolog"
+    },
+    {
+      "id": "opensource:composer-require-guzzlehttp-guzzle",
+      "label": "composer require guzzlehttp/guzzle",
+      "command": "composer require guzzlehttp/guzzle"
+    },
+    {
+      "id": "opensource:composer-remove-guzzlehttp-guzzle",
+      "label": "composer remove guzzlehttp/guzzle",
+      "command": "composer remove guzzlehttp/guzzle"
+    },
+    {
+      "id": "opensource:composer-require-phpunit-phpunit",
+      "label": "composer require phpunit/phpunit",
+      "command": "composer require phpunit/phpunit"
+    },
+    {
+      "id": "opensource:composer-remove-phpunit-phpunit",
+      "label": "composer remove phpunit/phpunit",
+      "command": "composer remove phpunit/phpunit"
+    },
+    {
+      "id": "opensource:composer-require-laravel-framework",
+      "label": "composer require laravel/framework",
+      "command": "composer require laravel/framework"
+    },
+    {
+      "id": "opensource:composer-remove-laravel-framework",
+      "label": "composer remove laravel/framework",
+      "command": "composer remove laravel/framework"
+    },
+    {
+      "id": "opensource:composer-require-symfony-console",
+      "label": "composer require symfony/console",
+      "command": "composer require symfony/console"
+    },
+    {
+      "id": "opensource:composer-remove-symfony-console",
+      "label": "composer remove symfony/console",
+      "command": "composer remove symfony/console"
+    },
+    {
+      "id": "opensource:composer-require-doctrine-orm",
+      "label": "composer require doctrine/orm",
+      "command": "composer require doctrine/orm"
+    },
+    {
+      "id": "opensource:composer-remove-doctrine-orm",
+      "label": "composer remove doctrine/orm",
+      "command": "composer remove doctrine/orm"
+    },
+    {
+      "id": "opensource:composer-require-vlucas-phpdotenv",
+      "label": "composer require vlucas/phpdotenv",
+      "command": "composer require vlucas/phpdotenv"
+    },
+    {
+      "id": "opensource:composer-remove-vlucas-phpdotenv",
+      "label": "composer remove vlucas/phpdotenv",
+      "command": "composer remove vlucas/phpdotenv"
+    },
+    {
+      "id": "opensource:composer-require-spatie-laravel-permission",
+      "label": "composer require spatie/laravel-permission",
+      "command": "composer require spatie/laravel-permission"
+    },
+    {
+      "id": "opensource:composer-remove-spatie-laravel-permission",
+      "label": "composer remove spatie/laravel-permission",
+      "command": "composer remove spatie/laravel-permission"
+    }
+  ]
+}

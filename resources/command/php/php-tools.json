@@ -1,0 +1,12 @@
+{
+  "language": "php",
+  "extension": ".php",
+  "subgroup": "php-tools",
+  "commands": [
+    {
+      "id": "opensource:laravel-new-my-app",
+      "label": "laravel new my-app",
+      "command": "laravel new my-app"
+    }
+  ]
+}

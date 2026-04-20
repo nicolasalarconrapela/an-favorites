@@ -1,0 +1,27 @@
+{
+  "language": "flutter",
+  "extension": ".dart",
+  "subgroup": "dart-core",
+  "commands": [
+    {
+      "id": "opensource:dart-run",
+      "label": "dart run",
+      "command": "dart run"
+    },
+    {
+      "id": "opensource:dart-format",
+      "label": "dart format .",
+      "command": "dart format ."
+    },
+    {
+      "id": "opensource:dart-analyze",
+      "label": "dart analyze",
+      "command": "dart analyze"
+    },
+    {
+      "id": "opensource:dart-create-my-cli",
+      "label": "dart create my_cli",
+      "command": "dart create my_cli"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "language": "sql",
+  "extension": ".sql",
+  "subgroup": "flyway",
+  "commands": [
+    {
+      "id": "opensource:flyway-migrate",
+      "label": "flyway migrate",
+      "command": "flyway migrate"
+    },
+    {
+      "id": "opensource:flyway-info",
+      "label": "flyway info",
+      "command": "flyway info"
+    }
+  ]
+}

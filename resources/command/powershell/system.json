@@ -1,0 +1,27 @@
+{
+  "language": "powershell",
+  "extension": ".ps1",
+  "subgroup": "system",
+  "commands": [
+    {
+      "id": "opensource:get-process",
+      "label": "Get-Process",
+      "command": "Get-Process"
+    },
+    {
+      "id": "opensource:stop-process-id-1234-force",
+      "label": "Stop-Process -Id 1234 -Force",
+      "command": "Stop-Process -Id 1234 -Force"
+    },
+    {
+      "id": "opensource:get-service",
+      "label": "Get-Service",
+      "command": "Get-Service"
+    },
+    {
+      "id": "opensource:get-eventlog-logname-application-newest-10",
+      "label": "Get-EventLog -LogName Application -Newest 10",
+      "command": "Get-EventLog -LogName Application -Newest 10"
+    }
+  ]
+}

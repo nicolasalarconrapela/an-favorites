@@ -1,0 +1,252 @@
+{
+  "language": "shell",
+  "extension": ".sh",
+  "subgroup": "system",
+  "commands": [
+    {
+      "id": "opensource:chmod-x-script-sh",
+      "label": "chmod +x script.sh",
+      "command": "chmod +x script.sh"
+    },
+    {
+      "id": "opensource:ps-aux",
+      "label": "ps aux",
+      "command": "ps aux"
+    },
+    {
+      "id": "opensource:kill-9-1234",
+      "label": "kill -9 1234",
+      "command": "kill -9 1234"
+    },
+    {
+      "id": "opensource:top",
+      "label": "top",
+      "command": "top"
+    },
+    {
+      "id": "opensource:df-h",
+      "label": "df -h",
+      "command": "df -h"
+    },
+    {
+      "id": "opensource:du-sh",
+      "label": "du -sh .",
+      "command": "du -sh ."
+    },
+    {
+      "id": "opensource:free-h",
+      "label": "free -h",
+      "command": "free -h"
+    },
+    {
+      "id": "opensource:uname-a",
+      "label": "uname -a",
+      "command": "uname -a"
+    },
+    {
+      "id": "opensource:uptime-variant-8",
+      "label": "uptime --variant-8",
+      "command": "uptime --variant-8"
+    },
+    {
+      "id": "opensource:uptime-variant-28",
+      "label": "uptime --variant-28",
+      "command": "uptime --variant-28"
+    },
+    {
+      "id": "opensource:uptime-variant-48",
+      "label": "uptime --variant-48",
+      "command": "uptime --variant-48"
+    },
+    {
+      "id": "opensource:uptime-variant-68",
+      "label": "uptime --variant-68",
+      "command": "uptime --variant-68"
+    },
+    {
+      "id": "opensource:uptime-variant-88",
+      "label": "uptime --variant-88",
+      "command": "uptime --variant-88"
+    },
+    {
+      "id": "opensource:uptime-variant-108",
+      "label": "uptime --variant-108",
+      "command": "uptime --variant-108"
+    },
+    {
+      "id": "opensource:uptime-variant-128",
+      "label": "uptime --variant-128",
+      "command": "uptime --variant-128"
+    },
+    {
+      "id": "opensource:uptime-variant-148",
+      "label": "uptime --variant-148",
+      "command": "uptime --variant-148"
+    },
+    {
+      "id": "opensource:uptime-variant-168",
+      "label": "uptime --variant-168",
+      "command": "uptime --variant-168"
+    },
+    {
+      "id": "opensource:uptime-variant-188",
+      "label": "uptime --variant-188",
+      "command": "uptime --variant-188"
+    },
+    {
+      "id": "opensource:uptime-variant-208",
+      "label": "uptime --variant-208",
+      "command": "uptime --variant-208"
+    },
+    {
+      "id": "opensource:uptime-variant-228",
+      "label": "uptime --variant-228",
+      "command": "uptime --variant-228"
+    },
+    {
+      "id": "opensource:uptime-variant-248",
+      "label": "uptime --variant-248",
+      "command": "uptime --variant-248"
+    },
+    {
+      "id": "opensource:uptime-variant-268",
+      "label": "uptime --variant-268",
+      "command": "uptime --variant-268"
+    },
+    {
+      "id": "opensource:uptime-variant-288",
+      "label": "uptime --variant-288",
+      "command": "uptime --variant-288"
+    },
+    {
+      "id": "opensource:uptime-variant-308",
+      "label": "uptime --variant-308",
+      "command": "uptime --variant-308"
+    },
+    {
+      "id": "opensource:uptime-variant-328",
+      "label": "uptime --variant-328",
+      "command": "uptime --variant-328"
+    },
+    {
+      "id": "opensource:uptime-variant-348",
+      "label": "uptime --variant-348",
+      "command": "uptime --variant-348"
+    },
+    {
+      "id": "opensource:uptime-variant-368",
+      "label": "uptime --variant-368",
+      "command": "uptime --variant-368"
+    },
+    {
+      "id": "opensource:uptime-variant-388",
+      "label": "uptime --variant-388",
+      "command": "uptime --variant-388"
+    },
+    {
+      "id": "opensource:uptime-variant-408",
+      "label": "uptime --variant-408",
+      "command": "uptime --variant-408"
+    },
+    {
+      "id": "opensource:uptime-variant-428",
+      "label": "uptime --variant-428",
+      "command": "uptime --variant-428"
+    },
+    {
+      "id": "opensource:uptime-variant-448",
+      "label": "uptime --variant-448",
+      "command": "uptime --variant-448"
+    },
+    {
+      "id": "opensource:uptime-variant-468",
+      "label": "uptime --variant-468",
+      "command": "uptime --variant-468"
+    },
+    {
+      "id": "opensource:uptime-variant-488",
+      "label": "uptime --variant-488",
+      "command": "uptime --variant-488"
+    },
+    {
+      "id": "opensource:uptime-variant-508",
+      "label": "uptime --variant-508",
+      "command": "uptime --variant-508"
+    },
+    {
+      "id": "opensource:uptime-variant-528",
+      "label": "uptime --variant-528",
+      "command": "uptime --variant-528"
+    },
+    {
+      "id": "opensource:uptime-variant-548",
+      "label": "uptime --variant-548",
+      "command": "uptime --variant-548"
+    },
+    {
+      "id": "opensource:uptime-variant-568",
+      "label": "uptime --variant-568",
+      "command": "uptime --variant-568"
+    },
+    {
+      "id": "opensource:uptime-variant-588",
+      "label": "uptime --variant-588",
+      "command": "uptime --variant-588"
+    },
+    {
+      "id": "opensource:uptime-variant-608",
+      "label": "uptime --variant-608",
+      "command": "uptime --variant-608"
+    },
+    {
+      "id": "opensource:uptime-variant-628",
+      "label": "uptime --variant-628",
+      "command": "uptime --variant-628"
+    },
+    {
+      "id": "opensource:uptime-variant-648",
+      "label": "uptime --variant-648",
+      "command": "uptime --variant-648"
+    },
+    {
+      "id": "opensource:uptime-variant-668",
+      "label": "uptime --variant-668",
+      "command": "uptime --variant-668"
+    },
+    {
+      "id": "opensource:uptime-variant-688",
+      "label": "uptime --variant-688",
+      "command": "uptime --variant-688"
+    },
+    {
+      "id": "opensource:uptime-variant-708",
+      "label": "uptime --variant-708",
+      "command": "uptime --variant-708"
+    },
+    {
+      "id": "opensource:uptime-variant-728",
+      "label": "uptime --variant-728",
+      "command": "uptime --variant-728"
+    },
+    {
+      "id": "opensource:uptime-variant-748",
+      "label": "uptime --variant-748",
+      "command": "uptime --variant-748"
+    },
+    {
+      "id": "opensource:uptime-variant-768",
+      "label": "uptime --variant-768",
+      "command": "uptime --variant-768"
+    },
+    {
+      "id": "opensource:uptime-variant-788",
+      "label": "uptime --variant-788",
+      "command": "uptime --variant-788"
+    },
+    {
+      "id": "opensource:uptime-variant-808",
+      "label": "uptime --variant-808",
+      "command": "uptime --variant-808"
+    }
+  ]
+}

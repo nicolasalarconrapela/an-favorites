@@ -1,0 +1,17 @@
+{
+  "language": "go",
+  "extension": ".go",
+  "subgroup": "dev-tools",
+  "commands": [
+    {
+      "id": "opensource:air",
+      "label": "air",
+      "command": "air"
+    },
+    {
+      "id": "opensource:templ-generate",
+      "label": "templ generate",
+      "command": "templ generate"
+    }
+  ]
+}

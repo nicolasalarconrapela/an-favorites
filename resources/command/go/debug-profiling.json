@@ -1,0 +1,12 @@
+{
+  "language": "go",
+  "extension": ".go",
+  "subgroup": "debug-profiling",
+  "commands": [
+    {
+      "id": "opensource:dlv-debug",
+      "label": "dlv debug",
+      "command": "dlv debug"
+    }
+  ]
+}

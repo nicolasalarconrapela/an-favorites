@@ -1,0 +1,12 @@
+{
+  "language": "node",
+  "extension": ".js",
+  "subgroup": "corepack",
+  "commands": [
+    {
+      "id": "opensource:corepack-enable",
+      "label": "corepack enable",
+      "command": "corepack enable"
+    }
+  ]
+}

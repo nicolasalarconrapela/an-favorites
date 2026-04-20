@@ -1,0 +1,22 @@
+{
+  "language": "typescript",
+  "extension": ".ts",
+  "subgroup": "remix",
+  "commands": [
+    {
+      "id": "opensource:remix-dev",
+      "label": "remix dev",
+      "command": "remix dev"
+    },
+    {
+      "id": "opensource:remix-build",
+      "label": "remix build",
+      "command": "remix build"
+    },
+    {
+      "id": "opensource:remix-test",
+      "label": "remix test",
+      "command": "remix test"
+    }
+  ]
+}

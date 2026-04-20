@@ -1,0 +1,27 @@
+{
+  "language": "cpp",
+  "extension": ".cpp",
+  "subgroup": "cmake",
+  "commands": [
+    {
+      "id": "opensource:cmake-s-b-build",
+      "label": "cmake -S . -B build",
+      "command": "cmake -S . -B build"
+    },
+    {
+      "id": "opensource:cmake-build-build",
+      "label": "cmake --build build",
+      "command": "cmake --build build"
+    },
+    {
+      "id": "opensource:cmake-install-build",
+      "label": "cmake --install build",
+      "command": "cmake --install build"
+    },
+    {
+      "id": "opensource:cmake-s-b-build-dcmake-build-type-release",
+      "label": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release",
+      "command": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release"
+    }
+  ]
+}

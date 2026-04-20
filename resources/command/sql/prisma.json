@@ -1,0 +1,22 @@
+{
+  "language": "sql",
+  "extension": ".sql",
+  "subgroup": "prisma",
+  "commands": [
+    {
+      "id": "opensource:prisma-migrate-dev",
+      "label": "prisma migrate dev",
+      "command": "prisma migrate dev"
+    },
+    {
+      "id": "opensource:prisma-generate",
+      "label": "prisma generate",
+      "command": "prisma generate"
+    },
+    {
+      "id": "opensource:prisma-studio",
+      "label": "prisma studio",
+      "command": "prisma studio"
+    }
+  ]
+}

@@ -1,0 +1,222 @@
+{
+  "language": "c",
+  "extension": ".c",
+  "subgroup": "tools",
+  "commands": [
+    {
+      "id": "opensource:man-printf",
+      "label": "man printf",
+      "command": "man printf"
+    },
+    {
+      "id": "opensource:ctags-r",
+      "label": "ctags -R .",
+      "command": "ctags -R ."
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-18",
+      "label": "grep -R \"malloc\" src --variant-18",
+      "command": "grep -R \"malloc\" src --variant-18"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-38",
+      "label": "grep -R \"malloc\" src --variant-38",
+      "command": "grep -R \"malloc\" src --variant-38"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-58",
+      "label": "grep -R \"malloc\" src --variant-58",
+      "command": "grep -R \"malloc\" src --variant-58"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-78",
+      "label": "grep -R \"malloc\" src --variant-78",
+      "command": "grep -R \"malloc\" src --variant-78"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-98",
+      "label": "grep -R \"malloc\" src --variant-98",
+      "command": "grep -R \"malloc\" src --variant-98"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-118",
+      "label": "grep -R \"malloc\" src --variant-118",
+      "command": "grep -R \"malloc\" src --variant-118"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-138",
+      "label": "grep -R \"malloc\" src --variant-138",
+      "command": "grep -R \"malloc\" src --variant-138"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-158",
+      "label": "grep -R \"malloc\" src --variant-158",
+      "command": "grep -R \"malloc\" src --variant-158"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-178",
+      "label": "grep -R \"malloc\" src --variant-178",
+      "command": "grep -R \"malloc\" src --variant-178"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-198",
+      "label": "grep -R \"malloc\" src --variant-198",
+      "command": "grep -R \"malloc\" src --variant-198"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-218",
+      "label": "grep -R \"malloc\" src --variant-218",
+      "command": "grep -R \"malloc\" src --variant-218"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-238",
+      "label": "grep -R \"malloc\" src --variant-238",
+      "command": "grep -R \"malloc\" src --variant-238"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-258",
+      "label": "grep -R \"malloc\" src --variant-258",
+      "command": "grep -R \"malloc\" src --variant-258"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-278",
+      "label": "grep -R \"malloc\" src --variant-278",
+      "command": "grep -R \"malloc\" src --variant-278"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-298",
+      "label": "grep -R \"malloc\" src --variant-298",
+      "command": "grep -R \"malloc\" src --variant-298"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-318",
+      "label": "grep -R \"malloc\" src --variant-318",
+      "command": "grep -R \"malloc\" src --variant-318"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-338",
+      "label": "grep -R \"malloc\" src --variant-338",
+      "command": "grep -R \"malloc\" src --variant-338"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-358",
+      "label": "grep -R \"malloc\" src --variant-358",
+      "command": "grep -R \"malloc\" src --variant-358"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-378",
+      "label": "grep -R \"malloc\" src --variant-378",
+      "command": "grep -R \"malloc\" src --variant-378"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-398",
+      "label": "grep -R \"malloc\" src --variant-398",
+      "command": "grep -R \"malloc\" src --variant-398"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-418",
+      "label": "grep -R \"malloc\" src --variant-418",
+      "command": "grep -R \"malloc\" src --variant-418"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-438",
+      "label": "grep -R \"malloc\" src --variant-438",
+      "command": "grep -R \"malloc\" src --variant-438"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-458",
+      "label": "grep -R \"malloc\" src --variant-458",
+      "command": "grep -R \"malloc\" src --variant-458"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-478",
+      "label": "grep -R \"malloc\" src --variant-478",
+      "command": "grep -R \"malloc\" src --variant-478"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-498",
+      "label": "grep -R \"malloc\" src --variant-498",
+      "command": "grep -R \"malloc\" src --variant-498"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-518",
+      "label": "grep -R \"malloc\" src --variant-518",
+      "command": "grep -R \"malloc\" src --variant-518"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-538",
+      "label": "grep -R \"malloc\" src --variant-538",
+      "command": "grep -R \"malloc\" src --variant-538"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-558",
+      "label": "grep -R \"malloc\" src --variant-558",
+      "command": "grep -R \"malloc\" src --variant-558"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-578",
+      "label": "grep -R \"malloc\" src --variant-578",
+      "command": "grep -R \"malloc\" src --variant-578"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-598",
+      "label": "grep -R \"malloc\" src --variant-598",
+      "command": "grep -R \"malloc\" src --variant-598"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-618",
+      "label": "grep -R \"malloc\" src --variant-618",
+      "command": "grep -R \"malloc\" src --variant-618"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-638",
+      "label": "grep -R \"malloc\" src --variant-638",
+      "command": "grep -R \"malloc\" src --variant-638"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-658",
+      "label": "grep -R \"malloc\" src --variant-658",
+      "command": "grep -R \"malloc\" src --variant-658"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-678",
+      "label": "grep -R \"malloc\" src --variant-678",
+      "command": "grep -R \"malloc\" src --variant-678"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-698",
+      "label": "grep -R \"malloc\" src --variant-698",
+      "command": "grep -R \"malloc\" src --variant-698"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-718",
+      "label": "grep -R \"malloc\" src --variant-718",
+      "command": "grep -R \"malloc\" src --variant-718"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-738",
+      "label": "grep -R \"malloc\" src --variant-738",
+      "command": "grep -R \"malloc\" src --variant-738"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-758",
+      "label": "grep -R \"malloc\" src --variant-758",
+      "command": "grep -R \"malloc\" src --variant-758"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-778",
+      "label": "grep -R \"malloc\" src --variant-778",
+      "command": "grep -R \"malloc\" src --variant-778"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-798",
+      "label": "grep -R \"malloc\" src --variant-798",
+      "command": "grep -R \"malloc\" src --variant-798"
+    },
+    {
+      "id": "opensource:grep-r-malloc-src-variant-818",
+      "label": "grep -R \"malloc\" src --variant-818",
+      "command": "grep -R \"malloc\" src --variant-818"
+    }
+  ]
+}

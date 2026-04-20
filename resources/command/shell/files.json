@@ -1,0 +1,157 @@
+{
+  "language": "shell",
+  "extension": ".sh",
+  "subgroup": "files",
+  "commands": [
+    {
+      "id": "opensource:mkdir-project",
+      "label": "mkdir project",
+      "command": "mkdir project"
+    },
+    {
+      "id": "opensource:touch-readme-md",
+      "label": "touch README.md",
+      "command": "touch README.md"
+    },
+    {
+      "id": "opensource:cp-file-txt-backup-txt",
+      "label": "cp file.txt backup.txt",
+      "command": "cp file.txt backup.txt"
+    },
+    {
+      "id": "opensource:mv-old-txt-new-txt",
+      "label": "mv old.txt new.txt",
+      "command": "mv old.txt new.txt"
+    },
+    {
+      "id": "opensource:rm-file-txt",
+      "label": "rm file.txt",
+      "command": "rm file.txt"
+    },
+    {
+      "id": "opensource:rm-rf-node-modules",
+      "label": "rm -rf node_modules",
+      "command": "rm -rf node_modules"
+    },
+    {
+      "id": "opensource:cat-file-txt",
+      "label": "cat file.txt",
+      "command": "cat file.txt"
+    },
+    {
+      "id": "opensource:less-file-txt",
+      "label": "less file.txt",
+      "command": "less file.txt"
+    },
+    {
+      "id": "opensource:head-n-20-file-txt",
+      "label": "head -n 20 file.txt",
+      "command": "head -n 20 file.txt"
+    },
+    {
+      "id": "opensource:tail-f-app-log",
+      "label": "tail -f app.log",
+      "command": "tail -f app.log"
+    },
+    {
+      "id": "opensource:ls-src",
+      "label": "ls src",
+      "command": "ls src"
+    },
+    {
+      "id": "opensource:rm-rf-src",
+      "label": "rm -rf src",
+      "command": "rm -rf src"
+    },
+    {
+      "id": "opensource:ls-dist",
+      "label": "ls dist",
+      "command": "ls dist"
+    },
+    {
+      "id": "opensource:rm-rf-dist",
+      "label": "rm -rf dist",
+      "command": "rm -rf dist"
+    },
+    {
+      "id": "opensource:ls-build",
+      "label": "ls build",
+      "command": "ls build"
+    },
+    {
+      "id": "opensource:rm-rf-build",
+      "label": "rm -rf build",
+      "command": "rm -rf build"
+    },
+    {
+      "id": "opensource:ls-logs",
+      "label": "ls logs",
+      "command": "ls logs"
+    },
+    {
+      "id": "opensource:rm-rf-logs",
+      "label": "rm -rf logs",
+      "command": "rm -rf logs"
+    },
+    {
+      "id": "opensource:ls-tmp",
+      "label": "ls tmp",
+      "command": "ls tmp"
+    },
+    {
+      "id": "opensource:rm-rf-tmp",
+      "label": "rm -rf tmp",
+      "command": "rm -rf tmp"
+    },
+    {
+      "id": "opensource:ls-coverage",
+      "label": "ls coverage",
+      "command": "ls coverage"
+    },
+    {
+      "id": "opensource:rm-rf-coverage",
+      "label": "rm -rf coverage",
+      "command": "rm -rf coverage"
+    },
+    {
+      "id": "opensource:ls-node-modules",
+      "label": "ls node_modules",
+      "command": "ls node_modules"
+    },
+    {
+      "id": "opensource:rm-rf-node-modules",
+      "label": "rm -rf node_modules",
+      "command": "rm -rf node_modules"
+    },
+    {
+      "id": "opensource:ls-readme-md",
+      "label": "ls README.md",
+      "command": "ls README.md"
+    },
+    {
+      "id": "opensource:rm-rf-readme-md",
+      "label": "rm -rf README.md",
+      "command": "rm -rf README.md"
+    },
+    {
+      "id": "opensource:ls-package-json",
+      "label": "ls package.json",
+      "command": "ls package.json"
+    },
+    {
+      "id": "opensource:rm-rf-package-json",
+      "label": "rm -rf package.json",
+      "command": "rm -rf package.json"
+    },
+    {
+      "id": "opensource:ls-dockerfile",
+      "label": "ls Dockerfile",
+      "command": "ls Dockerfile"
+    },
+    {
+      "id": "opensource:rm-rf-dockerfile",
+      "label": "rm -rf Dockerfile",
+      "command": "rm -rf Dockerfile"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "language": "docker",
+  "extension": "Dockerfile",
+  "subgroup": "networks",
+  "commands": [
+    {
+      "id": "opensource:docker-network-ls",
+      "label": "docker network ls",
+      "command": "docker network ls"
+    }
+  ]
+}

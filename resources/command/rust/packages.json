@@ -1,0 +1,22 @@
+{
+  "language": "rust",
+  "extension": ".rs",
+  "subgroup": "packages",
+  "commands": [
+    {
+      "id": "opensource:cargo-add-serde",
+      "label": "cargo add serde",
+      "command": "cargo add serde"
+    },
+    {
+      "id": "opensource:cargo-add-tokio-features-full",
+      "label": "cargo add tokio --features full",
+      "command": "cargo add tokio --features full"
+    },
+    {
+      "id": "opensource:cargo-install-ripgrep",
+      "label": "cargo install ripgrep",
+      "command": "cargo install ripgrep"
+    }
+  ]
+}

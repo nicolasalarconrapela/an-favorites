@@ -1,0 +1,32 @@
+{
+  "language": "dotnet",
+  "extension": ".cs",
+  "subgroup": "scaffolding",
+  "commands": [
+    {
+      "id": "opensource:dotnet-new-console",
+      "label": "dotnet new console",
+      "command": "dotnet new console"
+    },
+    {
+      "id": "opensource:dotnet-new-webapi",
+      "label": "dotnet new webapi",
+      "command": "dotnet new webapi"
+    },
+    {
+      "id": "opensource:dotnet-new-sln",
+      "label": "dotnet new sln",
+      "command": "dotnet new sln"
+    },
+    {
+      "id": "opensource:dotnet-new-xunit",
+      "label": "dotnet new xunit",
+      "command": "dotnet new xunit"
+    },
+    {
+      "id": "opensource:dotnet-new-classlib",
+      "label": "dotnet new classlib",
+      "command": "dotnet new classlib"
+    }
+  ]
+}

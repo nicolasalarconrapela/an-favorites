@@ -1,0 +1,12 @@
+{
+  "language": "devops",
+  "extension": ".yaml",
+  "subgroup": "serverless",
+  "commands": [
+    {
+      "id": "opensource:serverless-deploy",
+      "label": "serverless deploy",
+      "command": "serverless deploy"
+    }
+  ]
+}

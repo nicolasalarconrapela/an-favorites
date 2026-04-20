@@ -1,0 +1,27 @@
+{
+  "language": "rust",
+  "extension": ".rs",
+  "subgroup": "rustup",
+  "commands": [
+    {
+      "id": "opensource:rustup-show",
+      "label": "rustup show",
+      "command": "rustup show"
+    },
+    {
+      "id": "opensource:rustup-update",
+      "label": "rustup update",
+      "command": "rustup update"
+    },
+    {
+      "id": "opensource:rustup-default-stable",
+      "label": "rustup default stable",
+      "command": "rustup default stable"
+    },
+    {
+      "id": "opensource:rustup-target-add-wasm32-unknown-unknown",
+      "label": "rustup target add wasm32-unknown-unknown",
+      "command": "rustup target add wasm32-unknown-unknown"
+    }
+  ]
+}

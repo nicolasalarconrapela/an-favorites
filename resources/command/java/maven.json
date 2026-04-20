@@ -1,0 +1,347 @@
+{
+  "language": "java",
+  "extension": ".java",
+  "subgroup": "maven",
+  "commands": [
+    {
+      "id": "opensource:mvn-clean",
+      "label": "mvn clean",
+      "command": "mvn clean"
+    },
+    {
+      "id": "opensource:mvn-compile",
+      "label": "mvn compile",
+      "command": "mvn compile"
+    },
+    {
+      "id": "opensource:mvn-test",
+      "label": "mvn test",
+      "command": "mvn test"
+    },
+    {
+      "id": "opensource:mvn-package",
+      "label": "mvn package",
+      "command": "mvn package"
+    },
+    {
+      "id": "opensource:mvn-install",
+      "label": "mvn install",
+      "command": "mvn install"
+    },
+    {
+      "id": "opensource:mvn-clean-install",
+      "label": "mvn clean install",
+      "command": "mvn clean install"
+    },
+    {
+      "id": "opensource:mvn-clean-package",
+      "label": "mvn clean package",
+      "command": "mvn clean package"
+    },
+    {
+      "id": "opensource:mvn-verify",
+      "label": "mvn verify",
+      "command": "mvn verify"
+    },
+    {
+      "id": "opensource:mvn-spring-boot-run",
+      "label": "mvn spring-boot:run",
+      "command": "mvn spring-boot:run"
+    },
+    {
+      "id": "opensource:mvn-dependency-tree",
+      "label": "mvn dependency:tree",
+      "command": "mvn dependency:tree"
+    },
+    {
+      "id": "opensource:mvn-dependency-resolve",
+      "label": "mvn dependency:resolve",
+      "command": "mvn dependency:resolve"
+    },
+    {
+      "id": "opensource:mvn-jacoco-report",
+      "label": "mvn jacoco:report",
+      "command": "mvn jacoco:report"
+    },
+    {
+      "id": "opensource:mvn-spotless-apply",
+      "label": "mvn spotless:apply",
+      "command": "mvn spotless:apply"
+    },
+    {
+      "id": "opensource:mvn-spotless-check",
+      "label": "mvn spotless:check",
+      "command": "mvn spotless:check"
+    },
+    {
+      "id": "opensource:mvn-help-effective-pom",
+      "label": "mvn help:effective-pom",
+      "command": "mvn help:effective-pom"
+    },
+    {
+      "id": "opensource:mvn-q-dskiptests-package",
+      "label": "mvn -q -DskipTests package",
+      "command": "mvn -q -DskipTests package"
+    },
+    {
+      "id": "opensource:mvn-dependency-get-dartifact-org-example-spring-boot-starter-web-1-0-0",
+      "label": "mvn dependency:get -Dartifact=org.example:spring-boot-starter-web:1.0.0",
+      "command": "mvn dependency:get -Dartifact=org.example:spring-boot-starter-web:1.0.0"
+    },
+    {
+      "id": "opensource:mvn-dependency-get-dartifact-org-example-spring-boot-starter-data-jpa-1-0-0",
+      "label": "mvn dependency:get -Dartifact=org.example:spring-boot-starter-data-jpa:1.0.0",
+      "command": "mvn dependency:get -Dartifact=org.example:spring-boot-starter-data-jpa:1.0.0"
+    },
+    {
+      "id": "opensource:mvn-dependency-get-dartifact-org-example-lombok-1-0-0",
+      "label": "mvn dependency:get -Dartifact=org.example:lombok:1.0.0",
+      "command": "mvn dependency:get -Dartifact=org.example:lombok:1.0.0"
+    },
+    {
+      "id": "opensource:mvn-dependency-get-dartifact-org-example-mapstruct-1-0-0",
+      "label": "mvn dependency:get -Dartifact=org.example:mapstruct:1.0.0",
+      "command": "mvn dependency:get -Dartifact=org.example:mapstruct:1.0.0"
+    },
+    {
+      "id": "opensource:mvn-dependency-get-dartifact-org-example-jackson-databind-1-0-0",
+      "label": "mvn dependency:get -Dartifact=org.example:jackson-databind:1.0.0",
+      "command": "mvn dependency:get -Dartifact=org.example:jackson-databind:1.0.0"
+    },
+    {
+      "id": "opensource:mvn-dependency-get-dartifact-org-example-junit-jupiter-1-0-0",
+      "label": "mvn dependency:get -Dartifact=org.example:junit-jupiter:1.0.0",
+      "command": "mvn dependency:get -Dartifact=org.example:junit-jupiter:1.0.0"
+    },
+    {
+      "id": "opensource:mvn-dependency-get-dartifact-org-example-mockito-core-1-0-0",
+      "label": "mvn dependency:get -Dartifact=org.example:mockito-core:1.0.0",
+      "command": "mvn dependency:get -Dartifact=org.example:mockito-core:1.0.0"
+    },
+    {
+      "id": "opensource:mvn-dependency-get-dartifact-org-example-flyway-core-1-0-0",
+      "label": "mvn dependency:get -Dartifact=org.example:flyway-core:1.0.0",
+      "command": "mvn dependency:get -Dartifact=org.example:flyway-core:1.0.0"
+    },
+    {
+      "id": "opensource:mvn-dependency-get-dartifact-org-example-postgresql-1-0-0",
+      "label": "mvn dependency:get -Dartifact=org.example:postgresql:1.0.0",
+      "command": "mvn dependency:get -Dartifact=org.example:postgresql:1.0.0"
+    },
+    {
+      "id": "opensource:mvn-dependency-get-dartifact-org-example-slf4j-api-1-0-0",
+      "label": "mvn dependency:get -Dartifact=org.example:slf4j-api:1.0.0",
+      "command": "mvn dependency:get -Dartifact=org.example:slf4j-api:1.0.0"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-4",
+      "label": "mvn test -DskipITs --variant-4",
+      "command": "mvn test -DskipITs --variant-4"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-24",
+      "label": "mvn test -DskipITs --variant-24",
+      "command": "mvn test -DskipITs --variant-24"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-44",
+      "label": "mvn test -DskipITs --variant-44",
+      "command": "mvn test -DskipITs --variant-44"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-64",
+      "label": "mvn test -DskipITs --variant-64",
+      "command": "mvn test -DskipITs --variant-64"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-84",
+      "label": "mvn test -DskipITs --variant-84",
+      "command": "mvn test -DskipITs --variant-84"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-104",
+      "label": "mvn test -DskipITs --variant-104",
+      "command": "mvn test -DskipITs --variant-104"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-124",
+      "label": "mvn test -DskipITs --variant-124",
+      "command": "mvn test -DskipITs --variant-124"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-144",
+      "label": "mvn test -DskipITs --variant-144",
+      "command": "mvn test -DskipITs --variant-144"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-164",
+      "label": "mvn test -DskipITs --variant-164",
+      "command": "mvn test -DskipITs --variant-164"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-184",
+      "label": "mvn test -DskipITs --variant-184",
+      "command": "mvn test -DskipITs --variant-184"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-204",
+      "label": "mvn test -DskipITs --variant-204",
+      "command": "mvn test -DskipITs --variant-204"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-224",
+      "label": "mvn test -DskipITs --variant-224",
+      "command": "mvn test -DskipITs --variant-224"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-244",
+      "label": "mvn test -DskipITs --variant-244",
+      "command": "mvn test -DskipITs --variant-244"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-264",
+      "label": "mvn test -DskipITs --variant-264",
+      "command": "mvn test -DskipITs --variant-264"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-284",
+      "label": "mvn test -DskipITs --variant-284",
+      "command": "mvn test -DskipITs --variant-284"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-304",
+      "label": "mvn test -DskipITs --variant-304",
+      "command": "mvn test -DskipITs --variant-304"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-324",
+      "label": "mvn test -DskipITs --variant-324",
+      "command": "mvn test -DskipITs --variant-324"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-344",
+      "label": "mvn test -DskipITs --variant-344",
+      "command": "mvn test -DskipITs --variant-344"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-364",
+      "label": "mvn test -DskipITs --variant-364",
+      "command": "mvn test -DskipITs --variant-364"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-384",
+      "label": "mvn test -DskipITs --variant-384",
+      "command": "mvn test -DskipITs --variant-384"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-404",
+      "label": "mvn test -DskipITs --variant-404",
+      "command": "mvn test -DskipITs --variant-404"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-424",
+      "label": "mvn test -DskipITs --variant-424",
+      "command": "mvn test -DskipITs --variant-424"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-444",
+      "label": "mvn test -DskipITs --variant-444",
+      "command": "mvn test -DskipITs --variant-444"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-464",
+      "label": "mvn test -DskipITs --variant-464",
+      "command": "mvn test -DskipITs --variant-464"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-484",
+      "label": "mvn test -DskipITs --variant-484",
+      "command": "mvn test -DskipITs --variant-484"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-504",
+      "label": "mvn test -DskipITs --variant-504",
+      "command": "mvn test -DskipITs --variant-504"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-524",
+      "label": "mvn test -DskipITs --variant-524",
+      "command": "mvn test -DskipITs --variant-524"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-544",
+      "label": "mvn test -DskipITs --variant-544",
+      "command": "mvn test -DskipITs --variant-544"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-564",
+      "label": "mvn test -DskipITs --variant-564",
+      "command": "mvn test -DskipITs --variant-564"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-584",
+      "label": "mvn test -DskipITs --variant-584",
+      "command": "mvn test -DskipITs --variant-584"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-604",
+      "label": "mvn test -DskipITs --variant-604",
+      "command": "mvn test -DskipITs --variant-604"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-624",
+      "label": "mvn test -DskipITs --variant-624",
+      "command": "mvn test -DskipITs --variant-624"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-644",
+      "label": "mvn test -DskipITs --variant-644",
+      "command": "mvn test -DskipITs --variant-644"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-664",
+      "label": "mvn test -DskipITs --variant-664",
+      "command": "mvn test -DskipITs --variant-664"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-684",
+      "label": "mvn test -DskipITs --variant-684",
+      "command": "mvn test -DskipITs --variant-684"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-704",
+      "label": "mvn test -DskipITs --variant-704",
+      "command": "mvn test -DskipITs --variant-704"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-724",
+      "label": "mvn test -DskipITs --variant-724",
+      "command": "mvn test -DskipITs --variant-724"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-744",
+      "label": "mvn test -DskipITs --variant-744",
+      "command": "mvn test -DskipITs --variant-744"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-764",
+      "label": "mvn test -DskipITs --variant-764",
+      "command": "mvn test -DskipITs --variant-764"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-784",
+      "label": "mvn test -DskipITs --variant-784",
+      "command": "mvn test -DskipITs --variant-784"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-804",
+      "label": "mvn test -DskipITs --variant-804",
+      "command": "mvn test -DskipITs --variant-804"
+    },
+    {
+      "id": "opensource:mvn-test-dskipits-variant-824",
+      "label": "mvn test -DskipITs --variant-824",
+      "command": "mvn test -DskipITs --variant-824"
+    }
+  ]
+}

@@ -1,0 +1,307 @@
+{
+  "language": "git",
+  "extension": ".git",
+  "subgroup": "branches",
+  "commands": [
+    {
+      "id": "opensource:git-checkout-main",
+      "label": "git checkout main",
+      "command": "git checkout main"
+    },
+    {
+      "id": "opensource:git-switch-main",
+      "label": "git switch main",
+      "command": "git switch main"
+    },
+    {
+      "id": "opensource:git-checkout-b-main",
+      "label": "git checkout -b main",
+      "command": "git checkout -b main"
+    },
+    {
+      "id": "opensource:git-switch-c-main",
+      "label": "git switch -c main",
+      "command": "git switch -c main"
+    },
+    {
+      "id": "opensource:git-merge-main",
+      "label": "git merge main",
+      "command": "git merge main"
+    },
+    {
+      "id": "opensource:git-rebase-main",
+      "label": "git rebase main",
+      "command": "git rebase main"
+    },
+    {
+      "id": "opensource:git-checkout-develop",
+      "label": "git checkout develop",
+      "command": "git checkout develop"
+    },
+    {
+      "id": "opensource:git-switch-develop",
+      "label": "git switch develop",
+      "command": "git switch develop"
+    },
+    {
+      "id": "opensource:git-checkout-b-develop",
+      "label": "git checkout -b develop",
+      "command": "git checkout -b develop"
+    },
+    {
+      "id": "opensource:git-switch-c-develop",
+      "label": "git switch -c develop",
+      "command": "git switch -c develop"
+    },
+    {
+      "id": "opensource:git-merge-develop",
+      "label": "git merge develop",
+      "command": "git merge develop"
+    },
+    {
+      "id": "opensource:git-rebase-develop",
+      "label": "git rebase develop",
+      "command": "git rebase develop"
+    },
+    {
+      "id": "opensource:git-checkout-release-1-0-x",
+      "label": "git checkout release/1.0.x",
+      "command": "git checkout release/1.0.x"
+    },
+    {
+      "id": "opensource:git-switch-release-1-0-x",
+      "label": "git switch release/1.0.x",
+      "command": "git switch release/1.0.x"
+    },
+    {
+      "id": "opensource:git-checkout-b-release-1-0-x",
+      "label": "git checkout -b release/1.0.x",
+      "command": "git checkout -b release/1.0.x"
+    },
+    {
+      "id": "opensource:git-switch-c-release-1-0-x",
+      "label": "git switch -c release/1.0.x",
+      "command": "git switch -c release/1.0.x"
+    },
+    {
+      "id": "opensource:git-merge-release-1-0-x",
+      "label": "git merge release/1.0.x",
+      "command": "git merge release/1.0.x"
+    },
+    {
+      "id": "opensource:git-rebase-release-1-0-x",
+      "label": "git rebase release/1.0.x",
+      "command": "git rebase release/1.0.x"
+    },
+    {
+      "id": "opensource:git-checkout-feature-login",
+      "label": "git checkout feature/login",
+      "command": "git checkout feature/login"
+    },
+    {
+      "id": "opensource:git-switch-feature-login",
+      "label": "git switch feature/login",
+      "command": "git switch feature/login"
+    },
+    {
+      "id": "opensource:git-checkout-b-feature-login",
+      "label": "git checkout -b feature/login",
+      "command": "git checkout -b feature/login"
+    },
+    {
+      "id": "opensource:git-switch-c-feature-login",
+      "label": "git switch -c feature/login",
+      "command": "git switch -c feature/login"
+    },
+    {
+      "id": "opensource:git-merge-feature-login",
+      "label": "git merge feature/login",
+      "command": "git merge feature/login"
+    },
+    {
+      "id": "opensource:git-rebase-feature-login",
+      "label": "git rebase feature/login",
+      "command": "git rebase feature/login"
+    },
+    {
+      "id": "opensource:git-checkout-feature-payments",
+      "label": "git checkout feature/payments",
+      "command": "git checkout feature/payments"
+    },
+    {
+      "id": "opensource:git-switch-feature-payments",
+      "label": "git switch feature/payments",
+      "command": "git switch feature/payments"
+    },
+    {
+      "id": "opensource:git-checkout-b-feature-payments",
+      "label": "git checkout -b feature/payments",
+      "command": "git checkout -b feature/payments"
+    },
+    {
+      "id": "opensource:git-switch-c-feature-payments",
+      "label": "git switch -c feature/payments",
+      "command": "git switch -c feature/payments"
+    },
+    {
+      "id": "opensource:git-merge-feature-payments",
+      "label": "git merge feature/payments",
+      "command": "git merge feature/payments"
+    },
+    {
+      "id": "opensource:git-rebase-feature-payments",
+      "label": "git rebase feature/payments",
+      "command": "git rebase feature/payments"
+    },
+    {
+      "id": "opensource:git-checkout-feature-search",
+      "label": "git checkout feature/search",
+      "command": "git checkout feature/search"
+    },
+    {
+      "id": "opensource:git-switch-feature-search",
+      "label": "git switch feature/search",
+      "command": "git switch feature/search"
+    },
+    {
+      "id": "opensource:git-checkout-b-feature-search",
+      "label": "git checkout -b feature/search",
+      "command": "git checkout -b feature/search"
+    },
+    {
+      "id": "opensource:git-switch-c-feature-search",
+      "label": "git switch -c feature/search",
+      "command": "git switch -c feature/search"
+    },
+    {
+      "id": "opensource:git-merge-feature-search",
+      "label": "git merge feature/search",
+      "command": "git merge feature/search"
+    },
+    {
+      "id": "opensource:git-rebase-feature-search",
+      "label": "git rebase feature/search",
+      "command": "git rebase feature/search"
+    },
+    {
+      "id": "opensource:git-checkout-hotfix-critical-bug",
+      "label": "git checkout hotfix/critical-bug",
+      "command": "git checkout hotfix/critical-bug"
+    },
+    {
+      "id": "opensource:git-switch-hotfix-critical-bug",
+      "label": "git switch hotfix/critical-bug",
+      "command": "git switch hotfix/critical-bug"
+    },
+    {
+      "id": "opensource:git-checkout-b-hotfix-critical-bug",
+      "label": "git checkout -b hotfix/critical-bug",
+      "command": "git checkout -b hotfix/critical-bug"
+    },
+    {
+      "id": "opensource:git-switch-c-hotfix-critical-bug",
+      "label": "git switch -c hotfix/critical-bug",
+      "command": "git switch -c hotfix/critical-bug"
+    },
+    {
+      "id": "opensource:git-merge-hotfix-critical-bug",
+      "label": "git merge hotfix/critical-bug",
+      "command": "git merge hotfix/critical-bug"
+    },
+    {
+      "id": "opensource:git-rebase-hotfix-critical-bug",
+      "label": "git rebase hotfix/critical-bug",
+      "command": "git rebase hotfix/critical-bug"
+    },
+    {
+      "id": "opensource:git-checkout-chore-deps",
+      "label": "git checkout chore/deps",
+      "command": "git checkout chore/deps"
+    },
+    {
+      "id": "opensource:git-switch-chore-deps",
+      "label": "git switch chore/deps",
+      "command": "git switch chore/deps"
+    },
+    {
+      "id": "opensource:git-checkout-b-chore-deps",
+      "label": "git checkout -b chore/deps",
+      "command": "git checkout -b chore/deps"
+    },
+    {
+      "id": "opensource:git-switch-c-chore-deps",
+      "label": "git switch -c chore/deps",
+      "command": "git switch -c chore/deps"
+    },
+    {
+      "id": "opensource:git-merge-chore-deps",
+      "label": "git merge chore/deps",
+      "command": "git merge chore/deps"
+    },
+    {
+      "id": "opensource:git-rebase-chore-deps",
+      "label": "git rebase chore/deps",
+      "command": "git rebase chore/deps"
+    },
+    {
+      "id": "opensource:git-checkout-refactor-api-client",
+      "label": "git checkout refactor/api-client",
+      "command": "git checkout refactor/api-client"
+    },
+    {
+      "id": "opensource:git-switch-refactor-api-client",
+      "label": "git switch refactor/api-client",
+      "command": "git switch refactor/api-client"
+    },
+    {
+      "id": "opensource:git-checkout-b-refactor-api-client",
+      "label": "git checkout -b refactor/api-client",
+      "command": "git checkout -b refactor/api-client"
+    },
+    {
+      "id": "opensource:git-switch-c-refactor-api-client",
+      "label": "git switch -c refactor/api-client",
+      "command": "git switch -c refactor/api-client"
+    },
+    {
+      "id": "opensource:git-merge-refactor-api-client",
+      "label": "git merge refactor/api-client",
+      "command": "git merge refactor/api-client"
+    },
+    {
+      "id": "opensource:git-rebase-refactor-api-client",
+      "label": "git rebase refactor/api-client",
+      "command": "git rebase refactor/api-client"
+    },
+    {
+      "id": "opensource:git-checkout-test-e2e-suite",
+      "label": "git checkout test/e2e-suite",
+      "command": "git checkout test/e2e-suite"
+    },
+    {
+      "id": "opensource:git-switch-test-e2e-suite",
+      "label": "git switch test/e2e-suite",
+      "command": "git switch test/e2e-suite"
+    },
+    {
+      "id": "opensource:git-checkout-b-test-e2e-suite",
+      "label": "git checkout -b test/e2e-suite",
+      "command": "git checkout -b test/e2e-suite"
+    },
+    {
+      "id": "opensource:git-switch-c-test-e2e-suite",
+      "label": "git switch -c test/e2e-suite",
+      "command": "git switch -c test/e2e-suite"
+    },
+    {
+      "id": "opensource:git-merge-test-e2e-suite",
+      "label": "git merge test/e2e-suite",
+      "command": "git merge test/e2e-suite"
+    },
+    {
+      "id": "opensource:git-rebase-test-e2e-suite",
+      "label": "git rebase test/e2e-suite",
+      "command": "git rebase test/e2e-suite"
+    }
+  ]
+}

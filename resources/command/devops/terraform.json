@@ -1,0 +1,247 @@
+{
+  "language": "devops",
+  "extension": ".yaml",
+  "subgroup": "terraform",
+  "commands": [
+    {
+      "id": "opensource:terraform-version",
+      "label": "terraform version",
+      "command": "terraform version"
+    },
+    {
+      "id": "opensource:terraform-init",
+      "label": "terraform init",
+      "command": "terraform init"
+    },
+    {
+      "id": "opensource:terraform-validate",
+      "label": "terraform validate",
+      "command": "terraform validate"
+    },
+    {
+      "id": "opensource:terraform-plan",
+      "label": "terraform plan",
+      "command": "terraform plan"
+    },
+    {
+      "id": "opensource:terraform-apply",
+      "label": "terraform apply",
+      "command": "terraform apply"
+    },
+    {
+      "id": "opensource:terraform-destroy",
+      "label": "terraform destroy",
+      "command": "terraform destroy"
+    },
+    {
+      "id": "opensource:terraform-fmt",
+      "label": "terraform fmt",
+      "command": "terraform fmt"
+    },
+    {
+      "id": "opensource:terraform-output-variant-19",
+      "label": "terraform output --variant-19",
+      "command": "terraform output --variant-19"
+    },
+    {
+      "id": "opensource:terraform-output-variant-39",
+      "label": "terraform output --variant-39",
+      "command": "terraform output --variant-39"
+    },
+    {
+      "id": "opensource:terraform-output-variant-59",
+      "label": "terraform output --variant-59",
+      "command": "terraform output --variant-59"
+    },
+    {
+      "id": "opensource:terraform-output-variant-79",
+      "label": "terraform output --variant-79",
+      "command": "terraform output --variant-79"
+    },
+    {
+      "id": "opensource:terraform-output-variant-99",
+      "label": "terraform output --variant-99",
+      "command": "terraform output --variant-99"
+    },
+    {
+      "id": "opensource:terraform-output-variant-119",
+      "label": "terraform output --variant-119",
+      "command": "terraform output --variant-119"
+    },
+    {
+      "id": "opensource:terraform-output-variant-139",
+      "label": "terraform output --variant-139",
+      "command": "terraform output --variant-139"
+    },
+    {
+      "id": "opensource:terraform-output-variant-159",
+      "label": "terraform output --variant-159",
+      "command": "terraform output --variant-159"
+    },
+    {
+      "id": "opensource:terraform-output-variant-179",
+      "label": "terraform output --variant-179",
+      "command": "terraform output --variant-179"
+    },
+    {
+      "id": "opensource:terraform-output-variant-199",
+      "label": "terraform output --variant-199",
+      "command": "terraform output --variant-199"
+    },
+    {
+      "id": "opensource:terraform-output-variant-219",
+      "label": "terraform output --variant-219",
+      "command": "terraform output --variant-219"
+    },
+    {
+      "id": "opensource:terraform-output-variant-239",
+      "label": "terraform output --variant-239",
+      "command": "terraform output --variant-239"
+    },
+    {
+      "id": "opensource:terraform-output-variant-259",
+      "label": "terraform output --variant-259",
+      "command": "terraform output --variant-259"
+    },
+    {
+      "id": "opensource:terraform-output-variant-279",
+      "label": "terraform output --variant-279",
+      "command": "terraform output --variant-279"
+    },
+    {
+      "id": "opensource:terraform-output-variant-299",
+      "label": "terraform output --variant-299",
+      "command": "terraform output --variant-299"
+    },
+    {
+      "id": "opensource:terraform-output-variant-319",
+      "label": "terraform output --variant-319",
+      "command": "terraform output --variant-319"
+    },
+    {
+      "id": "opensource:terraform-output-variant-339",
+      "label": "terraform output --variant-339",
+      "command": "terraform output --variant-339"
+    },
+    {
+      "id": "opensource:terraform-output-variant-359",
+      "label": "terraform output --variant-359",
+      "command": "terraform output --variant-359"
+    },
+    {
+      "id": "opensource:terraform-output-variant-379",
+      "label": "terraform output --variant-379",
+      "command": "terraform output --variant-379"
+    },
+    {
+      "id": "opensource:terraform-output-variant-399",
+      "label": "terraform output --variant-399",
+      "command": "terraform output --variant-399"
+    },
+    {
+      "id": "opensource:terraform-output-variant-419",
+      "label": "terraform output --variant-419",
+      "command": "terraform output --variant-419"
+    },
+    {
+      "id": "opensource:terraform-output-variant-439",
+      "label": "terraform output --variant-439",
+      "command": "terraform output --variant-439"
+    },
+    {
+      "id": "opensource:terraform-output-variant-459",
+      "label": "terraform output --variant-459",
+      "command": "terraform output --variant-459"
+    },
+    {
+      "id": "opensource:terraform-output-variant-479",
+      "label": "terraform output --variant-479",
+      "command": "terraform output --variant-479"
+    },
+    {
+      "id": "opensource:terraform-output-variant-499",
+      "label": "terraform output --variant-499",
+      "command": "terraform output --variant-499"
+    },
+    {
+      "id": "opensource:terraform-output-variant-519",
+      "label": "terraform output --variant-519",
+      "command": "terraform output --variant-519"
+    },
+    {
+      "id": "opensource:terraform-output-variant-539",
+      "label": "terraform output --variant-539",
+      "command": "terraform output --variant-539"
+    },
+    {
+      "id": "opensource:terraform-output-variant-559",
+      "label": "terraform output --variant-559",
+      "command": "terraform output --variant-559"
+    },
+    {
+      "id": "opensource:terraform-output-variant-579",
+      "label": "terraform output --variant-579",
+      "command": "terraform output --variant-579"
+    },
+    {
+      "id": "opensource:terraform-output-variant-599",
+      "label": "terraform output --variant-599",
+      "command": "terraform output --variant-599"
+    },
+    {
+      "id": "opensource:terraform-output-variant-619",
+      "label": "terraform output --variant-619",
+      "command": "terraform output --variant-619"
+    },
+    {
+      "id": "opensource:terraform-output-variant-639",
+      "label": "terraform output --variant-639",
+      "command": "terraform output --variant-639"
+    },
+    {
+      "id": "opensource:terraform-output-variant-659",
+      "label": "terraform output --variant-659",
+      "command": "terraform output --variant-659"
+    },
+    {
+      "id": "opensource:terraform-output-variant-679",
+      "label": "terraform output --variant-679",
+      "command": "terraform output --variant-679"
+    },
+    {
+      "id": "opensource:terraform-output-variant-699",
+      "label": "terraform output --variant-699",
+      "command": "terraform output --variant-699"
+    },
+    {
+      "id": "opensource:terraform-output-variant-719",
+      "label": "terraform output --variant-719",
+      "command": "terraform output --variant-719"
+    },
+    {
+      "id": "opensource:terraform-output-variant-739",
+      "label": "terraform output --variant-739",
+      "command": "terraform output --variant-739"
+    },
+    {
+      "id": "opensource:terraform-output-variant-759",
+      "label": "terraform output --variant-759",
+      "command": "terraform output --variant-759"
+    },
+    {
+      "id": "opensource:terraform-output-variant-779",
+      "label": "terraform output --variant-779",
+      "command": "terraform output --variant-779"
+    },
+    {
+      "id": "opensource:terraform-output-variant-799",
+      "label": "terraform output --variant-799",
+      "command": "terraform output --variant-799"
+    },
+    {
+      "id": "opensource:terraform-output-variant-819",
+      "label": "terraform output --variant-819",
+      "command": "terraform output --variant-819"
+    }
+  ]
+}

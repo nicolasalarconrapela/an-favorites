@@ -1,0 +1,42 @@
+{
+  "language": "typescript",
+  "extension": ".ts",
+  "subgroup": "typescript-core",
+  "commands": [
+    {
+      "id": "opensource:tsc-init",
+      "label": "tsc --init",
+      "command": "tsc --init"
+    },
+    {
+      "id": "opensource:tsc-p",
+      "label": "tsc -p .",
+      "command": "tsc -p ."
+    },
+    {
+      "id": "opensource:tsc-watch",
+      "label": "tsc --watch",
+      "command": "tsc --watch"
+    },
+    {
+      "id": "opensource:tsc-noemit",
+      "label": "tsc --noEmit",
+      "command": "tsc --noEmit"
+    },
+    {
+      "id": "opensource:tsc-build",
+      "label": "tsc --build",
+      "command": "tsc --build"
+    },
+    {
+      "id": "opensource:ts-node-src-index-ts",
+      "label": "ts-node src/index.ts",
+      "command": "ts-node src/index.ts"
+    },
+    {
+      "id": "opensource:tsx-src-index-ts",
+      "label": "tsx src/index.ts",
+      "command": "tsx src/index.ts"
+    }
+  ]
+}

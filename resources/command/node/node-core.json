@@ -1,0 +1,27 @@
+{
+  "language": "node",
+  "extension": ".js",
+  "subgroup": "node-core",
+  "commands": [
+    {
+      "id": "opensource:node-v",
+      "label": "node -v",
+      "command": "node -v"
+    },
+    {
+      "id": "opensource:node-src-index-js",
+      "label": "node src/index.js",
+      "command": "node src/index.js"
+    },
+    {
+      "id": "opensource:node-watch-src-index-js",
+      "label": "node --watch src/index.js",
+      "command": "node --watch src/index.js"
+    },
+    {
+      "id": "opensource:node-inspect-src-index-js",
+      "label": "node --inspect src/index.js",
+      "command": "node --inspect src/index.js"
+    }
+  ]
+}

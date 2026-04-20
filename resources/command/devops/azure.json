@@ -1,0 +1,22 @@
+{
+  "language": "devops",
+  "extension": ".yaml",
+  "subgroup": "azure",
+  "commands": [
+    {
+      "id": "opensource:az-login",
+      "label": "az login",
+      "command": "az login"
+    },
+    {
+      "id": "opensource:az-account-show",
+      "label": "az account show",
+      "command": "az account show"
+    },
+    {
+      "id": "opensource:az-group-list",
+      "label": "az group list",
+      "command": "az group list"
+    }
+  ]
+}

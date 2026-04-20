@@ -1,0 +1,217 @@
+{
+  "language": "flutter",
+  "extension": ".dart",
+  "subgroup": "testing",
+  "commands": [
+    {
+      "id": "opensource:flutter-test",
+      "label": "flutter test",
+      "command": "flutter test"
+    },
+    {
+      "id": "opensource:dart-test-variant-14",
+      "label": "dart test --variant-14",
+      "command": "dart test --variant-14"
+    },
+    {
+      "id": "opensource:dart-test-variant-34",
+      "label": "dart test --variant-34",
+      "command": "dart test --variant-34"
+    },
+    {
+      "id": "opensource:dart-test-variant-54",
+      "label": "dart test --variant-54",
+      "command": "dart test --variant-54"
+    },
+    {
+      "id": "opensource:dart-test-variant-74",
+      "label": "dart test --variant-74",
+      "command": "dart test --variant-74"
+    },
+    {
+      "id": "opensource:dart-test-variant-94",
+      "label": "dart test --variant-94",
+      "command": "dart test --variant-94"
+    },
+    {
+      "id": "opensource:dart-test-variant-114",
+      "label": "dart test --variant-114",
+      "command": "dart test --variant-114"
+    },
+    {
+      "id": "opensource:dart-test-variant-134",
+      "label": "dart test --variant-134",
+      "command": "dart test --variant-134"
+    },
+    {
+      "id": "opensource:dart-test-variant-154",
+      "label": "dart test --variant-154",
+      "command": "dart test --variant-154"
+    },
+    {
+      "id": "opensource:dart-test-variant-174",
+      "label": "dart test --variant-174",
+      "command": "dart test --variant-174"
+    },
+    {
+      "id": "opensource:dart-test-variant-194",
+      "label": "dart test --variant-194",
+      "command": "dart test --variant-194"
+    },
+    {
+      "id": "opensource:dart-test-variant-214",
+      "label": "dart test --variant-214",
+      "command": "dart test --variant-214"
+    },
+    {
+      "id": "opensource:dart-test-variant-234",
+      "label": "dart test --variant-234",
+      "command": "dart test --variant-234"
+    },
+    {
+      "id": "opensource:dart-test-variant-254",
+      "label": "dart test --variant-254",
+      "command": "dart test --variant-254"
+    },
+    {
+      "id": "opensource:dart-test-variant-274",
+      "label": "dart test --variant-274",
+      "command": "dart test --variant-274"
+    },
+    {
+      "id": "opensource:dart-test-variant-294",
+      "label": "dart test --variant-294",
+      "command": "dart test --variant-294"
+    },
+    {
+      "id": "opensource:dart-test-variant-314",
+      "label": "dart test --variant-314",
+      "command": "dart test --variant-314"
+    },
+    {
+      "id": "opensource:dart-test-variant-334",
+      "label": "dart test --variant-334",
+      "command": "dart test --variant-334"
+    },
+    {
+      "id": "opensource:dart-test-variant-354",
+      "label": "dart test --variant-354",
+      "command": "dart test --variant-354"
+    },
+    {
+      "id": "opensource:dart-test-variant-374",
+      "label": "dart test --variant-374",
+      "command": "dart test --variant-374"
+    },
+    {
+      "id": "opensource:dart-test-variant-394",
+      "label": "dart test --variant-394",
+      "command": "dart test --variant-394"
+    },
+    {
+      "id": "opensource:dart-test-variant-414",
+      "label": "dart test --variant-414",
+      "command": "dart test --variant-414"
+    },
+    {
+      "id": "opensource:dart-test-variant-434",
+      "label": "dart test --variant-434",
+      "command": "dart test --variant-434"
+    },
+    {
+      "id": "opensource:dart-test-variant-454",
+      "label": "dart test --variant-454",
+      "command": "dart test --variant-454"
+    },
+    {
+      "id": "opensource:dart-test-variant-474",
+      "label": "dart test --variant-474",
+      "command": "dart test --variant-474"
+    },
+    {
+      "id": "opensource:dart-test-variant-494",
+      "label": "dart test --variant-494",
+      "command": "dart test --variant-494"
+    },
+    {
+      "id": "opensource:dart-test-variant-514",
+      "label": "dart test --variant-514",
+      "command": "dart test --variant-514"
+    },
+    {
+      "id": "opensource:dart-test-variant-534",
+      "label": "dart test --variant-534",
+      "command": "dart test --variant-534"
+    },
+    {
+      "id": "opensource:dart-test-variant-554",
+      "label": "dart test --variant-554",
+      "command": "dart test --variant-554"
+    },
+    {
+      "id": "opensource:dart-test-variant-574",
+      "label": "dart test --variant-574",
+      "command": "dart test --variant-574"
+    },
+    {
+      "id": "opensource:dart-test-variant-594",
+      "label": "dart test --variant-594",
+      "command": "dart test --variant-594"
+    },
+    {
+      "id": "opensource:dart-test-variant-614",
+      "label": "dart test --variant-614",
+      "command": "dart test --variant-614"
+    },
+    {
+      "id": "opensource:dart-test-variant-634",
+      "label": "dart test --variant-634",
+      "command": "dart test --variant-634"
+    },
+    {
+      "id": "opensource:dart-test-variant-654",
+      "label": "dart test --variant-654",
+      "command": "dart test --variant-654"
+    },
+    {
+      "id": "opensource:dart-test-variant-674",
+      "label": "dart test --variant-674",
+      "command": "dart test --variant-674"
+    },
+    {
+      "id": "opensource:dart-test-variant-694",
+      "label": "dart test --variant-694",
+      "command": "dart test --variant-694"
+    },
+    {
+      "id": "opensource:dart-test-variant-714",
+      "label": "dart test --variant-714",
+      "command": "dart test --variant-714"
+    },
+    {
+      "id": "opensource:dart-test-variant-734",
+      "label": "dart test --variant-734",
+      "command": "dart test --variant-734"
+    },
+    {
+      "id": "opensource:dart-test-variant-754",
+      "label": "dart test --variant-754",
+      "command": "dart test --variant-754"
+    },
+    {
+      "id": "opensource:dart-test-variant-774",
+      "label": "dart test --variant-774",
+      "command": "dart test --variant-774"
+    },
+    {
+      "id": "opensource:dart-test-variant-794",
+      "label": "dart test --variant-794",
+      "command": "dart test --variant-794"
+    },
+    {
+      "id": "opensource:dart-test-variant-814",
+      "label": "dart test --variant-814",
+      "command": "dart test --variant-814"
+    }
+  ]
+}

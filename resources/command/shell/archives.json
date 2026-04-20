@@ -1,0 +1,22 @@
+{
+  "language": "shell",
+  "extension": ".sh",
+  "subgroup": "archives",
+  "commands": [
+    {
+      "id": "opensource:tar-xzf-archive-tar-gz",
+      "label": "tar -xzf archive.tar.gz",
+      "command": "tar -xzf archive.tar.gz"
+    },
+    {
+      "id": "opensource:zip-r-archive-zip",
+      "label": "zip -r archive.zip .",
+      "command": "zip -r archive.zip ."
+    },
+    {
+      "id": "opensource:unzip-archive-zip",
+      "label": "unzip archive.zip",
+      "command": "unzip archive.zip"
+    }
+  ]
+}

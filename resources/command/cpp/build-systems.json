@@ -1,0 +1,32 @@
+{
+  "language": "cpp",
+  "extension": ".cpp",
+  "subgroup": "build-systems",
+  "commands": [
+    {
+      "id": "opensource:make",
+      "label": "make",
+      "command": "make"
+    },
+    {
+      "id": "opensource:make-clean",
+      "label": "make clean",
+      "command": "make clean"
+    },
+    {
+      "id": "opensource:ninja-c-build",
+      "label": "ninja -C build",
+      "command": "ninja -C build"
+    },
+    {
+      "id": "opensource:meson-setup-build",
+      "label": "meson setup build",
+      "command": "meson setup build"
+    },
+    {
+      "id": "opensource:bazel-build",
+      "label": "bazel build //...",
+      "command": "bazel build //..."
+    }
+  ]
+}

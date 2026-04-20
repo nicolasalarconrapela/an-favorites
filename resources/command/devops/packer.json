@@ -1,0 +1,22 @@
+{
+  "language": "devops",
+  "extension": ".yaml",
+  "subgroup": "packer",
+  "commands": [
+    {
+      "id": "opensource:packer-init",
+      "label": "packer init .",
+      "command": "packer init ."
+    },
+    {
+      "id": "opensource:packer-validate",
+      "label": "packer validate .",
+      "command": "packer validate ."
+    },
+    {
+      "id": "opensource:packer-build-template-pkr-hcl",
+      "label": "packer build template.pkr.hcl",
+      "command": "packer build template.pkr.hcl"
+    }
+  ]
+}

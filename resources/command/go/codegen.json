@@ -1,0 +1,12 @@
+{
+  "language": "go",
+  "extension": ".go",
+  "subgroup": "codegen",
+  "commands": [
+    {
+      "id": "opensource:buf-generate",
+      "label": "buf generate",
+      "command": "buf generate"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "language": "shell",
+  "extension": ".sh",
+  "subgroup": "network",
+  "commands": [
+    {
+      "id": "opensource:curl-https-example-com",
+      "label": "curl https://example.com",
+      "command": "curl https://example.com"
+    },
+    {
+      "id": "opensource:wget-https-example-com-file-zip",
+      "label": "wget https://example.com/file.zip",
+      "command": "wget https://example.com/file.zip"
+    },
+    {
+      "id": "opensource:ssh-user-server",
+      "label": "ssh user@server",
+      "command": "ssh user@server"
+    }
+  ]
+}

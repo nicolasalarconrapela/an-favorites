@@ -1,0 +1,57 @@
+{
+  "language": "git",
+  "extension": ".git",
+  "subgroup": "remote",
+  "commands": [
+    {
+      "id": "opensource:git-remote-v",
+      "label": "git remote -v",
+      "command": "git remote -v"
+    },
+    {
+      "id": "opensource:git-remote-show-origin",
+      "label": "git remote show origin",
+      "command": "git remote show origin"
+    },
+    {
+      "id": "opensource:git-fetch-origin",
+      "label": "git fetch origin",
+      "command": "git fetch origin"
+    },
+    {
+      "id": "opensource:git-pull-origin-main",
+      "label": "git pull origin main",
+      "command": "git pull origin main"
+    },
+    {
+      "id": "opensource:git-push-origin-main",
+      "label": "git push origin main",
+      "command": "git push origin main"
+    },
+    {
+      "id": "opensource:git-remote-v",
+      "label": "git remote -v",
+      "command": "git remote -v"
+    },
+    {
+      "id": "opensource:git-remote-show-upstream",
+      "label": "git remote show upstream",
+      "command": "git remote show upstream"
+    },
+    {
+      "id": "opensource:git-fetch-upstream",
+      "label": "git fetch upstream",
+      "command": "git fetch upstream"
+    },
+    {
+      "id": "opensource:git-pull-upstream-main",
+      "label": "git pull upstream main",
+      "command": "git pull upstream main"
+    },
+    {
+      "id": "opensource:git-push-upstream-main",
+      "label": "git push upstream main",
+      "command": "git push upstream main"
+    }
+  ]
+}

@@ -1,0 +1,247 @@
+{
+  "language": "typescript",
+  "extension": ".ts",
+  "subgroup": "packages",
+  "commands": [
+    {
+      "id": "opensource:npm-install-d-types-node",
+      "label": "npm install -D @types/node",
+      "command": "npm install -D @types/node"
+    },
+    {
+      "id": "opensource:pnpm-add-d-types-node",
+      "label": "pnpm add -D @types/node",
+      "command": "pnpm add -D @types/node"
+    },
+    {
+      "id": "opensource:yarn-add-d-types-node",
+      "label": "yarn add -D @types/node",
+      "command": "yarn add -D @types/node"
+    },
+    {
+      "id": "opensource:npm-install-d-typescript",
+      "label": "npm install -D typescript",
+      "command": "npm install -D typescript"
+    },
+    {
+      "id": "opensource:pnpm-add-d-typescript",
+      "label": "pnpm add -D typescript",
+      "command": "pnpm add -D typescript"
+    },
+    {
+      "id": "opensource:yarn-add-d-typescript",
+      "label": "yarn add -D typescript",
+      "command": "yarn add -D typescript"
+    },
+    {
+      "id": "opensource:npm-install-d-ts-node",
+      "label": "npm install -D ts-node",
+      "command": "npm install -D ts-node"
+    },
+    {
+      "id": "opensource:pnpm-add-d-ts-node",
+      "label": "pnpm add -D ts-node",
+      "command": "pnpm add -D ts-node"
+    },
+    {
+      "id": "opensource:yarn-add-d-ts-node",
+      "label": "yarn add -D ts-node",
+      "command": "yarn add -D ts-node"
+    },
+    {
+      "id": "opensource:npm-install-d-tsx",
+      "label": "npm install -D tsx",
+      "command": "npm install -D tsx"
+    },
+    {
+      "id": "opensource:pnpm-add-d-tsx",
+      "label": "pnpm add -D tsx",
+      "command": "pnpm add -D tsx"
+    },
+    {
+      "id": "opensource:yarn-add-d-tsx",
+      "label": "yarn add -D tsx",
+      "command": "yarn add -D tsx"
+    },
+    {
+      "id": "opensource:npm-install-d-vitest",
+      "label": "npm install -D vitest",
+      "command": "npm install -D vitest"
+    },
+    {
+      "id": "opensource:pnpm-add-d-vitest",
+      "label": "pnpm add -D vitest",
+      "command": "pnpm add -D vitest"
+    },
+    {
+      "id": "opensource:yarn-add-d-vitest",
+      "label": "yarn add -D vitest",
+      "command": "yarn add -D vitest"
+    },
+    {
+      "id": "opensource:npm-install-d-jest",
+      "label": "npm install -D jest",
+      "command": "npm install -D jest"
+    },
+    {
+      "id": "opensource:pnpm-add-d-jest",
+      "label": "pnpm add -D jest",
+      "command": "pnpm add -D jest"
+    },
+    {
+      "id": "opensource:yarn-add-d-jest",
+      "label": "yarn add -D jest",
+      "command": "yarn add -D jest"
+    },
+    {
+      "id": "opensource:npm-install-d-ts-jest",
+      "label": "npm install -D ts-jest",
+      "command": "npm install -D ts-jest"
+    },
+    {
+      "id": "opensource:pnpm-add-d-ts-jest",
+      "label": "pnpm add -D ts-jest",
+      "command": "pnpm add -D ts-jest"
+    },
+    {
+      "id": "opensource:yarn-add-d-ts-jest",
+      "label": "yarn add -D ts-jest",
+      "command": "yarn add -D ts-jest"
+    },
+    {
+      "id": "opensource:npm-install-d-eslint",
+      "label": "npm install -D eslint",
+      "command": "npm install -D eslint"
+    },
+    {
+      "id": "opensource:pnpm-add-d-eslint",
+      "label": "pnpm add -D eslint",
+      "command": "pnpm add -D eslint"
+    },
+    {
+      "id": "opensource:yarn-add-d-eslint",
+      "label": "yarn add -D eslint",
+      "command": "yarn add -D eslint"
+    },
+    {
+      "id": "opensource:npm-install-d-prettier",
+      "label": "npm install -D prettier",
+      "command": "npm install -D prettier"
+    },
+    {
+      "id": "opensource:pnpm-add-d-prettier",
+      "label": "pnpm add -D prettier",
+      "command": "pnpm add -D prettier"
+    },
+    {
+      "id": "opensource:yarn-add-d-prettier",
+      "label": "yarn add -D prettier",
+      "command": "yarn add -D prettier"
+    },
+    {
+      "id": "opensource:npm-install-d-esbuild",
+      "label": "npm install -D esbuild",
+      "command": "npm install -D esbuild"
+    },
+    {
+      "id": "opensource:pnpm-add-d-esbuild",
+      "label": "pnpm add -D esbuild",
+      "command": "pnpm add -D esbuild"
+    },
+    {
+      "id": "opensource:yarn-add-d-esbuild",
+      "label": "yarn add -D esbuild",
+      "command": "yarn add -D esbuild"
+    },
+    {
+      "id": "opensource:npm-install-d-swc",
+      "label": "npm install -D swc",
+      "command": "npm install -D swc"
+    },
+    {
+      "id": "opensource:pnpm-add-d-swc",
+      "label": "pnpm add -D swc",
+      "command": "pnpm add -D swc"
+    },
+    {
+      "id": "opensource:yarn-add-d-swc",
+      "label": "yarn add -D swc",
+      "command": "yarn add -D swc"
+    },
+    {
+      "id": "opensource:npm-install-d-rollup",
+      "label": "npm install -D rollup",
+      "command": "npm install -D rollup"
+    },
+    {
+      "id": "opensource:pnpm-add-d-rollup",
+      "label": "pnpm add -D rollup",
+      "command": "pnpm add -D rollup"
+    },
+    {
+      "id": "opensource:yarn-add-d-rollup",
+      "label": "yarn add -D rollup",
+      "command": "yarn add -D rollup"
+    },
+    {
+      "id": "opensource:npm-install-d-webpack",
+      "label": "npm install -D webpack",
+      "command": "npm install -D webpack"
+    },
+    {
+      "id": "opensource:pnpm-add-d-webpack",
+      "label": "pnpm add -D webpack",
+      "command": "pnpm add -D webpack"
+    },
+    {
+      "id": "opensource:yarn-add-d-webpack",
+      "label": "yarn add -D webpack",
+      "command": "yarn add -D webpack"
+    },
+    {
+      "id": "opensource:npm-install-d-typedoc",
+      "label": "npm install -D typedoc",
+      "command": "npm install -D typedoc"
+    },
+    {
+      "id": "opensource:pnpm-add-d-typedoc",
+      "label": "pnpm add -D typedoc",
+      "command": "pnpm add -D typedoc"
+    },
+    {
+      "id": "opensource:yarn-add-d-typedoc",
+      "label": "yarn add -D typedoc",
+      "command": "yarn add -D typedoc"
+    },
+    {
+      "id": "opensource:npm-install-d-storybook",
+      "label": "npm install -D storybook",
+      "command": "npm install -D storybook"
+    },
+    {
+      "id": "opensource:pnpm-add-d-storybook",
+      "label": "pnpm add -D storybook",
+      "command": "pnpm add -D storybook"
+    },
+    {
+      "id": "opensource:yarn-add-d-storybook",
+      "label": "yarn add -D storybook",
+      "command": "yarn add -D storybook"
+    },
+    {
+      "id": "opensource:npm-install-d-cypress",
+      "label": "npm install -D cypress",
+      "command": "npm install -D cypress"
+    },
+    {
+      "id": "opensource:pnpm-add-d-cypress",
+      "label": "pnpm add -D cypress",
+      "command": "pnpm add -D cypress"
+    },
+    {
+      "id": "opensource:yarn-add-d-cypress",
+      "label": "yarn add -D cypress",
+      "command": "yarn add -D cypress"
+    }
+  ]
+}

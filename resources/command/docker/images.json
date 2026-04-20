@@ -1,0 +1,17 @@
+{
+  "language": "docker",
+  "extension": "Dockerfile",
+  "subgroup": "images",
+  "commands": [
+    {
+      "id": "opensource:docker-images",
+      "label": "docker images",
+      "command": "docker images"
+    },
+    {
+      "id": "opensource:docker-image-prune-f",
+      "label": "docker image prune -f",
+      "command": "docker image prune -f"
+    }
+  ]
+}

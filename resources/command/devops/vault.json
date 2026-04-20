@@ -1,0 +1,22 @@
+{
+  "language": "devops",
+  "extension": ".yaml",
+  "subgroup": "vault",
+  "commands": [
+    {
+      "id": "opensource:vault-status",
+      "label": "vault status",
+      "command": "vault status"
+    },
+    {
+      "id": "opensource:vault-login",
+      "label": "vault login",
+      "command": "vault login"
+    },
+    {
+      "id": "opensource:vault-kv-get-secret-app",
+      "label": "vault kv get secret/app",
+      "command": "vault kv get secret/app"
+    }
+  ]
+}

@@ -1,0 +1,367 @@
+{
+  "language": "node",
+  "extension": ".js",
+  "subgroup": "scripts",
+  "commands": [
+    {
+      "id": "opensource:npm-run-dev",
+      "label": "npm run dev",
+      "command": "npm run dev"
+    },
+    {
+      "id": "opensource:pnpm-dev",
+      "label": "pnpm dev",
+      "command": "pnpm dev"
+    },
+    {
+      "id": "opensource:yarn-dev",
+      "label": "yarn dev",
+      "command": "yarn dev"
+    },
+    {
+      "id": "opensource:npm-run-build",
+      "label": "npm run build",
+      "command": "npm run build"
+    },
+    {
+      "id": "opensource:pnpm-build",
+      "label": "pnpm build",
+      "command": "pnpm build"
+    },
+    {
+      "id": "opensource:yarn-build",
+      "label": "yarn build",
+      "command": "yarn build"
+    },
+    {
+      "id": "opensource:npm-run-test",
+      "label": "npm run test",
+      "command": "npm run test"
+    },
+    {
+      "id": "opensource:pnpm-test",
+      "label": "pnpm test",
+      "command": "pnpm test"
+    },
+    {
+      "id": "opensource:yarn-test",
+      "label": "yarn test",
+      "command": "yarn test"
+    },
+    {
+      "id": "opensource:npm-run-lint",
+      "label": "npm run lint",
+      "command": "npm run lint"
+    },
+    {
+      "id": "opensource:pnpm-lint",
+      "label": "pnpm lint",
+      "command": "pnpm lint"
+    },
+    {
+      "id": "opensource:yarn-lint",
+      "label": "yarn lint",
+      "command": "yarn lint"
+    },
+    {
+      "id": "opensource:npm-run-format",
+      "label": "npm run format",
+      "command": "npm run format"
+    },
+    {
+      "id": "opensource:pnpm-format",
+      "label": "pnpm format",
+      "command": "pnpm format"
+    },
+    {
+      "id": "opensource:yarn-format",
+      "label": "yarn format",
+      "command": "yarn format"
+    },
+    {
+      "id": "opensource:npm-run-typecheck",
+      "label": "npm run typecheck",
+      "command": "npm run typecheck"
+    },
+    {
+      "id": "opensource:pnpm-typecheck",
+      "label": "pnpm typecheck",
+      "command": "pnpm typecheck"
+    },
+    {
+      "id": "opensource:yarn-typecheck",
+      "label": "yarn typecheck",
+      "command": "yarn typecheck"
+    },
+    {
+      "id": "opensource:npm-run-coverage",
+      "label": "npm run coverage",
+      "command": "npm run coverage"
+    },
+    {
+      "id": "opensource:pnpm-coverage",
+      "label": "pnpm coverage",
+      "command": "pnpm coverage"
+    },
+    {
+      "id": "opensource:yarn-coverage",
+      "label": "yarn coverage",
+      "command": "yarn coverage"
+    },
+    {
+      "id": "opensource:npm-run-start",
+      "label": "npm run start",
+      "command": "npm run start"
+    },
+    {
+      "id": "opensource:pnpm-start",
+      "label": "pnpm start",
+      "command": "pnpm start"
+    },
+    {
+      "id": "opensource:yarn-start",
+      "label": "yarn start",
+      "command": "yarn start"
+    },
+    {
+      "id": "opensource:npm-run-preview",
+      "label": "npm run preview",
+      "command": "npm run preview"
+    },
+    {
+      "id": "opensource:pnpm-preview",
+      "label": "pnpm preview",
+      "command": "pnpm preview"
+    },
+    {
+      "id": "opensource:yarn-preview",
+      "label": "yarn preview",
+      "command": "yarn preview"
+    },
+    {
+      "id": "opensource:npm-run-prepare",
+      "label": "npm run prepare",
+      "command": "npm run prepare"
+    },
+    {
+      "id": "opensource:pnpm-prepare",
+      "label": "pnpm prepare",
+      "command": "pnpm prepare"
+    },
+    {
+      "id": "opensource:yarn-prepare",
+      "label": "yarn prepare",
+      "command": "yarn prepare"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-2",
+      "label": "npm run coverage --variant-2",
+      "command": "npm run coverage --variant-2"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-22",
+      "label": "npm run coverage --variant-22",
+      "command": "npm run coverage --variant-22"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-42",
+      "label": "npm run coverage --variant-42",
+      "command": "npm run coverage --variant-42"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-62",
+      "label": "npm run coverage --variant-62",
+      "command": "npm run coverage --variant-62"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-82",
+      "label": "npm run coverage --variant-82",
+      "command": "npm run coverage --variant-82"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-102",
+      "label": "npm run coverage --variant-102",
+      "command": "npm run coverage --variant-102"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-122",
+      "label": "npm run coverage --variant-122",
+      "command": "npm run coverage --variant-122"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-142",
+      "label": "npm run coverage --variant-142",
+      "command": "npm run coverage --variant-142"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-162",
+      "label": "npm run coverage --variant-162",
+      "command": "npm run coverage --variant-162"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-182",
+      "label": "npm run coverage --variant-182",
+      "command": "npm run coverage --variant-182"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-202",
+      "label": "npm run coverage --variant-202",
+      "command": "npm run coverage --variant-202"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-222",
+      "label": "npm run coverage --variant-222",
+      "command": "npm run coverage --variant-222"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-242",
+      "label": "npm run coverage --variant-242",
+      "command": "npm run coverage --variant-242"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-262",
+      "label": "npm run coverage --variant-262",
+      "command": "npm run coverage --variant-262"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-282",
+      "label": "npm run coverage --variant-282",
+      "command": "npm run coverage --variant-282"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-302",
+      "label": "npm run coverage --variant-302",
+      "command": "npm run coverage --variant-302"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-322",
+      "label": "npm run coverage --variant-322",
+      "command": "npm run coverage --variant-322"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-342",
+      "label": "npm run coverage --variant-342",
+      "command": "npm run coverage --variant-342"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-362",
+      "label": "npm run coverage --variant-362",
+      "command": "npm run coverage --variant-362"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-382",
+      "label": "npm run coverage --variant-382",
+      "command": "npm run coverage --variant-382"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-402",
+      "label": "npm run coverage --variant-402",
+      "command": "npm run coverage --variant-402"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-422",
+      "label": "npm run coverage --variant-422",
+      "command": "npm run coverage --variant-422"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-442",
+      "label": "npm run coverage --variant-442",
+      "command": "npm run coverage --variant-442"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-462",
+      "label": "npm run coverage --variant-462",
+      "command": "npm run coverage --variant-462"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-482",
+      "label": "npm run coverage --variant-482",
+      "command": "npm run coverage --variant-482"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-502",
+      "label": "npm run coverage --variant-502",
+      "command": "npm run coverage --variant-502"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-522",
+      "label": "npm run coverage --variant-522",
+      "command": "npm run coverage --variant-522"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-542",
+      "label": "npm run coverage --variant-542",
+      "command": "npm run coverage --variant-542"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-562",
+      "label": "npm run coverage --variant-562",
+      "command": "npm run coverage --variant-562"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-582",
+      "label": "npm run coverage --variant-582",
+      "command": "npm run coverage --variant-582"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-602",
+      "label": "npm run coverage --variant-602",
+      "command": "npm run coverage --variant-602"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-622",
+      "label": "npm run coverage --variant-622",
+      "command": "npm run coverage --variant-622"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-642",
+      "label": "npm run coverage --variant-642",
+      "command": "npm run coverage --variant-642"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-662",
+      "label": "npm run coverage --variant-662",
+      "command": "npm run coverage --variant-662"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-682",
+      "label": "npm run coverage --variant-682",
+      "command": "npm run coverage --variant-682"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-702",
+      "label": "npm run coverage --variant-702",
+      "command": "npm run coverage --variant-702"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-722",
+      "label": "npm run coverage --variant-722",
+      "command": "npm run coverage --variant-722"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-742",
+      "label": "npm run coverage --variant-742",
+      "command": "npm run coverage --variant-742"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-762",
+      "label": "npm run coverage --variant-762",
+      "command": "npm run coverage --variant-762"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-782",
+      "label": "npm run coverage --variant-782",
+      "command": "npm run coverage --variant-782"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-802",
+      "label": "npm run coverage --variant-802",
+      "command": "npm run coverage --variant-802"
+    },
+    {
+      "id": "opensource:npm-run-coverage-variant-822",
+      "label": "npm run coverage --variant-822",
+      "command": "npm run coverage --variant-822"
+    }
+  ]
+}

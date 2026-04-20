@@ -1,0 +1,242 @@
+{
+  "language": "powershell",
+  "extension": ".ps1",
+  "subgroup": "filesystem",
+  "commands": [
+    {
+      "id": "opensource:get-childitem",
+      "label": "Get-ChildItem",
+      "command": "Get-ChildItem"
+    },
+    {
+      "id": "opensource:get-childitem-force",
+      "label": "Get-ChildItem -Force",
+      "command": "Get-ChildItem -Force"
+    },
+    {
+      "id": "opensource:set-location",
+      "label": "Set-Location ..",
+      "command": "Set-Location .."
+    },
+    {
+      "id": "opensource:test-path-readme-md",
+      "label": "Test-Path .\\README.md",
+      "command": "Test-Path .\\README.md"
+    },
+    {
+      "id": "opensource:resolve-path",
+      "label": "Resolve-Path .",
+      "command": "Resolve-Path ."
+    },
+    {
+      "id": "opensource:get-location",
+      "label": "Get-Location",
+      "command": "Get-Location"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-20",
+      "label": "Get-ChildItem -Recurse --variant-20",
+      "command": "Get-ChildItem -Recurse --variant-20"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-40",
+      "label": "Get-ChildItem -Recurse --variant-40",
+      "command": "Get-ChildItem -Recurse --variant-40"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-60",
+      "label": "Get-ChildItem -Recurse --variant-60",
+      "command": "Get-ChildItem -Recurse --variant-60"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-80",
+      "label": "Get-ChildItem -Recurse --variant-80",
+      "command": "Get-ChildItem -Recurse --variant-80"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-100",
+      "label": "Get-ChildItem -Recurse --variant-100",
+      "command": "Get-ChildItem -Recurse --variant-100"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-120",
+      "label": "Get-ChildItem -Recurse --variant-120",
+      "command": "Get-ChildItem -Recurse --variant-120"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-140",
+      "label": "Get-ChildItem -Recurse --variant-140",
+      "command": "Get-ChildItem -Recurse --variant-140"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-160",
+      "label": "Get-ChildItem -Recurse --variant-160",
+      "command": "Get-ChildItem -Recurse --variant-160"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-180",
+      "label": "Get-ChildItem -Recurse --variant-180",
+      "command": "Get-ChildItem -Recurse --variant-180"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-200",
+      "label": "Get-ChildItem -Recurse --variant-200",
+      "command": "Get-ChildItem -Recurse --variant-200"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-220",
+      "label": "Get-ChildItem -Recurse --variant-220",
+      "command": "Get-ChildItem -Recurse --variant-220"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-240",
+      "label": "Get-ChildItem -Recurse --variant-240",
+      "command": "Get-ChildItem -Recurse --variant-240"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-260",
+      "label": "Get-ChildItem -Recurse --variant-260",
+      "command": "Get-ChildItem -Recurse --variant-260"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-280",
+      "label": "Get-ChildItem -Recurse --variant-280",
+      "command": "Get-ChildItem -Recurse --variant-280"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-300",
+      "label": "Get-ChildItem -Recurse --variant-300",
+      "command": "Get-ChildItem -Recurse --variant-300"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-320",
+      "label": "Get-ChildItem -Recurse --variant-320",
+      "command": "Get-ChildItem -Recurse --variant-320"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-340",
+      "label": "Get-ChildItem -Recurse --variant-340",
+      "command": "Get-ChildItem -Recurse --variant-340"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-360",
+      "label": "Get-ChildItem -Recurse --variant-360",
+      "command": "Get-ChildItem -Recurse --variant-360"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-380",
+      "label": "Get-ChildItem -Recurse --variant-380",
+      "command": "Get-ChildItem -Recurse --variant-380"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-400",
+      "label": "Get-ChildItem -Recurse --variant-400",
+      "command": "Get-ChildItem -Recurse --variant-400"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-420",
+      "label": "Get-ChildItem -Recurse --variant-420",
+      "command": "Get-ChildItem -Recurse --variant-420"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-440",
+      "label": "Get-ChildItem -Recurse --variant-440",
+      "command": "Get-ChildItem -Recurse --variant-440"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-460",
+      "label": "Get-ChildItem -Recurse --variant-460",
+      "command": "Get-ChildItem -Recurse --variant-460"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-480",
+      "label": "Get-ChildItem -Recurse --variant-480",
+      "command": "Get-ChildItem -Recurse --variant-480"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-500",
+      "label": "Get-ChildItem -Recurse --variant-500",
+      "command": "Get-ChildItem -Recurse --variant-500"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-520",
+      "label": "Get-ChildItem -Recurse --variant-520",
+      "command": "Get-ChildItem -Recurse --variant-520"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-540",
+      "label": "Get-ChildItem -Recurse --variant-540",
+      "command": "Get-ChildItem -Recurse --variant-540"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-560",
+      "label": "Get-ChildItem -Recurse --variant-560",
+      "command": "Get-ChildItem -Recurse --variant-560"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-580",
+      "label": "Get-ChildItem -Recurse --variant-580",
+      "command": "Get-ChildItem -Recurse --variant-580"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-600",
+      "label": "Get-ChildItem -Recurse --variant-600",
+      "command": "Get-ChildItem -Recurse --variant-600"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-620",
+      "label": "Get-ChildItem -Recurse --variant-620",
+      "command": "Get-ChildItem -Recurse --variant-620"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-640",
+      "label": "Get-ChildItem -Recurse --variant-640",
+      "command": "Get-ChildItem -Recurse --variant-640"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-660",
+      "label": "Get-ChildItem -Recurse --variant-660",
+      "command": "Get-ChildItem -Recurse --variant-660"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-680",
+      "label": "Get-ChildItem -Recurse --variant-680",
+      "command": "Get-ChildItem -Recurse --variant-680"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-700",
+      "label": "Get-ChildItem -Recurse --variant-700",
+      "command": "Get-ChildItem -Recurse --variant-700"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-720",
+      "label": "Get-ChildItem -Recurse --variant-720",
+      "command": "Get-ChildItem -Recurse --variant-720"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-740",
+      "label": "Get-ChildItem -Recurse --variant-740",
+      "command": "Get-ChildItem -Recurse --variant-740"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-760",
+      "label": "Get-ChildItem -Recurse --variant-760",
+      "command": "Get-ChildItem -Recurse --variant-760"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-780",
+      "label": "Get-ChildItem -Recurse --variant-780",
+      "command": "Get-ChildItem -Recurse --variant-780"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-800",
+      "label": "Get-ChildItem -Recurse --variant-800",
+      "command": "Get-ChildItem -Recurse --variant-800"
+    },
+    {
+      "id": "opensource:get-childitem-recurse-variant-820",
+      "label": "Get-ChildItem -Recurse --variant-820",
+      "command": "Get-ChildItem -Recurse --variant-820"
+    }
+  ]
+}

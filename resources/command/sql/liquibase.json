@@ -1,0 +1,17 @@
+{
+  "language": "sql",
+  "extension": ".sql",
+  "subgroup": "liquibase",
+  "commands": [
+    {
+      "id": "opensource:liquibase-update",
+      "label": "liquibase update",
+      "command": "liquibase update"
+    },
+    {
+      "id": "opensource:liquibase-status",
+      "label": "liquibase status",
+      "command": "liquibase status"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "language": "docker",
+  "extension": "Dockerfile",
+  "subgroup": "volumes",
+  "commands": [
+    {
+      "id": "opensource:docker-volume-ls",
+      "label": "docker volume ls",
+      "command": "docker volume ls"
+    },
+    {
+      "id": "opensource:docker-volume-prune-f",
+      "label": "docker volume prune -f",
+      "command": "docker volume prune -f"
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "language": "docker",
+  "extension": "Dockerfile",
+  "subgroup": "docker-core",
+  "commands": [
+    {
+      "id": "opensource:docker-version",
+      "label": "docker --version",
+      "command": "docker --version"
+    },
+    {
+      "id": "opensource:docker-build-t-my-app",
+      "label": "docker build -t my-app .",
+      "command": "docker build -t my-app ."
+    },
+    {
+      "id": "opensource:docker-run-my-app",
+      "label": "docker run my-app",
+      "command": "docker run my-app"
+    },
+    {
+      "id": "opensource:docker-run-p-8080-8080-my-app",
+      "label": "docker run -p 8080:8080 my-app",
+      "command": "docker run -p 8080:8080 my-app"
+    },
+    {
+      "id": "opensource:docker-ps",
+      "label": "docker ps",
+      "command": "docker ps"
+    },
+    {
+      "id": "opensource:docker-ps-a",
+      "label": "docker ps -a",
+      "command": "docker ps -a"
+    },
+    {
+      "id": "opensource:docker-pull-nginx",
+      "label": "docker pull nginx",
+      "command": "docker pull nginx"
+    },
+    {
+      "id": "opensource:docker-logs-container-id",
+      "label": "docker logs container_id",
+      "command": "docker logs container_id"
+    },
+    {
+      "id": "opensource:docker-stop-container-id",
+      "label": "docker stop container_id",
+      "command": "docker stop container_id"
+    },
+    {
+      "id": "opensource:docker-start-container-id",
+      "label": "docker start container_id",
+      "command": "docker start container_id"
+    },
+    {
+      "id": "opensource:docker-restart-container-id",
+      "label": "docker restart container_id",
+      "command": "docker restart container_id"
+    },
+    {
+      "id": "opensource:docker-rm-container-id",
+      "label": "docker rm container_id",
+      "command": "docker rm container_id"
+    },
+    {
+      "id": "opensource:docker-rmi-image-id",
+      "label": "docker rmi image_id",
+      "command": "docker rmi image_id"
+    },
+    {
+      "id": "opensource:docker-login",
+      "label": "docker login",
+      "command": "docker login"
+    },
+    {
+      "id": "opensource:docker-inspect-container-id",
+      "label": "docker inspect container_id",
+      "command": "docker inspect container_id"
+    },
+    {
+      "id": "opensource:docker-stats",
+      "label": "docker stats",
+      "command": "docker stats"
+    },
+    {
+      "id": "opensource:docker-top-container-id",
+      "label": "docker top container_id",
+      "command": "docker top container_id"
+    },
+    {
+      "id": "opensource:docker-save-my-app-o-my-app-tar",
+      "label": "docker save my-app -o my-app.tar",
+      "command": "docker save my-app -o my-app.tar"
+    },
+    {
+      "id": "opensource:docker-load-i-my-app-tar",
+      "label": "docker load -i my-app.tar",
+      "command": "docker load -i my-app.tar"
+    },
+    {
+      "id": "opensource:docker-history-my-app",
+      "label": "docker history my-app",
+      "command": "docker history my-app"
+    },
+    {
+      "id": "opensource:docker-info",
+      "label": "docker info",
+      "command": "docker info"
+    },
+    {
+      "id": "opensource:docker-builder-prune-f",
+      "label": "docker builder prune -f",
+      "command": "docker builder prune -f"
+    }
+  ]
+}

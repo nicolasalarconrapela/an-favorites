@@ -1,0 +1,22 @@
+{
+  "language": "typescript",
+  "extension": ".ts",
+  "subgroup": "next",
+  "commands": [
+    {
+      "id": "opensource:next-dev",
+      "label": "next dev",
+      "command": "next dev"
+    },
+    {
+      "id": "opensource:next-build",
+      "label": "next build",
+      "command": "next build"
+    },
+    {
+      "id": "opensource:next-start",
+      "label": "next start",
+      "command": "next start"
+    }
+  ]
+}

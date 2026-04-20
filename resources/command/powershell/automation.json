@@ -1,0 +1,12 @@
+{
+  "language": "powershell",
+  "extension": ".ps1",
+  "subgroup": "automation",
+  "commands": [
+    {
+      "id": "opensource:start-process-code",
+      "label": "Start-Process code .",
+      "command": "Start-Process code ."
+    }
+  ]
+}

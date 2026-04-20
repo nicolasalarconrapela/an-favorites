@@ -1,0 +1,17 @@
+{
+  "language": "sql",
+  "extension": ".sql",
+  "subgroup": "dbmate",
+  "commands": [
+    {
+      "id": "opensource:dbmate-up",
+      "label": "dbmate up",
+      "command": "dbmate up"
+    },
+    {
+      "id": "opensource:dbmate-rollback",
+      "label": "dbmate rollback",
+      "command": "dbmate rollback"
+    }
+  ]
+}

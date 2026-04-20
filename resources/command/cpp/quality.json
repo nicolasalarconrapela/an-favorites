@@ -1,0 +1,227 @@
+{
+  "language": "cpp",
+  "extension": ".cpp",
+  "subgroup": "quality",
+  "commands": [
+    {
+      "id": "opensource:clang-format-i-src-cpp",
+      "label": "clang-format -i src/*.cpp",
+      "command": "clang-format -i src/*.cpp"
+    },
+    {
+      "id": "opensource:clang-tidy-src-cpp",
+      "label": "clang-tidy src/*.cpp",
+      "command": "clang-tidy src/*.cpp"
+    },
+    {
+      "id": "opensource:cppcheck",
+      "label": "cppcheck .",
+      "command": "cppcheck ."
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-17",
+      "label": "cpplint src/main.cpp --variant-17",
+      "command": "cpplint src/main.cpp --variant-17"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-37",
+      "label": "cpplint src/main.cpp --variant-37",
+      "command": "cpplint src/main.cpp --variant-37"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-57",
+      "label": "cpplint src/main.cpp --variant-57",
+      "command": "cpplint src/main.cpp --variant-57"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-77",
+      "label": "cpplint src/main.cpp --variant-77",
+      "command": "cpplint src/main.cpp --variant-77"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-97",
+      "label": "cpplint src/main.cpp --variant-97",
+      "command": "cpplint src/main.cpp --variant-97"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-117",
+      "label": "cpplint src/main.cpp --variant-117",
+      "command": "cpplint src/main.cpp --variant-117"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-137",
+      "label": "cpplint src/main.cpp --variant-137",
+      "command": "cpplint src/main.cpp --variant-137"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-157",
+      "label": "cpplint src/main.cpp --variant-157",
+      "command": "cpplint src/main.cpp --variant-157"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-177",
+      "label": "cpplint src/main.cpp --variant-177",
+      "command": "cpplint src/main.cpp --variant-177"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-197",
+      "label": "cpplint src/main.cpp --variant-197",
+      "command": "cpplint src/main.cpp --variant-197"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-217",
+      "label": "cpplint src/main.cpp --variant-217",
+      "command": "cpplint src/main.cpp --variant-217"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-237",
+      "label": "cpplint src/main.cpp --variant-237",
+      "command": "cpplint src/main.cpp --variant-237"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-257",
+      "label": "cpplint src/main.cpp --variant-257",
+      "command": "cpplint src/main.cpp --variant-257"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-277",
+      "label": "cpplint src/main.cpp --variant-277",
+      "command": "cpplint src/main.cpp --variant-277"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-297",
+      "label": "cpplint src/main.cpp --variant-297",
+      "command": "cpplint src/main.cpp --variant-297"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-317",
+      "label": "cpplint src/main.cpp --variant-317",
+      "command": "cpplint src/main.cpp --variant-317"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-337",
+      "label": "cpplint src/main.cpp --variant-337",
+      "command": "cpplint src/main.cpp --variant-337"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-357",
+      "label": "cpplint src/main.cpp --variant-357",
+      "command": "cpplint src/main.cpp --variant-357"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-377",
+      "label": "cpplint src/main.cpp --variant-377",
+      "command": "cpplint src/main.cpp --variant-377"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-397",
+      "label": "cpplint src/main.cpp --variant-397",
+      "command": "cpplint src/main.cpp --variant-397"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-417",
+      "label": "cpplint src/main.cpp --variant-417",
+      "command": "cpplint src/main.cpp --variant-417"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-437",
+      "label": "cpplint src/main.cpp --variant-437",
+      "command": "cpplint src/main.cpp --variant-437"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-457",
+      "label": "cpplint src/main.cpp --variant-457",
+      "command": "cpplint src/main.cpp --variant-457"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-477",
+      "label": "cpplint src/main.cpp --variant-477",
+      "command": "cpplint src/main.cpp --variant-477"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-497",
+      "label": "cpplint src/main.cpp --variant-497",
+      "command": "cpplint src/main.cpp --variant-497"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-517",
+      "label": "cpplint src/main.cpp --variant-517",
+      "command": "cpplint src/main.cpp --variant-517"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-537",
+      "label": "cpplint src/main.cpp --variant-537",
+      "command": "cpplint src/main.cpp --variant-537"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-557",
+      "label": "cpplint src/main.cpp --variant-557",
+      "command": "cpplint src/main.cpp --variant-557"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-577",
+      "label": "cpplint src/main.cpp --variant-577",
+      "command": "cpplint src/main.cpp --variant-577"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-597",
+      "label": "cpplint src/main.cpp --variant-597",
+      "command": "cpplint src/main.cpp --variant-597"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-617",
+      "label": "cpplint src/main.cpp --variant-617",
+      "command": "cpplint src/main.cpp --variant-617"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-637",
+      "label": "cpplint src/main.cpp --variant-637",
+      "command": "cpplint src/main.cpp --variant-637"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-657",
+      "label": "cpplint src/main.cpp --variant-657",
+      "command": "cpplint src/main.cpp --variant-657"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-677",
+      "label": "cpplint src/main.cpp --variant-677",
+      "command": "cpplint src/main.cpp --variant-677"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-697",
+      "label": "cpplint src/main.cpp --variant-697",
+      "command": "cpplint src/main.cpp --variant-697"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-717",
+      "label": "cpplint src/main.cpp --variant-717",
+      "command": "cpplint src/main.cpp --variant-717"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-737",
+      "label": "cpplint src/main.cpp --variant-737",
+      "command": "cpplint src/main.cpp --variant-737"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-757",
+      "label": "cpplint src/main.cpp --variant-757",
+      "command": "cpplint src/main.cpp --variant-757"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-777",
+      "label": "cpplint src/main.cpp --variant-777",
+      "command": "cpplint src/main.cpp --variant-777"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-797",
+      "label": "cpplint src/main.cpp --variant-797",
+      "command": "cpplint src/main.cpp --variant-797"
+    },
+    {
+      "id": "opensource:cpplint-src-main-cpp-variant-817",
+      "label": "cpplint src/main.cpp --variant-817",
+      "command": "cpplint src/main.cpp --variant-817"
+    }
+  ]
+}

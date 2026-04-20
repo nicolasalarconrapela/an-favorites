@@ -1,0 +1,77 @@
+{
+  "language": "ruby",
+  "extension": ".rb",
+  "subgroup": "bundler",
+  "commands": [
+    {
+      "id": "opensource:bundle-init",
+      "label": "bundle init",
+      "command": "bundle init"
+    },
+    {
+      "id": "opensource:bundle-install",
+      "label": "bundle install",
+      "command": "bundle install"
+    },
+    {
+      "id": "opensource:bundle-update",
+      "label": "bundle update",
+      "command": "bundle update"
+    },
+    {
+      "id": "opensource:bundle-exec-rspec",
+      "label": "bundle exec rspec",
+      "command": "bundle exec rspec"
+    },
+    {
+      "id": "opensource:bundle-exec-rake",
+      "label": "bundle exec rake",
+      "command": "bundle exec rake"
+    },
+    {
+      "id": "opensource:bundle-exec-rubocop",
+      "label": "bundle exec rubocop",
+      "command": "bundle exec rubocop"
+    },
+    {
+      "id": "opensource:bundle-add-rails",
+      "label": "bundle add rails",
+      "command": "bundle add rails"
+    },
+    {
+      "id": "opensource:bundle-add-rspec",
+      "label": "bundle add rspec",
+      "command": "bundle add rspec"
+    },
+    {
+      "id": "opensource:bundle-add-rubocop",
+      "label": "bundle add rubocop",
+      "command": "bundle add rubocop"
+    },
+    {
+      "id": "opensource:bundle-add-sinatra",
+      "label": "bundle add sinatra",
+      "command": "bundle add sinatra"
+    },
+    {
+      "id": "opensource:bundle-add-sidekiq",
+      "label": "bundle add sidekiq",
+      "command": "bundle add sidekiq"
+    },
+    {
+      "id": "opensource:bundle-add-puma",
+      "label": "bundle add puma",
+      "command": "bundle add puma"
+    },
+    {
+      "id": "opensource:bundle-add-nokogiri",
+      "label": "bundle add nokogiri",
+      "command": "bundle add nokogiri"
+    },
+    {
+      "id": "opensource:bundle-add-devise",
+      "label": "bundle add devise",
+      "command": "bundle add devise"
+    }
+  ]
+}

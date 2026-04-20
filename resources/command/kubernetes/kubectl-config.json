@@ -1,0 +1,17 @@
+{
+  "language": "kubernetes",
+  "extension": ".yaml",
+  "subgroup": "kubectl-config",
+  "commands": [
+    {
+      "id": "opensource:kubectl-config-get-contexts",
+      "label": "kubectl config get-contexts",
+      "command": "kubectl config get-contexts"
+    },
+    {
+      "id": "opensource:kubectl-config-use-context-minikube",
+      "label": "kubectl config use-context minikube",
+      "command": "kubectl config use-context minikube"
+    }
+  ]
+}

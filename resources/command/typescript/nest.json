@@ -1,0 +1,22 @@
+{
+  "language": "typescript",
+  "extension": ".ts",
+  "subgroup": "nest",
+  "commands": [
+    {
+      "id": "opensource:nest-dev",
+      "label": "nest dev",
+      "command": "nest dev"
+    },
+    {
+      "id": "opensource:nest-build",
+      "label": "nest build",
+      "command": "nest build"
+    },
+    {
+      "id": "opensource:nest-start",
+      "label": "nest start",
+      "command": "nest start"
+    }
+  ]
+}

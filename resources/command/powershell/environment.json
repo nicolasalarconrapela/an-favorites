@@ -1,0 +1,27 @@
+{
+  "language": "powershell",
+  "extension": ".ps1",
+  "subgroup": "environment",
+  "commands": [
+    {
+      "id": "opensource:get-netipaddress",
+      "label": "Get-NetIPAddress",
+      "command": "Get-NetIPAddress"
+    },
+    {
+      "id": "opensource:get-executionpolicy",
+      "label": "Get-ExecutionPolicy",
+      "command": "Get-ExecutionPolicy"
+    },
+    {
+      "id": "opensource:set-executionpolicy-remotesigned-scope-currentuser",
+      "label": "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser",
+      "command": "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser"
+    },
+    {
+      "id": "opensource:get-computerinfo",
+      "label": "Get-ComputerInfo",
+      "command": "Get-ComputerInfo"
+    }
+  ]
+}

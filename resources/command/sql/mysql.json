@@ -1,0 +1,32 @@
+{
+  "language": "sql",
+  "extension": ".sql",
+  "subgroup": "mysql",
+  "commands": [
+    {
+      "id": "opensource:mysql-u-root-p",
+      "label": "mysql -u root -p",
+      "command": "mysql -u root -p"
+    },
+    {
+      "id": "opensource:mysqldump-u-root-p-mydb-backup-sql",
+      "label": "mysqldump -u root -p mydb > backup.sql",
+      "command": "mysqldump -u root -p mydb > backup.sql"
+    },
+    {
+      "id": "opensource:mysql-u-root-p-mydb-schema-sql",
+      "label": "mysql -u root -p mydb < schema.sql",
+      "command": "mysql -u root -p mydb < schema.sql"
+    },
+    {
+      "id": "opensource:mysqladmin-ping",
+      "label": "mysqladmin ping",
+      "command": "mysqladmin ping"
+    },
+    {
+      "id": "opensource:mycli-mydb",
+      "label": "mycli mydb",
+      "command": "mycli mydb"
+    }
+  ]
+}

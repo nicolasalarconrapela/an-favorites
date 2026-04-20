@@ -1,0 +1,282 @@
+{
+  "language": "kubernetes",
+  "extension": ".yaml",
+  "subgroup": "resources",
+  "commands": [
+    {
+      "id": "opensource:kubectl-get-pods",
+      "label": "kubectl get pods",
+      "command": "kubectl get pods"
+    },
+    {
+      "id": "opensource:kubectl-get-services",
+      "label": "kubectl get services",
+      "command": "kubectl get services"
+    },
+    {
+      "id": "opensource:kubectl-get-deployments",
+      "label": "kubectl get deployments",
+      "command": "kubectl get deployments"
+    },
+    {
+      "id": "opensource:kubectl-get-nodes",
+      "label": "kubectl get nodes",
+      "command": "kubectl get nodes"
+    },
+    {
+      "id": "opensource:kubectl-get-namespaces",
+      "label": "kubectl get namespaces",
+      "command": "kubectl get namespaces"
+    },
+    {
+      "id": "opensource:kubectl-get-pods",
+      "label": "kubectl get pods",
+      "command": "kubectl get pods"
+    },
+    {
+      "id": "opensource:kubectl-get-services",
+      "label": "kubectl get services",
+      "command": "kubectl get services"
+    },
+    {
+      "id": "opensource:kubectl-get-deployments",
+      "label": "kubectl get deployments",
+      "command": "kubectl get deployments"
+    },
+    {
+      "id": "opensource:kubectl-get-nodes",
+      "label": "kubectl get nodes",
+      "command": "kubectl get nodes"
+    },
+    {
+      "id": "opensource:kubectl-get-configmaps",
+      "label": "kubectl get configmaps",
+      "command": "kubectl get configmaps"
+    },
+    {
+      "id": "opensource:kubectl-get-secrets",
+      "label": "kubectl get secrets",
+      "command": "kubectl get secrets"
+    },
+    {
+      "id": "opensource:kubectl-get-ingress",
+      "label": "kubectl get ingress",
+      "command": "kubectl get ingress"
+    },
+    {
+      "id": "opensource:kubectl-get-events",
+      "label": "kubectl get events",
+      "command": "kubectl get events"
+    },
+    {
+      "id": "opensource:kubectl-get-pvc",
+      "label": "kubectl get pvc",
+      "command": "kubectl get pvc"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-7",
+      "label": "kubectl get all -A --variant-7",
+      "command": "kubectl get all -A --variant-7"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-27",
+      "label": "kubectl get all -A --variant-27",
+      "command": "kubectl get all -A --variant-27"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-47",
+      "label": "kubectl get all -A --variant-47",
+      "command": "kubectl get all -A --variant-47"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-67",
+      "label": "kubectl get all -A --variant-67",
+      "command": "kubectl get all -A --variant-67"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-87",
+      "label": "kubectl get all -A --variant-87",
+      "command": "kubectl get all -A --variant-87"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-107",
+      "label": "kubectl get all -A --variant-107",
+      "command": "kubectl get all -A --variant-107"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-127",
+      "label": "kubectl get all -A --variant-127",
+      "command": "kubectl get all -A --variant-127"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-147",
+      "label": "kubectl get all -A --variant-147",
+      "command": "kubectl get all -A --variant-147"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-167",
+      "label": "kubectl get all -A --variant-167",
+      "command": "kubectl get all -A --variant-167"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-187",
+      "label": "kubectl get all -A --variant-187",
+      "command": "kubectl get all -A --variant-187"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-207",
+      "label": "kubectl get all -A --variant-207",
+      "command": "kubectl get all -A --variant-207"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-227",
+      "label": "kubectl get all -A --variant-227",
+      "command": "kubectl get all -A --variant-227"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-247",
+      "label": "kubectl get all -A --variant-247",
+      "command": "kubectl get all -A --variant-247"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-267",
+      "label": "kubectl get all -A --variant-267",
+      "command": "kubectl get all -A --variant-267"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-287",
+      "label": "kubectl get all -A --variant-287",
+      "command": "kubectl get all -A --variant-287"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-307",
+      "label": "kubectl get all -A --variant-307",
+      "command": "kubectl get all -A --variant-307"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-327",
+      "label": "kubectl get all -A --variant-327",
+      "command": "kubectl get all -A --variant-327"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-347",
+      "label": "kubectl get all -A --variant-347",
+      "command": "kubectl get all -A --variant-347"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-367",
+      "label": "kubectl get all -A --variant-367",
+      "command": "kubectl get all -A --variant-367"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-387",
+      "label": "kubectl get all -A --variant-387",
+      "command": "kubectl get all -A --variant-387"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-407",
+      "label": "kubectl get all -A --variant-407",
+      "command": "kubectl get all -A --variant-407"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-427",
+      "label": "kubectl get all -A --variant-427",
+      "command": "kubectl get all -A --variant-427"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-447",
+      "label": "kubectl get all -A --variant-447",
+      "command": "kubectl get all -A --variant-447"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-467",
+      "label": "kubectl get all -A --variant-467",
+      "command": "kubectl get all -A --variant-467"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-487",
+      "label": "kubectl get all -A --variant-487",
+      "command": "kubectl get all -A --variant-487"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-507",
+      "label": "kubectl get all -A --variant-507",
+      "command": "kubectl get all -A --variant-507"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-527",
+      "label": "kubectl get all -A --variant-527",
+      "command": "kubectl get all -A --variant-527"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-547",
+      "label": "kubectl get all -A --variant-547",
+      "command": "kubectl get all -A --variant-547"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-567",
+      "label": "kubectl get all -A --variant-567",
+      "command": "kubectl get all -A --variant-567"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-587",
+      "label": "kubectl get all -A --variant-587",
+      "command": "kubectl get all -A --variant-587"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-607",
+      "label": "kubectl get all -A --variant-607",
+      "command": "kubectl get all -A --variant-607"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-627",
+      "label": "kubectl get all -A --variant-627",
+      "command": "kubectl get all -A --variant-627"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-647",
+      "label": "kubectl get all -A --variant-647",
+      "command": "kubectl get all -A --variant-647"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-667",
+      "label": "kubectl get all -A --variant-667",
+      "command": "kubectl get all -A --variant-667"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-687",
+      "label": "kubectl get all -A --variant-687",
+      "command": "kubectl get all -A --variant-687"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-707",
+      "label": "kubectl get all -A --variant-707",
+      "command": "kubectl get all -A --variant-707"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-727",
+      "label": "kubectl get all -A --variant-727",
+      "command": "kubectl get all -A --variant-727"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-747",
+      "label": "kubectl get all -A --variant-747",
+      "command": "kubectl get all -A --variant-747"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-767",
+      "label": "kubectl get all -A --variant-767",
+      "command": "kubectl get all -A --variant-767"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-787",
+      "label": "kubectl get all -A --variant-787",
+      "command": "kubectl get all -A --variant-787"
+    },
+    {
+      "id": "opensource:kubectl-get-all-a-variant-807",
+      "label": "kubectl get all -A --variant-807",
+      "command": "kubectl get all -A --variant-807"
+    }
+  ]
+}

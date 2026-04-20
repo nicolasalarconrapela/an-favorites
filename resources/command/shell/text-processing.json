@@ -1,0 +1,97 @@
+{
+  "language": "shell",
+  "extension": ".sh",
+  "subgroup": "text-processing",
+  "commands": [
+    {
+      "id": "opensource:grep-error-app-log",
+      "label": "grep \"error\" app.log",
+      "command": "grep \"error\" app.log"
+    },
+    {
+      "id": "opensource:grep-r-todo-src",
+      "label": "grep -R \"TODO\" src",
+      "command": "grep -R \"TODO\" src"
+    },
+    {
+      "id": "opensource:find-name-ts",
+      "label": "find . -name \"*.ts\"",
+      "command": "find . -name \"*.ts\""
+    },
+    {
+      "id": "opensource:find-type-f-wc-l",
+      "label": "find . -type f | wc -l",
+      "command": "find . -type f | wc -l"
+    },
+    {
+      "id": "opensource:sed-n-1-20p-file-txt",
+      "label": "sed -n '1,20p' file.txt",
+      "command": "sed -n '1,20p' file.txt"
+    },
+    {
+      "id": "opensource:awk-print-1-data-txt",
+      "label": "awk '{print $1}' data.txt",
+      "command": "awk '{print $1}' data.txt"
+    },
+    {
+      "id": "opensource:sort-file-txt",
+      "label": "sort file.txt",
+      "command": "sort file.txt"
+    },
+    {
+      "id": "opensource:uniq-file-txt",
+      "label": "uniq file.txt",
+      "command": "uniq file.txt"
+    },
+    {
+      "id": "opensource:find-src-type-f",
+      "label": "find src -type f",
+      "command": "find src -type f"
+    },
+    {
+      "id": "opensource:find-dist-type-f",
+      "label": "find dist -type f",
+      "command": "find dist -type f"
+    },
+    {
+      "id": "opensource:find-build-type-f",
+      "label": "find build -type f",
+      "command": "find build -type f"
+    },
+    {
+      "id": "opensource:find-logs-type-f",
+      "label": "find logs -type f",
+      "command": "find logs -type f"
+    },
+    {
+      "id": "opensource:find-tmp-type-f",
+      "label": "find tmp -type f",
+      "command": "find tmp -type f"
+    },
+    {
+      "id": "opensource:find-coverage-type-f",
+      "label": "find coverage -type f",
+      "command": "find coverage -type f"
+    },
+    {
+      "id": "opensource:find-node-modules-type-f",
+      "label": "find node_modules -type f",
+      "command": "find node_modules -type f"
+    },
+    {
+      "id": "opensource:find-readme-md-type-f",
+      "label": "find README.md -type f",
+      "command": "find README.md -type f"
+    },
+    {
+      "id": "opensource:find-package-json-type-f",
+      "label": "find package.json -type f",
+      "command": "find package.json -type f"
+    },
+    {
+      "id": "opensource:find-dockerfile-type-f",
+      "label": "find Dockerfile -type f",
+      "command": "find Dockerfile -type f"
+    }
+  ]
+}

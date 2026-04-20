@@ -1,0 +1,127 @@
+{
+  "language": "java",
+  "extension": ".java",
+  "subgroup": "java-core",
+  "commands": [
+    {
+      "id": "opensource:java-version",
+      "label": "java -version",
+      "command": "java -version"
+    },
+    {
+      "id": "opensource:javac-main-java",
+      "label": "javac Main.java",
+      "command": "javac Main.java"
+    },
+    {
+      "id": "opensource:java-main",
+      "label": "java Main",
+      "command": "java Main"
+    },
+    {
+      "id": "opensource:jshell",
+      "label": "jshell",
+      "command": "jshell"
+    },
+    {
+      "id": "opensource:javac-src-main-java-userservice-java",
+      "label": "javac src/main/java/UserService.java",
+      "command": "javac src/main/java/UserService.java"
+    },
+    {
+      "id": "opensource:java-userservice",
+      "label": "java UserService",
+      "command": "java UserService"
+    },
+    {
+      "id": "opensource:javac-src-main-java-orderservice-java",
+      "label": "javac src/main/java/OrderService.java",
+      "command": "javac src/main/java/OrderService.java"
+    },
+    {
+      "id": "opensource:java-orderservice",
+      "label": "java OrderService",
+      "command": "java OrderService"
+    },
+    {
+      "id": "opensource:javac-src-main-java-main-java",
+      "label": "javac src/main/java/Main.java",
+      "command": "javac src/main/java/Main.java"
+    },
+    {
+      "id": "opensource:java-main",
+      "label": "java Main",
+      "command": "java Main"
+    },
+    {
+      "id": "opensource:javac-src-main-java-application-java",
+      "label": "javac src/main/java/Application.java",
+      "command": "javac src/main/java/Application.java"
+    },
+    {
+      "id": "opensource:java-application",
+      "label": "java Application",
+      "command": "java Application"
+    },
+    {
+      "id": "opensource:javac-src-main-java-usercontroller-java",
+      "label": "javac src/main/java/UserController.java",
+      "command": "javac src/main/java/UserController.java"
+    },
+    {
+      "id": "opensource:java-usercontroller",
+      "label": "java UserController",
+      "command": "java UserController"
+    },
+    {
+      "id": "opensource:javac-src-main-java-healthcheck-java",
+      "label": "javac src/main/java/HealthCheck.java",
+      "command": "javac src/main/java/HealthCheck.java"
+    },
+    {
+      "id": "opensource:java-healthcheck",
+      "label": "java HealthCheck",
+      "command": "java HealthCheck"
+    },
+    {
+      "id": "opensource:javac-src-main-java-paymentservice-java",
+      "label": "javac src/main/java/PaymentService.java",
+      "command": "javac src/main/java/PaymentService.java"
+    },
+    {
+      "id": "opensource:java-paymentservice",
+      "label": "java PaymentService",
+      "command": "java PaymentService"
+    },
+    {
+      "id": "opensource:javac-src-main-java-emailsender-java",
+      "label": "javac src/main/java/EmailSender.java",
+      "command": "javac src/main/java/EmailSender.java"
+    },
+    {
+      "id": "opensource:java-emailsender",
+      "label": "java EmailSender",
+      "command": "java EmailSender"
+    },
+    {
+      "id": "opensource:javac-src-main-java-jwtfilter-java",
+      "label": "javac src/main/java/JwtFilter.java",
+      "command": "javac src/main/java/JwtFilter.java"
+    },
+    {
+      "id": "opensource:java-jwtfilter",
+      "label": "java JwtFilter",
+      "command": "java JwtFilter"
+    },
+    {
+      "id": "opensource:javac-src-main-java-appconfig-java",
+      "label": "javac src/main/java/AppConfig.java",
+      "command": "javac src/main/java/AppConfig.java"
+    },
+    {
+      "id": "opensource:java-appconfig",
+      "label": "java AppConfig",
+      "command": "java AppConfig"
+    }
+  ]
+}

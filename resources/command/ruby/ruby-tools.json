@@ -1,0 +1,12 @@
+{
+  "language": "ruby",
+  "extension": ".rb",
+  "subgroup": "ruby-tools",
+  "commands": [
+    {
+      "id": "opensource:spring-stop",
+      "label": "spring stop",
+      "command": "spring stop"
+    }
+  ]
+}

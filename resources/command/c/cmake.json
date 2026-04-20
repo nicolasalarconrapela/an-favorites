@@ -1,0 +1,17 @@
+{
+  "language": "c",
+  "extension": ".c",
+  "subgroup": "cmake",
+  "commands": [
+    {
+      "id": "opensource:cmake-s-b-build",
+      "label": "cmake -S . -B build",
+      "command": "cmake -S . -B build"
+    },
+    {
+      "id": "opensource:cmake-build-build",
+      "label": "cmake --build build",
+      "command": "cmake --build build"
+    }
+  ]
+}

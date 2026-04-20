@@ -1,0 +1,132 @@
+{
+  "language": "flutter",
+  "extension": ".dart",
+  "subgroup": "packages",
+  "commands": [
+    {
+      "id": "opensource:flutter-pub-get",
+      "label": "flutter pub get",
+      "command": "flutter pub get"
+    },
+    {
+      "id": "opensource:flutter-pub-add-http",
+      "label": "flutter pub add http",
+      "command": "flutter pub add http"
+    },
+    {
+      "id": "opensource:flutter-pub-remove-http",
+      "label": "flutter pub remove http",
+      "command": "flutter pub remove http"
+    },
+    {
+      "id": "opensource:flutter-pub-outdated",
+      "label": "flutter pub outdated",
+      "command": "flutter pub outdated"
+    },
+    {
+      "id": "opensource:dart-pub-get",
+      "label": "dart pub get",
+      "command": "dart pub get"
+    },
+    {
+      "id": "opensource:flutter-pub-add-http",
+      "label": "flutter pub add http",
+      "command": "flutter pub add http"
+    },
+    {
+      "id": "opensource:flutter-pub-remove-http",
+      "label": "flutter pub remove http",
+      "command": "flutter pub remove http"
+    },
+    {
+      "id": "opensource:flutter-pub-add-dio",
+      "label": "flutter pub add dio",
+      "command": "flutter pub add dio"
+    },
+    {
+      "id": "opensource:flutter-pub-remove-dio",
+      "label": "flutter pub remove dio",
+      "command": "flutter pub remove dio"
+    },
+    {
+      "id": "opensource:flutter-pub-add-riverpod",
+      "label": "flutter pub add riverpod",
+      "command": "flutter pub add riverpod"
+    },
+    {
+      "id": "opensource:flutter-pub-remove-riverpod",
+      "label": "flutter pub remove riverpod",
+      "command": "flutter pub remove riverpod"
+    },
+    {
+      "id": "opensource:flutter-pub-add-bloc",
+      "label": "flutter pub add bloc",
+      "command": "flutter pub add bloc"
+    },
+    {
+      "id": "opensource:flutter-pub-remove-bloc",
+      "label": "flutter pub remove bloc",
+      "command": "flutter pub remove bloc"
+    },
+    {
+      "id": "opensource:flutter-pub-add-go-router",
+      "label": "flutter pub add go_router",
+      "command": "flutter pub add go_router"
+    },
+    {
+      "id": "opensource:flutter-pub-remove-go-router",
+      "label": "flutter pub remove go_router",
+      "command": "flutter pub remove go_router"
+    },
+    {
+      "id": "opensource:flutter-pub-add-freezed",
+      "label": "flutter pub add freezed",
+      "command": "flutter pub add freezed"
+    },
+    {
+      "id": "opensource:flutter-pub-remove-freezed",
+      "label": "flutter pub remove freezed",
+      "command": "flutter pub remove freezed"
+    },
+    {
+      "id": "opensource:flutter-pub-add-json-serializable",
+      "label": "flutter pub add json_serializable",
+      "command": "flutter pub add json_serializable"
+    },
+    {
+      "id": "opensource:flutter-pub-remove-json-serializable",
+      "label": "flutter pub remove json_serializable",
+      "command": "flutter pub remove json_serializable"
+    },
+    {
+      "id": "opensource:flutter-pub-add-build-runner",
+      "label": "flutter pub add build_runner",
+      "command": "flutter pub add build_runner"
+    },
+    {
+      "id": "opensource:flutter-pub-remove-build-runner",
+      "label": "flutter pub remove build_runner",
+      "command": "flutter pub remove build_runner"
+    },
+    {
+      "id": "opensource:flutter-pub-add-flutter-lints",
+      "label": "flutter pub add flutter_lints",
+      "command": "flutter pub add flutter_lints"
+    },
+    {
+      "id": "opensource:flutter-pub-remove-flutter-lints",
+      "label": "flutter pub remove flutter_lints",
+      "command": "flutter pub remove flutter_lints"
+    },
+    {
+      "id": "opensource:flutter-pub-add-shared-preferences",
+      "label": "flutter pub add shared_preferences",
+      "command": "flutter pub add shared_preferences"
+    },
+    {
+      "id": "opensource:flutter-pub-remove-shared-preferences",
+      "label": "flutter pub remove shared_preferences",
+      "command": "flutter pub remove shared_preferences"
+    }
+  ]
+}

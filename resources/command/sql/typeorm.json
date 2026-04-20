@@ -1,0 +1,12 @@
+{
+  "language": "sql",
+  "extension": ".sql",
+  "subgroup": "typeorm",
+  "commands": [
+    {
+      "id": "opensource:typeorm-migration-run",
+      "label": "typeorm migration:run",
+      "command": "typeorm migration:run"
+    }
+  ]
+}

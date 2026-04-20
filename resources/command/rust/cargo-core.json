@@ -1,0 +1,42 @@
+{
+  "language": "rust",
+  "extension": ".rs",
+  "subgroup": "cargo-core",
+  "commands": [
+    {
+      "id": "opensource:cargo-new-my-app",
+      "label": "cargo new my_app",
+      "command": "cargo new my_app"
+    },
+    {
+      "id": "opensource:cargo-init",
+      "label": "cargo init",
+      "command": "cargo init"
+    },
+    {
+      "id": "opensource:cargo-update",
+      "label": "cargo update",
+      "command": "cargo update"
+    },
+    {
+      "id": "opensource:cargo-publish",
+      "label": "cargo publish",
+      "command": "cargo publish"
+    },
+    {
+      "id": "opensource:cargo-expand",
+      "label": "cargo expand",
+      "command": "cargo expand"
+    },
+    {
+      "id": "opensource:cargo-watch-x-run",
+      "label": "cargo watch -x run",
+      "command": "cargo watch -x run"
+    },
+    {
+      "id": "opensource:cargo-watch-x-test",
+      "label": "cargo watch -x test",
+      "command": "cargo watch -x test"
+    }
+  ]
+}

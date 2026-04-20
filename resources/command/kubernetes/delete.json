@@ -1,0 +1,12 @@
+{
+  "language": "kubernetes",
+  "extension": ".yaml",
+  "subgroup": "delete",
+  "commands": [
+    {
+      "id": "opensource:kubectl-delete-pod-my-pod",
+      "label": "kubectl delete pod my-pod",
+      "command": "kubectl delete pod my-pod"
+    }
+  ]
+}

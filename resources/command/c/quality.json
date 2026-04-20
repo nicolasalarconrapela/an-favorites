@@ -1,0 +1,22 @@
+{
+  "language": "c",
+  "extension": ".c",
+  "subgroup": "quality",
+  "commands": [
+    {
+      "id": "opensource:cppcheck",
+      "label": "cppcheck .",
+      "command": "cppcheck ."
+    },
+    {
+      "id": "opensource:clang-format-i-src-c",
+      "label": "clang-format -i src/*.c",
+      "command": "clang-format -i src/*.c"
+    },
+    {
+      "id": "opensource:scan-build-make",
+      "label": "scan-build make",
+      "command": "scan-build make"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "language": "php",
+  "extension": ".php",
+  "subgroup": "wordpress",
+  "commands": [
+    {
+      "id": "opensource:wp-core-download",
+      "label": "wp core download",
+      "command": "wp core download"
+    },
+    {
+      "id": "opensource:wp-plugin-list",
+      "label": "wp plugin list",
+      "command": "wp plugin list"
+    }
+  ]
+}

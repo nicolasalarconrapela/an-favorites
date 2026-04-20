@@ -1,0 +1,12 @@
+{
+  "language": "c",
+  "extension": ".c",
+  "subgroup": "packages",
+  "commands": [
+    {
+      "id": "opensource:pkg-config-libs-glib-2-0",
+      "label": "pkg-config --libs glib-2.0",
+      "command": "pkg-config --libs glib-2.0"
+    }
+  ]
+}

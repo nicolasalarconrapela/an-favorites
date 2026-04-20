@@ -1,0 +1,22 @@
+{
+  "language": "flutter",
+  "extension": ".dart",
+  "subgroup": "build",
+  "commands": [
+    {
+      "id": "opensource:flutter-build-apk",
+      "label": "flutter build apk",
+      "command": "flutter build apk"
+    },
+    {
+      "id": "opensource:flutter-build-web",
+      "label": "flutter build web",
+      "command": "flutter build web"
+    },
+    {
+      "id": "opensource:flutter-build-windows",
+      "label": "flutter build windows",
+      "command": "flutter build windows"
+    }
+  ]
+}

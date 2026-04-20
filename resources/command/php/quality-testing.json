@@ -1,0 +1,232 @@
+{
+  "language": "php",
+  "extension": ".php",
+  "subgroup": "quality-testing",
+  "commands": [
+    {
+      "id": "opensource:phpunit",
+      "label": "phpunit",
+      "command": "phpunit"
+    },
+    {
+      "id": "opensource:phpstan-analyse",
+      "label": "phpstan analyse",
+      "command": "phpstan analyse"
+    },
+    {
+      "id": "opensource:pint",
+      "label": "pint",
+      "command": "pint"
+    },
+    {
+      "id": "opensource:php-cs-fixer-fix",
+      "label": "php-cs-fixer fix",
+      "command": "php-cs-fixer fix"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-12",
+      "label": "phpstan analyse src --variant-12",
+      "command": "phpstan analyse src --variant-12"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-32",
+      "label": "phpstan analyse src --variant-32",
+      "command": "phpstan analyse src --variant-32"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-52",
+      "label": "phpstan analyse src --variant-52",
+      "command": "phpstan analyse src --variant-52"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-72",
+      "label": "phpstan analyse src --variant-72",
+      "command": "phpstan analyse src --variant-72"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-92",
+      "label": "phpstan analyse src --variant-92",
+      "command": "phpstan analyse src --variant-92"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-112",
+      "label": "phpstan analyse src --variant-112",
+      "command": "phpstan analyse src --variant-112"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-132",
+      "label": "phpstan analyse src --variant-132",
+      "command": "phpstan analyse src --variant-132"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-152",
+      "label": "phpstan analyse src --variant-152",
+      "command": "phpstan analyse src --variant-152"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-172",
+      "label": "phpstan analyse src --variant-172",
+      "command": "phpstan analyse src --variant-172"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-192",
+      "label": "phpstan analyse src --variant-192",
+      "command": "phpstan analyse src --variant-192"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-212",
+      "label": "phpstan analyse src --variant-212",
+      "command": "phpstan analyse src --variant-212"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-232",
+      "label": "phpstan analyse src --variant-232",
+      "command": "phpstan analyse src --variant-232"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-252",
+      "label": "phpstan analyse src --variant-252",
+      "command": "phpstan analyse src --variant-252"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-272",
+      "label": "phpstan analyse src --variant-272",
+      "command": "phpstan analyse src --variant-272"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-292",
+      "label": "phpstan analyse src --variant-292",
+      "command": "phpstan analyse src --variant-292"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-312",
+      "label": "phpstan analyse src --variant-312",
+      "command": "phpstan analyse src --variant-312"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-332",
+      "label": "phpstan analyse src --variant-332",
+      "command": "phpstan analyse src --variant-332"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-352",
+      "label": "phpstan analyse src --variant-352",
+      "command": "phpstan analyse src --variant-352"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-372",
+      "label": "phpstan analyse src --variant-372",
+      "command": "phpstan analyse src --variant-372"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-392",
+      "label": "phpstan analyse src --variant-392",
+      "command": "phpstan analyse src --variant-392"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-412",
+      "label": "phpstan analyse src --variant-412",
+      "command": "phpstan analyse src --variant-412"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-432",
+      "label": "phpstan analyse src --variant-432",
+      "command": "phpstan analyse src --variant-432"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-452",
+      "label": "phpstan analyse src --variant-452",
+      "command": "phpstan analyse src --variant-452"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-472",
+      "label": "phpstan analyse src --variant-472",
+      "command": "phpstan analyse src --variant-472"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-492",
+      "label": "phpstan analyse src --variant-492",
+      "command": "phpstan analyse src --variant-492"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-512",
+      "label": "phpstan analyse src --variant-512",
+      "command": "phpstan analyse src --variant-512"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-532",
+      "label": "phpstan analyse src --variant-532",
+      "command": "phpstan analyse src --variant-532"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-552",
+      "label": "phpstan analyse src --variant-552",
+      "command": "phpstan analyse src --variant-552"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-572",
+      "label": "phpstan analyse src --variant-572",
+      "command": "phpstan analyse src --variant-572"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-592",
+      "label": "phpstan analyse src --variant-592",
+      "command": "phpstan analyse src --variant-592"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-612",
+      "label": "phpstan analyse src --variant-612",
+      "command": "phpstan analyse src --variant-612"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-632",
+      "label": "phpstan analyse src --variant-632",
+      "command": "phpstan analyse src --variant-632"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-652",
+      "label": "phpstan analyse src --variant-652",
+      "command": "phpstan analyse src --variant-652"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-672",
+      "label": "phpstan analyse src --variant-672",
+      "command": "phpstan analyse src --variant-672"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-692",
+      "label": "phpstan analyse src --variant-692",
+      "command": "phpstan analyse src --variant-692"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-712",
+      "label": "phpstan analyse src --variant-712",
+      "command": "phpstan analyse src --variant-712"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-732",
+      "label": "phpstan analyse src --variant-732",
+      "command": "phpstan analyse src --variant-732"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-752",
+      "label": "phpstan analyse src --variant-752",
+      "command": "phpstan analyse src --variant-752"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-772",
+      "label": "phpstan analyse src --variant-772",
+      "command": "phpstan analyse src --variant-772"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-792",
+      "label": "phpstan analyse src --variant-792",
+      "command": "phpstan analyse src --variant-792"
+    },
+    {
+      "id": "opensource:phpstan-analyse-src-variant-812",
+      "label": "phpstan analyse src --variant-812",
+      "command": "phpstan analyse src --variant-812"
+    }
+  ]
+}

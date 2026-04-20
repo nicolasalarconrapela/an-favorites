@@ -1,0 +1,22 @@
+{
+  "language": "c",
+  "extension": ".c",
+  "subgroup": "c-core",
+  "commands": [
+    {
+      "id": "opensource:main",
+      "label": "./main",
+      "command": "./main"
+    },
+    {
+      "id": "opensource:ctest-test-dir-build",
+      "label": "ctest --test-dir build",
+      "command": "ctest --test-dir build"
+    },
+    {
+      "id": "opensource:gcov-main-c",
+      "label": "gcov main.c",
+      "command": "gcov main.c"
+    }
+  ]
+}

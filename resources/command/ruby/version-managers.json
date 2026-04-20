@@ -1,0 +1,22 @@
+{
+  "language": "ruby",
+  "extension": ".rb",
+  "subgroup": "version-managers",
+  "commands": [
+    {
+      "id": "opensource:rbenv-versions",
+      "label": "rbenv versions",
+      "command": "rbenv versions"
+    },
+    {
+      "id": "opensource:rbenv-install-3-3-0",
+      "label": "rbenv install 3.3.0",
+      "command": "rbenv install 3.3.0"
+    },
+    {
+      "id": "opensource:rvm-list",
+      "label": "rvm list",
+      "command": "rvm list"
+    }
+  ]
+}

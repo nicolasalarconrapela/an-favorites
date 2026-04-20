@@ -1,0 +1,17 @@
+{
+  "language": "devops",
+  "extension": ".yaml",
+  "subgroup": "hashicorp-runtime",
+  "commands": [
+    {
+      "id": "opensource:consul-members",
+      "label": "consul members",
+      "command": "consul members"
+    },
+    {
+      "id": "opensource:nomad-status",
+      "label": "nomad status",
+      "command": "nomad status"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "language": "rust",
+  "extension": ".rs",
+  "subgroup": "quality",
+  "commands": [
+    {
+      "id": "opensource:cargo-fmt",
+      "label": "cargo fmt",
+      "command": "cargo fmt"
+    },
+    {
+      "id": "opensource:cargo-clippy",
+      "label": "cargo clippy",
+      "command": "cargo clippy"
+    },
+    {
+      "id": "opensource:cargo-audit",
+      "label": "cargo audit",
+      "command": "cargo audit"
+    },
+    {
+      "id": "opensource:cargo-deny-check",
+      "label": "cargo deny check",
+      "command": "cargo deny check"
+    }
+  ]
+}

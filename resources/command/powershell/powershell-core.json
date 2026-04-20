@@ -1,0 +1,42 @@
+{
+  "language": "powershell",
+  "extension": ".ps1",
+  "subgroup": "powershell-core",
+  "commands": [
+    {
+      "id": "opensource:pwsh-v",
+      "label": "pwsh -v",
+      "command": "pwsh -v"
+    },
+    {
+      "id": "opensource:get-date",
+      "label": "Get-Date",
+      "command": "Get-Date"
+    },
+    {
+      "id": "opensource:get-history",
+      "label": "Get-History",
+      "command": "Get-History"
+    },
+    {
+      "id": "opensource:clear-host",
+      "label": "Clear-Host",
+      "command": "Clear-Host"
+    },
+    {
+      "id": "opensource:get-item-env-path",
+      "label": "Get-Item Env:PATH",
+      "command": "Get-Item Env:PATH"
+    },
+    {
+      "id": "opensource:where-exe-node",
+      "label": "where.exe node",
+      "command": "where.exe node"
+    },
+    {
+      "id": "opensource:get-filehash-file-txt",
+      "label": "Get-FileHash file.txt",
+      "command": "Get-FileHash file.txt"
+    }
+  ]
+}

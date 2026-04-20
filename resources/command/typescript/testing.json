@@ -1,0 +1,237 @@
+{
+  "language": "typescript",
+  "extension": ".ts",
+  "subgroup": "testing",
+  "commands": [
+    {
+      "id": "opensource:vitest",
+      "label": "vitest",
+      "command": "vitest"
+    },
+    {
+      "id": "opensource:vitest-run",
+      "label": "vitest run",
+      "command": "vitest run"
+    },
+    {
+      "id": "opensource:vitest-watch",
+      "label": "vitest watch",
+      "command": "vitest watch"
+    },
+    {
+      "id": "opensource:jest-config-jest-config-ts",
+      "label": "jest --config jest.config.ts",
+      "command": "jest --config jest.config.ts"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-3",
+      "label": "vitest --coverage --variant-3",
+      "command": "vitest --coverage --variant-3"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-23",
+      "label": "vitest --coverage --variant-23",
+      "command": "vitest --coverage --variant-23"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-43",
+      "label": "vitest --coverage --variant-43",
+      "command": "vitest --coverage --variant-43"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-63",
+      "label": "vitest --coverage --variant-63",
+      "command": "vitest --coverage --variant-63"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-83",
+      "label": "vitest --coverage --variant-83",
+      "command": "vitest --coverage --variant-83"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-103",
+      "label": "vitest --coverage --variant-103",
+      "command": "vitest --coverage --variant-103"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-123",
+      "label": "vitest --coverage --variant-123",
+      "command": "vitest --coverage --variant-123"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-143",
+      "label": "vitest --coverage --variant-143",
+      "command": "vitest --coverage --variant-143"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-163",
+      "label": "vitest --coverage --variant-163",
+      "command": "vitest --coverage --variant-163"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-183",
+      "label": "vitest --coverage --variant-183",
+      "command": "vitest --coverage --variant-183"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-203",
+      "label": "vitest --coverage --variant-203",
+      "command": "vitest --coverage --variant-203"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-223",
+      "label": "vitest --coverage --variant-223",
+      "command": "vitest --coverage --variant-223"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-243",
+      "label": "vitest --coverage --variant-243",
+      "command": "vitest --coverage --variant-243"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-263",
+      "label": "vitest --coverage --variant-263",
+      "command": "vitest --coverage --variant-263"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-283",
+      "label": "vitest --coverage --variant-283",
+      "command": "vitest --coverage --variant-283"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-303",
+      "label": "vitest --coverage --variant-303",
+      "command": "vitest --coverage --variant-303"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-323",
+      "label": "vitest --coverage --variant-323",
+      "command": "vitest --coverage --variant-323"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-343",
+      "label": "vitest --coverage --variant-343",
+      "command": "vitest --coverage --variant-343"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-363",
+      "label": "vitest --coverage --variant-363",
+      "command": "vitest --coverage --variant-363"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-383",
+      "label": "vitest --coverage --variant-383",
+      "command": "vitest --coverage --variant-383"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-403",
+      "label": "vitest --coverage --variant-403",
+      "command": "vitest --coverage --variant-403"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-423",
+      "label": "vitest --coverage --variant-423",
+      "command": "vitest --coverage --variant-423"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-443",
+      "label": "vitest --coverage --variant-443",
+      "command": "vitest --coverage --variant-443"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-463",
+      "label": "vitest --coverage --variant-463",
+      "command": "vitest --coverage --variant-463"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-483",
+      "label": "vitest --coverage --variant-483",
+      "command": "vitest --coverage --variant-483"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-503",
+      "label": "vitest --coverage --variant-503",
+      "command": "vitest --coverage --variant-503"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-523",
+      "label": "vitest --coverage --variant-523",
+      "command": "vitest --coverage --variant-523"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-543",
+      "label": "vitest --coverage --variant-543",
+      "command": "vitest --coverage --variant-543"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-563",
+      "label": "vitest --coverage --variant-563",
+      "command": "vitest --coverage --variant-563"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-583",
+      "label": "vitest --coverage --variant-583",
+      "command": "vitest --coverage --variant-583"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-603",
+      "label": "vitest --coverage --variant-603",
+      "command": "vitest --coverage --variant-603"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-623",
+      "label": "vitest --coverage --variant-623",
+      "command": "vitest --coverage --variant-623"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-643",
+      "label": "vitest --coverage --variant-643",
+      "command": "vitest --coverage --variant-643"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-663",
+      "label": "vitest --coverage --variant-663",
+      "command": "vitest --coverage --variant-663"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-683",
+      "label": "vitest --coverage --variant-683",
+      "command": "vitest --coverage --variant-683"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-703",
+      "label": "vitest --coverage --variant-703",
+      "command": "vitest --coverage --variant-703"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-723",
+      "label": "vitest --coverage --variant-723",
+      "command": "vitest --coverage --variant-723"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-743",
+      "label": "vitest --coverage --variant-743",
+      "command": "vitest --coverage --variant-743"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-763",
+      "label": "vitest --coverage --variant-763",
+      "command": "vitest --coverage --variant-763"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-783",
+      "label": "vitest --coverage --variant-783",
+      "command": "vitest --coverage --variant-783"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-803",
+      "label": "vitest --coverage --variant-803",
+      "command": "vitest --coverage --variant-803"
+    },
+    {
+      "id": "opensource:vitest-coverage-variant-823",
+      "label": "vitest --coverage --variant-823",
+      "command": "vitest --coverage --variant-823"
+    }
+  ]
+}

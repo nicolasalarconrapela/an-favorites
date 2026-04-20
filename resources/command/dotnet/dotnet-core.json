@@ -1,0 +1,27 @@
+{
+  "language": "dotnet",
+  "extension": ".cs",
+  "subgroup": "dotnet-core",
+  "commands": [
+    {
+      "id": "opensource:dotnet-info",
+      "label": "dotnet --info",
+      "command": "dotnet --info"
+    },
+    {
+      "id": "opensource:dotnet-pack",
+      "label": "dotnet pack",
+      "command": "dotnet pack"
+    },
+    {
+      "id": "opensource:dotnet-watch-run",
+      "label": "dotnet watch run",
+      "command": "dotnet watch run"
+    },
+    {
+      "id": "opensource:dotnet-format",
+      "label": "dotnet format",
+      "command": "dotnet format"
+    }
+  ]
+}

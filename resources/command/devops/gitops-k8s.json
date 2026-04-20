@@ -1,0 +1,22 @@
+{
+  "language": "devops",
+  "extension": ".yaml",
+  "subgroup": "gitops-k8s",
+  "commands": [
+    {
+      "id": "opensource:helm-lint-chart",
+      "label": "helm lint chart/",
+      "command": "helm lint chart/"
+    },
+    {
+      "id": "opensource:argocd-app-list",
+      "label": "argocd app list",
+      "command": "argocd app list"
+    },
+    {
+      "id": "opensource:flux-get-all",
+      "label": "flux get all",
+      "command": "flux get all"
+    }
+  ]
+}

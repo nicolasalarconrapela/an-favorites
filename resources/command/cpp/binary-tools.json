@@ -1,0 +1,22 @@
+{
+  "language": "cpp",
+  "extension": ".cpp",
+  "subgroup": "binary-tools",
+  "commands": [
+    {
+      "id": "opensource:objdump-d-main",
+      "label": "objdump -d main",
+      "command": "objdump -d main"
+    },
+    {
+      "id": "opensource:nm-main",
+      "label": "nm main",
+      "command": "nm main"
+    },
+    {
+      "id": "opensource:readelf-a-main",
+      "label": "readelf -a main",
+      "command": "readelf -a main"
+    }
+  ]
+}

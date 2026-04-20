@@ -1,0 +1,17 @@
+{
+  "language": "dotnet",
+  "extension": ".cs",
+  "subgroup": "tools-and-workloads",
+  "commands": [
+    {
+      "id": "opensource:dotnet-tool-restore",
+      "label": "dotnet tool restore",
+      "command": "dotnet tool restore"
+    },
+    {
+      "id": "opensource:dotnet-workload-list",
+      "label": "dotnet workload list",
+      "command": "dotnet workload list"
+    }
+  ]
+}

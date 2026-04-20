@@ -1,0 +1,132 @@
+{
+  "language": "git",
+  "extension": ".git",
+  "subgroup": "history",
+  "commands": [
+    {
+      "id": "opensource:git-show-head",
+      "label": "git show HEAD",
+      "command": "git show HEAD"
+    },
+    {
+      "id": "opensource:git-revert-head",
+      "label": "git revert HEAD",
+      "command": "git revert HEAD"
+    },
+    {
+      "id": "opensource:git-cherry-pick-head",
+      "label": "git cherry-pick HEAD",
+      "command": "git cherry-pick HEAD"
+    },
+    {
+      "id": "opensource:git-reset-soft-head",
+      "label": "git reset --soft HEAD",
+      "command": "git reset --soft HEAD"
+    },
+    {
+      "id": "opensource:git-reset-hard-head",
+      "label": "git reset --hard HEAD",
+      "command": "git reset --hard HEAD"
+    },
+    {
+      "id": "opensource:git-show-head-1",
+      "label": "git show HEAD~1",
+      "command": "git show HEAD~1"
+    },
+    {
+      "id": "opensource:git-revert-head-1",
+      "label": "git revert HEAD~1",
+      "command": "git revert HEAD~1"
+    },
+    {
+      "id": "opensource:git-cherry-pick-head-1",
+      "label": "git cherry-pick HEAD~1",
+      "command": "git cherry-pick HEAD~1"
+    },
+    {
+      "id": "opensource:git-reset-soft-head-1",
+      "label": "git reset --soft HEAD~1",
+      "command": "git reset --soft HEAD~1"
+    },
+    {
+      "id": "opensource:git-reset-hard-head-1",
+      "label": "git reset --hard HEAD~1",
+      "command": "git reset --hard HEAD~1"
+    },
+    {
+      "id": "opensource:git-show-head-2",
+      "label": "git show HEAD~2",
+      "command": "git show HEAD~2"
+    },
+    {
+      "id": "opensource:git-revert-head-2",
+      "label": "git revert HEAD~2",
+      "command": "git revert HEAD~2"
+    },
+    {
+      "id": "opensource:git-cherry-pick-head-2",
+      "label": "git cherry-pick HEAD~2",
+      "command": "git cherry-pick HEAD~2"
+    },
+    {
+      "id": "opensource:git-reset-soft-head-2",
+      "label": "git reset --soft HEAD~2",
+      "command": "git reset --soft HEAD~2"
+    },
+    {
+      "id": "opensource:git-reset-hard-head-2",
+      "label": "git reset --hard HEAD~2",
+      "command": "git reset --hard HEAD~2"
+    },
+    {
+      "id": "opensource:git-show-abc1234",
+      "label": "git show abc1234",
+      "command": "git show abc1234"
+    },
+    {
+      "id": "opensource:git-revert-abc1234",
+      "label": "git revert abc1234",
+      "command": "git revert abc1234"
+    },
+    {
+      "id": "opensource:git-cherry-pick-abc1234",
+      "label": "git cherry-pick abc1234",
+      "command": "git cherry-pick abc1234"
+    },
+    {
+      "id": "opensource:git-reset-soft-abc1234",
+      "label": "git reset --soft abc1234",
+      "command": "git reset --soft abc1234"
+    },
+    {
+      "id": "opensource:git-reset-hard-abc1234",
+      "label": "git reset --hard abc1234",
+      "command": "git reset --hard abc1234"
+    },
+    {
+      "id": "opensource:git-show-def5678",
+      "label": "git show def5678",
+      "command": "git show def5678"
+    },
+    {
+      "id": "opensource:git-revert-def5678",
+      "label": "git revert def5678",
+      "command": "git revert def5678"
+    },
+    {
+      "id": "opensource:git-cherry-pick-def5678",
+      "label": "git cherry-pick def5678",
+      "command": "git cherry-pick def5678"
+    },
+    {
+      "id": "opensource:git-reset-soft-def5678",
+      "label": "git reset --soft def5678",
+      "command": "git reset --soft def5678"
+    },
+    {
+      "id": "opensource:git-reset-hard-def5678",
+      "label": "git reset --hard def5678",
+      "command": "git reset --hard def5678"
+    }
+  ]
+}

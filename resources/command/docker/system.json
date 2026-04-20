@@ -1,0 +1,12 @@
+{
+  "language": "docker",
+  "extension": "Dockerfile",
+  "subgroup": "system",
+  "commands": [
+    {
+      "id": "opensource:docker-system-prune-f",
+      "label": "docker system prune -f",
+      "command": "docker system prune -f"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "language": "dotnet",
+  "extension": ".cs",
+  "subgroup": "entity-framework",
+  "commands": [
+    {
+      "id": "opensource:dotnet-ef-migrations-add-initialcreate",
+      "label": "dotnet ef migrations add InitialCreate",
+      "command": "dotnet ef migrations add InitialCreate"
+    },
+    {
+      "id": "opensource:dotnet-ef-database-update",
+      "label": "dotnet ef database update",
+      "command": "dotnet ef database update"
+    }
+  ]
+}

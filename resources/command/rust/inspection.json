@@ -1,0 +1,22 @@
+{
+  "language": "rust",
+  "extension": ".rs",
+  "subgroup": "inspection",
+  "commands": [
+    {
+      "id": "opensource:cargo-doc-open",
+      "label": "cargo doc --open",
+      "command": "cargo doc --open"
+    },
+    {
+      "id": "opensource:cargo-tree",
+      "label": "cargo tree",
+      "command": "cargo tree"
+    },
+    {
+      "id": "opensource:cargo-metadata",
+      "label": "cargo metadata",
+      "command": "cargo metadata"
+    }
+  ]
+}

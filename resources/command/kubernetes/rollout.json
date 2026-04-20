@@ -1,0 +1,17 @@
+{
+  "language": "kubernetes",
+  "extension": ".yaml",
+  "subgroup": "rollout",
+  "commands": [
+    {
+      "id": "opensource:kubectl-rollout-status-deployment-my-app",
+      "label": "kubectl rollout status deployment/my-app",
+      "command": "kubectl rollout status deployment/my-app"
+    },
+    {
+      "id": "opensource:kubectl-rollout-restart-deployment-my-app",
+      "label": "kubectl rollout restart deployment/my-app",
+      "command": "kubectl rollout restart deployment/my-app"
+    }
+  ]
+}

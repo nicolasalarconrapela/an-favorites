@@ -1,0 +1,52 @@
+{
+  "language": "java",
+  "extension": ".java",
+  "subgroup": "gradle",
+  "commands": [
+    {
+      "id": "opensource:gradlew-build",
+      "label": "./gradlew build",
+      "command": "./gradlew build"
+    },
+    {
+      "id": "opensource:gradlew-test",
+      "label": "./gradlew test",
+      "command": "./gradlew test"
+    },
+    {
+      "id": "opensource:gradlew-clean-build",
+      "label": "./gradlew clean build",
+      "command": "./gradlew clean build"
+    },
+    {
+      "id": "opensource:gradlew-bootrun",
+      "label": "./gradlew bootRun",
+      "command": "./gradlew bootRun"
+    },
+    {
+      "id": "opensource:gradlew-dependencies",
+      "label": "./gradlew dependencies",
+      "command": "./gradlew dependencies"
+    },
+    {
+      "id": "opensource:gradlew-tasks",
+      "label": "./gradlew tasks",
+      "command": "./gradlew tasks"
+    },
+    {
+      "id": "opensource:gradlew-check",
+      "label": "./gradlew check",
+      "command": "./gradlew check"
+    },
+    {
+      "id": "opensource:gradlew-spotlessapply",
+      "label": "./gradlew spotlessApply",
+      "command": "./gradlew spotlessApply"
+    },
+    {
+      "id": "opensource:gradlew-spotlesscheck",
+      "label": "./gradlew spotlessCheck",
+      "command": "./gradlew spotlessCheck"
+    }
+  ]
+}

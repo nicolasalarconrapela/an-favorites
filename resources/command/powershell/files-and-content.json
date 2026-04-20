@@ -1,0 +1,47 @@
+{
+  "language": "powershell",
+  "extension": ".ps1",
+  "subgroup": "files-and-content",
+  "commands": [
+    {
+      "id": "opensource:new-item-itemtype-directory-temp",
+      "label": "New-Item -ItemType Directory temp",
+      "command": "New-Item -ItemType Directory temp"
+    },
+    {
+      "id": "opensource:new-item-readme-md",
+      "label": "New-Item README.md",
+      "command": "New-Item README.md"
+    },
+    {
+      "id": "opensource:copy-item-file-txt-backup-txt",
+      "label": "Copy-Item file.txt backup.txt",
+      "command": "Copy-Item file.txt backup.txt"
+    },
+    {
+      "id": "opensource:move-item-old-txt-new-txt",
+      "label": "Move-Item old.txt new.txt",
+      "command": "Move-Item old.txt new.txt"
+    },
+    {
+      "id": "opensource:remove-item-file-txt",
+      "label": "Remove-Item file.txt",
+      "command": "Remove-Item file.txt"
+    },
+    {
+      "id": "opensource:get-content-file-txt",
+      "label": "Get-Content file.txt",
+      "command": "Get-Content file.txt"
+    },
+    {
+      "id": "opensource:get-clipboard",
+      "label": "Get-Clipboard",
+      "command": "Get-Clipboard"
+    },
+    {
+      "id": "opensource:set-clipboard-hello-world",
+      "label": "Set-Clipboard 'hello world'",
+      "command": "Set-Clipboard 'hello world'"
+    }
+  ]
+}

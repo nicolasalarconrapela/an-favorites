@@ -1,0 +1,242 @@
+{
+  "language": "dotnet",
+  "extension": ".cs",
+  "subgroup": "build-run-test",
+  "commands": [
+    {
+      "id": "opensource:dotnet-restore",
+      "label": "dotnet restore",
+      "command": "dotnet restore"
+    },
+    {
+      "id": "opensource:dotnet-build",
+      "label": "dotnet build",
+      "command": "dotnet build"
+    },
+    {
+      "id": "opensource:dotnet-run",
+      "label": "dotnet run",
+      "command": "dotnet run"
+    },
+    {
+      "id": "opensource:dotnet-test",
+      "label": "dotnet test",
+      "command": "dotnet test"
+    },
+    {
+      "id": "opensource:dotnet-clean",
+      "label": "dotnet clean",
+      "command": "dotnet clean"
+    },
+    {
+      "id": "opensource:dotnet-publish-c-release",
+      "label": "dotnet publish -c Release",
+      "command": "dotnet publish -c Release"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-9",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-9",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-9"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-29",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-29",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-29"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-49",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-49",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-49"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-69",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-69",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-69"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-89",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-89",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-89"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-109",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-109",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-109"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-129",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-129",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-129"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-149",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-149",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-149"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-169",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-169",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-169"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-189",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-189",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-189"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-209",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-209",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-209"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-229",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-229",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-229"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-249",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-249",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-249"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-269",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-269",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-269"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-289",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-289",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-289"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-309",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-309",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-309"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-329",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-329",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-329"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-349",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-349",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-349"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-369",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-369",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-369"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-389",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-389",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-389"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-409",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-409",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-409"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-429",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-429",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-429"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-449",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-449",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-449"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-469",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-469",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-469"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-489",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-489",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-489"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-509",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-509",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-509"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-529",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-529",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-529"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-549",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-549",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-549"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-569",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-569",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-569"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-589",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-589",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-589"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-609",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-609",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-609"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-629",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-629",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-629"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-649",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-649",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-649"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-669",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-669",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-669"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-689",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-689",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-689"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-709",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-709",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-709"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-729",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-729",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-729"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-749",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-749",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-749"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-769",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-769",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-769"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-789",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-789",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-789"
+    },
+    {
+      "id": "opensource:dotnet-test-collect-xplat-code-coverage-variant-809",
+      "label": "dotnet test --collect:\"XPlat Code Coverage\" --variant-809",
+      "command": "dotnet test --collect:\"XPlat Code Coverage\" --variant-809"
+    }
+  ]
+}

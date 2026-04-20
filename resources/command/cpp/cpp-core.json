@@ -1,0 +1,27 @@
+{
+  "language": "cpp",
+  "extension": ".cpp",
+  "subgroup": "cpp-core",
+  "commands": [
+    {
+      "id": "opensource:main",
+      "label": "./main",
+      "command": "./main"
+    },
+    {
+      "id": "opensource:ctest-test-dir-build",
+      "label": "ctest --test-dir build",
+      "command": "ctest --test-dir build"
+    },
+    {
+      "id": "opensource:gcov-main-cpp",
+      "label": "gcov main.cpp",
+      "command": "gcov main.cpp"
+    },
+    {
+      "id": "opensource:lcov-capture-directory-output-file-coverage-info",
+      "label": "lcov --capture --directory . --output-file coverage.info",
+      "command": "lcov --capture --directory . --output-file coverage.info"
+    }
+  ]
+}

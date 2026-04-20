@@ -1,0 +1,157 @@
+{
+  "language": "git",
+  "extension": ".git",
+  "subgroup": "files",
+  "commands": [
+    {
+      "id": "opensource:git-checkout-readme-md",
+      "label": "git checkout -- README.md",
+      "command": "git checkout -- README.md"
+    },
+    {
+      "id": "opensource:git-restore-readme-md",
+      "label": "git restore README.md",
+      "command": "git restore README.md"
+    },
+    {
+      "id": "opensource:git-add-readme-md",
+      "label": "git add README.md",
+      "command": "git add README.md"
+    },
+    {
+      "id": "opensource:git-rm-readme-md",
+      "label": "git rm README.md",
+      "command": "git rm README.md"
+    },
+    {
+      "id": "opensource:git-mv-readme-md-readme-md-bak",
+      "label": "git mv README.md README.md.bak",
+      "command": "git mv README.md README.md.bak"
+    },
+    {
+      "id": "opensource:git-checkout-package-json",
+      "label": "git checkout -- package.json",
+      "command": "git checkout -- package.json"
+    },
+    {
+      "id": "opensource:git-restore-package-json",
+      "label": "git restore package.json",
+      "command": "git restore package.json"
+    },
+    {
+      "id": "opensource:git-add-package-json",
+      "label": "git add package.json",
+      "command": "git add package.json"
+    },
+    {
+      "id": "opensource:git-rm-package-json",
+      "label": "git rm package.json",
+      "command": "git rm package.json"
+    },
+    {
+      "id": "opensource:git-mv-package-json-package-json-bak",
+      "label": "git mv package.json package.json.bak",
+      "command": "git mv package.json package.json.bak"
+    },
+    {
+      "id": "opensource:git-checkout-src-index-ts",
+      "label": "git checkout -- src/index.ts",
+      "command": "git checkout -- src/index.ts"
+    },
+    {
+      "id": "opensource:git-restore-src-index-ts",
+      "label": "git restore src/index.ts",
+      "command": "git restore src/index.ts"
+    },
+    {
+      "id": "opensource:git-add-src-index-ts",
+      "label": "git add src/index.ts",
+      "command": "git add src/index.ts"
+    },
+    {
+      "id": "opensource:git-rm-src-index-ts",
+      "label": "git rm src/index.ts",
+      "command": "git rm src/index.ts"
+    },
+    {
+      "id": "opensource:git-mv-src-index-ts-src-index-ts-bak",
+      "label": "git mv src/index.ts src/index.ts.bak",
+      "command": "git mv src/index.ts src/index.ts.bak"
+    },
+    {
+      "id": "opensource:git-checkout-pom-xml",
+      "label": "git checkout -- pom.xml",
+      "command": "git checkout -- pom.xml"
+    },
+    {
+      "id": "opensource:git-restore-pom-xml",
+      "label": "git restore pom.xml",
+      "command": "git restore pom.xml"
+    },
+    {
+      "id": "opensource:git-add-pom-xml",
+      "label": "git add pom.xml",
+      "command": "git add pom.xml"
+    },
+    {
+      "id": "opensource:git-rm-pom-xml",
+      "label": "git rm pom.xml",
+      "command": "git rm pom.xml"
+    },
+    {
+      "id": "opensource:git-mv-pom-xml-pom-xml-bak",
+      "label": "git mv pom.xml pom.xml.bak",
+      "command": "git mv pom.xml pom.xml.bak"
+    },
+    {
+      "id": "opensource:git-checkout-dockerfile",
+      "label": "git checkout -- Dockerfile",
+      "command": "git checkout -- Dockerfile"
+    },
+    {
+      "id": "opensource:git-restore-dockerfile",
+      "label": "git restore Dockerfile",
+      "command": "git restore Dockerfile"
+    },
+    {
+      "id": "opensource:git-add-dockerfile",
+      "label": "git add Dockerfile",
+      "command": "git add Dockerfile"
+    },
+    {
+      "id": "opensource:git-rm-dockerfile",
+      "label": "git rm Dockerfile",
+      "command": "git rm Dockerfile"
+    },
+    {
+      "id": "opensource:git-mv-dockerfile-dockerfile-bak",
+      "label": "git mv Dockerfile Dockerfile.bak",
+      "command": "git mv Dockerfile Dockerfile.bak"
+    },
+    {
+      "id": "opensource:git-checkout-github-workflows-ci-yml",
+      "label": "git checkout -- .github/workflows/ci.yml",
+      "command": "git checkout -- .github/workflows/ci.yml"
+    },
+    {
+      "id": "opensource:git-restore-github-workflows-ci-yml",
+      "label": "git restore .github/workflows/ci.yml",
+      "command": "git restore .github/workflows/ci.yml"
+    },
+    {
+      "id": "opensource:git-add-github-workflows-ci-yml",
+      "label": "git add .github/workflows/ci.yml",
+      "command": "git add .github/workflows/ci.yml"
+    },
+    {
+      "id": "opensource:git-rm-github-workflows-ci-yml",
+      "label": "git rm .github/workflows/ci.yml",
+      "command": "git rm .github/workflows/ci.yml"
+    },
+    {
+      "id": "opensource:git-mv-github-workflows-ci-yml-github-workflows-ci-yml-bak",
+      "label": "git mv .github/workflows/ci.yml .github/workflows/ci.yml.bak",
+      "command": "git mv .github/workflows/ci.yml .github/workflows/ci.yml.bak"
+    }
+  ]
+}

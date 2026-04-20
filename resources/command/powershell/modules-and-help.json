@@ -1,0 +1,27 @@
+{
+  "language": "powershell",
+  "extension": ".ps1",
+  "subgroup": "modules-and-help",
+  "commands": [
+    {
+      "id": "opensource:get-command-git",
+      "label": "Get-Command git",
+      "command": "Get-Command git"
+    },
+    {
+      "id": "opensource:get-module-listavailable",
+      "label": "Get-Module -ListAvailable",
+      "command": "Get-Module -ListAvailable"
+    },
+    {
+      "id": "opensource:get-alias",
+      "label": "Get-Alias",
+      "command": "Get-Alias"
+    },
+    {
+      "id": "opensource:set-alias-ll-get-childitem",
+      "label": "Set-Alias ll Get-ChildItem",
+      "command": "Set-Alias ll Get-ChildItem"
+    }
+  ]
+}

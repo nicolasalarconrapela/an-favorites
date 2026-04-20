@@ -1,0 +1,27 @@
+{
+  "language": "typescript",
+  "extension": ".ts",
+  "subgroup": "bundling",
+  "commands": [
+    {
+      "id": "opensource:webpack-config-webpack-config-ts",
+      "label": "webpack --config webpack.config.ts",
+      "command": "webpack --config webpack.config.ts"
+    },
+    {
+      "id": "opensource:rollup-c",
+      "label": "rollup -c",
+      "command": "rollup -c"
+    },
+    {
+      "id": "opensource:esbuild-src-index-ts-bundle-outfile-dist-index-js",
+      "label": "esbuild src/index.ts --bundle --outfile=dist/index.js",
+      "command": "esbuild src/index.ts --bundle --outfile=dist/index.js"
+    },
+    {
+      "id": "opensource:swc-src-d-dist",
+      "label": "swc src -d dist",
+      "command": "swc src -d dist"
+    }
+  ]
+}

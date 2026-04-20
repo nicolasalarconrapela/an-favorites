@@ -1,0 +1,17 @@
+{
+  "language": "cpp",
+  "extension": ".cpp",
+  "subgroup": "packages",
+  "commands": [
+    {
+      "id": "opensource:conan-install-output-folder-build-build-missing",
+      "label": "conan install . --output-folder=build --build=missing",
+      "command": "conan install . --output-folder=build --build=missing"
+    },
+    {
+      "id": "opensource:vcpkg-install-fmt",
+      "label": "vcpkg install fmt",
+      "command": "vcpkg install fmt"
+    }
+  ]
+}

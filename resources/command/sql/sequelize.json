@@ -1,0 +1,12 @@
+{
+  "language": "sql",
+  "extension": ".sql",
+  "subgroup": "sequelize",
+  "commands": [
+    {
+      "id": "opensource:sequelize-db-migrate",
+      "label": "sequelize db:migrate",
+      "command": "sequelize db:migrate"
+    }
+  ]
+}

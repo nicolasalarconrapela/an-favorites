@@ -1,0 +1,67 @@
+{
+  "language": "ruby",
+  "extension": ".rb",
+  "subgroup": "gems",
+  "commands": [
+    {
+      "id": "opensource:gem-install-bundler",
+      "label": "gem install bundler",
+      "command": "gem install bundler"
+    },
+    {
+      "id": "opensource:gem-list",
+      "label": "gem list",
+      "command": "gem list"
+    },
+    {
+      "id": "opensource:gem-install-rails",
+      "label": "gem install rails",
+      "command": "gem install rails"
+    },
+    {
+      "id": "opensource:gem-uninstall-rails",
+      "label": "gem uninstall rails",
+      "command": "gem uninstall rails"
+    },
+    {
+      "id": "opensource:gem-install-rails",
+      "label": "gem install rails",
+      "command": "gem install rails"
+    },
+    {
+      "id": "opensource:gem-install-rspec",
+      "label": "gem install rspec",
+      "command": "gem install rspec"
+    },
+    {
+      "id": "opensource:gem-install-rubocop",
+      "label": "gem install rubocop",
+      "command": "gem install rubocop"
+    },
+    {
+      "id": "opensource:gem-install-sinatra",
+      "label": "gem install sinatra",
+      "command": "gem install sinatra"
+    },
+    {
+      "id": "opensource:gem-install-sidekiq",
+      "label": "gem install sidekiq",
+      "command": "gem install sidekiq"
+    },
+    {
+      "id": "opensource:gem-install-puma",
+      "label": "gem install puma",
+      "command": "gem install puma"
+    },
+    {
+      "id": "opensource:gem-install-nokogiri",
+      "label": "gem install nokogiri",
+      "command": "gem install nokogiri"
+    },
+    {
+      "id": "opensource:gem-install-devise",
+      "label": "gem install devise",
+      "command": "gem install devise"
+    }
+  ]
+}

@@ -1,0 +1,317 @@
+{
+  "language": "python",
+  "extension": ".py",
+  "subgroup": "packages",
+  "commands": [
+    {
+      "id": "opensource:python-m-pip-install-requests",
+      "label": "python -m pip install requests",
+      "command": "python -m pip install requests"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-requests",
+      "label": "python -m pip uninstall -y requests",
+      "command": "python -m pip uninstall -y requests"
+    },
+    {
+      "id": "opensource:python-m-pip-show-requests",
+      "label": "python -m pip show requests",
+      "command": "python -m pip show requests"
+    },
+    {
+      "id": "opensource:python-m-pip-install-pytest",
+      "label": "python -m pip install pytest",
+      "command": "python -m pip install pytest"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-pytest",
+      "label": "python -m pip uninstall -y pytest",
+      "command": "python -m pip uninstall -y pytest"
+    },
+    {
+      "id": "opensource:python-m-pip-show-pytest",
+      "label": "python -m pip show pytest",
+      "command": "python -m pip show pytest"
+    },
+    {
+      "id": "opensource:python-m-pip-install-django",
+      "label": "python -m pip install django",
+      "command": "python -m pip install django"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-django",
+      "label": "python -m pip uninstall -y django",
+      "command": "python -m pip uninstall -y django"
+    },
+    {
+      "id": "opensource:python-m-pip-show-django",
+      "label": "python -m pip show django",
+      "command": "python -m pip show django"
+    },
+    {
+      "id": "opensource:python-m-pip-install-fastapi",
+      "label": "python -m pip install fastapi",
+      "command": "python -m pip install fastapi"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-fastapi",
+      "label": "python -m pip uninstall -y fastapi",
+      "command": "python -m pip uninstall -y fastapi"
+    },
+    {
+      "id": "opensource:python-m-pip-show-fastapi",
+      "label": "python -m pip show fastapi",
+      "command": "python -m pip show fastapi"
+    },
+    {
+      "id": "opensource:python-m-pip-install-uvicorn",
+      "label": "python -m pip install uvicorn",
+      "command": "python -m pip install uvicorn"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-uvicorn",
+      "label": "python -m pip uninstall -y uvicorn",
+      "command": "python -m pip uninstall -y uvicorn"
+    },
+    {
+      "id": "opensource:python-m-pip-show-uvicorn",
+      "label": "python -m pip show uvicorn",
+      "command": "python -m pip show uvicorn"
+    },
+    {
+      "id": "opensource:python-m-pip-install-pandas",
+      "label": "python -m pip install pandas",
+      "command": "python -m pip install pandas"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-pandas",
+      "label": "python -m pip uninstall -y pandas",
+      "command": "python -m pip uninstall -y pandas"
+    },
+    {
+      "id": "opensource:python-m-pip-show-pandas",
+      "label": "python -m pip show pandas",
+      "command": "python -m pip show pandas"
+    },
+    {
+      "id": "opensource:python-m-pip-install-numpy",
+      "label": "python -m pip install numpy",
+      "command": "python -m pip install numpy"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-numpy",
+      "label": "python -m pip uninstall -y numpy",
+      "command": "python -m pip uninstall -y numpy"
+    },
+    {
+      "id": "opensource:python-m-pip-show-numpy",
+      "label": "python -m pip show numpy",
+      "command": "python -m pip show numpy"
+    },
+    {
+      "id": "opensource:python-m-pip-install-sqlalchemy",
+      "label": "python -m pip install sqlalchemy",
+      "command": "python -m pip install sqlalchemy"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-sqlalchemy",
+      "label": "python -m pip uninstall -y sqlalchemy",
+      "command": "python -m pip uninstall -y sqlalchemy"
+    },
+    {
+      "id": "opensource:python-m-pip-show-sqlalchemy",
+      "label": "python -m pip show sqlalchemy",
+      "command": "python -m pip show sqlalchemy"
+    },
+    {
+      "id": "opensource:python-m-pip-install-alembic",
+      "label": "python -m pip install alembic",
+      "command": "python -m pip install alembic"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-alembic",
+      "label": "python -m pip uninstall -y alembic",
+      "command": "python -m pip uninstall -y alembic"
+    },
+    {
+      "id": "opensource:python-m-pip-show-alembic",
+      "label": "python -m pip show alembic",
+      "command": "python -m pip show alembic"
+    },
+    {
+      "id": "opensource:python-m-pip-install-black",
+      "label": "python -m pip install black",
+      "command": "python -m pip install black"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-black",
+      "label": "python -m pip uninstall -y black",
+      "command": "python -m pip uninstall -y black"
+    },
+    {
+      "id": "opensource:python-m-pip-show-black",
+      "label": "python -m pip show black",
+      "command": "python -m pip show black"
+    },
+    {
+      "id": "opensource:python-m-pip-install-ruff",
+      "label": "python -m pip install ruff",
+      "command": "python -m pip install ruff"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-ruff",
+      "label": "python -m pip uninstall -y ruff",
+      "command": "python -m pip uninstall -y ruff"
+    },
+    {
+      "id": "opensource:python-m-pip-show-ruff",
+      "label": "python -m pip show ruff",
+      "command": "python -m pip show ruff"
+    },
+    {
+      "id": "opensource:python-m-pip-install-mypy",
+      "label": "python -m pip install mypy",
+      "command": "python -m pip install mypy"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-mypy",
+      "label": "python -m pip uninstall -y mypy",
+      "command": "python -m pip uninstall -y mypy"
+    },
+    {
+      "id": "opensource:python-m-pip-show-mypy",
+      "label": "python -m pip show mypy",
+      "command": "python -m pip show mypy"
+    },
+    {
+      "id": "opensource:python-m-pip-install-pydantic",
+      "label": "python -m pip install pydantic",
+      "command": "python -m pip install pydantic"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-pydantic",
+      "label": "python -m pip uninstall -y pydantic",
+      "command": "python -m pip uninstall -y pydantic"
+    },
+    {
+      "id": "opensource:python-m-pip-show-pydantic",
+      "label": "python -m pip show pydantic",
+      "command": "python -m pip show pydantic"
+    },
+    {
+      "id": "opensource:python-m-pip-install-flask",
+      "label": "python -m pip install flask",
+      "command": "python -m pip install flask"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-flask",
+      "label": "python -m pip uninstall -y flask",
+      "command": "python -m pip uninstall -y flask"
+    },
+    {
+      "id": "opensource:python-m-pip-show-flask",
+      "label": "python -m pip show flask",
+      "command": "python -m pip show flask"
+    },
+    {
+      "id": "opensource:python-m-pip-install-celery",
+      "label": "python -m pip install celery",
+      "command": "python -m pip install celery"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-celery",
+      "label": "python -m pip uninstall -y celery",
+      "command": "python -m pip uninstall -y celery"
+    },
+    {
+      "id": "opensource:python-m-pip-show-celery",
+      "label": "python -m pip show celery",
+      "command": "python -m pip show celery"
+    },
+    {
+      "id": "opensource:python-m-pip-install-redis",
+      "label": "python -m pip install redis",
+      "command": "python -m pip install redis"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-redis",
+      "label": "python -m pip uninstall -y redis",
+      "command": "python -m pip uninstall -y redis"
+    },
+    {
+      "id": "opensource:python-m-pip-show-redis",
+      "label": "python -m pip show redis",
+      "command": "python -m pip show redis"
+    },
+    {
+      "id": "opensource:python-m-pip-install-httpx",
+      "label": "python -m pip install httpx",
+      "command": "python -m pip install httpx"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-httpx",
+      "label": "python -m pip uninstall -y httpx",
+      "command": "python -m pip uninstall -y httpx"
+    },
+    {
+      "id": "opensource:python-m-pip-show-httpx",
+      "label": "python -m pip show httpx",
+      "command": "python -m pip show httpx"
+    },
+    {
+      "id": "opensource:python-m-pip-install-typer",
+      "label": "python -m pip install typer",
+      "command": "python -m pip install typer"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-typer",
+      "label": "python -m pip uninstall -y typer",
+      "command": "python -m pip uninstall -y typer"
+    },
+    {
+      "id": "opensource:python-m-pip-show-typer",
+      "label": "python -m pip show typer",
+      "command": "python -m pip show typer"
+    },
+    {
+      "id": "opensource:python-m-pip-install-poetry",
+      "label": "python -m pip install poetry",
+      "command": "python -m pip install poetry"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-poetry",
+      "label": "python -m pip uninstall -y poetry",
+      "command": "python -m pip uninstall -y poetry"
+    },
+    {
+      "id": "opensource:python-m-pip-show-poetry",
+      "label": "python -m pip show poetry",
+      "command": "python -m pip show poetry"
+    },
+    {
+      "id": "opensource:python-m-pip-install-pipenv",
+      "label": "python -m pip install pipenv",
+      "command": "python -m pip install pipenv"
+    },
+    {
+      "id": "opensource:python-m-pip-uninstall-y-pipenv",
+      "label": "python -m pip uninstall -y pipenv",
+      "command": "python -m pip uninstall -y pipenv"
+    },
+    {
+      "id": "opensource:python-m-pip-show-pipenv",
+      "label": "python -m pip show pipenv",
+      "command": "python -m pip show pipenv"
+    },
+    {
+      "id": "opensource:pipenv-install",
+      "label": "pipenv install",
+      "command": "pipenv install"
+    },
+    {
+      "id": "opensource:pipenv-shell",
+      "label": "pipenv shell",
+      "command": "pipenv shell"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "language": "devops",
+  "extension": ".yaml",
+  "subgroup": "ansible",
+  "commands": [
+    {
+      "id": "opensource:ansible-version",
+      "label": "ansible --version",
+      "command": "ansible --version"
+    },
+    {
+      "id": "opensource:ansible-playbook-site-yml",
+      "label": "ansible-playbook site.yml",
+      "command": "ansible-playbook site.yml"
+    },
+    {
+      "id": "opensource:ansible-inventory-list",
+      "label": "ansible-inventory --list",
+      "command": "ansible-inventory --list"
+    },
+    {
+      "id": "opensource:ansible-all-m-ping",
+      "label": "ansible all -m ping",
+      "command": "ansible all -m ping"
+    }
+  ]
+}

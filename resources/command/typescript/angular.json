@@ -1,0 +1,22 @@
+{
+  "language": "typescript",
+  "extension": ".ts",
+  "subgroup": "angular",
+  "commands": [
+    {
+      "id": "opensource:ng-serve",
+      "label": "ng serve",
+      "command": "ng serve"
+    },
+    {
+      "id": "opensource:ng-build",
+      "label": "ng build",
+      "command": "ng build"
+    },
+    {
+      "id": "opensource:ng-test",
+      "label": "ng test",
+      "command": "ng test"
+    }
+  ]
+}

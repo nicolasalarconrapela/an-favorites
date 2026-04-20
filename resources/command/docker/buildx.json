@@ -1,0 +1,17 @@
+{
+  "language": "docker",
+  "extension": "Dockerfile",
+  "subgroup": "buildx",
+  "commands": [
+    {
+      "id": "opensource:docker-buildx-ls",
+      "label": "docker buildx ls",
+      "command": "docker buildx ls"
+    },
+    {
+      "id": "opensource:docker-buildx-build-platform-linux-amd64-t-my-app",
+      "label": "docker buildx build --platform linux/amd64 -t my-app .",
+      "command": "docker buildx build --platform linux/amd64 -t my-app ."
+    }
+  ]
+}

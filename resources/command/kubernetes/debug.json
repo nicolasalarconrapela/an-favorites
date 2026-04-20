@@ -1,0 +1,72 @@
+{
+  "language": "kubernetes",
+  "extension": ".yaml",
+  "subgroup": "debug",
+  "commands": [
+    {
+      "id": "opensource:kubectl-describe-pod-my-pod",
+      "label": "kubectl describe pod my-pod",
+      "command": "kubectl describe pod my-pod"
+    },
+    {
+      "id": "opensource:kubectl-logs-my-pod",
+      "label": "kubectl logs my-pod",
+      "command": "kubectl logs my-pod"
+    },
+    {
+      "id": "opensource:kubectl-logs-f-my-pod",
+      "label": "kubectl logs -f my-pod",
+      "command": "kubectl logs -f my-pod"
+    },
+    {
+      "id": "opensource:kubectl-exec-it-my-pod-sh",
+      "label": "kubectl exec -it my-pod -- sh",
+      "command": "kubectl exec -it my-pod -- sh"
+    },
+    {
+      "id": "opensource:kubectl-describe-pod-my-pod",
+      "label": "kubectl describe pod my-pod",
+      "command": "kubectl describe pod my-pod"
+    },
+    {
+      "id": "opensource:kubectl-describe-service-my-service",
+      "label": "kubectl describe service my-service",
+      "command": "kubectl describe service my-service"
+    },
+    {
+      "id": "opensource:kubectl-describe-deployment-my-deployment",
+      "label": "kubectl describe deployment my-deployment",
+      "command": "kubectl describe deployment my-deployment"
+    },
+    {
+      "id": "opensource:kubectl-describe-node-my-node",
+      "label": "kubectl describe node my-node",
+      "command": "kubectl describe node my-node"
+    },
+    {
+      "id": "opensource:kubectl-describe-configmap-my-configmap",
+      "label": "kubectl describe configmap my-configmap",
+      "command": "kubectl describe configmap my-configmap"
+    },
+    {
+      "id": "opensource:kubectl-describe-secret-my-secret",
+      "label": "kubectl describe secret my-secret",
+      "command": "kubectl describe secret my-secret"
+    },
+    {
+      "id": "opensource:kubectl-describe-ingres-my-ingres",
+      "label": "kubectl describe ingres my-ingres",
+      "command": "kubectl describe ingres my-ingres"
+    },
+    {
+      "id": "opensource:kubectl-describe-event-my-event",
+      "label": "kubectl describe event my-event",
+      "command": "kubectl describe event my-event"
+    },
+    {
+      "id": "opensource:kubectl-describe-pvc-my-pvc",
+      "label": "kubectl describe pvc my-pvc",
+      "command": "kubectl describe pvc my-pvc"
+    }
+  ]
+}

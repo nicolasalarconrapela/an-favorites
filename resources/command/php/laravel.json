@@ -1,0 +1,32 @@
+{
+  "language": "php",
+  "extension": ".php",
+  "subgroup": "laravel",
+  "commands": [
+    {
+      "id": "opensource:php-artisan-serve",
+      "label": "php artisan serve",
+      "command": "php artisan serve"
+    },
+    {
+      "id": "opensource:php-artisan-migrate",
+      "label": "php artisan migrate",
+      "command": "php artisan migrate"
+    },
+    {
+      "id": "opensource:php-artisan-db-seed",
+      "label": "php artisan db:seed",
+      "command": "php artisan db:seed"
+    },
+    {
+      "id": "opensource:php-artisan-route-list",
+      "label": "php artisan route:list",
+      "command": "php artisan route:list"
+    },
+    {
+      "id": "opensource:php-artisan-test",
+      "label": "php artisan test",
+      "command": "php artisan test"
+    }
+  ]
+}

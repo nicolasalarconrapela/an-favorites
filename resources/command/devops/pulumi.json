@@ -1,0 +1,12 @@
+{
+  "language": "devops",
+  "extension": ".yaml",
+  "subgroup": "pulumi",
+  "commands": [
+    {
+      "id": "opensource:pulumi-up",
+      "label": "pulumi up",
+      "command": "pulumi up"
+    }
+  ]
+}

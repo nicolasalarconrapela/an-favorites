@@ -1,0 +1,82 @@
+{
+  "language": "git",
+  "extension": ".git",
+  "subgroup": "tags",
+  "commands": [
+    {
+      "id": "opensource:git-tag-v1-0-0",
+      "label": "git tag v1.0.0",
+      "command": "git tag v1.0.0"
+    },
+    {
+      "id": "opensource:git-push-origin-v1-0-0",
+      "label": "git push origin v1.0.0",
+      "command": "git push origin v1.0.0"
+    },
+    {
+      "id": "opensource:git-show-v1-0-0",
+      "label": "git show v1.0.0",
+      "command": "git show v1.0.0"
+    },
+    {
+      "id": "opensource:git-tag-v1-1-0",
+      "label": "git tag v1.1.0",
+      "command": "git tag v1.1.0"
+    },
+    {
+      "id": "opensource:git-push-origin-v1-1-0",
+      "label": "git push origin v1.1.0",
+      "command": "git push origin v1.1.0"
+    },
+    {
+      "id": "opensource:git-show-v1-1-0",
+      "label": "git show v1.1.0",
+      "command": "git show v1.1.0"
+    },
+    {
+      "id": "opensource:git-tag-v2-0-0",
+      "label": "git tag v2.0.0",
+      "command": "git tag v2.0.0"
+    },
+    {
+      "id": "opensource:git-push-origin-v2-0-0",
+      "label": "git push origin v2.0.0",
+      "command": "git push origin v2.0.0"
+    },
+    {
+      "id": "opensource:git-show-v2-0-0",
+      "label": "git show v2.0.0",
+      "command": "git show v2.0.0"
+    },
+    {
+      "id": "opensource:git-tag-latest",
+      "label": "git tag latest",
+      "command": "git tag latest"
+    },
+    {
+      "id": "opensource:git-push-origin-latest",
+      "label": "git push origin latest",
+      "command": "git push origin latest"
+    },
+    {
+      "id": "opensource:git-show-latest",
+      "label": "git show latest",
+      "command": "git show latest"
+    },
+    {
+      "id": "opensource:git-tag-stable",
+      "label": "git tag stable",
+      "command": "git tag stable"
+    },
+    {
+      "id": "opensource:git-push-origin-stable",
+      "label": "git push origin stable",
+      "command": "git push origin stable"
+    },
+    {
+      "id": "opensource:git-show-stable",
+      "label": "git show stable",
+      "command": "git show stable"
+    }
+  ]
+}

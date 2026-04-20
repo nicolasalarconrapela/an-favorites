@@ -1,0 +1,27 @@
+{
+  "language": "ruby",
+  "extension": ".rb",
+  "subgroup": "ruby-core",
+  "commands": [
+    {
+      "id": "opensource:ruby-v",
+      "label": "ruby -v",
+      "command": "ruby -v"
+    },
+    {
+      "id": "opensource:irb",
+      "label": "irb",
+      "command": "irb"
+    },
+    {
+      "id": "opensource:rake-t",
+      "label": "rake -T",
+      "command": "rake -T"
+    },
+    {
+      "id": "opensource:ruby-script-rb",
+      "label": "ruby script.rb",
+      "command": "ruby script.rb"
+    }
+  ]
+}

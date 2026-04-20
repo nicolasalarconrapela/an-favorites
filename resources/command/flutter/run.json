@@ -1,0 +1,22 @@
+{
+  "language": "flutter",
+  "extension": ".dart",
+  "subgroup": "run",
+  "commands": [
+    {
+      "id": "opensource:flutter-run",
+      "label": "flutter run",
+      "command": "flutter run"
+    },
+    {
+      "id": "opensource:flutter-attach",
+      "label": "flutter attach",
+      "command": "flutter attach"
+    },
+    {
+      "id": "opensource:flutter-install",
+      "label": "flutter install",
+      "command": "flutter install"
+    }
+  ]
+}

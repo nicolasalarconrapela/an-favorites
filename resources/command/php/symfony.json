@@ -1,0 +1,22 @@
+{
+  "language": "php",
+  "extension": ".php",
+  "subgroup": "symfony",
+  "commands": [
+    {
+      "id": "opensource:symfony-new-my-project",
+      "label": "symfony new my_project",
+      "command": "symfony new my_project"
+    },
+    {
+      "id": "opensource:symfony-server-start",
+      "label": "symfony server:start",
+      "command": "symfony server:start"
+    },
+    {
+      "id": "opensource:symfony-console-cache-clear",
+      "label": "symfony console cache:clear",
+      "command": "symfony console cache:clear"
+    }
+  ]
+}

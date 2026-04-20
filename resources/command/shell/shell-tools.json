@@ -1,0 +1,32 @@
+{
+  "language": "shell",
+  "extension": ".sh",
+  "subgroup": "shell-tools",
+  "commands": [
+    {
+      "id": "opensource:export-node-env-production",
+      "label": "export NODE_ENV=production",
+      "command": "export NODE_ENV=production"
+    },
+    {
+      "id": "opensource:alias-ll-ls-la",
+      "label": "alias ll='ls -la'",
+      "command": "alias ll='ls -la'"
+    },
+    {
+      "id": "opensource:which-node",
+      "label": "which node",
+      "command": "which node"
+    },
+    {
+      "id": "opensource:echo-hello-world",
+      "label": "echo \"hello world\"",
+      "command": "echo \"hello world\""
+    },
+    {
+      "id": "opensource:realpath",
+      "label": "realpath .",
+      "command": "realpath ."
+    }
+  ]
+}

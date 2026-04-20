@@ -1,0 +1,27 @@
+{
+  "language": "cpp",
+  "extension": ".cpp",
+  "subgroup": "compilers",
+  "commands": [
+    {
+      "id": "opensource:g-main-cpp-o-main",
+      "label": "g++ main.cpp -o main",
+      "command": "g++ main.cpp -o main"
+    },
+    {
+      "id": "opensource:clang-main-cpp-o-main",
+      "label": "clang++ main.cpp -o main",
+      "command": "clang++ main.cpp -o main"
+    },
+    {
+      "id": "opensource:g-std-c-20-main-cpp-o-main",
+      "label": "g++ -std=c++20 main.cpp -o main",
+      "command": "g++ -std=c++20 main.cpp -o main"
+    },
+    {
+      "id": "opensource:clang-std-c-20-main-cpp-o-main",
+      "label": "clang++ -std=c++20 main.cpp -o main",
+      "command": "clang++ -std=c++20 main.cpp -o main"
+    }
+  ]
+}

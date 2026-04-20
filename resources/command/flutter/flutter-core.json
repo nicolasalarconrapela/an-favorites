@@ -1,0 +1,47 @@
+{
+  "language": "flutter",
+  "extension": ".dart",
+  "subgroup": "flutter-core",
+  "commands": [
+    {
+      "id": "opensource:flutter-version",
+      "label": "flutter --version",
+      "command": "flutter --version"
+    },
+    {
+      "id": "opensource:flutter-create-my-app",
+      "label": "flutter create my_app",
+      "command": "flutter create my_app"
+    },
+    {
+      "id": "opensource:flutter-clean",
+      "label": "flutter clean",
+      "command": "flutter clean"
+    },
+    {
+      "id": "opensource:flutter-analyze",
+      "label": "flutter analyze",
+      "command": "flutter analyze"
+    },
+    {
+      "id": "opensource:flutter-format",
+      "label": "flutter format .",
+      "command": "flutter format ."
+    },
+    {
+      "id": "opensource:flutter-screenshot",
+      "label": "flutter screenshot",
+      "command": "flutter screenshot"
+    },
+    {
+      "id": "opensource:flutter-gen-l10n",
+      "label": "flutter gen-l10n",
+      "command": "flutter gen-l10n"
+    },
+    {
+      "id": "opensource:flutter-upgrade",
+      "label": "flutter upgrade",
+      "command": "flutter upgrade"
+    }
+  ]
+}

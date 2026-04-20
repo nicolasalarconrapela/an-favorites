@@ -1,0 +1,22 @@
+{
+  "language": "devops",
+  "extension": ".yaml",
+  "subgroup": "gcp",
+  "commands": [
+    {
+      "id": "opensource:gcloud-auth-login",
+      "label": "gcloud auth login",
+      "command": "gcloud auth login"
+    },
+    {
+      "id": "opensource:gcloud-config-list",
+      "label": "gcloud config list",
+      "command": "gcloud config list"
+    },
+    {
+      "id": "opensource:gcloud-projects-list",
+      "label": "gcloud projects list",
+      "command": "gcloud projects list"
+    }
+  ]
+}

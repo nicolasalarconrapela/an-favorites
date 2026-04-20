@@ -1,0 +1,27 @@
+{
+  "language": "devops",
+  "extension": ".yaml",
+  "subgroup": "aws",
+  "commands": [
+    {
+      "id": "opensource:aws-configure",
+      "label": "aws configure",
+      "command": "aws configure"
+    },
+    {
+      "id": "opensource:aws-s3-ls",
+      "label": "aws s3 ls",
+      "command": "aws s3 ls"
+    },
+    {
+      "id": "opensource:aws-sts-get-caller-identity",
+      "label": "aws sts get-caller-identity",
+      "command": "aws sts get-caller-identity"
+    },
+    {
+      "id": "opensource:aws-ec2-describe-instances",
+      "label": "aws ec2 describe-instances",
+      "command": "aws ec2 describe-instances"
+    }
+  ]
+}

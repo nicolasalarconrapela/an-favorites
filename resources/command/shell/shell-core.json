@@ -1,0 +1,47 @@
+{
+  "language": "shell",
+  "extension": ".sh",
+  "subgroup": "shell-core",
+  "commands": [
+    {
+      "id": "opensource:pwd",
+      "label": "pwd",
+      "command": "pwd"
+    },
+    {
+      "id": "opensource:ls",
+      "label": "ls",
+      "command": "ls"
+    },
+    {
+      "id": "opensource:ls-la",
+      "label": "ls -la",
+      "command": "ls -la"
+    },
+    {
+      "id": "opensource:cd",
+      "label": "cd ..",
+      "command": "cd .."
+    },
+    {
+      "id": "opensource:whoami",
+      "label": "whoami",
+      "command": "whoami"
+    },
+    {
+      "id": "opensource:history",
+      "label": "history",
+      "command": "history"
+    },
+    {
+      "id": "opensource:env",
+      "label": "env",
+      "command": "env"
+    },
+    {
+      "id": "opensource:clear",
+      "label": "clear",
+      "command": "clear"
+    }
+  ]
+}

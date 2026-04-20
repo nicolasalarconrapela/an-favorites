@@ -1,0 +1,22 @@
+{
+  "language": "kubernetes",
+  "extension": ".yaml",
+  "subgroup": "kubectl-core",
+  "commands": [
+    {
+      "id": "opensource:kubectl-version-client",
+      "label": "kubectl version --client",
+      "command": "kubectl version --client"
+    },
+    {
+      "id": "opensource:kubectl-apply-f-deployment-yaml",
+      "label": "kubectl apply -f deployment.yaml",
+      "command": "kubectl apply -f deployment.yaml"
+    },
+    {
+      "id": "opensource:kubectl-cluster-info",
+      "label": "kubectl cluster-info",
+      "command": "kubectl cluster-info"
+    }
+  ]
+}

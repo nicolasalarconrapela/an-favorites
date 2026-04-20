@@ -1,0 +1,12 @@
+{
+  "language": "sql",
+  "extension": ".sql",
+  "subgroup": "knex",
+  "commands": [
+    {
+      "id": "opensource:knex-migrate-latest",
+      "label": "knex migrate:latest",
+      "command": "knex migrate:latest"
+    }
+  ]
+}

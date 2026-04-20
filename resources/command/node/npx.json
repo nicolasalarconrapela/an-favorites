@@ -1,0 +1,22 @@
+{
+  "language": "node",
+  "extension": ".js",
+  "subgroup": "npx",
+  "commands": [
+    {
+      "id": "opensource:npx-vite-latest",
+      "label": "npx vite@latest",
+      "command": "npx vite@latest"
+    },
+    {
+      "id": "opensource:npx-eslint",
+      "label": "npx eslint .",
+      "command": "npx eslint ."
+    },
+    {
+      "id": "opensource:npx-prettier-write",
+      "label": "npx prettier --write .",
+      "command": "npx prettier --write ."
+    }
+  ]
+}

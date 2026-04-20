@@ -1,0 +1,507 @@
+{
+  "language": "node",
+  "extension": ".js",
+  "subgroup": "packages",
+  "commands": [
+    {
+      "id": "opensource:npm-install-express",
+      "label": "npm install express",
+      "command": "npm install express"
+    },
+    {
+      "id": "opensource:npm-uninstall-express",
+      "label": "npm uninstall express",
+      "command": "npm uninstall express"
+    },
+    {
+      "id": "opensource:npm-install-d-express",
+      "label": "npm install -D express",
+      "command": "npm install -D express"
+    },
+    {
+      "id": "opensource:pnpm-add-express",
+      "label": "pnpm add express",
+      "command": "pnpm add express"
+    },
+    {
+      "id": "opensource:yarn-add-express",
+      "label": "yarn add express",
+      "command": "yarn add express"
+    },
+    {
+      "id": "opensource:npm-install-react",
+      "label": "npm install react",
+      "command": "npm install react"
+    },
+    {
+      "id": "opensource:npm-uninstall-react",
+      "label": "npm uninstall react",
+      "command": "npm uninstall react"
+    },
+    {
+      "id": "opensource:npm-install-d-react",
+      "label": "npm install -D react",
+      "command": "npm install -D react"
+    },
+    {
+      "id": "opensource:pnpm-add-react",
+      "label": "pnpm add react",
+      "command": "pnpm add react"
+    },
+    {
+      "id": "opensource:yarn-add-react",
+      "label": "yarn add react",
+      "command": "yarn add react"
+    },
+    {
+      "id": "opensource:npm-install-typescript",
+      "label": "npm install typescript",
+      "command": "npm install typescript"
+    },
+    {
+      "id": "opensource:npm-uninstall-typescript",
+      "label": "npm uninstall typescript",
+      "command": "npm uninstall typescript"
+    },
+    {
+      "id": "opensource:npm-install-d-typescript",
+      "label": "npm install -D typescript",
+      "command": "npm install -D typescript"
+    },
+    {
+      "id": "opensource:pnpm-add-typescript",
+      "label": "pnpm add typescript",
+      "command": "pnpm add typescript"
+    },
+    {
+      "id": "opensource:yarn-add-typescript",
+      "label": "yarn add typescript",
+      "command": "yarn add typescript"
+    },
+    {
+      "id": "opensource:npm-install-eslint",
+      "label": "npm install eslint",
+      "command": "npm install eslint"
+    },
+    {
+      "id": "opensource:npm-uninstall-eslint",
+      "label": "npm uninstall eslint",
+      "command": "npm uninstall eslint"
+    },
+    {
+      "id": "opensource:npm-install-d-eslint",
+      "label": "npm install -D eslint",
+      "command": "npm install -D eslint"
+    },
+    {
+      "id": "opensource:pnpm-add-eslint",
+      "label": "pnpm add eslint",
+      "command": "pnpm add eslint"
+    },
+    {
+      "id": "opensource:yarn-add-eslint",
+      "label": "yarn add eslint",
+      "command": "yarn add eslint"
+    },
+    {
+      "id": "opensource:npm-install-prettier",
+      "label": "npm install prettier",
+      "command": "npm install prettier"
+    },
+    {
+      "id": "opensource:npm-uninstall-prettier",
+      "label": "npm uninstall prettier",
+      "command": "npm uninstall prettier"
+    },
+    {
+      "id": "opensource:npm-install-d-prettier",
+      "label": "npm install -D prettier",
+      "command": "npm install -D prettier"
+    },
+    {
+      "id": "opensource:pnpm-add-prettier",
+      "label": "pnpm add prettier",
+      "command": "pnpm add prettier"
+    },
+    {
+      "id": "opensource:yarn-add-prettier",
+      "label": "yarn add prettier",
+      "command": "yarn add prettier"
+    },
+    {
+      "id": "opensource:npm-install-vitest",
+      "label": "npm install vitest",
+      "command": "npm install vitest"
+    },
+    {
+      "id": "opensource:npm-uninstall-vitest",
+      "label": "npm uninstall vitest",
+      "command": "npm uninstall vitest"
+    },
+    {
+      "id": "opensource:npm-install-d-vitest",
+      "label": "npm install -D vitest",
+      "command": "npm install -D vitest"
+    },
+    {
+      "id": "opensource:pnpm-add-vitest",
+      "label": "pnpm add vitest",
+      "command": "pnpm add vitest"
+    },
+    {
+      "id": "opensource:yarn-add-vitest",
+      "label": "yarn add vitest",
+      "command": "yarn add vitest"
+    },
+    {
+      "id": "opensource:npm-install-jest",
+      "label": "npm install jest",
+      "command": "npm install jest"
+    },
+    {
+      "id": "opensource:npm-uninstall-jest",
+      "label": "npm uninstall jest",
+      "command": "npm uninstall jest"
+    },
+    {
+      "id": "opensource:npm-install-d-jest",
+      "label": "npm install -D jest",
+      "command": "npm install -D jest"
+    },
+    {
+      "id": "opensource:pnpm-add-jest",
+      "label": "pnpm add jest",
+      "command": "pnpm add jest"
+    },
+    {
+      "id": "opensource:yarn-add-jest",
+      "label": "yarn add jest",
+      "command": "yarn add jest"
+    },
+    {
+      "id": "opensource:npm-install-lodash",
+      "label": "npm install lodash",
+      "command": "npm install lodash"
+    },
+    {
+      "id": "opensource:npm-uninstall-lodash",
+      "label": "npm uninstall lodash",
+      "command": "npm uninstall lodash"
+    },
+    {
+      "id": "opensource:npm-install-d-lodash",
+      "label": "npm install -D lodash",
+      "command": "npm install -D lodash"
+    },
+    {
+      "id": "opensource:pnpm-add-lodash",
+      "label": "pnpm add lodash",
+      "command": "pnpm add lodash"
+    },
+    {
+      "id": "opensource:yarn-add-lodash",
+      "label": "yarn add lodash",
+      "command": "yarn add lodash"
+    },
+    {
+      "id": "opensource:npm-install-axios",
+      "label": "npm install axios",
+      "command": "npm install axios"
+    },
+    {
+      "id": "opensource:npm-uninstall-axios",
+      "label": "npm uninstall axios",
+      "command": "npm uninstall axios"
+    },
+    {
+      "id": "opensource:npm-install-d-axios",
+      "label": "npm install -D axios",
+      "command": "npm install -D axios"
+    },
+    {
+      "id": "opensource:pnpm-add-axios",
+      "label": "pnpm add axios",
+      "command": "pnpm add axios"
+    },
+    {
+      "id": "opensource:yarn-add-axios",
+      "label": "yarn add axios",
+      "command": "yarn add axios"
+    },
+    {
+      "id": "opensource:npm-install-dotenv",
+      "label": "npm install dotenv",
+      "command": "npm install dotenv"
+    },
+    {
+      "id": "opensource:npm-uninstall-dotenv",
+      "label": "npm uninstall dotenv",
+      "command": "npm uninstall dotenv"
+    },
+    {
+      "id": "opensource:npm-install-d-dotenv",
+      "label": "npm install -D dotenv",
+      "command": "npm install -D dotenv"
+    },
+    {
+      "id": "opensource:pnpm-add-dotenv",
+      "label": "pnpm add dotenv",
+      "command": "pnpm add dotenv"
+    },
+    {
+      "id": "opensource:yarn-add-dotenv",
+      "label": "yarn add dotenv",
+      "command": "yarn add dotenv"
+    },
+    {
+      "id": "opensource:npm-install-zod",
+      "label": "npm install zod",
+      "command": "npm install zod"
+    },
+    {
+      "id": "opensource:npm-uninstall-zod",
+      "label": "npm uninstall zod",
+      "command": "npm uninstall zod"
+    },
+    {
+      "id": "opensource:npm-install-d-zod",
+      "label": "npm install -D zod",
+      "command": "npm install -D zod"
+    },
+    {
+      "id": "opensource:pnpm-add-zod",
+      "label": "pnpm add zod",
+      "command": "pnpm add zod"
+    },
+    {
+      "id": "opensource:yarn-add-zod",
+      "label": "yarn add zod",
+      "command": "yarn add zod"
+    },
+    {
+      "id": "opensource:npm-install-commander",
+      "label": "npm install commander",
+      "command": "npm install commander"
+    },
+    {
+      "id": "opensource:npm-uninstall-commander",
+      "label": "npm uninstall commander",
+      "command": "npm uninstall commander"
+    },
+    {
+      "id": "opensource:npm-install-d-commander",
+      "label": "npm install -D commander",
+      "command": "npm install -D commander"
+    },
+    {
+      "id": "opensource:pnpm-add-commander",
+      "label": "pnpm add commander",
+      "command": "pnpm add commander"
+    },
+    {
+      "id": "opensource:yarn-add-commander",
+      "label": "yarn add commander",
+      "command": "yarn add commander"
+    },
+    {
+      "id": "opensource:npm-install-chalk",
+      "label": "npm install chalk",
+      "command": "npm install chalk"
+    },
+    {
+      "id": "opensource:npm-uninstall-chalk",
+      "label": "npm uninstall chalk",
+      "command": "npm uninstall chalk"
+    },
+    {
+      "id": "opensource:npm-install-d-chalk",
+      "label": "npm install -D chalk",
+      "command": "npm install -D chalk"
+    },
+    {
+      "id": "opensource:pnpm-add-chalk",
+      "label": "pnpm add chalk",
+      "command": "pnpm add chalk"
+    },
+    {
+      "id": "opensource:yarn-add-chalk",
+      "label": "yarn add chalk",
+      "command": "yarn add chalk"
+    },
+    {
+      "id": "opensource:npm-install-rimraf",
+      "label": "npm install rimraf",
+      "command": "npm install rimraf"
+    },
+    {
+      "id": "opensource:npm-uninstall-rimraf",
+      "label": "npm uninstall rimraf",
+      "command": "npm uninstall rimraf"
+    },
+    {
+      "id": "opensource:npm-install-d-rimraf",
+      "label": "npm install -D rimraf",
+      "command": "npm install -D rimraf"
+    },
+    {
+      "id": "opensource:pnpm-add-rimraf",
+      "label": "pnpm add rimraf",
+      "command": "pnpm add rimraf"
+    },
+    {
+      "id": "opensource:yarn-add-rimraf",
+      "label": "yarn add rimraf",
+      "command": "yarn add rimraf"
+    },
+    {
+      "id": "opensource:npm-install-webpack",
+      "label": "npm install webpack",
+      "command": "npm install webpack"
+    },
+    {
+      "id": "opensource:npm-uninstall-webpack",
+      "label": "npm uninstall webpack",
+      "command": "npm uninstall webpack"
+    },
+    {
+      "id": "opensource:npm-install-d-webpack",
+      "label": "npm install -D webpack",
+      "command": "npm install -D webpack"
+    },
+    {
+      "id": "opensource:pnpm-add-webpack",
+      "label": "pnpm add webpack",
+      "command": "pnpm add webpack"
+    },
+    {
+      "id": "opensource:yarn-add-webpack",
+      "label": "yarn add webpack",
+      "command": "yarn add webpack"
+    },
+    {
+      "id": "opensource:npm-install-vite",
+      "label": "npm install vite",
+      "command": "npm install vite"
+    },
+    {
+      "id": "opensource:npm-uninstall-vite",
+      "label": "npm uninstall vite",
+      "command": "npm uninstall vite"
+    },
+    {
+      "id": "opensource:npm-install-d-vite",
+      "label": "npm install -D vite",
+      "command": "npm install -D vite"
+    },
+    {
+      "id": "opensource:pnpm-add-vite",
+      "label": "pnpm add vite",
+      "command": "pnpm add vite"
+    },
+    {
+      "id": "opensource:yarn-add-vite",
+      "label": "yarn add vite",
+      "command": "yarn add vite"
+    },
+    {
+      "id": "opensource:npm-install-ts-node",
+      "label": "npm install ts-node",
+      "command": "npm install ts-node"
+    },
+    {
+      "id": "opensource:npm-uninstall-ts-node",
+      "label": "npm uninstall ts-node",
+      "command": "npm uninstall ts-node"
+    },
+    {
+      "id": "opensource:npm-install-d-ts-node",
+      "label": "npm install -D ts-node",
+      "command": "npm install -D ts-node"
+    },
+    {
+      "id": "opensource:pnpm-add-ts-node",
+      "label": "pnpm add ts-node",
+      "command": "pnpm add ts-node"
+    },
+    {
+      "id": "opensource:yarn-add-ts-node",
+      "label": "yarn add ts-node",
+      "command": "yarn add ts-node"
+    },
+    {
+      "id": "opensource:npm-install-tsx",
+      "label": "npm install tsx",
+      "command": "npm install tsx"
+    },
+    {
+      "id": "opensource:npm-uninstall-tsx",
+      "label": "npm uninstall tsx",
+      "command": "npm uninstall tsx"
+    },
+    {
+      "id": "opensource:npm-install-d-tsx",
+      "label": "npm install -D tsx",
+      "command": "npm install -D tsx"
+    },
+    {
+      "id": "opensource:pnpm-add-tsx",
+      "label": "pnpm add tsx",
+      "command": "pnpm add tsx"
+    },
+    {
+      "id": "opensource:yarn-add-tsx",
+      "label": "yarn add tsx",
+      "command": "yarn add tsx"
+    },
+    {
+      "id": "opensource:npm-install-nodemon",
+      "label": "npm install nodemon",
+      "command": "npm install nodemon"
+    },
+    {
+      "id": "opensource:npm-uninstall-nodemon",
+      "label": "npm uninstall nodemon",
+      "command": "npm uninstall nodemon"
+    },
+    {
+      "id": "opensource:npm-install-d-nodemon",
+      "label": "npm install -D nodemon",
+      "command": "npm install -D nodemon"
+    },
+    {
+      "id": "opensource:pnpm-add-nodemon",
+      "label": "pnpm add nodemon",
+      "command": "pnpm add nodemon"
+    },
+    {
+      "id": "opensource:yarn-add-nodemon",
+      "label": "yarn add nodemon",
+      "command": "yarn add nodemon"
+    },
+    {
+      "id": "opensource:npm-install-cross-env",
+      "label": "npm install cross-env",
+      "command": "npm install cross-env"
+    },
+    {
+      "id": "opensource:npm-uninstall-cross-env",
+      "label": "npm uninstall cross-env",
+      "command": "npm uninstall cross-env"
+    },
+    {
+      "id": "opensource:npm-install-d-cross-env",
+      "label": "npm install -D cross-env",
+      "command": "npm install -D cross-env"
+    },
+    {
+      "id": "opensource:pnpm-add-cross-env",
+      "label": "pnpm add cross-env",
+      "command": "pnpm add cross-env"
+    },
+    {
+      "id": "opensource:yarn-add-cross-env",
+      "label": "yarn add cross-env",
+      "command": "yarn add cross-env"
+    }
+  ]
+}

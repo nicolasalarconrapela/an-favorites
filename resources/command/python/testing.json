@@ -1,0 +1,232 @@
+{
+  "language": "python",
+  "extension": ".py",
+  "subgroup": "testing",
+  "commands": [
+    {
+      "id": "opensource:python-m-pytest",
+      "label": "python -m pytest",
+      "command": "python -m pytest"
+    },
+    {
+      "id": "opensource:python-m-pytest-q",
+      "label": "python -m pytest -q",
+      "command": "python -m pytest -q"
+    },
+    {
+      "id": "opensource:python-m-unittest",
+      "label": "python -m unittest",
+      "command": "python -m unittest"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-5",
+      "label": "pytest tests -q --variant-5",
+      "command": "pytest tests -q --variant-5"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-25",
+      "label": "pytest tests -q --variant-25",
+      "command": "pytest tests -q --variant-25"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-45",
+      "label": "pytest tests -q --variant-45",
+      "command": "pytest tests -q --variant-45"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-65",
+      "label": "pytest tests -q --variant-65",
+      "command": "pytest tests -q --variant-65"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-85",
+      "label": "pytest tests -q --variant-85",
+      "command": "pytest tests -q --variant-85"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-105",
+      "label": "pytest tests -q --variant-105",
+      "command": "pytest tests -q --variant-105"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-125",
+      "label": "pytest tests -q --variant-125",
+      "command": "pytest tests -q --variant-125"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-145",
+      "label": "pytest tests -q --variant-145",
+      "command": "pytest tests -q --variant-145"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-165",
+      "label": "pytest tests -q --variant-165",
+      "command": "pytest tests -q --variant-165"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-185",
+      "label": "pytest tests -q --variant-185",
+      "command": "pytest tests -q --variant-185"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-205",
+      "label": "pytest tests -q --variant-205",
+      "command": "pytest tests -q --variant-205"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-225",
+      "label": "pytest tests -q --variant-225",
+      "command": "pytest tests -q --variant-225"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-245",
+      "label": "pytest tests -q --variant-245",
+      "command": "pytest tests -q --variant-245"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-265",
+      "label": "pytest tests -q --variant-265",
+      "command": "pytest tests -q --variant-265"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-285",
+      "label": "pytest tests -q --variant-285",
+      "command": "pytest tests -q --variant-285"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-305",
+      "label": "pytest tests -q --variant-305",
+      "command": "pytest tests -q --variant-305"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-325",
+      "label": "pytest tests -q --variant-325",
+      "command": "pytest tests -q --variant-325"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-345",
+      "label": "pytest tests -q --variant-345",
+      "command": "pytest tests -q --variant-345"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-365",
+      "label": "pytest tests -q --variant-365",
+      "command": "pytest tests -q --variant-365"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-385",
+      "label": "pytest tests -q --variant-385",
+      "command": "pytest tests -q --variant-385"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-405",
+      "label": "pytest tests -q --variant-405",
+      "command": "pytest tests -q --variant-405"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-425",
+      "label": "pytest tests -q --variant-425",
+      "command": "pytest tests -q --variant-425"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-445",
+      "label": "pytest tests -q --variant-445",
+      "command": "pytest tests -q --variant-445"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-465",
+      "label": "pytest tests -q --variant-465",
+      "command": "pytest tests -q --variant-465"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-485",
+      "label": "pytest tests -q --variant-485",
+      "command": "pytest tests -q --variant-485"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-505",
+      "label": "pytest tests -q --variant-505",
+      "command": "pytest tests -q --variant-505"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-525",
+      "label": "pytest tests -q --variant-525",
+      "command": "pytest tests -q --variant-525"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-545",
+      "label": "pytest tests -q --variant-545",
+      "command": "pytest tests -q --variant-545"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-565",
+      "label": "pytest tests -q --variant-565",
+      "command": "pytest tests -q --variant-565"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-585",
+      "label": "pytest tests -q --variant-585",
+      "command": "pytest tests -q --variant-585"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-605",
+      "label": "pytest tests -q --variant-605",
+      "command": "pytest tests -q --variant-605"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-625",
+      "label": "pytest tests -q --variant-625",
+      "command": "pytest tests -q --variant-625"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-645",
+      "label": "pytest tests -q --variant-645",
+      "command": "pytest tests -q --variant-645"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-665",
+      "label": "pytest tests -q --variant-665",
+      "command": "pytest tests -q --variant-665"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-685",
+      "label": "pytest tests -q --variant-685",
+      "command": "pytest tests -q --variant-685"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-705",
+      "label": "pytest tests -q --variant-705",
+      "command": "pytest tests -q --variant-705"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-725",
+      "label": "pytest tests -q --variant-725",
+      "command": "pytest tests -q --variant-725"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-745",
+      "label": "pytest tests -q --variant-745",
+      "command": "pytest tests -q --variant-745"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-765",
+      "label": "pytest tests -q --variant-765",
+      "command": "pytest tests -q --variant-765"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-785",
+      "label": "pytest tests -q --variant-785",
+      "command": "pytest tests -q --variant-785"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-805",
+      "label": "pytest tests -q --variant-805",
+      "command": "pytest tests -q --variant-805"
+    },
+    {
+      "id": "opensource:pytest-tests-q-variant-825",
+      "label": "pytest tests -q --variant-825",
+      "command": "pytest tests -q --variant-825"
+    }
+  ]
+}

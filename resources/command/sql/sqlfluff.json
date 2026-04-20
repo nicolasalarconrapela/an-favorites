@@ -1,0 +1,12 @@
+{
+  "language": "sql",
+  "extension": ".sql",
+  "subgroup": "sqlfluff",
+  "commands": [
+    {
+      "id": "opensource:sqlfluff-lint-sql",
+      "label": "sqlfluff lint sql/",
+      "command": "sqlfluff lint sql/"
+    }
+  ]
+}

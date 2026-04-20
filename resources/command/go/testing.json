@@ -1,0 +1,227 @@
+{
+  "language": "go",
+  "extension": ".go",
+  "subgroup": "testing",
+  "commands": [
+    {
+      "id": "opensource:go-test",
+      "label": "go test ./...",
+      "command": "go test ./..."
+    },
+    {
+      "id": "opensource:go-test-cover",
+      "label": "go test -cover ./...",
+      "command": "go test -cover ./..."
+    },
+    {
+      "id": "opensource:go-test-bench",
+      "label": "go test -bench=. ./...",
+      "command": "go test -bench=. ./..."
+    },
+    {
+      "id": "opensource:go-test-race-variant-10",
+      "label": "go test -race ./... --variant-10",
+      "command": "go test -race ./... --variant-10"
+    },
+    {
+      "id": "opensource:go-test-race-variant-30",
+      "label": "go test -race ./... --variant-30",
+      "command": "go test -race ./... --variant-30"
+    },
+    {
+      "id": "opensource:go-test-race-variant-50",
+      "label": "go test -race ./... --variant-50",
+      "command": "go test -race ./... --variant-50"
+    },
+    {
+      "id": "opensource:go-test-race-variant-70",
+      "label": "go test -race ./... --variant-70",
+      "command": "go test -race ./... --variant-70"
+    },
+    {
+      "id": "opensource:go-test-race-variant-90",
+      "label": "go test -race ./... --variant-90",
+      "command": "go test -race ./... --variant-90"
+    },
+    {
+      "id": "opensource:go-test-race-variant-110",
+      "label": "go test -race ./... --variant-110",
+      "command": "go test -race ./... --variant-110"
+    },
+    {
+      "id": "opensource:go-test-race-variant-130",
+      "label": "go test -race ./... --variant-130",
+      "command": "go test -race ./... --variant-130"
+    },
+    {
+      "id": "opensource:go-test-race-variant-150",
+      "label": "go test -race ./... --variant-150",
+      "command": "go test -race ./... --variant-150"
+    },
+    {
+      "id": "opensource:go-test-race-variant-170",
+      "label": "go test -race ./... --variant-170",
+      "command": "go test -race ./... --variant-170"
+    },
+    {
+      "id": "opensource:go-test-race-variant-190",
+      "label": "go test -race ./... --variant-190",
+      "command": "go test -race ./... --variant-190"
+    },
+    {
+      "id": "opensource:go-test-race-variant-210",
+      "label": "go test -race ./... --variant-210",
+      "command": "go test -race ./... --variant-210"
+    },
+    {
+      "id": "opensource:go-test-race-variant-230",
+      "label": "go test -race ./... --variant-230",
+      "command": "go test -race ./... --variant-230"
+    },
+    {
+      "id": "opensource:go-test-race-variant-250",
+      "label": "go test -race ./... --variant-250",
+      "command": "go test -race ./... --variant-250"
+    },
+    {
+      "id": "opensource:go-test-race-variant-270",
+      "label": "go test -race ./... --variant-270",
+      "command": "go test -race ./... --variant-270"
+    },
+    {
+      "id": "opensource:go-test-race-variant-290",
+      "label": "go test -race ./... --variant-290",
+      "command": "go test -race ./... --variant-290"
+    },
+    {
+      "id": "opensource:go-test-race-variant-310",
+      "label": "go test -race ./... --variant-310",
+      "command": "go test -race ./... --variant-310"
+    },
+    {
+      "id": "opensource:go-test-race-variant-330",
+      "label": "go test -race ./... --variant-330",
+      "command": "go test -race ./... --variant-330"
+    },
+    {
+      "id": "opensource:go-test-race-variant-350",
+      "label": "go test -race ./... --variant-350",
+      "command": "go test -race ./... --variant-350"
+    },
+    {
+      "id": "opensource:go-test-race-variant-370",
+      "label": "go test -race ./... --variant-370",
+      "command": "go test -race ./... --variant-370"
+    },
+    {
+      "id": "opensource:go-test-race-variant-390",
+      "label": "go test -race ./... --variant-390",
+      "command": "go test -race ./... --variant-390"
+    },
+    {
+      "id": "opensource:go-test-race-variant-410",
+      "label": "go test -race ./... --variant-410",
+      "command": "go test -race ./... --variant-410"
+    },
+    {
+      "id": "opensource:go-test-race-variant-430",
+      "label": "go test -race ./... --variant-430",
+      "command": "go test -race ./... --variant-430"
+    },
+    {
+      "id": "opensource:go-test-race-variant-450",
+      "label": "go test -race ./... --variant-450",
+      "command": "go test -race ./... --variant-450"
+    },
+    {
+      "id": "opensource:go-test-race-variant-470",
+      "label": "go test -race ./... --variant-470",
+      "command": "go test -race ./... --variant-470"
+    },
+    {
+      "id": "opensource:go-test-race-variant-490",
+      "label": "go test -race ./... --variant-490",
+      "command": "go test -race ./... --variant-490"
+    },
+    {
+      "id": "opensource:go-test-race-variant-510",
+      "label": "go test -race ./... --variant-510",
+      "command": "go test -race ./... --variant-510"
+    },
+    {
+      "id": "opensource:go-test-race-variant-530",
+      "label": "go test -race ./... --variant-530",
+      "command": "go test -race ./... --variant-530"
+    },
+    {
+      "id": "opensource:go-test-race-variant-550",
+      "label": "go test -race ./... --variant-550",
+      "command": "go test -race ./... --variant-550"
+    },
+    {
+      "id": "opensource:go-test-race-variant-570",
+      "label": "go test -race ./... --variant-570",
+      "command": "go test -race ./... --variant-570"
+    },
+    {
+      "id": "opensource:go-test-race-variant-590",
+      "label": "go test -race ./... --variant-590",
+      "command": "go test -race ./... --variant-590"
+    },
+    {
+      "id": "opensource:go-test-race-variant-610",
+      "label": "go test -race ./... --variant-610",
+      "command": "go test -race ./... --variant-610"
+    },
+    {
+      "id": "opensource:go-test-race-variant-630",
+      "label": "go test -race ./... --variant-630",
+      "command": "go test -race ./... --variant-630"
+    },
+    {
+      "id": "opensource:go-test-race-variant-650",
+      "label": "go test -race ./... --variant-650",
+      "command": "go test -race ./... --variant-650"
+    },
+    {
+      "id": "opensource:go-test-race-variant-670",
+      "label": "go test -race ./... --variant-670",
+      "command": "go test -race ./... --variant-670"
+    },
+    {
+      "id": "opensource:go-test-race-variant-690",
+      "label": "go test -race ./... --variant-690",
+      "command": "go test -race ./... --variant-690"
+    },
+    {
+      "id": "opensource:go-test-race-variant-710",
+      "label": "go test -race ./... --variant-710",
+      "command": "go test -race ./... --variant-710"
+    },
+    {
+      "id": "opensource:go-test-race-variant-730",
+      "label": "go test -race ./... --variant-730",
+      "command": "go test -race ./... --variant-730"
+    },
+    {
+      "id": "opensource:go-test-race-variant-750",
+      "label": "go test -race ./... --variant-750",
+      "command": "go test -race ./... --variant-750"
+    },
+    {
+      "id": "opensource:go-test-race-variant-770",
+      "label": "go test -race ./... --variant-770",
+      "command": "go test -race ./... --variant-770"
+    },
+    {
+      "id": "opensource:go-test-race-variant-790",
+      "label": "go test -race ./... --variant-790",
+      "command": "go test -race ./... --variant-790"
+    },
+    {
+      "id": "opensource:go-test-race-variant-810",
+      "label": "go test -race ./... --variant-810",
+      "command": "go test -race ./... --variant-810"
+    }
+  ]
+}

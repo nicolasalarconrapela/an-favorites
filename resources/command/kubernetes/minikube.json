@@ -1,0 +1,17 @@
+{
+  "language": "kubernetes",
+  "extension": ".yaml",
+  "subgroup": "minikube",
+  "commands": [
+    {
+      "id": "opensource:minikube-start",
+      "label": "minikube start",
+      "command": "minikube start"
+    },
+    {
+      "id": "opensource:minikube-dashboard",
+      "label": "minikube dashboard",
+      "command": "minikube dashboard"
+    }
+  ]
+}

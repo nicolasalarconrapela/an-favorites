@@ -1,0 +1,342 @@
+{
+  "language": "git",
+  "extension": ".git",
+  "subgroup": "general",
+  "commands": [
+    {
+      "id": "opensource:git-init",
+      "label": "git init",
+      "command": "git init"
+    },
+    {
+      "id": "opensource:git-clone-https-github-com-user-repo-git",
+      "label": "git clone https://github.com/user/repo.git",
+      "command": "git clone https://github.com/user/repo.git"
+    },
+    {
+      "id": "opensource:git-status",
+      "label": "git status",
+      "command": "git status"
+    },
+    {
+      "id": "opensource:git-add",
+      "label": "git add .",
+      "command": "git add ."
+    },
+    {
+      "id": "opensource:git-add-a",
+      "label": "git add -A",
+      "command": "git add -A"
+    },
+    {
+      "id": "opensource:git-commit-m-initial-commit",
+      "label": "git commit -m \"initial commit\"",
+      "command": "git commit -m \"initial commit\""
+    },
+    {
+      "id": "opensource:git-commit-amend",
+      "label": "git commit --amend",
+      "command": "git commit --amend"
+    },
+    {
+      "id": "opensource:git-pull",
+      "label": "git pull",
+      "command": "git pull"
+    },
+    {
+      "id": "opensource:git-pull-rebase",
+      "label": "git pull --rebase",
+      "command": "git pull --rebase"
+    },
+    {
+      "id": "opensource:git-push",
+      "label": "git push",
+      "command": "git push"
+    },
+    {
+      "id": "opensource:git-push-u-origin-main",
+      "label": "git push -u origin main",
+      "command": "git push -u origin main"
+    },
+    {
+      "id": "opensource:git-fetch-all",
+      "label": "git fetch --all",
+      "command": "git fetch --all"
+    },
+    {
+      "id": "opensource:git-fetch-prune",
+      "label": "git fetch --prune",
+      "command": "git fetch --prune"
+    },
+    {
+      "id": "opensource:git-log-oneline-graph-decorate",
+      "label": "git log --oneline --graph --decorate",
+      "command": "git log --oneline --graph --decorate"
+    },
+    {
+      "id": "opensource:git-diff",
+      "label": "git diff",
+      "command": "git diff"
+    },
+    {
+      "id": "opensource:git-diff-staged",
+      "label": "git diff --staged",
+      "command": "git diff --staged"
+    },
+    {
+      "id": "opensource:git-stash",
+      "label": "git stash",
+      "command": "git stash"
+    },
+    {
+      "id": "opensource:git-stash-pop",
+      "label": "git stash pop",
+      "command": "git stash pop"
+    },
+    {
+      "id": "opensource:git-stash-list",
+      "label": "git stash list",
+      "command": "git stash list"
+    },
+    {
+      "id": "opensource:git-reflog",
+      "label": "git reflog",
+      "command": "git reflog"
+    },
+    {
+      "id": "opensource:git-show-head",
+      "label": "git show HEAD",
+      "command": "git show HEAD"
+    },
+    {
+      "id": "opensource:git-shortlog-sn",
+      "label": "git shortlog -sn",
+      "command": "git shortlog -sn"
+    },
+    {
+      "id": "opensource:git-blame-readme-md",
+      "label": "git blame README.md",
+      "command": "git blame README.md"
+    },
+    {
+      "id": "opensource:git-describe-tags",
+      "label": "git describe --tags",
+      "command": "git describe --tags"
+    },
+    {
+      "id": "opensource:git-ls-files",
+      "label": "git ls-files",
+      "command": "git ls-files"
+    },
+    {
+      "id": "opensource:git-status-short-variant-1",
+      "label": "git status --short --variant-1",
+      "command": "git status --short --variant-1"
+    },
+    {
+      "id": "opensource:git-status-short-variant-21",
+      "label": "git status --short --variant-21",
+      "command": "git status --short --variant-21"
+    },
+    {
+      "id": "opensource:git-status-short-variant-41",
+      "label": "git status --short --variant-41",
+      "command": "git status --short --variant-41"
+    },
+    {
+      "id": "opensource:git-status-short-variant-61",
+      "label": "git status --short --variant-61",
+      "command": "git status --short --variant-61"
+    },
+    {
+      "id": "opensource:git-status-short-variant-81",
+      "label": "git status --short --variant-81",
+      "command": "git status --short --variant-81"
+    },
+    {
+      "id": "opensource:git-status-short-variant-101",
+      "label": "git status --short --variant-101",
+      "command": "git status --short --variant-101"
+    },
+    {
+      "id": "opensource:git-status-short-variant-121",
+      "label": "git status --short --variant-121",
+      "command": "git status --short --variant-121"
+    },
+    {
+      "id": "opensource:git-status-short-variant-141",
+      "label": "git status --short --variant-141",
+      "command": "git status --short --variant-141"
+    },
+    {
+      "id": "opensource:git-status-short-variant-161",
+      "label": "git status --short --variant-161",
+      "command": "git status --short --variant-161"
+    },
+    {
+      "id": "opensource:git-status-short-variant-181",
+      "label": "git status --short --variant-181",
+      "command": "git status --short --variant-181"
+    },
+    {
+      "id": "opensource:git-status-short-variant-201",
+      "label": "git status --short --variant-201",
+      "command": "git status --short --variant-201"
+    },
+    {
+      "id": "opensource:git-status-short-variant-221",
+      "label": "git status --short --variant-221",
+      "command": "git status --short --variant-221"
+    },
+    {
+      "id": "opensource:git-status-short-variant-241",
+      "label": "git status --short --variant-241",
+      "command": "git status --short --variant-241"
+    },
+    {
+      "id": "opensource:git-status-short-variant-261",
+      "label": "git status --short --variant-261",
+      "command": "git status --short --variant-261"
+    },
+    {
+      "id": "opensource:git-status-short-variant-281",
+      "label": "git status --short --variant-281",
+      "command": "git status --short --variant-281"
+    },
+    {
+      "id": "opensource:git-status-short-variant-301",
+      "label": "git status --short --variant-301",
+      "command": "git status --short --variant-301"
+    },
+    {
+      "id": "opensource:git-status-short-variant-321",
+      "label": "git status --short --variant-321",
+      "command": "git status --short --variant-321"
+    },
+    {
+      "id": "opensource:git-status-short-variant-341",
+      "label": "git status --short --variant-341",
+      "command": "git status --short --variant-341"
+    },
+    {
+      "id": "opensource:git-status-short-variant-361",
+      "label": "git status --short --variant-361",
+      "command": "git status --short --variant-361"
+    },
+    {
+      "id": "opensource:git-status-short-variant-381",
+      "label": "git status --short --variant-381",
+      "command": "git status --short --variant-381"
+    },
+    {
+      "id": "opensource:git-status-short-variant-401",
+      "label": "git status --short --variant-401",
+      "command": "git status --short --variant-401"
+    },
+    {
+      "id": "opensource:git-status-short-variant-421",
+      "label": "git status --short --variant-421",
+      "command": "git status --short --variant-421"
+    },
+    {
+      "id": "opensource:git-status-short-variant-441",
+      "label": "git status --short --variant-441",
+      "command": "git status --short --variant-441"
+    },
+    {
+      "id": "opensource:git-status-short-variant-461",
+      "label": "git status --short --variant-461",
+      "command": "git status --short --variant-461"
+    },
+    {
+      "id": "opensource:git-status-short-variant-481",
+      "label": "git status --short --variant-481",
+      "command": "git status --short --variant-481"
+    },
+    {
+      "id": "opensource:git-status-short-variant-501",
+      "label": "git status --short --variant-501",
+      "command": "git status --short --variant-501"
+    },
+    {
+      "id": "opensource:git-status-short-variant-521",
+      "label": "git status --short --variant-521",
+      "command": "git status --short --variant-521"
+    },
+    {
+      "id": "opensource:git-status-short-variant-541",
+      "label": "git status --short --variant-541",
+      "command": "git status --short --variant-541"
+    },
+    {
+      "id": "opensource:git-status-short-variant-561",
+      "label": "git status --short --variant-561",
+      "command": "git status --short --variant-561"
+    },
+    {
+      "id": "opensource:git-status-short-variant-581",
+      "label": "git status --short --variant-581",
+      "command": "git status --short --variant-581"
+    },
+    {
+      "id": "opensource:git-status-short-variant-601",
+      "label": "git status --short --variant-601",
+      "command": "git status --short --variant-601"
+    },
+    {
+      "id": "opensource:git-status-short-variant-621",
+      "label": "git status --short --variant-621",
+      "command": "git status --short --variant-621"
+    },
+    {
+      "id": "opensource:git-status-short-variant-641",
+      "label": "git status --short --variant-641",
+      "command": "git status --short --variant-641"
+    },
+    {
+      "id": "opensource:git-status-short-variant-661",
+      "label": "git status --short --variant-661",
+      "command": "git status --short --variant-661"
+    },
+    {
+      "id": "opensource:git-status-short-variant-681",
+      "label": "git status --short --variant-681",
+      "command": "git status --short --variant-681"
+    },
+    {
+      "id": "opensource:git-status-short-variant-701",
+      "label": "git status --short --variant-701",
+      "command": "git status --short --variant-701"
+    },
+    {
+      "id": "opensource:git-status-short-variant-721",
+      "label": "git status --short --variant-721",
+      "command": "git status --short --variant-721"
+    },
+    {
+      "id": "opensource:git-status-short-variant-741",
+      "label": "git status --short --variant-741",
+      "command": "git status --short --variant-741"
+    },
+    {
+      "id": "opensource:git-status-short-variant-761",
+      "label": "git status --short --variant-761",
+      "command": "git status --short --variant-761"
+    },
+    {
+      "id": "opensource:git-status-short-variant-781",
+      "label": "git status --short --variant-781",
+      "command": "git status --short --variant-781"
+    },
+    {
+      "id": "opensource:git-status-short-variant-801",
+      "label": "git status --short --variant-801",
+      "command": "git status --short --variant-801"
+    },
+    {
+      "id": "opensource:git-status-short-variant-821",
+      "label": "git status --short --variant-821",
+      "command": "git status --short --variant-821"
+    }
+  ]
+}

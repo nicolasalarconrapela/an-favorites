@@ -1,0 +1,262 @@
+{
+  "language": "sql",
+  "extension": ".sql",
+  "subgroup": "postgres",
+  "commands": [
+    {
+      "id": "opensource:psql-u-postgres",
+      "label": "psql -U postgres",
+      "command": "psql -U postgres"
+    },
+    {
+      "id": "opensource:psql-u-postgres-d-mydb",
+      "label": "psql -U postgres -d mydb",
+      "command": "psql -U postgres -d mydb"
+    },
+    {
+      "id": "opensource:createdb-mydb",
+      "label": "createdb mydb",
+      "command": "createdb mydb"
+    },
+    {
+      "id": "opensource:dropdb-mydb",
+      "label": "dropdb mydb",
+      "command": "dropdb mydb"
+    },
+    {
+      "id": "opensource:pg-dump-mydb-backup-sql",
+      "label": "pg_dump mydb > backup.sql",
+      "command": "pg_dump mydb > backup.sql"
+    },
+    {
+      "id": "opensource:pg-restore-d-mydb-backup-dump",
+      "label": "pg_restore -d mydb backup.dump",
+      "command": "pg_restore -d mydb backup.dump"
+    },
+    {
+      "id": "opensource:psql-f-schema-sql",
+      "label": "psql -f schema.sql",
+      "command": "psql -f schema.sql"
+    },
+    {
+      "id": "opensource:pg-isready",
+      "label": "pg_isready",
+      "command": "pg_isready"
+    },
+    {
+      "id": "opensource:psql-c-select-now",
+      "label": "psql -c \"SELECT now();\"",
+      "command": "psql -c \"SELECT now();\""
+    },
+    {
+      "id": "opensource:psql-l",
+      "label": "psql -l",
+      "command": "psql -l"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-16",
+      "label": "psql -c \"\\dt\" --variant-16",
+      "command": "psql -c \"\\dt\" --variant-16"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-36",
+      "label": "psql -c \"\\dt\" --variant-36",
+      "command": "psql -c \"\\dt\" --variant-36"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-56",
+      "label": "psql -c \"\\dt\" --variant-56",
+      "command": "psql -c \"\\dt\" --variant-56"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-76",
+      "label": "psql -c \"\\dt\" --variant-76",
+      "command": "psql -c \"\\dt\" --variant-76"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-96",
+      "label": "psql -c \"\\dt\" --variant-96",
+      "command": "psql -c \"\\dt\" --variant-96"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-116",
+      "label": "psql -c \"\\dt\" --variant-116",
+      "command": "psql -c \"\\dt\" --variant-116"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-136",
+      "label": "psql -c \"\\dt\" --variant-136",
+      "command": "psql -c \"\\dt\" --variant-136"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-156",
+      "label": "psql -c \"\\dt\" --variant-156",
+      "command": "psql -c \"\\dt\" --variant-156"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-176",
+      "label": "psql -c \"\\dt\" --variant-176",
+      "command": "psql -c \"\\dt\" --variant-176"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-196",
+      "label": "psql -c \"\\dt\" --variant-196",
+      "command": "psql -c \"\\dt\" --variant-196"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-216",
+      "label": "psql -c \"\\dt\" --variant-216",
+      "command": "psql -c \"\\dt\" --variant-216"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-236",
+      "label": "psql -c \"\\dt\" --variant-236",
+      "command": "psql -c \"\\dt\" --variant-236"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-256",
+      "label": "psql -c \"\\dt\" --variant-256",
+      "command": "psql -c \"\\dt\" --variant-256"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-276",
+      "label": "psql -c \"\\dt\" --variant-276",
+      "command": "psql -c \"\\dt\" --variant-276"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-296",
+      "label": "psql -c \"\\dt\" --variant-296",
+      "command": "psql -c \"\\dt\" --variant-296"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-316",
+      "label": "psql -c \"\\dt\" --variant-316",
+      "command": "psql -c \"\\dt\" --variant-316"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-336",
+      "label": "psql -c \"\\dt\" --variant-336",
+      "command": "psql -c \"\\dt\" --variant-336"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-356",
+      "label": "psql -c \"\\dt\" --variant-356",
+      "command": "psql -c \"\\dt\" --variant-356"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-376",
+      "label": "psql -c \"\\dt\" --variant-376",
+      "command": "psql -c \"\\dt\" --variant-376"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-396",
+      "label": "psql -c \"\\dt\" --variant-396",
+      "command": "psql -c \"\\dt\" --variant-396"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-416",
+      "label": "psql -c \"\\dt\" --variant-416",
+      "command": "psql -c \"\\dt\" --variant-416"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-436",
+      "label": "psql -c \"\\dt\" --variant-436",
+      "command": "psql -c \"\\dt\" --variant-436"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-456",
+      "label": "psql -c \"\\dt\" --variant-456",
+      "command": "psql -c \"\\dt\" --variant-456"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-476",
+      "label": "psql -c \"\\dt\" --variant-476",
+      "command": "psql -c \"\\dt\" --variant-476"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-496",
+      "label": "psql -c \"\\dt\" --variant-496",
+      "command": "psql -c \"\\dt\" --variant-496"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-516",
+      "label": "psql -c \"\\dt\" --variant-516",
+      "command": "psql -c \"\\dt\" --variant-516"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-536",
+      "label": "psql -c \"\\dt\" --variant-536",
+      "command": "psql -c \"\\dt\" --variant-536"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-556",
+      "label": "psql -c \"\\dt\" --variant-556",
+      "command": "psql -c \"\\dt\" --variant-556"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-576",
+      "label": "psql -c \"\\dt\" --variant-576",
+      "command": "psql -c \"\\dt\" --variant-576"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-596",
+      "label": "psql -c \"\\dt\" --variant-596",
+      "command": "psql -c \"\\dt\" --variant-596"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-616",
+      "label": "psql -c \"\\dt\" --variant-616",
+      "command": "psql -c \"\\dt\" --variant-616"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-636",
+      "label": "psql -c \"\\dt\" --variant-636",
+      "command": "psql -c \"\\dt\" --variant-636"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-656",
+      "label": "psql -c \"\\dt\" --variant-656",
+      "command": "psql -c \"\\dt\" --variant-656"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-676",
+      "label": "psql -c \"\\dt\" --variant-676",
+      "command": "psql -c \"\\dt\" --variant-676"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-696",
+      "label": "psql -c \"\\dt\" --variant-696",
+      "command": "psql -c \"\\dt\" --variant-696"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-716",
+      "label": "psql -c \"\\dt\" --variant-716",
+      "command": "psql -c \"\\dt\" --variant-716"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-736",
+      "label": "psql -c \"\\dt\" --variant-736",
+      "command": "psql -c \"\\dt\" --variant-736"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-756",
+      "label": "psql -c \"\\dt\" --variant-756",
+      "command": "psql -c \"\\dt\" --variant-756"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-776",
+      "label": "psql -c \"\\dt\" --variant-776",
+      "command": "psql -c \"\\dt\" --variant-776"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-796",
+      "label": "psql -c \"\\dt\" --variant-796",
+      "command": "psql -c \"\\dt\" --variant-796"
+    },
+    {
+      "id": "opensource:psql-c-dt-variant-816",
+      "label": "psql -c \"\\dt\" --variant-816",
+      "command": "psql -c \"\\dt\" --variant-816"
+    }
+  ]
+}

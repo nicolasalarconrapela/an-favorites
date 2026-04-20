@@ -1,0 +1,17 @@
+{
+  "language": "typescript",
+  "extension": ".ts",
+  "subgroup": "quality",
+  "commands": [
+    {
+      "id": "opensource:npx-eslint-src-ts",
+      "label": "npx eslint \"src/**/*.ts\"",
+      "command": "npx eslint \"src/**/*.ts\""
+    },
+    {
+      "id": "opensource:npx-prettier-write-src-ts",
+      "label": "npx prettier --write \"src/**/*.ts\"",
+      "command": "npx prettier --write \"src/**/*.ts\""
+    }
+  ]
+}

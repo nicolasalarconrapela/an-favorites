@@ -1,0 +1,22 @@
+{
+  "language": "typescript",
+  "extension": ".ts",
+  "subgroup": "vite",
+  "commands": [
+    {
+      "id": "opensource:vite-dev",
+      "label": "vite dev",
+      "command": "vite dev"
+    },
+    {
+      "id": "opensource:vite-build",
+      "label": "vite build",
+      "command": "vite build"
+    },
+    {
+      "id": "opensource:vite-preview",
+      "label": "vite preview",
+      "command": "vite preview"
+    }
+  ]
+}

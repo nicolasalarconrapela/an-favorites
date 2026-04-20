@@ -1,0 +1,37 @@
+{
+  "language": "ruby",
+  "extension": ".rb",
+  "subgroup": "rails",
+  "commands": [
+    {
+      "id": "opensource:bundle-exec-rails-server",
+      "label": "bundle exec rails server",
+      "command": "bundle exec rails server"
+    },
+    {
+      "id": "opensource:bundle-exec-rails-console",
+      "label": "bundle exec rails console",
+      "command": "bundle exec rails console"
+    },
+    {
+      "id": "opensource:bundle-exec-rails-db-migrate",
+      "label": "bundle exec rails db:migrate",
+      "command": "bundle exec rails db:migrate"
+    },
+    {
+      "id": "opensource:bundle-exec-rails-test",
+      "label": "bundle exec rails test",
+      "command": "bundle exec rails test"
+    },
+    {
+      "id": "opensource:rails-new-myapp",
+      "label": "rails new myapp",
+      "command": "rails new myapp"
+    },
+    {
+      "id": "opensource:rails-routes",
+      "label": "rails routes",
+      "command": "rails routes"
+    }
+  ]
+}

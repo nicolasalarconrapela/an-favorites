@@ -1,0 +1,17 @@
+{
+  "language": "sql",
+  "extension": ".sql",
+  "subgroup": "sqlite",
+  "commands": [
+    {
+      "id": "opensource:sqlite3-database-db",
+      "label": "sqlite3 database.db",
+      "command": "sqlite3 database.db"
+    },
+    {
+      "id": "opensource:sqlite3-database-db-tables",
+      "label": "sqlite3 database.db \".tables\"",
+      "command": "sqlite3 database.db \".tables\""
+    }
+  ]
+}

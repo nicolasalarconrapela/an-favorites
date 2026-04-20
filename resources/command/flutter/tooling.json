@@ -1,0 +1,32 @@
+{
+  "language": "flutter",
+  "extension": ".dart",
+  "subgroup": "tooling",
+  "commands": [
+    {
+      "id": "opensource:flutter-doctor",
+      "label": "flutter doctor",
+      "command": "flutter doctor"
+    },
+    {
+      "id": "opensource:flutter-devices",
+      "label": "flutter devices",
+      "command": "flutter devices"
+    },
+    {
+      "id": "opensource:flutter-emulators",
+      "label": "flutter emulators",
+      "command": "flutter emulators"
+    },
+    {
+      "id": "opensource:flutter-logs",
+      "label": "flutter logs",
+      "command": "flutter logs"
+    },
+    {
+      "id": "opensource:flutter-config-enable-web",
+      "label": "flutter config --enable-web",
+      "command": "flutter config --enable-web"
+    }
+  ]
+}
