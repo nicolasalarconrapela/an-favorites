@@ -1,0 +1,203 @@
+{
+  "catalog.angular.description": "Configuracion de comandos Angular organizada por areas funcionales en un unico archivo.",
+
+  "groups.angularCoreWorkflow.name": "Core Workflow",
+  "groups.angularCoreWorkflow.description": "Comandos base del CLI de Angular para inicializacion, configuracion y tareas globales.",
+
+  "groups.angularDevelopment.name": "Development",
+  "groups.angularDevelopment.description": "Comandos para desarrollo diario, compilacion, pruebas y ciclo local de trabajo.",
+
+  "groups.angularScaffolding.name": "Scaffolding",
+  "groups.angularScaffolding.description": "Generacion de componentes y artefactos para acelerar la creacion de codigo.",
+
+  "groups.angularWorkspaceManagement.name": "Workspace Management",
+  "groups.angularWorkspaceManagement.description": "Herramientas para monorepos, dependencias y gestion de espacios de trabajo.",
+
+  "subgroups.angularBuildRunTest.name": "Build, Run and Test",
+  "subgroups.angularBuildRunTest.description": "Serve, build, test, lint, e2e e internacionalizacion.",
+
+  "subgroups.angularCypress.name": "Cypress",
+  "subgroups.angularCypress.description": "Automatizacion de pruebas end-to-end con Cypress en proyectos Angular.",
+
+  "subgroups.angularDependencies.name": "Dependencies",
+  "subgroups.angularDependencies.description": "Instalacion y mantenimiento de dependencias usadas por proyectos Angular.",
+
+  "subgroups.angularNx.name": "nx",
+  "subgroups.angularNx.description": "Comandos para visualizar y ejecutar tareas en workspaces Angular con Nx.",
+
+  "commands.ngVersion.label": "ng version",
+  "commands.ngVersion.description": "Muestra la version instalada de Angular CLI, Angular y dependencias relacionadas del workspace actual.",
+
+  "commands.ngNewMyApp.label": "ng new my-app",
+  "commands.ngNewMyApp.description": "Crea un nuevo proyecto Angular llamado my-app con la estructura base inicial.",
+
+  "commands.ngCacheClean.label": "ng cache clean",
+  "commands.ngCacheClean.description": "Limpia la cache local utilizada por Angular CLI para compilaciones y tareas internas.",
+
+  "commands.ngAnalyticsOff.label": "ng analytics off",
+  "commands.ngAnalyticsOff.description": "Desactiva el envio de datos de analitica de uso de Angular CLI.",
+
+  "commands.ngConfig.label": "ng config",
+  "commands.ngConfig.description": "Consulta o modifica la configuracion definida en angular.json o en la configuracion global del CLI.",
+
+  "commands.ngServe.label": "ng serve",
+  "commands.ngServe.description": "Levanta el servidor de desarrollo local de Angular y recompila automaticamente ante cambios.",
+
+  "commands.ngBuild.label": "ng build",
+  "commands.ngBuild.description": "Compila la aplicacion Angular y genera los artefactos de salida en la carpeta dist.",
+
+  "commands.ngBuildProduction.label": "ng build --configuration production",
+  "commands.ngBuildProduction.description": "Compila la aplicacion utilizando la configuracion de produccion definida en el workspace.",
+
+  "commands.ngTest.label": "ng test",
+  "commands.ngTest.description": "Ejecuta los tests unitarios del proyecto Angular mediante el runner configurado.",
+
+  "commands.ngLint.label": "ng lint",
+  "commands.ngLint.description": "Analiza el codigo fuente del proyecto para detectar errores de estilo y reglas de calidad.",
+
+  "commands.ngE2e.label": "ng e2e",
+  "commands.ngE2e.description": "Lanza las pruebas end-to-end configuradas para validar flujos completos de la aplicacion.",
+
+  "commands.ngExtractI18n.label": "ng extract-i18n",
+  "commands.ngExtractI18n.description": "Extrae los mensajes internacionalizables de la aplicacion para su traduccion.",
+
+  "commands.ngServeOpenVariant15.label": "ng serve --open --variant-15",
+  "commands.ngServeOpenVariant15.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 15.",
+  "commands.ngServeOpenVariant35.label": "ng serve --open --variant-35",
+  "commands.ngServeOpenVariant35.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 35.",
+  "commands.ngServeOpenVariant55.label": "ng serve --open --variant-55",
+  "commands.ngServeOpenVariant55.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 55.",
+  "commands.ngServeOpenVariant75.label": "ng serve --open --variant-75",
+  "commands.ngServeOpenVariant75.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 75.",
+  "commands.ngServeOpenVariant95.label": "ng serve --open --variant-95",
+  "commands.ngServeOpenVariant95.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 95.",
+  "commands.ngServeOpenVariant115.label": "ng serve --open --variant-115",
+  "commands.ngServeOpenVariant115.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 115.",
+  "commands.ngServeOpenVariant135.label": "ng serve --open --variant-135",
+  "commands.ngServeOpenVariant135.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 135.",
+  "commands.ngServeOpenVariant155.label": "ng serve --open --variant-155",
+  "commands.ngServeOpenVariant155.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 155.",
+  "commands.ngServeOpenVariant175.label": "ng serve --open --variant-175",
+  "commands.ngServeOpenVariant175.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 175.",
+  "commands.ngServeOpenVariant195.label": "ng serve --open --variant-195",
+  "commands.ngServeOpenVariant195.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 195.",
+  "commands.ngServeOpenVariant215.label": "ng serve --open --variant-215",
+  "commands.ngServeOpenVariant215.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 215.",
+  "commands.ngServeOpenVariant235.label": "ng serve --open --variant-235",
+  "commands.ngServeOpenVariant235.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 235.",
+  "commands.ngServeOpenVariant255.label": "ng serve --open --variant-255",
+  "commands.ngServeOpenVariant255.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 255.",
+  "commands.ngServeOpenVariant275.label": "ng serve --open --variant-275",
+  "commands.ngServeOpenVariant275.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 275.",
+  "commands.ngServeOpenVariant295.label": "ng serve --open --variant-295",
+  "commands.ngServeOpenVariant295.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 295.",
+  "commands.ngServeOpenVariant315.label": "ng serve --open --variant-315",
+  "commands.ngServeOpenVariant315.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 315.",
+  "commands.ngServeOpenVariant335.label": "ng serve --open --variant-335",
+  "commands.ngServeOpenVariant335.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 335.",
+  "commands.ngServeOpenVariant355.label": "ng serve --open --variant-355",
+  "commands.ngServeOpenVariant355.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 355.",
+  "commands.ngServeOpenVariant375.label": "ng serve --open --variant-375",
+  "commands.ngServeOpenVariant375.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 375.",
+  "commands.ngServeOpenVariant395.label": "ng serve --open --variant-395",
+  "commands.ngServeOpenVariant395.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 395.",
+  "commands.ngServeOpenVariant415.label": "ng serve --open --variant-415",
+  "commands.ngServeOpenVariant415.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 415.",
+  "commands.ngServeOpenVariant435.label": "ng serve --open --variant-435",
+  "commands.ngServeOpenVariant435.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 435.",
+  "commands.ngServeOpenVariant455.label": "ng serve --open --variant-455",
+  "commands.ngServeOpenVariant455.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 455.",
+  "commands.ngServeOpenVariant475.label": "ng serve --open --variant-475",
+  "commands.ngServeOpenVariant475.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 475.",
+  "commands.ngServeOpenVariant495.label": "ng serve --open --variant-495",
+  "commands.ngServeOpenVariant495.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 495.",
+  "commands.ngServeOpenVariant515.label": "ng serve --open --variant-515",
+  "commands.ngServeOpenVariant515.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 515.",
+  "commands.ngServeOpenVariant535.label": "ng serve --open --variant-535",
+  "commands.ngServeOpenVariant535.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 535.",
+  "commands.ngServeOpenVariant555.label": "ng serve --open --variant-555",
+  "commands.ngServeOpenVariant555.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 555.",
+  "commands.ngServeOpenVariant575.label": "ng serve --open --variant-575",
+  "commands.ngServeOpenVariant575.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 575.",
+  "commands.ngServeOpenVariant595.label": "ng serve --open --variant-595",
+  "commands.ngServeOpenVariant595.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 595.",
+  "commands.ngServeOpenVariant615.label": "ng serve --open --variant-615",
+  "commands.ngServeOpenVariant615.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 615.",
+  "commands.ngServeOpenVariant635.label": "ng serve --open --variant-635",
+  "commands.ngServeOpenVariant635.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 635.",
+  "commands.ngServeOpenVariant655.label": "ng serve --open --variant-655",
+  "commands.ngServeOpenVariant655.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 655.",
+  "commands.ngServeOpenVariant675.label": "ng serve --open --variant-675",
+  "commands.ngServeOpenVariant675.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 675.",
+  "commands.ngServeOpenVariant695.label": "ng serve --open --variant-695",
+  "commands.ngServeOpenVariant695.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 695.",
+  "commands.ngServeOpenVariant715.label": "ng serve --open --variant-715",
+  "commands.ngServeOpenVariant715.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 715.",
+  "commands.ngServeOpenVariant735.label": "ng serve --open --variant-735",
+  "commands.ngServeOpenVariant735.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 735.",
+  "commands.ngServeOpenVariant755.label": "ng serve --open --variant-755",
+  "commands.ngServeOpenVariant755.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 755.",
+  "commands.ngServeOpenVariant775.label": "ng serve --open --variant-775",
+  "commands.ngServeOpenVariant775.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 775.",
+  "commands.ngServeOpenVariant795.label": "ng serve --open --variant-795",
+  "commands.ngServeOpenVariant795.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 795.",
+  "commands.ngServeOpenVariant815.label": "ng serve --open --variant-815",
+  "commands.ngServeOpenVariant815.description": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 815.",
+
+  "commands.cypressOpen.label": "npx cypress open",
+  "commands.cypressOpen.description": "Abre la interfaz interactiva de Cypress para ejecutar y depurar pruebas end-to-end.",
+
+  "commands.cypressRun.label": "npx cypress run",
+  "commands.cypressRun.description": "Ejecuta las pruebas de Cypress en modo no interactivo desde linea de comandos.",
+
+  "commands.ngGenerateComponentUsersList.label": "ng generate component users/list",
+  "commands.ngGenerateComponentUsersList.description": "Genera un nuevo componente Angular en la ruta users/list.",
+
+  "commands.ngGenerateServiceCoreApi.label": "ng generate service core/api",
+  "commands.ngGenerateServiceCoreApi.description": "Genera un nuevo servicio Angular en la ruta core/api.",
+
+  "commands.ngGenerateModuleAdminRouting.label": "ng generate module admin --routing",
+  "commands.ngGenerateModuleAdminRouting.description": "Genera un nuevo modulo Angular llamado admin con soporte de routing.",
+
+  "commands.ngGenerateGuardAuth.label": "ng generate guard auth",
+  "commands.ngGenerateGuardAuth.description": "Genera un guard de Angular llamado auth para proteger rutas o flujos de navegacion.",
+
+  "commands.ngAddAngularMaterial.label": "ng add @angular/material",
+  "commands.ngAddAngularMaterial.description": "Instala Angular Material y aplica la configuracion inicial recomendada en el proyecto.",
+
+  "commands.ngUpdateAngularCoreCli.label": "ng update @angular/core @angular/cli",
+  "commands.ngUpdateAngularCoreCli.description": "Actualiza Angular Core y Angular CLI a versiones compatibles dentro del workspace.",
+
+  "commands.npmInstallRxjs.label": "npm install rxjs",
+  "commands.npmInstallRxjs.description": "Instala la libreria RxJS para trabajar con observables y programacion reactiva en Angular.",
+
+  "commands.npmInstallNgrxStore.label": "npm install @ngrx/store",
+  "commands.npmInstallNgrxStore.description": "Instala NgRx Store para gestion centralizada del estado de la aplicacion.",
+
+  "commands.npmInstallNgrxEffects.label": "npm install @ngrx/effects",
+  "commands.npmInstallNgrxEffects.description": "Instala NgRx Effects para manejar efectos secundarios y flujos asincronos.",
+
+  "commands.ngAddAngularEslintSchematics.label": "ng add @angular-eslint/schematics",
+  "commands.ngAddAngularEslintSchematics.description": "Agrega Angular ESLint al proyecto para sustituir o complementar reglas de linting.",
+
+  "commands.npmInstallCypress.label": "npm install cypress",
+  "commands.npmInstallCypress.description": "Instala Cypress como herramienta de pruebas end-to-end para el proyecto.",
+
+  "commands.npmInstallJasmineCore.label": "npm install jasmine-core",
+  "commands.npmInstallJasmineCore.description": "Instala Jasmine Core como framework base para pruebas unitarias.",
+
+  "commands.npmInstallKarma.label": "npm install karma",
+  "commands.npmInstallKarma.description": "Instala Karma como test runner para ejecutar pruebas del proyecto Angular.",
+
+  "commands.npxNxGraph.label": "npx nx graph",
+  "commands.npxNxGraph.description": "Genera y muestra el grafo de dependencias entre aplicaciones y librerias del workspace Nx.",
+
+  "commands.npxNxServeMyApp.label": "npx nx serve my-app",
+  "commands.npxNxServeMyApp.description": "Inicia en modo desarrollo la aplicacion my-app dentro de un workspace Nx.",
+
+  "commands.npxNxBuildMyApp.label": "npx nx build my-app",
+  "commands.npxNxBuildMyApp.description": "Compila la aplicacion my-app dentro del workspace Nx.",
+
+  "commands.npxNxTestMyApp.label": "npx nx test my-app",
+  "commands.npxNxTestMyApp.description": "Ejecuta los tests asociados a la aplicacion my-app en el workspace Nx."
+}
