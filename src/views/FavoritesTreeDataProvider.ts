@@ -7,9 +7,11 @@ import { isExcludedPath } from '../utils/exclusionUtils';
 import { runWithConcurrency } from '../utils/concurrency';
 import { t } from '../utils/l10n';
 import {
+  CommandTemplateCategoryItem,
   CommandTemplateGroupItem,
   CommandTemplateSubgroupItem,
   getCommandLanguageDisplayName,
+  getTemplateCategories,
   getRepresentativeTemplateCommand,
   getTemplateCommandsForSubgroup,
   getTemplateGroups,
@@ -288,6 +290,7 @@ export interface CommandFavoriteData {
   id: string;
   label: string;
   command: string;
+  description?: string;
   cwd?: string;
   background: boolean;
   addedAt: number;
@@ -299,6 +302,8 @@ export interface CommandFavoriteData {
   templateSourceId?: string;
   iconFile?: string;
   extension?: string;
+  iconType?: string;
+  templateCategory?: string;
   subgroup?: string;
   templateGroup?: string;
 }
@@ -308,7 +313,7 @@ export class CommandItem extends vscode.TreeItem {
     public readonly data: CommandFavoriteData,
     collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None,
   ) {
-    super(data.scope === 'opensource' ? data.command : data.label, collapsibleState);
+    super(data.label, collapsibleState);
 
     this.id = `command:${data.scope}:${data.id}`;
     const isVscode = data.type === 'vscode';
@@ -336,6 +341,19 @@ export class CommandItem extends vscode.TreeItem {
           ? undefined
           : `${data.command} [${locationLabel}]`;
       this.detail = undefined;
+    }
+
+    if (data.scope === 'opensource') {
+      const modeLabel = data.background ? t('Background') : t('Foreground');
+      this.description = undefined;
+      this.detail = undefined;
+      this.tooltip = isVscode
+        ? data.description?.trim()
+          ? `${data.label}\n${data.description}\n\n${data.command}`
+          : data.command
+        : data.description?.trim()
+          ? `${data.label}\n${data.description}\n\n${data.command}${data.cwd ? ` (${data.cwd})` : ''} - ${modeLabel}`
+          : `${data.command}${data.cwd ? ` (${data.cwd})` : ''} - ${modeLabel}`;
     }
 
     this.iconPath = new vscode.ThemeIcon(
@@ -548,6 +566,9 @@ export class FavoritesTreeDataProvider
       | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
+      | CommandTemplateGroupItem
+      | CommandTemplateCategoryItem
+      | CommandTemplateSubgroupItem
     >,
     vscode.TreeDragAndDropController<
       | GroupItem
@@ -557,6 +578,9 @@ export class FavoritesTreeDataProvider
       | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
+      | CommandTemplateGroupItem
+      | CommandTemplateCategoryItem
+      | CommandTemplateSubgroupItem
     >,
     vscode.Disposable
 {
@@ -578,6 +602,9 @@ export class FavoritesTreeDataProvider
     | CommandSectionItem
     | CommandScopeItem
     | CommandLanguageItem
+    | CommandTemplateGroupItem
+    | CommandTemplateCategoryItem
+    | CommandTemplateSubgroupItem
     | undefined
     | null
     | void
@@ -589,6 +616,9 @@ export class FavoritesTreeDataProvider
     | CommandSectionItem
     | CommandScopeItem
     | CommandLanguageItem
+    | CommandTemplateGroupItem
+    | CommandTemplateCategoryItem
+    | CommandTemplateSubgroupItem
     | undefined
     | null
     | void
@@ -602,6 +632,9 @@ export class FavoritesTreeDataProvider
     | CommandSectionItem
     | CommandScopeItem
     | CommandLanguageItem
+    | CommandTemplateGroupItem
+    | CommandTemplateCategoryItem
+    | CommandTemplateSubgroupItem
     | undefined
     | null
     | void
@@ -833,6 +866,9 @@ export class FavoritesTreeDataProvider
       | CommandItem
       | CommandSectionItem
       | CommandScopeItem
+      | CommandTemplateGroupItem
+      | CommandTemplateCategoryItem
+      | CommandTemplateSubgroupItem
       | CommandLanguageItem,
     expanded: boolean,
   ): void {
@@ -874,6 +910,7 @@ export class FavoritesTreeDataProvider
       | CommandItem
       | CommandSectionItem
       | CommandScopeItem
+      | CommandTemplateCategoryItem
       | CommandLanguageItem,
     traceLabel: string,
   ): void {
@@ -956,6 +993,7 @@ export class FavoritesTreeDataProvider
       | CommandScopeItem
       | CommandLanguageItem
       | CommandTemplateGroupItem
+      | CommandTemplateCategoryItem
       | CommandTemplateSubgroupItem,
   ): vscode.TreeItem {
     return element;
@@ -971,6 +1009,7 @@ export class FavoritesTreeDataProvider
       | CommandScopeItem
       | CommandLanguageItem
       | CommandTemplateGroupItem
+      | CommandTemplateCategoryItem
       | CommandTemplateSubgroupItem,
   ):
     | GroupItem
@@ -978,6 +1017,7 @@ export class FavoritesTreeDataProvider
     | CommandSectionItem
     | CommandLanguageItem
     | CommandTemplateGroupItem
+    | CommandTemplateCategoryItem
     | CommandTemplateSubgroupItem
     | CommandItem
     | undefined {
@@ -1068,11 +1108,23 @@ export class FavoritesTreeDataProvider
       return this.commandSectionItems.opensource;
     }
 
-    if (element instanceof CommandTemplateSubgroupItem) {
+    if (element instanceof CommandTemplateCategoryItem) {
       return new CommandTemplateGroupItem(
         element.groupName,
         element.extension ?? element.groupName,
         this.getPersistedCollapsibleState(`command-template-group:${element.groupName}`),
+      );
+    }
+
+    if (element instanceof CommandTemplateSubgroupItem) {
+      return new CommandTemplateCategoryItem(
+        element.groupName,
+        element.categoryName,
+        element.extension,
+        element.iconType,
+        this.getPersistedCollapsibleState(
+          `command-template-category:${element.groupName}:${element.categoryName}`,
+        ),
       );
     }
 
@@ -1086,11 +1138,13 @@ export class FavoritesTreeDataProvider
       return new CommandTemplateSubgroupItem(
         (element.data.templateGroup ??
           element.data.language.trim().toLowerCase()) || 'generic',
+        element.data.templateCategory ?? element.data.subgroup ?? 'general',
         element.data.subgroup ?? 'general',
         element.data.extension,
+        element.data.iconType,
         this.getPersistedCollapsibleState(
           `command-template-subgroup:${(element.data.templateGroup ??
-            element.data.language.trim().toLowerCase()) || 'generic'}:${element.data.subgroup ?? 'general'}`,
+            element.data.language.trim().toLowerCase()) || 'generic'}:${element.data.templateCategory ?? element.data.subgroup ?? 'general'}:${element.data.subgroup ?? 'general'}`,
         ),
       );
     }
@@ -1389,24 +1443,67 @@ export class FavoritesTreeDataProvider
     }
 
     if (element instanceof CommandTemplateGroupItem) {
-      const subgroups = getTemplateSubgroups(
+      const categories = getTemplateCategories(
         this.templateCommands,
         element.groupName,
       );
+
+      return Promise.resolve(
+        categories.map((category) => {
+          const representative = getRepresentativeTemplateCommand(
+            this.templateCommands,
+            element.groupName,
+            category,
+          );
+          return new CommandTemplateCategoryItem(
+            element.groupName,
+            category,
+            representative?.extension ?? element.extension,
+            representative?.iconType ?? element.iconType,
+            this.getPersistedCollapsibleState(
+              `command-template-category:${element.groupName}:${category}`,
+            ),
+          );
+        }),
+      );
+    }
+
+    if (element instanceof CommandTemplateCategoryItem) {
+      const subgroups = getTemplateSubgroups(
+        this.templateCommands,
+        element.groupName,
+        element.categoryName,
+      );
+      const hasNestedSubgroups =
+        subgroups.length > 1 || (subgroups.length === 1 && subgroups[0] !== element.categoryName);
+
+      if (!hasNestedSubgroups) {
+        return Promise.resolve(
+          getTemplateCommandsForSubgroup(
+            this.templateCommands,
+            element.groupName,
+            element.categoryName,
+            subgroups[0] ?? element.categoryName,
+          ).map((command) => new CommandItem(command)),
+        );
+      }
 
       return Promise.resolve(
         subgroups.map((subgroup) => {
           const representative = getRepresentativeTemplateCommand(
             this.templateCommands,
             element.groupName,
+            element.categoryName,
             subgroup,
           );
           return new CommandTemplateSubgroupItem(
             element.groupName,
+            element.categoryName,
             subgroup,
             representative?.extension ?? element.extension,
+            representative?.iconType ?? element.iconType,
             this.getPersistedCollapsibleState(
-              `command-template-subgroup:${element.groupName}:${subgroup}`,
+              `command-template-subgroup:${element.groupName}:${element.categoryName}:${subgroup}`,
             ),
           );
         }),
@@ -1418,6 +1515,7 @@ export class FavoritesTreeDataProvider
         getTemplateCommandsForSubgroup(
           this.templateCommands,
           element.groupName,
+          element.categoryName,
           element.subgroupName,
         )
           .map((command) => new CommandItem(command)),

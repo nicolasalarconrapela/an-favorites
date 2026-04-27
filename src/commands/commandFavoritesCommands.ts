@@ -1196,6 +1196,7 @@ async function promptOpenSourceTemplate(
       quickPick.buttons = [BACK_BUTTON];
       quickPick.items = templates.map((command) => ({
         label: command.label,
+        description: command.description,
         detail: command.command,
         template: {
           label: command.label,

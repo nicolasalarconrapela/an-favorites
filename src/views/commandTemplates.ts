@@ -8,6 +8,7 @@ export interface TemplateCommandData {
   id: string;
   label: string;
   command: string;
+  description?: string;
   cwd?: string;
   background: boolean;
   addedAt: number;
@@ -19,13 +20,17 @@ export interface TemplateCommandData {
   templateSourceId?: string;
   iconFile?: string;
   extension?: string;
+  iconType?: string;
+  templateCategory?: string;
   subgroup?: string;
   templateGroup?: string;
 }
 
 type TemplateCatalogEntry = Partial<TemplateCommandData> & {
   id: string;
-  label: string;
+  label?: string;
+  labelKey?: string;
+  descriptionKey?: string;
   command: string;
 };
 
@@ -47,9 +52,69 @@ type TemplateCatalogSplitFile = {
   iconFile?: string;
   commands?: TemplateCatalogEntry[];
 };
+
+type TemplateFolderSettingsItem = {
+  id?: string;
+  archivo?: string;
+  nombre?: string;
+  description?: string;
+  iconType?: string;
+};
+
+type TemplateFolderSettingsGroup = {
+  id?: string;
+  nombre?: string;
+  description?: string;
+  iconType?: string;
+  items?: TemplateFolderSettingsItem[];
+};
+
+type TemplateFolderSettings = {
+  language?: string;
+  extension?: string;
+  iconType?: string;
+  description?: string;
+  commandGroups?: TemplateFolderSettingsGroup[];
+};
+
+type LocalizedStringMap = Record<string, string>;
+
+type JsonObject = Record<string, unknown>;
+
+type LocalizedTemplateSubgroup = {
+  id?: string;
+  name?: string;
+  nameKey?: string;
+  description?: string;
+  descriptionKey?: string;
+  iconType?: string;
+  commands?: TemplateCatalogEntry[];
+};
+
+type LocalizedTemplateGroup = {
+  id?: string;
+  name?: string;
+  nameKey?: string;
+  description?: string;
+  descriptionKey?: string;
+  iconType?: string;
+  commands?: TemplateCatalogEntry[];
+  subgroups?: LocalizedTemplateSubgroup[];
+};
+
+type LocalizedTemplateCatalogFile = {
+  language?: string;
+  extension?: string;
+  iconType?: string;
+  description?: string;
+  descriptionKey?: string;
+  groups?: LocalizedTemplateGroup[];
+};
 //#endregion
 
 //#region Icon helpers
+
+let templateIconBasePath: string | undefined;
 
 function getSyntheticIconFileName(
   language: string,
@@ -76,6 +141,8 @@ function getSyntheticIconFileName(
   }
 
   switch (resolvedLanguage) {
+    case 'angular':
+      return 'angular.json';
     case 'javascript':
       return 'index.js';
     case 'typescript':
@@ -146,6 +213,40 @@ function getSyntheticIconResourceUri(
 
   return vscode.Uri.file(path.join(basePath, '.anfavorites-icons', fakeFileName));
 }
+
+function getBundledTemplateIconUri(language: string): vscode.Uri | undefined {
+  if (!templateIconBasePath) {
+    return undefined;
+  }
+
+  const normalized = language.trim().toLowerCase();
+  if (!normalized) {
+    return undefined;
+  }
+
+  const iconPath = path.join(
+    templateIconBasePath,
+    'resources',
+    'icons',
+    'templates',
+    `${normalized}.svg`,
+  );
+
+  try {
+    const fs = require('fs') as typeof import('fs');
+    return fs.existsSync(iconPath) ? vscode.Uri.file(iconPath) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function shouldUseFolderIcon(iconType?: string, extension?: string): boolean {
+  if (iconType?.trim().toLowerCase() === 'folder') {
+    return true;
+  }
+
+  return !!extension?.trim() && !extension.trim().startsWith('.');
+}
 //#endregion
 
 //#region Labels
@@ -201,6 +302,95 @@ export function getCommandLanguageDisplayName(language: string): string {
     default:
       return language.trim() || t('Personalized');
   }
+}
+//#endregion
+
+//#region Localization helpers
+
+function getConfiguredCatalogLocale(): 'es' | 'en' {
+  const configured = vscode.workspace
+    .getConfiguration('anfavorites')
+    .get<string>('language', 'auto');
+
+  if (configured === 'auto') {
+    return vscode.env.language.toLowerCase().startsWith('es') ? 'es' : 'en';
+  }
+
+  return configured.toLowerCase() === 'es' ? 'es' : 'en';
+}
+
+function readJsonFile<T>(filePath: string): T {
+  const fs = require('fs') as typeof import('fs');
+  const raw = fs.readFileSync(filePath, 'utf8').replace(/^\uFEFF/, '');
+  return JSON.parse(raw) as T;
+}
+
+function resolveLocalizedCatalogFilePath(baseFilePath: string): string {
+  const fs = require('fs') as typeof import('fs');
+  const locale = getConfiguredCatalogLocale();
+  const extension = path.extname(baseFilePath);
+  const basename = baseFilePath.slice(0, -extension.length);
+  const localizedFilePath = `${basename}.${locale}${extension}`;
+
+  if (fs.existsSync(localizedFilePath)) {
+    return localizedFilePath;
+  }
+
+  return baseFilePath;
+}
+
+function loadLocalizedStringMap(baseFilePath: string): LocalizedStringMap {
+  const localizedFilePath = resolveLocalizedCatalogFilePath(baseFilePath);
+  if (localizedFilePath === baseFilePath) {
+    return {};
+  }
+
+  return readJsonFile<LocalizedStringMap>(localizedFilePath);
+}
+
+function collectInlineLocalizedStrings(
+  value: unknown,
+  locale: 'es' | 'en',
+  localizedStrings: LocalizedStringMap = {},
+): LocalizedStringMap {
+  if (!value || typeof value !== 'object') {
+    return localizedStrings;
+  }
+
+  for (const [key, nestedValue] of Object.entries(value as JsonObject)) {
+    if (Array.isArray(nestedValue)) {
+      for (const item of nestedValue) {
+        collectInlineLocalizedStrings(item, locale, localizedStrings);
+      }
+      continue;
+    }
+
+    if (key.endsWith(`.${locale}`) && typeof nestedValue === 'string') {
+      localizedStrings[key.slice(0, -(`.${locale}`).length)] = nestedValue;
+      continue;
+    }
+
+    collectInlineLocalizedStrings(nestedValue, locale, localizedStrings);
+  }
+
+  return localizedStrings;
+}
+
+function resolveCatalogText(
+  literalValue: string | undefined,
+  key: string | undefined,
+  localizedStrings: LocalizedStringMap,
+  fallbackValue: string,
+): string {
+  if (literalValue?.trim()) {
+    return literalValue;
+  }
+
+  if (key?.trim()) {
+    return localizedStrings[key] ?? key;
+  }
+
+  return fallbackValue;
 }
 //#endregion
 
@@ -295,6 +485,171 @@ function flattenTemplateCatalogDirectory(rootPath: string): TemplateCatalogEntry
 
   return entries;
 }
+
+function flattenTemplateCatalogFromSettings(rootPath: string): TemplateCatalogEntry[] {
+  const fs = require('fs') as typeof import('fs');
+  const entries: TemplateCatalogEntry[] = [];
+  const languageDirectories = fs
+    .readdirSync(rootPath, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory());
+
+  for (const languageDirectory of languageDirectories) {
+    const languagePath = path.join(rootPath, languageDirectory.name);
+    const settingsPath = path.join(languagePath, 'settings.json');
+    if (!fs.existsSync(settingsPath)) {
+      continue;
+    }
+
+    const rawSettings = fs.readFileSync(settingsPath, 'utf8').replace(/^\uFEFF/, '');
+    const parsedSettings = JSON.parse(rawSettings) as TemplateFolderSettings;
+
+    for (const commandGroup of parsedSettings.commandGroups ?? []) {
+      for (const item of commandGroup.items ?? []) {
+        if (!item.archivo) {
+          continue;
+        }
+
+        const commandFilePath = path.join(languagePath, item.archivo);
+        if (!fs.existsSync(commandFilePath)) {
+          continue;
+        }
+
+        const rawCommandFile = fs.readFileSync(commandFilePath, 'utf8').replace(/^\uFEFF/, '');
+        const parsedCommandFile = JSON.parse(rawCommandFile) as TemplateCatalogSplitFile;
+        const subgroupName =
+          item.nombre ??
+          parsedCommandFile.subgroup ??
+          commandGroup.nombre ??
+          path.basename(item.archivo, '.json');
+
+        for (const command of parsedCommandFile.commands ?? []) {
+          entries.push({
+            ...command,
+            language:
+              command.language ??
+              parsedCommandFile.language ??
+              parsedSettings.language ??
+              languageDirectory.name,
+            extension:
+              command.extension ??
+              parsedCommandFile.extension ??
+              parsedSettings.extension,
+            iconFile: command.iconFile ?? parsedCommandFile.iconFile,
+            iconType:
+              command.iconType ??
+              item.iconType ??
+              commandGroup.iconType ??
+              parsedSettings.iconType,
+            subgroup: command.subgroup ?? subgroupName,
+            templateGroup: languageDirectory.name,
+          });
+        }
+      }
+    }
+  }
+
+  return entries;
+}
+
+function flattenLocalizedTemplateCatalog(rootPath: string): TemplateCatalogEntry[] {
+  const fs = require('fs') as typeof import('fs');
+  if (!fs.existsSync(rootPath)) {
+    return [];
+  }
+
+  const entries: TemplateCatalogEntry[] = [];
+  const languageDirectories = fs
+    .readdirSync(rootPath, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory());
+
+  for (const languageDirectory of languageDirectories) {
+    const languageKey = languageDirectory.name;
+    const languagePath = path.join(rootPath, languageKey);
+    const baseCatalogPath = path.join(languagePath, `${languageKey}.json`);
+    if (!fs.existsSync(baseCatalogPath)) {
+      continue;
+    }
+
+    const parsedCatalog = readJsonFile<LocalizedTemplateCatalogFile>(baseCatalogPath);
+    const locale = getConfiguredCatalogLocale();
+    const localizedStrings = {
+      ...collectInlineLocalizedStrings(parsedCatalog, locale),
+      ...loadLocalizedStringMap(baseCatalogPath),
+    };
+
+    for (const group of parsedCatalog.groups ?? []) {
+      const groupName = resolveCatalogText(
+        group.name,
+        group.nameKey,
+        localizedStrings,
+        group.id ?? 'general',
+      );
+
+      for (const command of group.commands ?? []) {
+        entries.push({
+          ...command,
+          label: resolveCatalogText(
+            command.label,
+            command.labelKey,
+            localizedStrings,
+            command.command,
+          ),
+          description: resolveCatalogText(
+            command.description,
+            command.descriptionKey,
+            localizedStrings,
+            '',
+          ),
+          language: command.language ?? parsedCatalog.language ?? languageKey,
+          extension: command.extension ?? parsedCatalog.extension,
+          iconType: command.iconType ?? group.iconType ?? parsedCatalog.iconType,
+          templateCategory: groupName,
+          subgroup: command.subgroup ?? groupName,
+          templateGroup: languageKey,
+        });
+      }
+
+      for (const subgroup of group.subgroups ?? []) {
+        const subgroupName = resolveCatalogText(
+          subgroup.name,
+          subgroup.nameKey,
+          localizedStrings,
+          subgroup.id ?? groupName,
+        );
+
+        for (const command of subgroup.commands ?? []) {
+          entries.push({
+            ...command,
+            label: resolveCatalogText(
+              command.label,
+              command.labelKey,
+              localizedStrings,
+              command.command,
+            ),
+            description: resolveCatalogText(
+              command.description,
+              command.descriptionKey,
+              localizedStrings,
+              '',
+            ),
+            language: command.language ?? parsedCatalog.language ?? languageKey,
+            extension: command.extension ?? parsedCatalog.extension,
+            iconType:
+              command.iconType ??
+              subgroup.iconType ??
+              group.iconType ??
+              parsedCatalog.iconType,
+            templateCategory: groupName,
+            subgroup: command.subgroup ?? subgroupName,
+            templateGroup: languageKey,
+          });
+        }
+      }
+    }
+  }
+
+  return entries;
+}
 //#endregion
 
 //#region Catalog loading
@@ -305,10 +660,19 @@ export function loadTemplateCatalog(
 ): TemplateCommandData[] {
   const fs = require('fs') as typeof import('fs');
   let builtins: TemplateCommandData[] = [];
+  templateIconBasePath = extensionPath;
 
   try {
     const splitCatalogPath = path.join(extensionPath, 'resources', 'command');
-    let parsedBuiltins = flattenTemplateCatalogDirectory(splitCatalogPath);
+    let parsedBuiltins = flattenLocalizedTemplateCatalog(splitCatalogPath);
+
+    if (parsedBuiltins.length === 0) {
+      parsedBuiltins = flattenTemplateCatalogFromSettings(splitCatalogPath);
+    }
+
+    if (parsedBuiltins.length === 0) {
+      parsedBuiltins = flattenTemplateCatalogDirectory(splitCatalogPath);
+    }
 
     // Keep compatibility with the previous single-file catalog while the new split format rolls out.
     if (parsedBuiltins.length === 0) {
@@ -325,8 +689,9 @@ export function loadTemplateCatalog(
 
     builtins = parsedBuiltins.map((command) => ({
       id: command.id,
-      label: command.label,
+      label: command.label ?? command.command,
       command: command.command,
+      description: command.description,
       background:
         command.id === 'opensource:mvn-clean-install-package'
           ? true
@@ -339,8 +704,10 @@ export function loadTemplateCatalog(
       source: 'builtin',
       iconFile: command.iconFile,
       extension: command.extension,
+      iconType: command.iconType,
       subgroup: command.subgroup,
       templateGroup: command.templateGroup,
+      templateCategory: command.templateCategory,
     }));
   } catch (error) {
     logger.warn('[commands] Failed to load internal Template catalog', {
@@ -412,11 +779,16 @@ export function getTemplateGroups(commands: TemplateCommandData[]): string[] {
 export function getTemplateSubgroups(
   commands: TemplateCommandData[],
   groupName: string,
+  categoryName?: string,
 ): string[] {
   return Array.from(
     new Set(
       commands
-        .filter((command) => getTemplateGroupKey(command) === groupName)
+        .filter(
+          (command) =>
+            getTemplateGroupKey(command) === groupName &&
+            (categoryName === undefined || command.templateCategory === categoryName),
+        )
         .map((command) => getTemplateSubgroupKey(command))
         .sort(),
     ),
@@ -426,24 +798,42 @@ export function getTemplateSubgroups(
 export function getRepresentativeTemplateCommand(
   commands: TemplateCommandData[],
   groupName: string,
+  categoryName?: string,
   subgroupName?: string,
 ): TemplateCommandData | undefined {
   return commands.find(
     (command) =>
       getTemplateGroupKey(command) === groupName &&
+      (categoryName === undefined || command.templateCategory === categoryName) &&
       (subgroupName === undefined || getTemplateSubgroupKey(command) === subgroupName),
+  );
+}
+
+export function getTemplateCategories(
+  commands: TemplateCommandData[],
+  groupName: string,
+): string[] {
+  return Array.from(
+    new Set(
+      commands
+        .filter((command) => getTemplateGroupKey(command) === groupName)
+        .map((command) => command.templateCategory ?? getTemplateSubgroupKey(command))
+        .sort(),
+    ),
   );
 }
 
 export function getTemplateCommandsForSubgroup(
   commands: TemplateCommandData[],
   groupName: string,
+  categoryName: string,
   subgroupName: string,
 ): TemplateCommandData[] {
   return commands
     .filter(
       (command) =>
         getTemplateGroupKey(command) === groupName &&
+        (command.templateCategory ?? getTemplateSubgroupKey(command)) === categoryName &&
         getTemplateSubgroupKey(command) === subgroupName,
     )
     .sort((a, b) => b.addedAt - a.addedAt || a.label.localeCompare(b.label));
@@ -456,6 +846,7 @@ export class CommandTemplateGroupItem extends vscode.TreeItem {
   constructor(
     public readonly groupName: string,
     public readonly extension?: string,
+    public readonly iconType?: string,
     collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
   ) {
     super(getCommandLanguageDisplayName(groupName), collapsibleState);
@@ -465,12 +856,9 @@ export class CommandTemplateGroupItem extends vscode.TreeItem {
       groupName,
       groupName,
       undefined,
-      extension ?? groupName,
+      undefined,
     );
-    this.iconPath =
-      (extension ?? groupName).trim() && !(extension ?? groupName).trim().startsWith('.')
-        ? vscode.ThemeIcon.Folder
-        : vscode.ThemeIcon.File;
+    this.iconPath = getBundledTemplateIconUri(groupName) ?? vscode.ThemeIcon.File;
   }
 }
 //#endregion
@@ -478,8 +866,10 @@ export class CommandTemplateGroupItem extends vscode.TreeItem {
 export class CommandTemplateSubgroupItem extends vscode.TreeItem {
   constructor(
     public readonly groupName: string,
+    public readonly categoryName: string,
     public readonly subgroupName: string,
     public readonly extension?: string,
+    public readonly iconType?: string,
     collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
   ) {
     super(subgroupName, collapsibleState);
@@ -491,9 +881,31 @@ export class CommandTemplateSubgroupItem extends vscode.TreeItem {
       undefined,
       extension,
     );
-    this.iconPath =
-      extension?.trim() && !extension.trim().startsWith('.')
-        ? vscode.ThemeIcon.Folder
-        : vscode.ThemeIcon.File;
+    this.iconPath = shouldUseFolderIcon(iconType, extension)
+      ? new vscode.ThemeIcon('folder')
+      : vscode.ThemeIcon.File;
+  }
+}
+
+export class CommandTemplateCategoryItem extends vscode.TreeItem {
+  constructor(
+    public readonly groupName: string,
+    public readonly categoryName: string,
+    public readonly extension?: string,
+    public readonly iconType?: string,
+    collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
+  ) {
+    super(categoryName, collapsibleState);
+    this.id = `command-template-category:${groupName}:${categoryName}`;
+    this.contextValue = `commandTemplateCategoryItem:${groupName}:${categoryName}`;
+    this.resourceUri = getSyntheticIconResourceUri(
+      groupName,
+      categoryName,
+      undefined,
+      extension,
+    );
+    this.iconPath = shouldUseFolderIcon(iconType, extension)
+      ? new vscode.ThemeIcon('folder')
+      : vscode.ThemeIcon.File;
   }
 }
