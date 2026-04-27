@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.3.34",
+  "version": "1.3.35",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -902,6 +902,7 @@
     "format:write": "prettier --write .",
     "compile": "node scripts/esbuild.js",
     "watch": "node scripts/esbuild.js --watch",
+    "sync:template-icons": "node scripts/run-typescript-script.js scripts/sync-template-icons.ts",
     "l10n:export": "l10n-dev export --outDir ./l10n ./src",
     "l10n:validate": "l10n-dev validate ./l10n",
     "compile-tests": "node -e \"require('fs').rmSync('out/test', { recursive: true, force: true })\" && tsc -p test/tsconfig.json",
