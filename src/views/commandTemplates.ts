@@ -133,6 +133,13 @@ type LocalizedTemplateCatalogFile = {
 //#region Icon helpers
 
 let templateIconBasePath: string | undefined;
+let materialIconManifestCache:
+  | {
+      basePath: string;
+      iconsDirectory?: string;
+    }
+  | undefined;
+const materialIconPathCache = new Map<string, string | undefined>();
 
 function getSyntheticIconFileName(
   language: string,
@@ -280,6 +287,37 @@ function getMaterialIconThemeIconPath(
   iconType: TemplateIconType,
   fs: typeof import('fs'),
 ): string | undefined {
+  const cacheKey = `${extensionPath}|${normalizedIconName}|${iconType}`;
+  if (materialIconPathCache.has(cacheKey)) {
+    return materialIconPathCache.get(cacheKey);
+  }
+
+  const iconsDirectory = getMaterialIconThemeIconsDirectory(extensionPath, fs);
+  if (!iconsDirectory) {
+    materialIconPathCache.set(cacheKey, undefined);
+    return undefined;
+  }
+
+  for (const iconFileName of getMaterialIconThemeCandidates(normalizedIconName, iconType)) {
+    const iconPath = path.join(iconsDirectory, iconFileName);
+    if (fs.existsSync(iconPath)) {
+      materialIconPathCache.set(cacheKey, iconPath);
+      return iconPath;
+    }
+  }
+
+  materialIconPathCache.set(cacheKey, undefined);
+  return undefined;
+}
+
+function getMaterialIconThemeIconsDirectory(
+  extensionPath: string,
+  fs: typeof import('fs'),
+): string | undefined {
+  if (materialIconManifestCache?.basePath === extensionPath) {
+    return materialIconManifestCache.iconsDirectory;
+  }
+
   const manifestPath = path.join(
     extensionPath,
     'resources',
@@ -289,6 +327,7 @@ function getMaterialIconThemeIconPath(
   );
 
   if (!fs.existsSync(manifestPath)) {
+    materialIconManifestCache = { basePath: extensionPath };
     return undefined;
   }
 
@@ -297,6 +336,7 @@ function getMaterialIconThemeIconPath(
   };
   const iconsPath = manifest.iconsPath?.trim();
   if (!iconsPath) {
+    materialIconManifestCache = { basePath: extensionPath };
     return undefined;
   }
 
@@ -308,14 +348,8 @@ function getMaterialIconThemeIconPath(
     iconsPath,
   );
 
-  for (const iconFileName of getMaterialIconThemeCandidates(normalizedIconName, iconType)) {
-    const iconPath = path.join(iconsDirectory, iconFileName);
-    if (fs.existsSync(iconPath)) {
-      return iconPath;
-    }
-  }
-
-  return undefined;
+  materialIconManifestCache = { basePath: extensionPath, iconsDirectory };
+  return iconsDirectory;
 }
 
 function normalizeTemplateIconType(iconType?: unknown): TemplateIconType {
@@ -337,8 +371,7 @@ export function resolveTemplateIconType(
     .split(',')
     .map((part) => part.trim().toLowerCase())
     .filter(Boolean);
-  const index = role === 'root' ? 0 : 1;
-  const selected = parts[index] ?? parts[0];
+  const selected = role === 'root' ? parts[0] : parts[1];
 
   return selected === 'folder' ? 'folder' : 'icon';
 }
@@ -703,21 +736,22 @@ function flattenTemplateCatalogFromSettings(rootPath: string): TemplateCatalogEn
             iconFile: command.iconFile ?? parsedCommandFile.iconFile,
             iconType:
               command.iconType ??
+              parsedSettings.iconType ??
               item.iconType ??
               commandGroup.iconType ??
-              parsedSettings.iconType,
+              parsedCommandFile.iconType,
             resourceIconName:
               command.resourceIconName ??
+              parsedSettings.resourceIconName ??
               item.resourceIconName ??
               commandGroup.resourceIconName ??
-              parsedCommandFile.resourceIconName ??
-              parsedSettings.resourceIconName,
+              parsedCommandFile.resourceIconName,
             resourceIconType:
               command.resourceIconType ??
+              parsedSettings.resourceIconType ??
               item.resourceIconType ??
               commandGroup.resourceIconType ??
-              parsedCommandFile.resourceIconType ??
-              parsedSettings.resourceIconType,
+              parsedCommandFile.resourceIconType,
             subgroup: command.subgroup ?? subgroupName,
             templateGroup: languageDirectory.name,
           });
@@ -780,15 +814,15 @@ function flattenLocalizedTemplateCatalog(rootPath: string): TemplateCatalogEntry
           ),
           language: command.language ?? parsedCatalog.language ?? languageKey,
           extension: command.extension ?? parsedCatalog.extension,
-          iconType: command.iconType ?? group.iconType ?? parsedCatalog.iconType,
+          iconType: command.iconType ?? parsedCatalog.iconType ?? group.iconType,
           resourceIconName:
             command.resourceIconName ??
-            group.resourceIconName ??
-            parsedCatalog.resourceIconName,
+            parsedCatalog.resourceIconName ??
+            group.resourceIconName,
           resourceIconType:
             command.resourceIconType ??
-            group.resourceIconType ??
-            parsedCatalog.resourceIconType,
+            parsedCatalog.resourceIconType ??
+            group.resourceIconType,
           templateCategory: groupName,
           subgroup: command.subgroup ?? groupName,
           templateGroup: languageKey,
@@ -857,6 +891,8 @@ export function loadTemplateCatalog(
   const fs = require('fs') as typeof import('fs');
   let builtins: TemplateCommandData[] = [];
   templateIconBasePath = extensionPath;
+  materialIconManifestCache = undefined;
+  materialIconPathCache.clear();
 
   try {
     const splitCatalogPath = path.join(extensionPath, 'resources', 'command');
