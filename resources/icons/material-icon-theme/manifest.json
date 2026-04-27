@@ -1,0 +1,8 @@
+{
+  "name": "vscode-material-icon-theme",
+  "repository": "https://github.com/material-extensions/vscode-material-icon-theme.git",
+  "version": "v5.33.1",
+  "iconsPath": "v5.33.1/icons",
+  "licensePath": "v5.33.1/LICENSE.material-icon-theme.md",
+  "syncedAt": "2026-04-27T09:41:06.159Z"
+}

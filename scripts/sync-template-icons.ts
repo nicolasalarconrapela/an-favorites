@@ -1,68 +1,66 @@
+import { execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 
-type IconMapping = {
-  target: string;
-  candidates: string[];
-};
-
 type CliOptions = {
-  source: string;
-  destination: string;
+  version: string;
+  repository: string;
+  cacheDir: string;
+  destinationRoot: string;
   dryRun: boolean;
+  keepCache: boolean;
 };
 
-const DEFAULT_SOURCE = path.join(
-  'vendor',
-  'vscode-material-icon-theme',
+const DEFAULT_VERSION = 'v5.33.1';
+const DEFAULT_REPOSITORY =
+  'https://github.com/material-extensions/vscode-material-icon-theme.git';
+const DEFAULT_CACHE_DIR = path.join('.tmp', 'material-icon-theme');
+const DEFAULT_DESTINATION_ROOT = path.join(
+  'resources',
+  'icons',
+  'material-icon-theme',
 );
-const DEFAULT_DESTINATION = path.join('resources', 'icons', 'templates');
-
-const ICON_MAPPINGS: IconMapping[] = [
-  { target: 'angular', candidates: ['angular'] },
-  { target: 'c', candidates: ['c'] },
-  { target: 'cpp', candidates: ['cpp'] },
-  { target: 'devops', candidates: ['tools', 'console', 'config'] },
-  { target: 'docker', candidates: ['docker'] },
-  { target: 'dotnet', candidates: ['dotnet', 'csharp'] },
-  { target: 'flutter', candidates: ['flutter', 'folder-flutter', 'dart'] },
-  { target: 'git', candidates: ['git'] },
-  { target: 'go', candidates: ['go', 'go_gopher'] },
-  { target: 'java', candidates: ['java'] },
-  { target: 'kubernetes', candidates: ['kubernetes', 'k8s'] },
-  { target: 'node', candidates: ['nodejs', 'node'] },
-  { target: 'php', candidates: ['php'] },
-  { target: 'powershell', candidates: ['powershell'] },
-  { target: 'python', candidates: ['python'] },
-  { target: 'ruby', candidates: ['ruby'] },
-  { target: 'rust', candidates: ['rust'] },
-  { target: 'shell', candidates: ['console', 'shell', 'bash'] },
-  { target: 'sql', candidates: ['database', 'sql'] },
-  { target: 'typescript', candidates: ['typescript'] },
-];
 
 function parseArgs(argv: string[]): CliOptions {
   const options: CliOptions = {
-    source: process.env.MATERIAL_ICON_THEME_PATH ?? DEFAULT_SOURCE,
-    destination: DEFAULT_DESTINATION,
+    version: process.env.MATERIAL_ICON_THEME_VERSION ?? DEFAULT_VERSION,
+    repository: process.env.MATERIAL_ICON_THEME_REPOSITORY ?? DEFAULT_REPOSITORY,
+    cacheDir: DEFAULT_CACHE_DIR,
+    destinationRoot: DEFAULT_DESTINATION_ROOT,
     dryRun: false,
+    keepCache: false,
   };
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
 
-    if (arg === '--source' || arg === '-s') {
-      options.source = argv[++i] ?? '';
+    if (arg === '--version' || arg === '-v') {
+      options.version = argv[++i] ?? '';
+      continue;
+    }
+
+    if (arg === '--repository' || arg === '--repo' || arg === '-r') {
+      options.repository = argv[++i] ?? '';
+      continue;
+    }
+
+    if (arg === '--cache-dir') {
+      options.cacheDir = argv[++i] ?? '';
       continue;
     }
 
     if (arg === '--destination' || arg === '-d') {
-      options.destination = argv[++i] ?? '';
+      options.destinationRoot = argv[++i] ?? '';
       continue;
     }
 
     if (arg === '--dry-run') {
       options.dryRun = true;
+      continue;
+    }
+
+    if (arg === '--keep-cache') {
+      options.keepCache = true;
       continue;
     }
 
@@ -74,198 +72,161 @@ function parseArgs(argv: string[]): CliOptions {
     throw new Error(`Unknown argument: ${arg}`);
   }
 
-  if (!options.source.trim()) {
-    throw new Error('Missing --source path.');
+  if (!options.version.trim()) {
+    throw new Error('Missing --version value.');
   }
 
-  if (!options.destination.trim()) {
-    throw new Error('Missing --destination path.');
+  if (!options.repository.trim()) {
+    throw new Error('Missing --repository value.');
   }
 
   return {
     ...options,
-    source: path.resolve(process.cwd(), options.source),
-    destination: path.resolve(process.cwd(), options.destination),
+    cacheDir: path.resolve(process.cwd(), options.cacheDir),
+    destinationRoot: path.resolve(process.cwd(), options.destinationRoot),
   };
 }
 
 function printHelp(): void {
   console.log(`Usage: npm run sync:template-icons -- [options]
 
-Copies selected SVG icons from vscode-material-icon-theme into AnFavorites.
+Clones a Material Icon Theme release/tag and copies the complete icons folder
+into a versioned AnFavorites asset directory.
 
 Options:
-  -s, --source <path>       Path to material-extensions/vscode-material-icon-theme.
-                            Default: ${DEFAULT_SOURCE}
-  -d, --destination <path>  Destination for copied SVGs.
-                            Default: ${DEFAULT_DESTINATION}
-      --dry-run            Show what would be copied without writing files.
+  -v, --version <tag>       Release tag to clone. Default: ${DEFAULT_VERSION}
+  -r, --repo <url>          Git repository URL. Default: ${DEFAULT_REPOSITORY}
+      --cache-dir <path>    Clone cache directory. Default: ${DEFAULT_CACHE_DIR}
+  -d, --destination <path>  Destination root. Default: ${DEFAULT_DESTINATION_ROOT}
+      --dry-run            Show planned actions without writing files.
+      --keep-cache         Keep cloned release checkout after syncing.
   -h, --help               Show this help.
 
 Example:
-  git submodule add https://github.com/material-extensions/vscode-material-icon-theme vendor/vscode-material-icon-theme
-  npm run sync:template-icons
+  npm run sync:template-icons -- --version v5.33.1
 `);
 }
 
-function listSvgFiles(root: string): string[] {
-  const results: string[] = [];
-  const stack = [root];
+function runGit(args: string[], cwd?: string): void {
+  execFileSync('git', args, {
+    cwd,
+    stdio: 'inherit',
+  });
+}
 
-  while (stack.length > 0) {
-    const current = stack.pop();
-    if (!current) {
+function removeDirectory(directory: string): void {
+  if (fs.existsSync(directory)) {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+function copyDirectory(source: string, destination: string): number {
+  let copiedFiles = 0;
+  fs.mkdirSync(destination, { recursive: true });
+
+  for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
+    const sourcePath = path.join(source, entry.name);
+    const destinationPath = path.join(destination, entry.name);
+
+    if (entry.isDirectory()) {
+      copiedFiles += copyDirectory(sourcePath, destinationPath);
       continue;
     }
 
-    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
-      const fullPath = path.join(current, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name === '.git' || entry.name === 'node_modules') {
-          continue;
-        }
-        stack.push(fullPath);
-        continue;
-      }
-
-      if (entry.isFile() && entry.name.toLowerCase().endsWith('.svg')) {
-        results.push(fullPath);
-      }
+    if (entry.isFile()) {
+      fs.copyFileSync(sourcePath, destinationPath);
+      copiedFiles++;
     }
   }
 
-  return results;
+  return copiedFiles;
 }
 
-function toIconKey(filePath: string): string {
-  return path.basename(filePath, '.svg').toLowerCase();
-}
-
-function indexSvgFiles(svgFiles: string[]): Map<string, string[]> {
-  const index = new Map<string, string[]>();
-
-  for (const filePath of svgFiles) {
-    const key = toIconKey(filePath);
-    const existing = index.get(key) ?? [];
-    existing.push(filePath);
-    index.set(key, existing);
-  }
-
-  return index;
-}
-
-function pickBestMatch(matches: string[]): string {
-  return [...matches].sort((a, b) => scorePath(b) - scorePath(a))[0];
-}
-
-function scorePath(filePath: string): number {
-  const normalized = filePath.replace(/\\/g, '/').toLowerCase();
-  let score = 0;
-
-  if (normalized.includes('/icons/')) score += 30;
-  if (normalized.includes('/src/')) score += 10;
-  if (normalized.includes('/dist/')) score += 10;
-  if (normalized.includes('/light/')) score -= 20;
-  if (normalized.includes('/folder')) score -= 15;
-
-  return score;
-}
-
-function syncIcons(options: CliOptions): void {
-  if (!fs.existsSync(options.source)) {
-    throw new Error(
-      `Source path does not exist: ${options.source}\n` +
-        'Clone or add the Material Icon Theme repo first.',
-    );
-  }
-
-  const svgFiles = listSvgFiles(options.source);
-  if (svgFiles.length === 0) {
-    throw new Error(`No SVG files found under: ${options.source}`);
-  }
-
-  const svgIndex = indexSvgFiles(svgFiles);
-  const copied: string[] = [];
-  const missing: string[] = [];
-
-  if (!options.dryRun) {
-    fs.mkdirSync(options.destination, { recursive: true });
-  }
-
-  for (const mapping of ICON_MAPPINGS) {
-    const source = findIcon(mapping, svgIndex);
-    if (!source) {
-      missing.push(`${mapping.target} (${mapping.candidates.join(', ')})`);
-      continue;
-    }
-
-    const destination = path.join(options.destination, `${mapping.target}.svg`);
-    copied.push(`${path.relative(process.cwd(), source)} -> ${path.relative(process.cwd(), destination)}`);
-
-    if (!options.dryRun) {
-      fs.copyFileSync(source, destination);
-    }
-  }
-
-  for (const line of copied) {
-    console.log(options.dryRun ? `[dry-run] ${line}` : `[copied] ${line}`);
-  }
-
-  if (missing.length > 0) {
-    console.warn(`Missing icons:\n- ${missing.join('\n- ')}`);
-  }
-
-  copyLicenseFile(options);
-
-  console.log(
-    `${options.dryRun ? 'Checked' : 'Synced'} ${copied.length} template icons` +
-      ` from ${path.relative(process.cwd(), options.source) || options.source}`,
-  );
-}
-
-function copyLicenseFile(options: CliOptions): void {
-  const licenseCandidates = ['LICENSE.md', 'LICENSE', 'LICENSE.txt'];
-  const sourceLicense = licenseCandidates
-    .map((fileName) => path.join(options.source, fileName))
+function findLicenseFile(sourceRoot: string): string | undefined {
+  return ['LICENSE.md', 'LICENSE', 'LICENSE.txt']
+    .map((fileName) => path.join(sourceRoot, fileName))
     .find((filePath) => fs.existsSync(filePath));
+}
 
-  if (!sourceLicense) {
-    console.warn('Material Icon Theme license file was not found in the source path.');
+function writeManifest(options: CliOptions): void {
+  const manifestPath = path.join(options.destinationRoot, 'manifest.json');
+  const manifest = {
+    name: 'vscode-material-icon-theme',
+    repository: options.repository,
+    version: options.version,
+    iconsPath: `${options.version}/icons`,
+    licensePath: `${options.version}/LICENSE.material-icon-theme.md`,
+    syncedAt: new Date().toISOString(),
+  };
+
+  fs.mkdirSync(options.destinationRoot, { recursive: true });
+  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+}
+
+function syncRelease(options: CliOptions): void {
+  const releaseCachePath = path.join(options.cacheDir, options.version);
+  const destinationVersionPath = path.join(
+    options.destinationRoot,
+    options.version,
+  );
+  const sourceIconsPath = path.join(releaseCachePath, 'icons');
+  const destinationIconsPath = path.join(destinationVersionPath, 'icons');
+
+  if (options.dryRun) {
+    console.log(`[dry-run] clone ${options.repository}#${options.version}`);
+    console.log(
+      `[dry-run] copy ${path.relative(process.cwd(), sourceIconsPath)} -> ${path.relative(process.cwd(), destinationIconsPath)}`,
+    );
+    console.log(
+      `[dry-run] write ${path.relative(process.cwd(), path.join(options.destinationRoot, 'manifest.json'))}`,
+    );
     return;
   }
 
-  const destinationLicense = path.join(
-    options.destination,
-    'LICENSE.material-icon-theme.md',
-  );
+  removeDirectory(releaseCachePath);
+  fs.mkdirSync(path.dirname(releaseCachePath), { recursive: true });
+
+  runGit([
+    'clone',
+    '--depth',
+    '1',
+    '--branch',
+    options.version,
+    options.repository,
+    releaseCachePath,
+  ]);
+
+  if (!fs.existsSync(sourceIconsPath)) {
+    throw new Error(`Cloned release does not contain an icons folder: ${sourceIconsPath}`);
+  }
+
+  removeDirectory(destinationVersionPath);
+  const copiedFiles = copyDirectory(sourceIconsPath, destinationIconsPath);
+
+  const licensePath = findLicenseFile(releaseCachePath);
+  if (licensePath) {
+    fs.copyFileSync(
+      licensePath,
+      path.join(destinationVersionPath, 'LICENSE.material-icon-theme.md'),
+    );
+  } else {
+    console.warn('Material Icon Theme license file was not found in the release checkout.');
+  }
+
+  writeManifest(options);
+
+  if (!options.keepCache) {
+    removeDirectory(releaseCachePath);
+  }
 
   console.log(
-    options.dryRun
-      ? `[dry-run] ${path.relative(process.cwd(), sourceLicense)} -> ${path.relative(process.cwd(), destinationLicense)}`
-      : `[copied] ${path.relative(process.cwd(), sourceLicense)} -> ${path.relative(process.cwd(), destinationLicense)}`,
+    `Synced Material Icon Theme ${options.version}: ${copiedFiles} icon files -> ` +
+      path.relative(process.cwd(), destinationIconsPath),
   );
-
-  if (!options.dryRun) {
-    fs.copyFileSync(sourceLicense, destinationLicense);
-  }
-}
-
-function findIcon(
-  mapping: IconMapping,
-  svgIndex: Map<string, string[]>,
-): string | undefined {
-  for (const candidate of mapping.candidates) {
-    const matches = svgIndex.get(candidate.toLowerCase());
-    if (matches && matches.length > 0) {
-      return pickBestMatch(matches);
-    }
-  }
-
-  return undefined;
 }
 
 try {
-  syncIcons(parseArgs(process.argv.slice(2)));
+  syncRelease(parseArgs(process.argv.slice(2)));
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);

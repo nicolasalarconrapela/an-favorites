@@ -214,29 +214,133 @@ function getSyntheticIconResourceUri(
   return vscode.Uri.file(path.join(basePath, '.anfavorites-icons', fakeFileName));
 }
 
-function getBundledTemplateIconUri(language: string): vscode.Uri | undefined {
+type TemplateIconType = 'folder' | 'icon';
+
+function getBundledTemplateIconUri(
+  iconName: string,
+  iconType?: string,
+): vscode.Uri | undefined {
   if (!templateIconBasePath) {
     return undefined;
   }
 
-  const normalized = language.trim().toLowerCase();
+  const normalized = normalizeMaterialIconKey(iconName);
   if (!normalized) {
     return undefined;
   }
-
-  const iconPath = path.join(
-    templateIconBasePath,
-    'resources',
-    'icons',
-    'templates',
-    `${normalized}.svg`,
-  );
+  const normalizedIconType = normalizeTemplateIconType(iconType);
 
   try {
     const fs = require('fs') as typeof import('fs');
-    return fs.existsSync(iconPath) ? vscode.Uri.file(iconPath) : undefined;
+    const materialIconPath = getMaterialIconThemeIconPath(
+      templateIconBasePath,
+      normalized,
+      normalizedIconType,
+      fs,
+    );
+    if (materialIconPath) {
+      return vscode.Uri.file(materialIconPath);
+    }
+
+    const legacyIconPath = path.join(
+      templateIconBasePath,
+      'resources',
+      'icons',
+      'templates',
+      `${normalized}.svg`,
+    );
+    return fs.existsSync(legacyIconPath) ? vscode.Uri.file(legacyIconPath) : undefined;
   } catch {
     return undefined;
+  }
+}
+
+function getMaterialIconThemeIconPath(
+  extensionPath: string,
+  normalizedIconName: string,
+  iconType: TemplateIconType,
+  fs: typeof import('fs'),
+): string | undefined {
+  const manifestPath = path.join(
+    extensionPath,
+    'resources',
+    'icons',
+    'material-icon-theme',
+    'manifest.json',
+  );
+
+  if (!fs.existsSync(manifestPath)) {
+    return undefined;
+  }
+
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as {
+    iconsPath?: string;
+  };
+  const iconsPath = manifest.iconsPath?.trim();
+  if (!iconsPath) {
+    return undefined;
+  }
+
+  const iconsDirectory = path.join(
+    extensionPath,
+    'resources',
+    'icons',
+    'material-icon-theme',
+    iconsPath,
+  );
+
+  for (const iconFileName of getMaterialIconThemeCandidates(normalizedIconName, iconType)) {
+    const iconPath = path.join(iconsDirectory, iconFileName);
+    if (fs.existsSync(iconPath)) {
+      return iconPath;
+    }
+  }
+
+  return undefined;
+}
+
+function normalizeTemplateIconType(iconType?: string): TemplateIconType {
+  return iconType?.trim().toLowerCase() === 'folder' ? 'folder' : 'icon';
+}
+
+function normalizeMaterialIconKey(value: string): string {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function getMaterialIconThemeCandidates(
+  iconName: string,
+  iconType: TemplateIconType,
+): string[] {
+  const iconCandidates = getMaterialIconThemeBaseCandidates(iconName);
+
+  if (iconType === 'folder') {
+    return [
+      ...iconCandidates.map((candidate) => `folder-${candidate}.svg`),
+      ...iconCandidates.map((candidate) => `folder-${candidate}-open.svg`),
+      'folder-base.svg',
+      'folder-src.svg',
+    ];
+  }
+
+  return iconCandidates.map((candidate) => `${candidate}.svg`);
+}
+
+function getMaterialIconThemeBaseCandidates(iconName: string): string[] {
+  switch (iconName) {
+    case 'devops':
+      return ['tools', 'console', 'config'];
+    case 'dotnet':
+      return ['dotnet', 'csharp'];
+    case 'flutter':
+      return ['flutter', 'dart'];
+    case 'node':
+      return ['nodejs', 'node'];
+    case 'shell':
+      return ['shell', 'bash', 'console'];
+    case 'sql':
+      return ['sql', 'database'];
+    default:
+      return [iconName];
   }
 }
 
@@ -858,7 +962,8 @@ export class CommandTemplateGroupItem extends vscode.TreeItem {
       undefined,
       undefined,
     );
-    this.iconPath = getBundledTemplateIconUri(groupName) ?? vscode.ThemeIcon.File;
+    this.iconPath =
+      getBundledTemplateIconUri(groupName, iconType) ?? vscode.ThemeIcon.File;
   }
 }
 //#endregion
@@ -881,9 +986,11 @@ export class CommandTemplateSubgroupItem extends vscode.TreeItem {
       undefined,
       extension,
     );
-    this.iconPath = shouldUseFolderIcon(iconType, extension)
-      ? new vscode.ThemeIcon('folder')
-      : vscode.ThemeIcon.File;
+    this.iconPath =
+      getBundledTemplateIconUri(subgroupName, iconType) ??
+      (shouldUseFolderIcon(iconType, extension)
+        ? new vscode.ThemeIcon('folder')
+        : vscode.ThemeIcon.File);
   }
 }
 
@@ -904,8 +1011,10 @@ export class CommandTemplateCategoryItem extends vscode.TreeItem {
       undefined,
       extension,
     );
-    this.iconPath = shouldUseFolderIcon(iconType, extension)
-      ? new vscode.ThemeIcon('folder')
-      : vscode.ThemeIcon.File;
+    this.iconPath =
+      getBundledTemplateIconUri(categoryName, iconType) ??
+      (shouldUseFolderIcon(iconType, extension)
+        ? new vscode.ThemeIcon('folder')
+        : vscode.ThemeIcon.File);
   }
 }
