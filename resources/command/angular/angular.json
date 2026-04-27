@@ -1,7 +1,6 @@
 {
   "language": "angular",
   "extension": ".ts",
-  "iconType": "folder",
   "descriptionKey": "catalog.angular.description",
   "catalog.angular.description.es": "Configuracion de comandos Angular organizada por areas funcionales en un unico archivo.",
   "catalog.angular.description.en": "Angular command configuration organized by functional areas in a single file.",
@@ -14,7 +13,7 @@
       "groups.angularCoreWorkflow.name.en": "Core Workflow",
       "groups.angularCoreWorkflow.description.es": "Comandos base del CLI de Angular para inicializacion, configuracion y tareas globales.",
       "groups.angularCoreWorkflow.description.en": "Core Angular CLI commands for initialization, configuration, and global tasks.",
-      "iconType": "folder",
+  "iconType": "folder, icon",
       "commands": [
         {
           "id": "opensource:ng-version",
@@ -22,9 +21,29 @@
           "descriptionKey": "commands.ngVersion.description",
           "commands.ngVersion.label.es": "ng version",
           "commands.ngVersion.label.en": "ng version",
-          "commands.ngVersion.description.es": "Muestra la version instalada de Angular CLI, Angular y dependencias relacionadas del workspace actual.",
-          "commands.ngVersion.description.en": "Displays the installed version of Angular CLI, Angular, and related dependencies in the current workspace.",
+          "commands.ngVersion.description.es": "Muestra la version instalada de Angular CLI, Angular, Node, package manager y dependencias relacionadas del workspace actual.",
+          "commands.ngVersion.description.en": "Displays the installed version of Angular CLI, Angular, Node, package manager, and related dependencies in the current workspace.",
           "command": "ng version"
+        },
+        {
+          "id": "opensource:ng-help",
+          "labelKey": "commands.ngHelp.label",
+          "descriptionKey": "commands.ngHelp.description",
+          "commands.ngHelp.label.es": "ng help",
+          "commands.ngHelp.label.en": "ng help",
+          "commands.ngHelp.description.es": "Muestra la ayuda general de Angular CLI con los comandos disponibles.",
+          "commands.ngHelp.description.en": "Displays the general Angular CLI help with the available commands.",
+          "command": "ng help"
+        },
+        {
+          "id": "opensource:ng-help-generate",
+          "labelKey": "commands.ngHelpGenerate.label",
+          "descriptionKey": "commands.ngHelpGenerate.description",
+          "commands.ngHelpGenerate.label.es": "ng help generate",
+          "commands.ngHelpGenerate.label.en": "ng help generate",
+          "commands.ngHelpGenerate.description.es": "Muestra la ayuda especifica del comando generate.",
+          "commands.ngHelpGenerate.description.en": "Displays specific help for the generate command.",
+          "command": "ng help generate"
         },
         {
           "id": "opensource:ng-new-my-app",
@@ -37,24 +56,24 @@
           "command": "ng new my-app"
         },
         {
-          "id": "opensource:ng-cache-clean",
-          "labelKey": "commands.ngCacheClean.label",
-          "descriptionKey": "commands.ngCacheClean.description",
-          "commands.ngCacheClean.label.es": "ng cache clean",
-          "commands.ngCacheClean.label.en": "ng cache clean",
-          "commands.ngCacheClean.description.es": "Limpia la cache local utilizada por Angular CLI para compilaciones y tareas internas.",
-          "commands.ngCacheClean.description.en": "Clears the local cache used by Angular CLI for builds and internal tasks.",
-          "command": "ng cache clean"
+          "id": "opensource:ng-new-my-app-routing-scss",
+          "labelKey": "commands.ngNewMyAppRoutingScss.label",
+          "descriptionKey": "commands.ngNewMyAppRoutingScss.description",
+          "commands.ngNewMyAppRoutingScss.label.es": "ng new my-app --routing --style=scss",
+          "commands.ngNewMyAppRoutingScss.label.en": "ng new my-app --routing --style=scss",
+          "commands.ngNewMyAppRoutingScss.description.es": "Crea un nuevo proyecto Angular con routing habilitado y SCSS como preprocesador de estilos.",
+          "commands.ngNewMyAppRoutingScss.description.en": "Creates a new Angular project with routing enabled and SCSS as the style preprocessor.",
+          "command": "ng new my-app --routing --style=scss"
         },
         {
-          "id": "opensource:ng-analytics-off",
-          "labelKey": "commands.ngAnalyticsOff.label",
-          "descriptionKey": "commands.ngAnalyticsOff.description",
-          "commands.ngAnalyticsOff.label.es": "ng analytics off",
-          "commands.ngAnalyticsOff.label.en": "ng analytics off",
-          "commands.ngAnalyticsOff.description.es": "Desactiva el envio de datos de analitica de uso de Angular CLI.",
-          "commands.ngAnalyticsOff.description.en": "Disables Angular CLI usage analytics data collection.",
-          "command": "ng analytics off"
+          "id": "opensource:ng-new-workspace-no-app",
+          "labelKey": "commands.ngNewWorkspaceNoApp.label",
+          "descriptionKey": "commands.ngNewWorkspaceNoApp.description",
+          "commands.ngNewWorkspaceNoApp.label.es": "ng new my-workspace --create-application=false",
+          "commands.ngNewWorkspaceNoApp.label.en": "ng new my-workspace --create-application=false",
+          "commands.ngNewWorkspaceNoApp.description.es": "Crea un workspace Angular sin aplicacion inicial, util para monorepos o estructuras con multiples proyectos.",
+          "commands.ngNewWorkspaceNoApp.description.en": "Creates an Angular workspace without an initial application, useful for monorepos or multi-project structures.",
+          "command": "ng new my-workspace --create-application=false"
         },
         {
           "id": "opensource:ng-config",
@@ -65,6 +84,16 @@
           "commands.ngConfig.description.es": "Consulta o modifica la configuracion definida en angular.json o en la configuracion global del CLI.",
           "commands.ngConfig.description.en": "Reads or updates the configuration defined in angular.json or the global CLI configuration.",
           "command": "ng config"
+        },
+        {
+          "id": "opensource:ng-config-package-manager-npm",
+          "labelKey": "commands.ngConfigPackageManagerNpm.label",
+          "descriptionKey": "commands.ngConfigPackageManagerNpm.description",
+          "commands.ngConfigPackageManagerNpm.label.es": "ng config cli.packageManager npm",
+          "commands.ngConfigPackageManagerNpm.label.en": "ng config cli.packageManager npm",
+          "commands.ngConfigPackageManagerNpm.description.es": "Configura npm como package manager por defecto para Angular CLI.",
+          "commands.ngConfigPackageManagerNpm.description.en": "Configures npm as the default package manager for Angular CLI.",
+          "command": "ng config cli.packageManager npm"
         }
       ]
     },
@@ -79,13 +108,13 @@
       "iconType": "folder",
       "subgroups": [
         {
-          "id": "angular-build-run-test",
-          "nameKey": "subgroups.angularBuildRunTest.name",
-          "descriptionKey": "subgroups.angularBuildRunTest.description",
-          "subgroups.angularBuildRunTest.name.es": "Build, Run and Test",
-          "subgroups.angularBuildRunTest.name.en": "Build, Run and Test",
-          "subgroups.angularBuildRunTest.description.es": "Serve, build, test, lint, e2e e internacionalizacion.",
-          "subgroups.angularBuildRunTest.description.en": "Serve, build, test, lint, e2e, and internationalization commands.",
+          "id": "angular-run",
+          "nameKey": "subgroups.angularRun.name",
+          "descriptionKey": "subgroups.angularRun.description",
+          "subgroups.angularRun.name.es": "Run",
+          "subgroups.angularRun.name.en": "Run",
+          "subgroups.angularRun.description.es": "Comandos para ejecutar aplicaciones Angular en local.",
+          "subgroups.angularRun.description.en": "Commands to run Angular applications locally.",
           "iconType": "folder",
           "commands": [
             {
@@ -99,6 +128,48 @@
               "command": "ng serve"
             },
             {
+              "id": "opensource:ng-serve-open",
+              "labelKey": "commands.ngServeOpen.label",
+              "descriptionKey": "commands.ngServeOpen.description",
+              "commands.ngServeOpen.label.es": "ng serve --open",
+              "commands.ngServeOpen.label.en": "ng serve --open",
+              "commands.ngServeOpen.description.es": "Levanta el servidor de desarrollo y abre automaticamente la aplicacion en el navegador.",
+              "commands.ngServeOpen.description.en": "Starts the development server and automatically opens the application in the browser.",
+              "command": "ng serve --open"
+            },
+            {
+              "id": "opensource:ng-serve-port-4300",
+              "labelKey": "commands.ngServePort4300.label",
+              "descriptionKey": "commands.ngServePort4300.description",
+              "commands.ngServePort4300.label.es": "ng serve --port 4300",
+              "commands.ngServePort4300.label.en": "ng serve --port 4300",
+              "commands.ngServePort4300.description.es": "Levanta la aplicacion Angular en el puerto 4300.",
+              "commands.ngServePort4300.description.en": "Starts the Angular application on port 4300.",
+              "command": "ng serve --port 4300"
+            },
+            {
+              "id": "opensource:ng-serve-development",
+              "labelKey": "commands.ngServeDevelopment.label",
+              "descriptionKey": "commands.ngServeDevelopment.description",
+              "commands.ngServeDevelopment.label.es": "ng serve --configuration development",
+              "commands.ngServeDevelopment.label.en": "ng serve --configuration development",
+              "commands.ngServeDevelopment.description.es": "Ejecuta la aplicacion usando la configuracion development definida en el workspace.",
+              "commands.ngServeDevelopment.description.en": "Runs the application using the development configuration defined in the workspace.",
+              "command": "ng serve --configuration development"
+            }
+          ]
+        },
+        {
+          "id": "angular-build",
+          "nameKey": "subgroups.angularBuild.name",
+          "descriptionKey": "subgroups.angularBuild.description",
+          "subgroups.angularBuild.name.es": "Build",
+          "subgroups.angularBuild.name.en": "Build",
+          "subgroups.angularBuild.description.es": "Comandos para compilar aplicaciones y librerias Angular.",
+          "subgroups.angularBuild.description.en": "Commands to build Angular applications and libraries.",
+          "iconType": "folder",
+          "commands": [
+            {
               "id": "opensource:ng-build",
               "labelKey": "commands.ngBuild.label",
               "descriptionKey": "commands.ngBuild.description",
@@ -109,7 +180,7 @@
               "command": "ng build"
             },
             {
-              "id": "opensource:ng-build-configuration-production",
+              "id": "opensource:ng-build-production",
               "labelKey": "commands.ngBuildProduction.label",
               "descriptionKey": "commands.ngBuildProduction.description",
               "commands.ngBuildProduction.label.es": "ng build --configuration production",
@@ -118,6 +189,38 @@
               "commands.ngBuildProduction.description.en": "Builds the application using the production configuration defined in the workspace.",
               "command": "ng build --configuration production"
             },
+            {
+              "id": "opensource:ng-build-watch",
+              "labelKey": "commands.ngBuildWatch.label",
+              "descriptionKey": "commands.ngBuildWatch.description",
+              "commands.ngBuildWatch.label.es": "ng build --watch",
+              "commands.ngBuildWatch.label.en": "ng build --watch",
+              "commands.ngBuildWatch.description.es": "Compila el proyecto en modo observacion, recompilando automaticamente ante cambios.",
+              "commands.ngBuildWatch.description.en": "Builds the project in watch mode, rebuilding automatically on changes.",
+              "command": "ng build --watch"
+            },
+            {
+              "id": "opensource:ng-build-my-app",
+              "labelKey": "commands.ngBuildMyApp.label",
+              "descriptionKey": "commands.ngBuildMyApp.description",
+              "commands.ngBuildMyApp.label.es": "ng build my-app",
+              "commands.ngBuildMyApp.label.en": "ng build my-app",
+              "commands.ngBuildMyApp.description.es": "Compila un proyecto concreto llamado my-app dentro del workspace.",
+              "commands.ngBuildMyApp.description.en": "Builds a specific project named my-app inside the workspace.",
+              "command": "ng build my-app"
+            }
+          ]
+        },
+        {
+          "id": "angular-test",
+          "nameKey": "subgroups.angularTest.name",
+          "descriptionKey": "subgroups.angularTest.description",
+          "subgroups.angularTest.name.es": "Test",
+          "subgroups.angularTest.name.en": "Test",
+          "subgroups.angularTest.description.es": "Comandos para pruebas unitarias, cobertura y pruebas end-to-end.",
+          "subgroups.angularTest.description.en": "Commands for unit tests, coverage, and end-to-end tests.",
+          "iconType": "folder",
+          "commands": [
             {
               "id": "opensource:ng-test",
               "labelKey": "commands.ngTest.label",
@@ -129,14 +232,24 @@
               "command": "ng test"
             },
             {
-              "id": "opensource:ng-lint",
-              "labelKey": "commands.ngLint.label",
-              "descriptionKey": "commands.ngLint.description",
-              "commands.ngLint.label.es": "ng lint",
-              "commands.ngLint.label.en": "ng lint",
-              "commands.ngLint.description.es": "Analiza el codigo fuente del proyecto para detectar errores de estilo y reglas de calidad.",
-              "commands.ngLint.description.en": "Analyzes the project source code to detect style issues and quality rule violations.",
-              "command": "ng lint"
+              "id": "opensource:ng-test-watch-false",
+              "labelKey": "commands.ngTestWatchFalse.label",
+              "descriptionKey": "commands.ngTestWatchFalse.description",
+              "commands.ngTestWatchFalse.label.es": "ng test --watch=false",
+              "commands.ngTestWatchFalse.label.en": "ng test --watch=false",
+              "commands.ngTestWatchFalse.description.es": "Ejecuta los tests unitarios una sola vez, util para integracion continua.",
+              "commands.ngTestWatchFalse.description.en": "Runs unit tests once, useful for continuous integration.",
+              "command": "ng test --watch=false"
+            },
+            {
+              "id": "opensource:ng-test-code-coverage",
+              "labelKey": "commands.ngTestCodeCoverage.label",
+              "descriptionKey": "commands.ngTestCodeCoverage.description",
+              "commands.ngTestCodeCoverage.label.es": "ng test --code-coverage",
+              "commands.ngTestCodeCoverage.label.en": "ng test --code-coverage",
+              "commands.ngTestCodeCoverage.description.es": "Ejecuta los tests unitarios generando informe de cobertura de codigo.",
+              "commands.ngTestCodeCoverage.description.en": "Runs unit tests and generates a code coverage report.",
+              "command": "ng test --code-coverage"
             },
             {
               "id": "opensource:ng-e2e",
@@ -147,6 +260,28 @@
               "commands.ngE2e.description.es": "Lanza las pruebas end-to-end configuradas para validar flujos completos de la aplicacion.",
               "commands.ngE2e.description.en": "Runs the configured end-to-end tests to validate complete application flows.",
               "command": "ng e2e"
+            }
+          ]
+        },
+        {
+          "id": "angular-quality-i18n",
+          "nameKey": "subgroups.angularQualityI18n.name",
+          "descriptionKey": "subgroups.angularQualityI18n.description",
+          "subgroups.angularQualityI18n.name.es": "Quality and i18n",
+          "subgroups.angularQualityI18n.name.en": "Quality and i18n",
+          "subgroups.angularQualityI18n.description.es": "Comandos para analisis de calidad e internacionalizacion.",
+          "subgroups.angularQualityI18n.description.en": "Commands for quality analysis and internationalization.",
+          "iconType": "folder",
+          "commands": [
+            {
+              "id": "opensource:ng-lint",
+              "labelKey": "commands.ngLint.label",
+              "descriptionKey": "commands.ngLint.description",
+              "commands.ngLint.label.es": "ng lint",
+              "commands.ngLint.label.en": "ng lint",
+              "commands.ngLint.description.es": "Analiza el codigo fuente del proyecto para detectar errores de estilo y reglas de calidad cuando el linting esta configurado.",
+              "commands.ngLint.description.en": "Analyzes the project source code to detect style issues and quality rule violations when linting is configured.",
+              "command": "ng lint"
             },
             {
               "id": "opensource:ng-extract-i18n",
@@ -159,446 +294,14 @@
               "command": "ng extract-i18n"
             },
             {
-              "id": "opensource:ng-serve-open-variant-15",
-              "labelKey": "commands.ngServeOpenVariant15.label",
-              "descriptionKey": "commands.ngServeOpenVariant15.description",
-              "commands.ngServeOpenVariant15.label.es": "ng serve --open --variant-15",
-              "commands.ngServeOpenVariant15.label.en": "ng serve --open --variant-15",
-              "commands.ngServeOpenVariant15.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 15.",
-              "commands.ngServeOpenVariant15.description.en": "Starts the development server, opens the browser automatically, and runs variant 15.",
-              "command": "ng serve --open --variant-15"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-35",
-              "labelKey": "commands.ngServeOpenVariant35.label",
-              "descriptionKey": "commands.ngServeOpenVariant35.description",
-              "commands.ngServeOpenVariant35.label.es": "ng serve --open --variant-35",
-              "commands.ngServeOpenVariant35.label.en": "ng serve --open --variant-35",
-              "commands.ngServeOpenVariant35.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 35.",
-              "commands.ngServeOpenVariant35.description.en": "Starts the development server, opens the browser automatically, and runs variant 35.",
-              "command": "ng serve --open --variant-35"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-55",
-              "labelKey": "commands.ngServeOpenVariant55.label",
-              "descriptionKey": "commands.ngServeOpenVariant55.description",
-              "commands.ngServeOpenVariant55.label.es": "ng serve --open --variant-55",
-              "commands.ngServeOpenVariant55.label.en": "ng serve --open --variant-55",
-              "commands.ngServeOpenVariant55.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 55.",
-              "commands.ngServeOpenVariant55.description.en": "Starts the development server, opens the browser automatically, and runs variant 55.",
-              "command": "ng serve --open --variant-55"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-75",
-              "labelKey": "commands.ngServeOpenVariant75.label",
-              "descriptionKey": "commands.ngServeOpenVariant75.description",
-              "commands.ngServeOpenVariant75.label.es": "ng serve --open --variant-75",
-              "commands.ngServeOpenVariant75.label.en": "ng serve --open --variant-75",
-              "commands.ngServeOpenVariant75.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 75.",
-              "commands.ngServeOpenVariant75.description.en": "Starts the development server, opens the browser automatically, and runs variant 75.",
-              "command": "ng serve --open --variant-75"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-95",
-              "labelKey": "commands.ngServeOpenVariant95.label",
-              "descriptionKey": "commands.ngServeOpenVariant95.description",
-              "commands.ngServeOpenVariant95.label.es": "ng serve --open --variant-95",
-              "commands.ngServeOpenVariant95.label.en": "ng serve --open --variant-95",
-              "commands.ngServeOpenVariant95.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 95.",
-              "commands.ngServeOpenVariant95.description.en": "Starts the development server, opens the browser automatically, and runs variant 95.",
-              "command": "ng serve --open --variant-95"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-115",
-              "labelKey": "commands.ngServeOpenVariant115.label",
-              "descriptionKey": "commands.ngServeOpenVariant115.description",
-              "commands.ngServeOpenVariant115.label.es": "ng serve --open --variant-115",
-              "commands.ngServeOpenVariant115.label.en": "ng serve --open --variant-115",
-              "commands.ngServeOpenVariant115.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 115.",
-              "commands.ngServeOpenVariant115.description.en": "Starts the development server, opens the browser automatically, and runs variant 115.",
-              "command": "ng serve --open --variant-115"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-135",
-              "labelKey": "commands.ngServeOpenVariant135.label",
-              "descriptionKey": "commands.ngServeOpenVariant135.description",
-              "commands.ngServeOpenVariant135.label.es": "ng serve --open --variant-135",
-              "commands.ngServeOpenVariant135.label.en": "ng serve --open --variant-135",
-              "commands.ngServeOpenVariant135.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 135.",
-              "commands.ngServeOpenVariant135.description.en": "Starts the development server, opens the browser automatically, and runs variant 135.",
-              "command": "ng serve --open --variant-135"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-155",
-              "labelKey": "commands.ngServeOpenVariant155.label",
-              "descriptionKey": "commands.ngServeOpenVariant155.description",
-              "commands.ngServeOpenVariant155.label.es": "ng serve --open --variant-155",
-              "commands.ngServeOpenVariant155.label.en": "ng serve --open --variant-155",
-              "commands.ngServeOpenVariant155.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 155.",
-              "commands.ngServeOpenVariant155.description.en": "Starts the development server, opens the browser automatically, and runs variant 155.",
-              "command": "ng serve --open --variant-155"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-175",
-              "labelKey": "commands.ngServeOpenVariant175.label",
-              "descriptionKey": "commands.ngServeOpenVariant175.description",
-              "commands.ngServeOpenVariant175.label.es": "ng serve --open --variant-175",
-              "commands.ngServeOpenVariant175.label.en": "ng serve --open --variant-175",
-              "commands.ngServeOpenVariant175.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 175.",
-              "commands.ngServeOpenVariant175.description.en": "Starts the development server, opens the browser automatically, and runs variant 175.",
-              "command": "ng serve --open --variant-175"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-195",
-              "labelKey": "commands.ngServeOpenVariant195.label",
-              "descriptionKey": "commands.ngServeOpenVariant195.description",
-              "commands.ngServeOpenVariant195.label.es": "ng serve --open --variant-195",
-              "commands.ngServeOpenVariant195.label.en": "ng serve --open --variant-195",
-              "commands.ngServeOpenVariant195.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 195.",
-              "commands.ngServeOpenVariant195.description.en": "Starts the development server, opens the browser automatically, and runs variant 195.",
-              "command": "ng serve --open --variant-195"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-215",
-              "labelKey": "commands.ngServeOpenVariant215.label",
-              "descriptionKey": "commands.ngServeOpenVariant215.description",
-              "commands.ngServeOpenVariant215.label.es": "ng serve --open --variant-215",
-              "commands.ngServeOpenVariant215.label.en": "ng serve --open --variant-215",
-              "commands.ngServeOpenVariant215.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 215.",
-              "commands.ngServeOpenVariant215.description.en": "Starts the development server, opens the browser automatically, and runs variant 215.",
-              "command": "ng serve --open --variant-215"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-235",
-              "labelKey": "commands.ngServeOpenVariant235.label",
-              "descriptionKey": "commands.ngServeOpenVariant235.description",
-              "commands.ngServeOpenVariant235.label.es": "ng serve --open --variant-235",
-              "commands.ngServeOpenVariant235.label.en": "ng serve --open --variant-235",
-              "commands.ngServeOpenVariant235.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 235.",
-              "commands.ngServeOpenVariant235.description.en": "Starts the development server, opens the browser automatically, and runs variant 235.",
-              "command": "ng serve --open --variant-235"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-255",
-              "labelKey": "commands.ngServeOpenVariant255.label",
-              "descriptionKey": "commands.ngServeOpenVariant255.description",
-              "commands.ngServeOpenVariant255.label.es": "ng serve --open --variant-255",
-              "commands.ngServeOpenVariant255.label.en": "ng serve --open --variant-255",
-              "commands.ngServeOpenVariant255.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 255.",
-              "commands.ngServeOpenVariant255.description.en": "Starts the development server, opens the browser automatically, and runs variant 255.",
-              "command": "ng serve --open --variant-255"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-275",
-              "labelKey": "commands.ngServeOpenVariant275.label",
-              "descriptionKey": "commands.ngServeOpenVariant275.description",
-              "commands.ngServeOpenVariant275.label.es": "ng serve --open --variant-275",
-              "commands.ngServeOpenVariant275.label.en": "ng serve --open --variant-275",
-              "commands.ngServeOpenVariant275.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 275.",
-              "commands.ngServeOpenVariant275.description.en": "Starts the development server, opens the browser automatically, and runs variant 275.",
-              "command": "ng serve --open --variant-275"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-295",
-              "labelKey": "commands.ngServeOpenVariant295.label",
-              "descriptionKey": "commands.ngServeOpenVariant295.description",
-              "commands.ngServeOpenVariant295.label.es": "ng serve --open --variant-295",
-              "commands.ngServeOpenVariant295.label.en": "ng serve --open --variant-295",
-              "commands.ngServeOpenVariant295.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 295.",
-              "commands.ngServeOpenVariant295.description.en": "Starts the development server, opens the browser automatically, and runs variant 295.",
-              "command": "ng serve --open --variant-295"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-315",
-              "labelKey": "commands.ngServeOpenVariant315.label",
-              "descriptionKey": "commands.ngServeOpenVariant315.description",
-              "commands.ngServeOpenVariant315.label.es": "ng serve --open --variant-315",
-              "commands.ngServeOpenVariant315.label.en": "ng serve --open --variant-315",
-              "commands.ngServeOpenVariant315.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 315.",
-              "commands.ngServeOpenVariant315.description.en": "Starts the development server, opens the browser automatically, and runs variant 315.",
-              "command": "ng serve --open --variant-315"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-335",
-              "labelKey": "commands.ngServeOpenVariant335.label",
-              "descriptionKey": "commands.ngServeOpenVariant335.description",
-              "commands.ngServeOpenVariant335.label.es": "ng serve --open --variant-335",
-              "commands.ngServeOpenVariant335.label.en": "ng serve --open --variant-335",
-              "commands.ngServeOpenVariant335.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 335.",
-              "commands.ngServeOpenVariant335.description.en": "Starts the development server, opens the browser automatically, and runs variant 335.",
-              "command": "ng serve --open --variant-335"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-355",
-              "labelKey": "commands.ngServeOpenVariant355.label",
-              "descriptionKey": "commands.ngServeOpenVariant355.description",
-              "commands.ngServeOpenVariant355.label.es": "ng serve --open --variant-355",
-              "commands.ngServeOpenVariant355.label.en": "ng serve --open --variant-355",
-              "commands.ngServeOpenVariant355.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 355.",
-              "commands.ngServeOpenVariant355.description.en": "Starts the development server, opens the browser automatically, and runs variant 355.",
-              "command": "ng serve --open --variant-355"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-375",
-              "labelKey": "commands.ngServeOpenVariant375.label",
-              "descriptionKey": "commands.ngServeOpenVariant375.description",
-              "commands.ngServeOpenVariant375.label.es": "ng serve --open --variant-375",
-              "commands.ngServeOpenVariant375.label.en": "ng serve --open --variant-375",
-              "commands.ngServeOpenVariant375.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 375.",
-              "commands.ngServeOpenVariant375.description.en": "Starts the development server, opens the browser automatically, and runs variant 375.",
-              "command": "ng serve --open --variant-375"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-395",
-              "labelKey": "commands.ngServeOpenVariant395.label",
-              "descriptionKey": "commands.ngServeOpenVariant395.description",
-              "commands.ngServeOpenVariant395.label.es": "ng serve --open --variant-395",
-              "commands.ngServeOpenVariant395.label.en": "ng serve --open --variant-395",
-              "commands.ngServeOpenVariant395.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 395.",
-              "commands.ngServeOpenVariant395.description.en": "Starts the development server, opens the browser automatically, and runs variant 395.",
-              "command": "ng serve --open --variant-395"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-415",
-              "labelKey": "commands.ngServeOpenVariant415.label",
-              "descriptionKey": "commands.ngServeOpenVariant415.description",
-              "commands.ngServeOpenVariant415.label.es": "ng serve --open --variant-415",
-              "commands.ngServeOpenVariant415.label.en": "ng serve --open --variant-415",
-              "commands.ngServeOpenVariant415.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 415.",
-              "commands.ngServeOpenVariant415.description.en": "Starts the development server, opens the browser automatically, and runs variant 415.",
-              "command": "ng serve --open --variant-415"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-435",
-              "labelKey": "commands.ngServeOpenVariant435.label",
-              "descriptionKey": "commands.ngServeOpenVariant435.description",
-              "commands.ngServeOpenVariant435.label.es": "ng serve --open --variant-435",
-              "commands.ngServeOpenVariant435.label.en": "ng serve --open --variant-435",
-              "commands.ngServeOpenVariant435.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 435.",
-              "commands.ngServeOpenVariant435.description.en": "Starts the development server, opens the browser automatically, and runs variant 435.",
-              "command": "ng serve --open --variant-435"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-455",
-              "labelKey": "commands.ngServeOpenVariant455.label",
-              "descriptionKey": "commands.ngServeOpenVariant455.description",
-              "commands.ngServeOpenVariant455.label.es": "ng serve --open --variant-455",
-              "commands.ngServeOpenVariant455.label.en": "ng serve --open --variant-455",
-              "commands.ngServeOpenVariant455.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 455.",
-              "commands.ngServeOpenVariant455.description.en": "Starts the development server, opens the browser automatically, and runs variant 455.",
-              "command": "ng serve --open --variant-455"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-475",
-              "labelKey": "commands.ngServeOpenVariant475.label",
-              "descriptionKey": "commands.ngServeOpenVariant475.description",
-              "commands.ngServeOpenVariant475.label.es": "ng serve --open --variant-475",
-              "commands.ngServeOpenVariant475.label.en": "ng serve --open --variant-475",
-              "commands.ngServeOpenVariant475.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 475.",
-              "commands.ngServeOpenVariant475.description.en": "Starts the development server, opens the browser automatically, and runs variant 475.",
-              "command": "ng serve --open --variant-475"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-495",
-              "labelKey": "commands.ngServeOpenVariant495.label",
-              "descriptionKey": "commands.ngServeOpenVariant495.description",
-              "commands.ngServeOpenVariant495.label.es": "ng serve --open --variant-495",
-              "commands.ngServeOpenVariant495.label.en": "ng serve --open --variant-495",
-              "commands.ngServeOpenVariant495.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 495.",
-              "commands.ngServeOpenVariant495.description.en": "Starts the development server, opens the browser automatically, and runs variant 495.",
-              "command": "ng serve --open --variant-495"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-515",
-              "labelKey": "commands.ngServeOpenVariant515.label",
-              "descriptionKey": "commands.ngServeOpenVariant515.description",
-              "commands.ngServeOpenVariant515.label.es": "ng serve --open --variant-515",
-              "commands.ngServeOpenVariant515.label.en": "ng serve --open --variant-515",
-              "commands.ngServeOpenVariant515.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 515.",
-              "commands.ngServeOpenVariant515.description.en": "Starts the development server, opens the browser automatically, and runs variant 515.",
-              "command": "ng serve --open --variant-515"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-535",
-              "labelKey": "commands.ngServeOpenVariant535.label",
-              "descriptionKey": "commands.ngServeOpenVariant535.description",
-              "commands.ngServeOpenVariant535.label.es": "ng serve --open --variant-535",
-              "commands.ngServeOpenVariant535.label.en": "ng serve --open --variant-535",
-              "commands.ngServeOpenVariant535.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 535.",
-              "commands.ngServeOpenVariant535.description.en": "Starts the development server, opens the browser automatically, and runs variant 535.",
-              "command": "ng serve --open --variant-535"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-555",
-              "labelKey": "commands.ngServeOpenVariant555.label",
-              "descriptionKey": "commands.ngServeOpenVariant555.description",
-              "commands.ngServeOpenVariant555.label.es": "ng serve --open --variant-555",
-              "commands.ngServeOpenVariant555.label.en": "ng serve --open --variant-555",
-              "commands.ngServeOpenVariant555.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 555.",
-              "commands.ngServeOpenVariant555.description.en": "Starts the development server, opens the browser automatically, and runs variant 555.",
-              "command": "ng serve --open --variant-555"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-575",
-              "labelKey": "commands.ngServeOpenVariant575.label",
-              "descriptionKey": "commands.ngServeOpenVariant575.description",
-              "commands.ngServeOpenVariant575.label.es": "ng serve --open --variant-575",
-              "commands.ngServeOpenVariant575.label.en": "ng serve --open --variant-575",
-              "commands.ngServeOpenVariant575.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 575.",
-              "commands.ngServeOpenVariant575.description.en": "Starts the development server, opens the browser automatically, and runs variant 575.",
-              "command": "ng serve --open --variant-575"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-595",
-              "labelKey": "commands.ngServeOpenVariant595.label",
-              "descriptionKey": "commands.ngServeOpenVariant595.description",
-              "commands.ngServeOpenVariant595.label.es": "ng serve --open --variant-595",
-              "commands.ngServeOpenVariant595.label.en": "ng serve --open --variant-595",
-              "commands.ngServeOpenVariant595.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 595.",
-              "commands.ngServeOpenVariant595.description.en": "Starts the development server, opens the browser automatically, and runs variant 595.",
-              "command": "ng serve --open --variant-595"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-615",
-              "labelKey": "commands.ngServeOpenVariant615.label",
-              "descriptionKey": "commands.ngServeOpenVariant615.description",
-              "commands.ngServeOpenVariant615.label.es": "ng serve --open --variant-615",
-              "commands.ngServeOpenVariant615.label.en": "ng serve --open --variant-615",
-              "commands.ngServeOpenVariant615.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 615.",
-              "commands.ngServeOpenVariant615.description.en": "Starts the development server, opens the browser automatically, and runs variant 615.",
-              "command": "ng serve --open --variant-615"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-635",
-              "labelKey": "commands.ngServeOpenVariant635.label",
-              "descriptionKey": "commands.ngServeOpenVariant635.description",
-              "commands.ngServeOpenVariant635.label.es": "ng serve --open --variant-635",
-              "commands.ngServeOpenVariant635.label.en": "ng serve --open --variant-635",
-              "commands.ngServeOpenVariant635.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 635.",
-              "commands.ngServeOpenVariant635.description.en": "Starts the development server, opens the browser automatically, and runs variant 635.",
-              "command": "ng serve --open --variant-635"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-655",
-              "labelKey": "commands.ngServeOpenVariant655.label",
-              "descriptionKey": "commands.ngServeOpenVariant655.description",
-              "commands.ngServeOpenVariant655.label.es": "ng serve --open --variant-655",
-              "commands.ngServeOpenVariant655.label.en": "ng serve --open --variant-655",
-              "commands.ngServeOpenVariant655.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 655.",
-              "commands.ngServeOpenVariant655.description.en": "Starts the development server, opens the browser automatically, and runs variant 655.",
-              "command": "ng serve --open --variant-655"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-675",
-              "labelKey": "commands.ngServeOpenVariant675.label",
-              "descriptionKey": "commands.ngServeOpenVariant675.description",
-              "commands.ngServeOpenVariant675.label.es": "ng serve --open --variant-675",
-              "commands.ngServeOpenVariant675.label.en": "ng serve --open --variant-675",
-              "commands.ngServeOpenVariant675.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 675.",
-              "commands.ngServeOpenVariant675.description.en": "Starts the development server, opens the browser automatically, and runs variant 675.",
-              "command": "ng serve --open --variant-675"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-695",
-              "labelKey": "commands.ngServeOpenVariant695.label",
-              "descriptionKey": "commands.ngServeOpenVariant695.description",
-              "commands.ngServeOpenVariant695.label.es": "ng serve --open --variant-695",
-              "commands.ngServeOpenVariant695.label.en": "ng serve --open --variant-695",
-              "commands.ngServeOpenVariant695.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 695.",
-              "commands.ngServeOpenVariant695.description.en": "Starts the development server, opens the browser automatically, and runs variant 695.",
-              "command": "ng serve --open --variant-695"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-715",
-              "labelKey": "commands.ngServeOpenVariant715.label",
-              "descriptionKey": "commands.ngServeOpenVariant715.description",
-              "commands.ngServeOpenVariant715.label.es": "ng serve --open --variant-715",
-              "commands.ngServeOpenVariant715.label.en": "ng serve --open --variant-715",
-              "commands.ngServeOpenVariant715.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 715.",
-              "commands.ngServeOpenVariant715.description.en": "Starts the development server, opens the browser automatically, and runs variant 715.",
-              "command": "ng serve --open --variant-715"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-735",
-              "labelKey": "commands.ngServeOpenVariant735.label",
-              "descriptionKey": "commands.ngServeOpenVariant735.description",
-              "commands.ngServeOpenVariant735.label.es": "ng serve --open --variant-735",
-              "commands.ngServeOpenVariant735.label.en": "ng serve --open --variant-735",
-              "commands.ngServeOpenVariant735.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 735.",
-              "commands.ngServeOpenVariant735.description.en": "Starts the development server, opens the browser automatically, and runs variant 735.",
-              "command": "ng serve --open --variant-735"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-755",
-              "labelKey": "commands.ngServeOpenVariant755.label",
-              "descriptionKey": "commands.ngServeOpenVariant755.description",
-              "commands.ngServeOpenVariant755.label.es": "ng serve --open --variant-755",
-              "commands.ngServeOpenVariant755.label.en": "ng serve --open --variant-755",
-              "commands.ngServeOpenVariant755.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 755.",
-              "commands.ngServeOpenVariant755.description.en": "Starts the development server, opens the browser automatically, and runs variant 755.",
-              "command": "ng serve --open --variant-755"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-775",
-              "labelKey": "commands.ngServeOpenVariant775.label",
-              "descriptionKey": "commands.ngServeOpenVariant775.description",
-              "commands.ngServeOpenVariant775.label.es": "ng serve --open --variant-775",
-              "commands.ngServeOpenVariant775.label.en": "ng serve --open --variant-775",
-              "commands.ngServeOpenVariant775.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 775.",
-              "commands.ngServeOpenVariant775.description.en": "Starts the development server, opens the browser automatically, and runs variant 775.",
-              "command": "ng serve --open --variant-775"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-795",
-              "labelKey": "commands.ngServeOpenVariant795.label",
-              "descriptionKey": "commands.ngServeOpenVariant795.description",
-              "commands.ngServeOpenVariant795.label.es": "ng serve --open --variant-795",
-              "commands.ngServeOpenVariant795.label.en": "ng serve --open --variant-795",
-              "commands.ngServeOpenVariant795.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 795.",
-              "commands.ngServeOpenVariant795.description.en": "Starts the development server, opens the browser automatically, and runs variant 795.",
-              "command": "ng serve --open --variant-795"
-            },
-            {
-              "id": "opensource:ng-serve-open-variant-815",
-              "labelKey": "commands.ngServeOpenVariant815.label",
-              "descriptionKey": "commands.ngServeOpenVariant815.description",
-              "commands.ngServeOpenVariant815.label.es": "ng serve --open --variant-815",
-              "commands.ngServeOpenVariant815.label.en": "ng serve --open --variant-815",
-              "commands.ngServeOpenVariant815.description.es": "Inicia el servidor de desarrollo, abre el navegador automaticamente y ejecuta la variante 815.",
-              "commands.ngServeOpenVariant815.description.en": "Starts the development server, opens the browser automatically, and runs variant 815.",
-              "command": "ng serve --open --variant-815"
-            }
-          ]
-        },
-        {
-          "id": "angular-cypress",
-          "nameKey": "subgroups.angularCypress.name",
-          "descriptionKey": "subgroups.angularCypress.description",
-          "subgroups.angularCypress.name.es": "Cypress",
-          "subgroups.angularCypress.name.en": "Cypress",
-          "subgroups.angularCypress.description.es": "Automatizacion de pruebas end-to-end con Cypress en proyectos Angular.",
-          "subgroups.angularCypress.description.en": "End-to-end test automation with Cypress for Angular projects.",
-          "iconType": "folder",
-          "commands": [
-            {
-              "id": "opensource:npx-cypress-open",
-              "labelKey": "commands.cypressOpen.label",
-              "descriptionKey": "commands.cypressOpen.description",
-              "commands.cypressOpen.label.es": "npx cypress open",
-              "commands.cypressOpen.label.en": "npx cypress open",
-              "commands.cypressOpen.description.es": "Abre la interfaz interactiva de Cypress para ejecutar y depurar pruebas end-to-end.",
-              "commands.cypressOpen.description.en": "Opens the interactive Cypress UI to run and debug end-to-end tests.",
-              "command": "npx cypress open"
-            },
-            {
-              "id": "opensource:npx-cypress-run",
-              "labelKey": "commands.cypressRun.label",
-              "descriptionKey": "commands.cypressRun.description",
-              "commands.cypressRun.label.es": "npx cypress run",
-              "commands.cypressRun.label.en": "npx cypress run",
-              "commands.cypressRun.description.es": "Ejecuta las pruebas de Cypress en modo no interactivo desde linea de comandos.",
-              "commands.cypressRun.description.en": "Runs Cypress tests in non-interactive mode from the command line.",
-              "command": "npx cypress run"
+              "id": "opensource:ng-extract-i18n-output-path",
+              "labelKey": "commands.ngExtractI18nOutputPath.label",
+              "descriptionKey": "commands.ngExtractI18nOutputPath.description",
+              "commands.ngExtractI18nOutputPath.label.es": "ng extract-i18n --output-path src/locale",
+              "commands.ngExtractI18nOutputPath.label.en": "ng extract-i18n --output-path src/locale",
+              "commands.ngExtractI18nOutputPath.description.es": "Extrae los mensajes internacionalizables y guarda los archivos generados en src/locale.",
+              "commands.ngExtractI18nOutputPath.description.en": "Extracts translatable messages and stores the generated files in src/locale.",
+              "command": "ng extract-i18n --output-path src/locale"
             }
           ]
         }
@@ -615,24 +318,94 @@
       "iconType": "folder",
       "commands": [
         {
-          "id": "opensource:ng-generate-component-users-list",
-          "labelKey": "commands.ngGenerateComponentUsersList.label",
-          "descriptionKey": "commands.ngGenerateComponentUsersList.description",
-          "commands.ngGenerateComponentUsersList.label.es": "ng generate component users/list",
-          "commands.ngGenerateComponentUsersList.label.en": "ng generate component users/list",
-          "commands.ngGenerateComponentUsersList.description.es": "Genera un nuevo componente Angular en la ruta users/list.",
-          "commands.ngGenerateComponentUsersList.description.en": "Generates a new Angular component in the users/list path.",
-          "command": "ng generate component users/list"
+          "id": "opensource:ng-generate-component-users",
+          "labelKey": "commands.ngGenerateComponentUsers.label",
+          "descriptionKey": "commands.ngGenerateComponentUsers.description",
+          "commands.ngGenerateComponentUsers.label.es": "ng generate component users",
+          "commands.ngGenerateComponentUsers.label.en": "ng generate component users",
+          "commands.ngGenerateComponentUsers.description.es": "Genera un nuevo componente Angular llamado users.",
+          "commands.ngGenerateComponentUsers.description.en": "Generates a new Angular component named users.",
+          "command": "ng generate component users"
         },
         {
-          "id": "opensource:ng-generate-service-core-api",
-          "labelKey": "commands.ngGenerateServiceCoreApi.label",
-          "descriptionKey": "commands.ngGenerateServiceCoreApi.description",
-          "commands.ngGenerateServiceCoreApi.label.es": "ng generate service core/api",
-          "commands.ngGenerateServiceCoreApi.label.en": "ng generate service core/api",
-          "commands.ngGenerateServiceCoreApi.description.es": "Genera un nuevo servicio Angular en la ruta core/api.",
-          "commands.ngGenerateServiceCoreApi.description.en": "Generates a new Angular service in the core/api path.",
-          "command": "ng generate service core/api"
+          "id": "opensource:ng-generate-component-header-short",
+          "labelKey": "commands.ngGenerateComponentHeaderShort.label",
+          "descriptionKey": "commands.ngGenerateComponentHeaderShort.description",
+          "commands.ngGenerateComponentHeaderShort.label.es": "ng g c components/header",
+          "commands.ngGenerateComponentHeaderShort.label.en": "ng g c components/header",
+          "commands.ngGenerateComponentHeaderShort.description.es": "Genera un componente usando la forma corta del comando generate.",
+          "commands.ngGenerateComponentHeaderShort.description.en": "Generates a component using the short form of the generate command.",
+          "command": "ng g c components/header"
+        },
+        {
+          "id": "opensource:ng-generate-service-user",
+          "labelKey": "commands.ngGenerateServiceUser.label",
+          "descriptionKey": "commands.ngGenerateServiceUser.description",
+          "commands.ngGenerateServiceUser.label.es": "ng g s services/user",
+          "commands.ngGenerateServiceUser.label.en": "ng g s services/user",
+          "commands.ngGenerateServiceUser.description.es": "Genera un servicio Angular en la ruta services/user.",
+          "commands.ngGenerateServiceUser.description.en": "Generates an Angular service in the services/user path.",
+          "command": "ng g s services/user"
+        },
+        {
+          "id": "opensource:ng-generate-pipe-capitalize",
+          "labelKey": "commands.ngGeneratePipeCapitalize.label",
+          "descriptionKey": "commands.ngGeneratePipeCapitalize.description",
+          "commands.ngGeneratePipeCapitalize.label.es": "ng g p pipes/capitalize",
+          "commands.ngGeneratePipeCapitalize.label.en": "ng g p pipes/capitalize",
+          "commands.ngGeneratePipeCapitalize.description.es": "Genera un pipe Angular llamado capitalize en la ruta pipes.",
+          "commands.ngGeneratePipeCapitalize.description.en": "Generates an Angular pipe named capitalize in the pipes path.",
+          "command": "ng g p pipes/capitalize"
+        },
+        {
+          "id": "opensource:ng-generate-directive-highlight",
+          "labelKey": "commands.ngGenerateDirectiveHighlight.label",
+          "descriptionKey": "commands.ngGenerateDirectiveHighlight.description",
+          "commands.ngGenerateDirectiveHighlight.label.es": "ng g d directives/highlight",
+          "commands.ngGenerateDirectiveHighlight.label.en": "ng g d directives/highlight",
+          "commands.ngGenerateDirectiveHighlight.description.es": "Genera una directiva Angular llamada highlight en la ruta directives.",
+          "commands.ngGenerateDirectiveHighlight.description.en": "Generates an Angular directive named highlight in the directives path.",
+          "command": "ng g d directives/highlight"
+        },
+        {
+          "id": "opensource:ng-generate-guard-auth",
+          "labelKey": "commands.ngGenerateGuardAuth.label",
+          "descriptionKey": "commands.ngGenerateGuardAuth.description",
+          "commands.ngGenerateGuardAuth.label.es": "ng g g guards/auth",
+          "commands.ngGenerateGuardAuth.label.en": "ng g g guards/auth",
+          "commands.ngGenerateGuardAuth.description.es": "Genera un guard de Angular llamado auth para proteger rutas o flujos de navegacion.",
+          "commands.ngGenerateGuardAuth.description.en": "Generates an Angular guard named auth to protect routes or navigation flows.",
+          "command": "ng g g guards/auth"
+        },
+        {
+          "id": "opensource:ng-generate-interface-user",
+          "labelKey": "commands.ngGenerateInterfaceUser.label",
+          "descriptionKey": "commands.ngGenerateInterfaceUser.description",
+          "commands.ngGenerateInterfaceUser.label.es": "ng g i models/user",
+          "commands.ngGenerateInterfaceUser.label.en": "ng g i models/user",
+          "commands.ngGenerateInterfaceUser.description.es": "Genera una interfaz TypeScript para modelar datos de usuario.",
+          "commands.ngGenerateInterfaceUser.description.en": "Generates a TypeScript interface to model user data.",
+          "command": "ng g i models/user"
+        },
+        {
+          "id": "opensource:ng-generate-enum-user-role",
+          "labelKey": "commands.ngGenerateEnumUserRole.label",
+          "descriptionKey": "commands.ngGenerateEnumUserRole.description",
+          "commands.ngGenerateEnumUserRole.label.es": "ng g enum models/user-role",
+          "commands.ngGenerateEnumUserRole.label.en": "ng g enum models/user-role",
+          "commands.ngGenerateEnumUserRole.description.es": "Genera un enum TypeScript para representar roles de usuario.",
+          "commands.ngGenerateEnumUserRole.description.en": "Generates a TypeScript enum to represent user roles.",
+          "command": "ng g enum models/user-role"
+        },
+        {
+          "id": "opensource:ng-generate-module-admin",
+          "labelKey": "commands.ngGenerateModuleAdmin.label",
+          "descriptionKey": "commands.ngGenerateModuleAdmin.description",
+          "commands.ngGenerateModuleAdmin.label.es": "ng g module features/admin",
+          "commands.ngGenerateModuleAdmin.label.en": "ng g module features/admin",
+          "commands.ngGenerateModuleAdmin.description.es": "Genera un modulo Angular dentro de la ruta features/admin.",
+          "commands.ngGenerateModuleAdmin.description.en": "Generates an Angular module inside the features/admin path.",
+          "command": "ng g module features/admin"
         },
         {
           "id": "opensource:ng-generate-module-admin-routing",
@@ -640,19 +413,29 @@
           "descriptionKey": "commands.ngGenerateModuleAdminRouting.description",
           "commands.ngGenerateModuleAdminRouting.label.es": "ng generate module admin --routing",
           "commands.ngGenerateModuleAdminRouting.label.en": "ng generate module admin --routing",
-          "commands.ngGenerateModuleAdminRouting.description.es": "Genera un nuevo modulo Angular llamado admin con soporte de routing.",
+          "commands.ngGenerateModuleAdminRouting.description.es": "Genera un modulo Angular llamado admin con soporte de routing.",
           "commands.ngGenerateModuleAdminRouting.description.en": "Generates a new Angular module named admin with routing support.",
           "command": "ng generate module admin --routing"
         },
         {
-          "id": "opensource:ng-generate-guard-auth",
-          "labelKey": "commands.ngGenerateGuardAuth.label",
-          "descriptionKey": "commands.ngGenerateGuardAuth.description",
-          "commands.ngGenerateGuardAuth.label.es": "ng generate guard auth",
-          "commands.ngGenerateGuardAuth.label.en": "ng generate guard auth",
-          "commands.ngGenerateGuardAuth.description.es": "Genera un guard de Angular llamado auth para proteger rutas o flujos de navegacion.",
-          "commands.ngGenerateGuardAuth.description.en": "Generates an Angular guard named auth to protect routes or navigation flows.",
-          "command": "ng generate guard auth"
+          "id": "opensource:ng-generate-class-user",
+          "labelKey": "commands.ngGenerateClassUser.label",
+          "descriptionKey": "commands.ngGenerateClassUser.description",
+          "commands.ngGenerateClassUser.label.es": "ng g class models/user",
+          "commands.ngGenerateClassUser.label.en": "ng g class models/user",
+          "commands.ngGenerateClassUser.description.es": "Genera una clase TypeScript para representar o encapsular logica de usuario.",
+          "commands.ngGenerateClassUser.description.en": "Generates a TypeScript class to represent or encapsulate user logic.",
+          "command": "ng g class models/user"
+        },
+        {
+          "id": "opensource:ng-generate-library-my-lib",
+          "labelKey": "commands.ngGenerateLibraryMyLib.label",
+          "descriptionKey": "commands.ngGenerateLibraryMyLib.description",
+          "commands.ngGenerateLibraryMyLib.label.es": "ng generate library my-lib",
+          "commands.ngGenerateLibraryMyLib.label.en": "ng generate library my-lib",
+          "commands.ngGenerateLibraryMyLib.description.es": "Genera una libreria Angular llamada my-lib dentro del workspace.",
+          "commands.ngGenerateLibraryMyLib.description.en": "Generates an Angular library named my-lib inside the workspace.",
+          "command": "ng generate library my-lib"
         }
       ]
     },
@@ -662,8 +445,8 @@
       "descriptionKey": "groups.angularWorkspaceManagement.description",
       "groups.angularWorkspaceManagement.name.es": "Workspace Management",
       "groups.angularWorkspaceManagement.name.en": "Workspace Management",
-      "groups.angularWorkspaceManagement.description.es": "Herramientas para monorepos, dependencias y gestion de espacios de trabajo.",
-      "groups.angularWorkspaceManagement.description.en": "Tools for monorepos, dependencies, and workspace management.",
+      "groups.angularWorkspaceManagement.description.es": "Herramientas para dependencias, actualizaciones, cache y gestion de espacios de trabajo.",
+      "groups.angularWorkspaceManagement.description.en": "Tools for dependencies, updates, cache, and workspace management.",
       "iconType": "folder",
       "subgroups": [
         {
@@ -687,6 +470,58 @@
               "command": "ng add @angular/material"
             },
             {
+              "id": "opensource:ng-add-angular-pwa",
+              "labelKey": "commands.ngAddAngularPwa.label",
+              "descriptionKey": "commands.ngAddAngularPwa.description",
+              "commands.ngAddAngularPwa.label.es": "ng add @angular/pwa",
+              "commands.ngAddAngularPwa.label.en": "ng add @angular/pwa",
+              "commands.ngAddAngularPwa.description.es": "Agrega soporte PWA al proyecto Angular mediante los schematics oficiales.",
+              "commands.ngAddAngularPwa.description.en": "Adds PWA support to the Angular project using official schematics.",
+              "command": "ng add @angular/pwa"
+            },
+            {
+              "id": "opensource:ng-add-ngrx-store",
+              "labelKey": "commands.ngAddNgrxStore.label",
+              "descriptionKey": "commands.ngAddNgrxStore.description",
+              "commands.ngAddNgrxStore.label.es": "ng add @ngrx/store",
+              "commands.ngAddNgrxStore.label.en": "ng add @ngrx/store",
+              "commands.ngAddNgrxStore.description.es": "Agrega NgRx Store al proyecto para gestion centralizada del estado.",
+              "commands.ngAddNgrxStore.description.en": "Adds NgRx Store to the project for centralized state management.",
+              "command": "ng add @ngrx/store"
+            },
+            {
+              "id": "opensource:ng-add-angular-eslint-schematics",
+              "labelKey": "commands.ngAddAngularEslintSchematics.label",
+              "descriptionKey": "commands.ngAddAngularEslintSchematics.description",
+              "commands.ngAddAngularEslintSchematics.label.es": "ng add @angular-eslint/schematics",
+              "commands.ngAddAngularEslintSchematics.label.en": "ng add @angular-eslint/schematics",
+              "commands.ngAddAngularEslintSchematics.description.es": "Agrega Angular ESLint al proyecto para configurar reglas de linting.",
+              "commands.ngAddAngularEslintSchematics.description.en": "Adds Angular ESLint to the project to configure linting rules.",
+              "command": "ng add @angular-eslint/schematics"
+            }
+          ]
+        },
+        {
+          "id": "angular-updates",
+          "nameKey": "subgroups.angularUpdates.name",
+          "descriptionKey": "subgroups.angularUpdates.description",
+          "subgroups.angularUpdates.name.es": "Updates",
+          "subgroups.angularUpdates.name.en": "Updates",
+          "subgroups.angularUpdates.description.es": "Comandos para revisar y aplicar actualizaciones de Angular y dependencias relacionadas.",
+          "subgroups.angularUpdates.description.en": "Commands to review and apply updates for Angular and related dependencies.",
+          "iconType": "folder",
+          "commands": [
+            {
+              "id": "opensource:ng-update",
+              "labelKey": "commands.ngUpdate.label",
+              "descriptionKey": "commands.ngUpdate.description",
+              "commands.ngUpdate.label.es": "ng update",
+              "commands.ngUpdate.label.en": "ng update",
+              "commands.ngUpdate.description.es": "Muestra las actualizaciones disponibles para Angular y paquetes relacionados del workspace.",
+              "commands.ngUpdate.description.en": "Displays available updates for Angular and related workspace packages.",
+              "command": "ng update"
+            },
+            {
               "id": "opensource:ng-update-angular-core-angular-cli",
               "labelKey": "commands.ngUpdateAngularCoreCli.label",
               "descriptionKey": "commands.ngUpdateAngularCoreCli.description",
@@ -697,126 +532,66 @@
               "command": "ng update @angular/core @angular/cli"
             },
             {
-              "id": "opensource:npm-install-rxjs",
-              "labelKey": "commands.npmInstallRxjs.label",
-              "descriptionKey": "commands.npmInstallRxjs.description",
-              "commands.npmInstallRxjs.label.es": "npm install rxjs",
-              "commands.npmInstallRxjs.label.en": "npm install rxjs",
-              "commands.npmInstallRxjs.description.es": "Instala la libreria RxJS para trabajar con observables y programacion reactiva en Angular.",
-              "commands.npmInstallRxjs.description.en": "Installs the RxJS library to work with observables and reactive programming in Angular.",
-              "command": "npm install rxjs"
-            },
-            {
-              "id": "opensource:npm-install-ngrx-store",
-              "labelKey": "commands.npmInstallNgrxStore.label",
-              "descriptionKey": "commands.npmInstallNgrxStore.description",
-              "commands.npmInstallNgrxStore.label.es": "npm install @ngrx/store",
-              "commands.npmInstallNgrxStore.label.en": "npm install @ngrx/store",
-              "commands.npmInstallNgrxStore.description.es": "Instala NgRx Store para gestion centralizada del estado de la aplicacion.",
-              "commands.npmInstallNgrxStore.description.en": "Installs NgRx Store for centralized application state management.",
-              "command": "npm install @ngrx/store"
-            },
-            {
-              "id": "opensource:npm-install-ngrx-effects",
-              "labelKey": "commands.npmInstallNgrxEffects.label",
-              "descriptionKey": "commands.npmInstallNgrxEffects.description",
-              "commands.npmInstallNgrxEffects.label.es": "npm install @ngrx/effects",
-              "commands.npmInstallNgrxEffects.label.en": "npm install @ngrx/effects",
-              "commands.npmInstallNgrxEffects.description.es": "Instala NgRx Effects para manejar efectos secundarios y flujos asincronos.",
-              "commands.npmInstallNgrxEffects.description.en": "Installs NgRx Effects to handle side effects and asynchronous flows.",
-              "command": "npm install @ngrx/effects"
-            },
-            {
-              "id": "opensource:ng-add-angular-eslint-schematics",
-              "labelKey": "commands.ngAddAngularEslintSchematics.label",
-              "descriptionKey": "commands.ngAddAngularEslintSchematics.description",
-              "commands.ngAddAngularEslintSchematics.label.es": "ng add @angular-eslint/schematics",
-              "commands.ngAddAngularEslintSchematics.label.en": "ng add @angular-eslint/schematics",
-              "commands.ngAddAngularEslintSchematics.description.es": "Agrega Angular ESLint al proyecto para sustituir o complementar reglas de linting.",
-              "commands.ngAddAngularEslintSchematics.description.en": "Adds Angular ESLint to the project to replace or complement linting rules.",
-              "command": "ng add @angular-eslint/schematics"
-            },
-            {
-              "id": "opensource:npm-install-cypress",
-              "labelKey": "commands.npmInstallCypress.label",
-              "descriptionKey": "commands.npmInstallCypress.description",
-              "commands.npmInstallCypress.label.es": "npm install cypress",
-              "commands.npmInstallCypress.label.en": "npm install cypress",
-              "commands.npmInstallCypress.description.es": "Instala Cypress como herramienta de pruebas end-to-end para el proyecto.",
-              "commands.npmInstallCypress.description.en": "Installs Cypress as the end-to-end testing tool for the project.",
-              "command": "npm install cypress"
-            },
-            {
-              "id": "opensource:npm-install-jasmine-core",
-              "labelKey": "commands.npmInstallJasmineCore.label",
-              "descriptionKey": "commands.npmInstallJasmineCore.description",
-              "commands.npmInstallJasmineCore.label.es": "npm install jasmine-core",
-              "commands.npmInstallJasmineCore.label.en": "npm install jasmine-core",
-              "commands.npmInstallJasmineCore.description.es": "Instala Jasmine Core como framework base para pruebas unitarias.",
-              "commands.npmInstallJasmineCore.description.en": "Installs Jasmine Core as the base framework for unit testing.",
-              "command": "npm install jasmine-core"
-            },
-            {
-              "id": "opensource:npm-install-karma",
-              "labelKey": "commands.npmInstallKarma.label",
-              "descriptionKey": "commands.npmInstallKarma.description",
-              "commands.npmInstallKarma.label.es": "npm install karma",
-              "commands.npmInstallKarma.label.en": "npm install karma",
-              "commands.npmInstallKarma.description.es": "Instala Karma como test runner para ejecutar pruebas del proyecto Angular.",
-              "commands.npmInstallKarma.description.en": "Installs Karma as the test runner to execute Angular project tests.",
-              "command": "npm install karma"
+              "id": "opensource:ng-update-angular-material",
+              "labelKey": "commands.ngUpdateAngularMaterial.label",
+              "descriptionKey": "commands.ngUpdateAngularMaterial.description",
+              "commands.ngUpdateAngularMaterial.label.es": "ng update @angular/material",
+              "commands.ngUpdateAngularMaterial.label.en": "ng update @angular/material",
+              "commands.ngUpdateAngularMaterial.description.es": "Actualiza Angular Material aplicando migraciones compatibles cuando esten disponibles.",
+              "commands.ngUpdateAngularMaterial.description.en": "Updates Angular Material and applies compatible migrations when available.",
+              "command": "ng update @angular/material"
             }
           ]
         },
         {
-          "id": "angular-nx",
-          "nameKey": "subgroups.angularNx.name",
-          "descriptionKey": "subgroups.angularNx.description",
-          "subgroups.angularNx.name.es": "nx",
-          "subgroups.angularNx.name.en": "nx",
-          "subgroups.angularNx.description.es": "Comandos para visualizar y ejecutar tareas en workspaces Angular con Nx.",
-          "subgroups.angularNx.description.en": "Commands to visualize and run tasks in Angular workspaces with Nx.",
+          "id": "angular-cache",
+          "nameKey": "subgroups.angularCache.name",
+          "descriptionKey": "subgroups.angularCache.description",
+          "subgroups.angularCache.name.es": "Cache",
+          "subgroups.angularCache.name.en": "Cache",
+          "subgroups.angularCache.description.es": "Comandos para consultar y administrar la cache local de Angular CLI.",
+          "subgroups.angularCache.description.en": "Commands to inspect and manage the local Angular CLI cache.",
           "iconType": "folder",
           "commands": [
             {
-              "id": "opensource:npx-nx-graph",
-              "labelKey": "commands.npxNxGraph.label",
-              "descriptionKey": "commands.npxNxGraph.description",
-              "commands.npxNxGraph.label.es": "npx nx graph",
-              "commands.npxNxGraph.label.en": "npx nx graph",
-              "commands.npxNxGraph.description.es": "Genera y muestra el grafo de dependencias entre aplicaciones y librerias del workspace Nx.",
-              "commands.npxNxGraph.description.en": "Generates and displays the dependency graph between applications and libraries in the Nx workspace.",
-              "command": "npx nx graph"
+              "id": "opensource:ng-cache-info",
+              "labelKey": "commands.ngCacheInfo.label",
+              "descriptionKey": "commands.ngCacheInfo.description",
+              "commands.ngCacheInfo.label.es": "ng cache info",
+              "commands.ngCacheInfo.label.en": "ng cache info",
+              "commands.ngCacheInfo.description.es": "Muestra informacion sobre la cache local utilizada por Angular CLI.",
+              "commands.ngCacheInfo.description.en": "Displays information about the local cache used by Angular CLI.",
+              "command": "ng cache info"
             },
             {
-              "id": "opensource:npx-nx-serve-my-app",
-              "labelKey": "commands.npxNxServeMyApp.label",
-              "descriptionKey": "commands.npxNxServeMyApp.description",
-              "commands.npxNxServeMyApp.label.es": "npx nx serve my-app",
-              "commands.npxNxServeMyApp.label.en": "npx nx serve my-app",
-              "commands.npxNxServeMyApp.description.es": "Inicia en modo desarrollo la aplicacion my-app dentro de un workspace Nx.",
-              "commands.npxNxServeMyApp.description.en": "Starts the my-app application in development mode inside an Nx workspace.",
-              "command": "npx nx serve my-app"
+              "id": "opensource:ng-cache-clean",
+              "labelKey": "commands.ngCacheClean.label",
+              "descriptionKey": "commands.ngCacheClean.description",
+              "commands.ngCacheClean.label.es": "ng cache clean",
+              "commands.ngCacheClean.label.en": "ng cache clean",
+              "commands.ngCacheClean.description.es": "Limpia la cache local utilizada por Angular CLI para compilaciones y tareas internas.",
+              "commands.ngCacheClean.description.en": "Clears the local cache used by Angular CLI for builds and internal tasks.",
+              "command": "ng cache clean"
             },
             {
-              "id": "opensource:npx-nx-build-my-app",
-              "labelKey": "commands.npxNxBuildMyApp.label",
-              "descriptionKey": "commands.npxNxBuildMyApp.description",
-              "commands.npxNxBuildMyApp.label.es": "npx nx build my-app",
-              "commands.npxNxBuildMyApp.label.en": "npx nx build my-app",
-              "commands.npxNxBuildMyApp.description.es": "Compila la aplicacion my-app dentro del workspace Nx.",
-              "commands.npxNxBuildMyApp.description.en": "Builds the my-app application inside the Nx workspace.",
-              "command": "npx nx build my-app"
+              "id": "opensource:ng-cache-enable",
+              "labelKey": "commands.ngCacheEnable.label",
+              "descriptionKey": "commands.ngCacheEnable.description",
+              "commands.ngCacheEnable.label.es": "ng cache enable",
+              "commands.ngCacheEnable.label.en": "ng cache enable",
+              "commands.ngCacheEnable.description.es": "Activa la cache local de Angular CLI.",
+              "commands.ngCacheEnable.description.en": "Enables the local Angular CLI cache.",
+              "command": "ng cache enable"
             },
             {
-              "id": "opensource:npx-nx-test-my-app",
-              "labelKey": "commands.npxNxTestMyApp.label",
-              "descriptionKey": "commands.npxNxTestMyApp.description",
-              "commands.npxNxTestMyApp.label.es": "npx nx test my-app",
-              "commands.npxNxTestMyApp.label.en": "npx nx test my-app",
-              "commands.npxNxTestMyApp.description.es": "Ejecuta los tests asociados a la aplicacion my-app en el workspace Nx.",
-              "commands.npxNxTestMyApp.description.en": "Runs the tests associated with the my-app application in the Nx workspace.",
-              "command": "npx nx test my-app"
+              "id": "opensource:ng-cache-disable",
+              "labelKey": "commands.ngCacheDisable.label",
+              "descriptionKey": "commands.ngCacheDisable.description",
+              "commands.ngCacheDisable.label.es": "ng cache disable",
+              "commands.ngCacheDisable.label.en": "ng cache disable",
+              "commands.ngCacheDisable.description.es": "Desactiva la cache local de Angular CLI.",
+              "commands.ngCacheDisable.description.en": "Disables the local Angular CLI cache.",
+              "command": "ng cache disable"
             }
           ]
         }

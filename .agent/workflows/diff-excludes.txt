@@ -11,4 +11,6 @@ package-lock.json
 .gitignore
 .vscode/launch.json
 CHANGELOG.md
-
+*.svg
+resources/command/**
+resources/icons/material-icon-theme/**

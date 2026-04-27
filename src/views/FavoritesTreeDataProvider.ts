@@ -16,6 +16,7 @@ import {
   getTemplateCommandsForSubgroup,
   getTemplateGroups,
   getTemplateSubgroups,
+  getTemplateResourceIconUri,
   loadTemplateCatalog,
 } from './commandTemplates';
 
@@ -303,6 +304,8 @@ export interface CommandFavoriteData {
   iconFile?: string;
   extension?: string;
   iconType?: string;
+  resourceIconName?: string;
+  resourceIconType?: string;
   templateCategory?: string;
   subgroup?: string;
   templateGroup?: string;
@@ -356,13 +359,16 @@ export class CommandItem extends vscode.TreeItem {
           : `${data.command}${data.cwd ? ` (${data.cwd})` : ''} - ${modeLabel}`;
     }
 
-    this.iconPath = new vscode.ThemeIcon(
-      data.scope === 'local'
-        ? 'folder-library'
-        : data.scope === 'global'
-          ? 'globe'
-          : 'library',
-    );
+    this.iconPath =
+      data.scope === 'opensource'
+        ? getTemplateResourceIconUri(
+            data.resourceIconName ?? data.templateGroup ?? data.language,
+            data.resourceIconType ?? data.iconType,
+            'command',
+          ) ?? new vscode.ThemeIcon('terminal')
+        : new vscode.ThemeIcon(
+            data.scope === 'local' ? 'folder-library' : 'globe',
+          );
 
     let ctx = `commandItem:${data.scope}:${data.language}`;
     ctx += data.readonly ? ':readonly' : ':editable';
@@ -1112,6 +1118,9 @@ export class FavoritesTreeDataProvider
       return new CommandTemplateGroupItem(
         element.groupName,
         element.extension ?? element.groupName,
+        element.iconType,
+        element.resourceIconName,
+        element.resourceIconType,
         this.getPersistedCollapsibleState(`command-template-group:${element.groupName}`),
       );
     }
@@ -1122,6 +1131,8 @@ export class FavoritesTreeDataProvider
         element.categoryName,
         element.extension,
         element.iconType,
+        element.resourceIconName,
+        element.resourceIconType,
         this.getPersistedCollapsibleState(
           `command-template-category:${element.groupName}:${element.categoryName}`,
         ),
@@ -1142,6 +1153,8 @@ export class FavoritesTreeDataProvider
         element.data.subgroup ?? 'general',
         element.data.extension,
         element.data.iconType,
+        element.data.resourceIconName,
+        element.data.resourceIconType,
         this.getPersistedCollapsibleState(
           `command-template-subgroup:${(element.data.templateGroup ??
             element.data.language.trim().toLowerCase()) || 'generic'}:${element.data.templateCategory ?? element.data.subgroup ?? 'general'}:${element.data.subgroup ?? 'general'}`,
@@ -1309,6 +1322,9 @@ export class FavoritesTreeDataProvider
             return new CommandTemplateGroupItem(
               groupName,
               representative?.extension ?? groupName,
+              representative?.iconType,
+              representative?.resourceIconName,
+              representative?.resourceIconType,
               this.getPersistedCollapsibleState(
                 `command-template-group:${groupName}`,
               ),
@@ -1460,6 +1476,8 @@ export class FavoritesTreeDataProvider
             category,
             representative?.extension ?? element.extension,
             representative?.iconType ?? element.iconType,
+            representative?.resourceIconName ?? element.resourceIconName,
+            representative?.resourceIconType ?? element.resourceIconType,
             this.getPersistedCollapsibleState(
               `command-template-category:${element.groupName}:${category}`,
             ),
@@ -1502,6 +1520,8 @@ export class FavoritesTreeDataProvider
             subgroup,
             representative?.extension ?? element.extension,
             representative?.iconType ?? element.iconType,
+            representative?.resourceIconName ?? element.resourceIconName,
+            representative?.resourceIconType ?? element.resourceIconType,
             this.getPersistedCollapsibleState(
               `command-template-subgroup:${element.groupName}:${element.categoryName}:${subgroup}`,
             ),

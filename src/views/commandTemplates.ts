@@ -21,6 +21,8 @@ export interface TemplateCommandData {
   iconFile?: string;
   extension?: string;
   iconType?: string;
+  resourceIconName?: string;
+  resourceIconType?: string;
   templateCategory?: string;
   subgroup?: string;
   templateGroup?: string;
@@ -38,6 +40,8 @@ type TemplateCatalogGroupNode = {
   language?: string;
   extension?: string;
   iconFile?: string;
+  resourceIconName?: string;
+  resourceIconType?: string;
 } & Record<string, string | TemplateCatalogEntry[] | undefined>;
 
 type TemplateCatalogTree = Record<
@@ -50,6 +54,8 @@ type TemplateCatalogSplitFile = {
   extension?: string;
   subgroup?: string;
   iconFile?: string;
+  resourceIconName?: string;
+  resourceIconType?: string;
   commands?: TemplateCatalogEntry[];
 };
 
@@ -59,6 +65,8 @@ type TemplateFolderSettingsItem = {
   nombre?: string;
   description?: string;
   iconType?: string;
+  resourceIconName?: string;
+  resourceIconType?: string;
 };
 
 type TemplateFolderSettingsGroup = {
@@ -66,6 +74,8 @@ type TemplateFolderSettingsGroup = {
   nombre?: string;
   description?: string;
   iconType?: string;
+  resourceIconName?: string;
+  resourceIconType?: string;
   items?: TemplateFolderSettingsItem[];
 };
 
@@ -73,6 +83,8 @@ type TemplateFolderSettings = {
   language?: string;
   extension?: string;
   iconType?: string;
+  resourceIconName?: string;
+  resourceIconType?: string;
   description?: string;
   commandGroups?: TemplateFolderSettingsGroup[];
 };
@@ -88,6 +100,8 @@ type LocalizedTemplateSubgroup = {
   description?: string;
   descriptionKey?: string;
   iconType?: string;
+  resourceIconName?: string;
+  resourceIconType?: string;
   commands?: TemplateCatalogEntry[];
 };
 
@@ -98,6 +112,8 @@ type LocalizedTemplateGroup = {
   description?: string;
   descriptionKey?: string;
   iconType?: string;
+  resourceIconName?: string;
+  resourceIconType?: string;
   commands?: TemplateCatalogEntry[];
   subgroups?: LocalizedTemplateSubgroup[];
 };
@@ -106,6 +122,8 @@ type LocalizedTemplateCatalogFile = {
   language?: string;
   extension?: string;
   iconType?: string;
+  resourceIconName?: string;
+  resourceIconType?: string;
   description?: string;
   descriptionKey?: string;
   groups?: LocalizedTemplateGroup[];
@@ -215,6 +233,7 @@ function getSyntheticIconResourceUri(
 }
 
 type TemplateIconType = 'folder' | 'icon';
+type TemplateIconRole = 'root' | 'command';
 
 function getBundledTemplateIconUri(
   iconName: string,
@@ -299,8 +318,29 @@ function getMaterialIconThemeIconPath(
   return undefined;
 }
 
-function normalizeTemplateIconType(iconType?: string): TemplateIconType {
-  return iconType?.trim().toLowerCase() === 'folder' ? 'folder' : 'icon';
+function normalizeTemplateIconType(iconType?: unknown): TemplateIconType {
+  return typeof iconType === 'string' &&
+    iconType.trim().toLowerCase() === 'folder'
+    ? 'folder'
+    : 'icon';
+}
+
+export function resolveTemplateIconType(
+  iconType: unknown,
+  role: TemplateIconRole,
+): TemplateIconType {
+  if (typeof iconType !== 'string') {
+    return 'icon';
+  }
+
+  const parts = iconType
+    .split(',')
+    .map((part) => part.trim().toLowerCase())
+    .filter(Boolean);
+  const index = role === 'root' ? 0 : 1;
+  const selected = parts[index] ?? parts[0];
+
+  return selected === 'folder' ? 'folder' : 'icon';
 }
 
 function normalizeMaterialIconKey(value: string): string {
@@ -344,12 +384,26 @@ function getMaterialIconThemeBaseCandidates(iconName: string): string[] {
   }
 }
 
-function shouldUseFolderIcon(iconType?: string, extension?: string): boolean {
-  if (iconType?.trim().toLowerCase() === 'folder') {
-    return true;
+export function getTemplateResourceIconUri(
+  resourceIconName?: unknown,
+  resourceIconType?: unknown,
+  role: TemplateIconRole = 'root',
+): vscode.Uri | undefined {
+  if (typeof resourceIconName !== 'string' || !resourceIconName.trim()) {
+    return undefined;
   }
 
-  return !!extension?.trim() && !extension.trim().startsWith('.');
+  return getBundledTemplateIconUri(
+    resourceIconName,
+    resolveTemplateIconType(resourceIconType, role),
+  );
+}
+
+function getForcedResourceIconUri(
+  resourceIconName?: unknown,
+  resourceIconType?: unknown,
+): vscode.Uri | undefined {
+  return getTemplateResourceIconUri(resourceIconName, resourceIconType, 'root');
 }
 //#endregion
 
@@ -522,6 +576,8 @@ function flattenTemplateCatalog(
     const groupLanguage = value?.language;
     const groupExtension = value?.extension;
     const groupIconFile = value?.iconFile;
+    const groupResourceIconName = value?.resourceIconName;
+    const groupResourceIconType = value?.resourceIconType;
 
     // Group metadata acts as defaults for every command inside each subgroup.
     for (const [subgroupKey, commands] of Object.entries(value ?? {})) {
@@ -529,6 +585,8 @@ function flattenTemplateCatalog(
         subgroupKey === 'language' ||
         subgroupKey === 'extension' ||
         subgroupKey === 'iconFile' ||
+        subgroupKey === 'resourceIconName' ||
+        subgroupKey === 'resourceIconType' ||
         !Array.isArray(commands)
       ) {
         continue;
@@ -540,6 +598,8 @@ function flattenTemplateCatalog(
           language: command.language ?? groupLanguage ?? languageKey,
           extension: command.extension ?? groupExtension,
           iconFile: command.iconFile ?? groupIconFile,
+          resourceIconName: command.resourceIconName ?? groupResourceIconName,
+          resourceIconType: command.resourceIconType ?? groupResourceIconType,
           subgroup: command.subgroup ?? subgroupKey,
         });
       }
@@ -580,6 +640,8 @@ function flattenTemplateCatalogDirectory(rootPath: string): TemplateCatalogEntry
           language: command.language ?? parsedFile.language ?? languageKey,
           extension: command.extension ?? parsedFile.extension,
           iconFile: command.iconFile ?? parsedFile.iconFile,
+          resourceIconName: command.resourceIconName ?? parsedFile.resourceIconName,
+          resourceIconType: command.resourceIconType ?? parsedFile.resourceIconType,
           subgroup: command.subgroup ?? subgroupKey,
           templateGroup: languageKey,
         });
@@ -644,6 +706,18 @@ function flattenTemplateCatalogFromSettings(rootPath: string): TemplateCatalogEn
               item.iconType ??
               commandGroup.iconType ??
               parsedSettings.iconType,
+            resourceIconName:
+              command.resourceIconName ??
+              item.resourceIconName ??
+              commandGroup.resourceIconName ??
+              parsedCommandFile.resourceIconName ??
+              parsedSettings.resourceIconName,
+            resourceIconType:
+              command.resourceIconType ??
+              item.resourceIconType ??
+              commandGroup.resourceIconType ??
+              parsedCommandFile.resourceIconType ??
+              parsedSettings.resourceIconType,
             subgroup: command.subgroup ?? subgroupName,
             templateGroup: languageDirectory.name,
           });
@@ -707,6 +781,14 @@ function flattenLocalizedTemplateCatalog(rootPath: string): TemplateCatalogEntry
           language: command.language ?? parsedCatalog.language ?? languageKey,
           extension: command.extension ?? parsedCatalog.extension,
           iconType: command.iconType ?? group.iconType ?? parsedCatalog.iconType,
+          resourceIconName:
+            command.resourceIconName ??
+            group.resourceIconName ??
+            parsedCatalog.resourceIconName,
+          resourceIconType:
+            command.resourceIconType ??
+            group.resourceIconType ??
+            parsedCatalog.resourceIconType,
           templateCategory: groupName,
           subgroup: command.subgroup ?? groupName,
           templateGroup: languageKey,
@@ -743,6 +825,16 @@ function flattenLocalizedTemplateCatalog(rootPath: string): TemplateCatalogEntry
               subgroup.iconType ??
               group.iconType ??
               parsedCatalog.iconType,
+            resourceIconName:
+              command.resourceIconName ??
+              subgroup.resourceIconName ??
+              group.resourceIconName ??
+              parsedCatalog.resourceIconName,
+            resourceIconType:
+              command.resourceIconType ??
+              subgroup.resourceIconType ??
+              group.resourceIconType ??
+              parsedCatalog.resourceIconType,
             templateCategory: groupName,
             subgroup: command.subgroup ?? subgroupName,
             templateGroup: languageKey,
@@ -809,6 +901,8 @@ export function loadTemplateCatalog(
       iconFile: command.iconFile,
       extension: command.extension,
       iconType: command.iconType,
+      resourceIconName: command.resourceIconName,
+      resourceIconType: command.resourceIconType,
       subgroup: command.subgroup,
       templateGroup: command.templateGroup,
       templateCategory: command.templateCategory,
@@ -951,19 +1045,17 @@ export class CommandTemplateGroupItem extends vscode.TreeItem {
     public readonly groupName: string,
     public readonly extension?: string,
     public readonly iconType?: string,
+    public readonly resourceIconName?: string,
+    public readonly resourceIconType?: string,
     collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
   ) {
     super(getCommandLanguageDisplayName(groupName), collapsibleState);
     this.id = `command-template-group:${groupName}`;
     this.contextValue = `commandTemplateGroupItem:${groupName}`;
-    this.resourceUri = getSyntheticIconResourceUri(
-      groupName,
-      groupName,
-      undefined,
-      undefined,
-    );
-    this.iconPath =
-      getBundledTemplateIconUri(groupName, iconType) ?? vscode.ThemeIcon.File;
+    this.iconPath = getForcedResourceIconUri(resourceIconName, resourceIconType);
+    if (!this.iconPath) {
+      this.iconPath = getTemplateResourceIconUri(groupName, iconType, 'root');
+    }
   }
 }
 //#endregion
@@ -975,22 +1067,14 @@ export class CommandTemplateSubgroupItem extends vscode.TreeItem {
     public readonly subgroupName: string,
     public readonly extension?: string,
     public readonly iconType?: string,
+    public readonly resourceIconName?: string,
+    public readonly resourceIconType?: string,
     collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
   ) {
     super(subgroupName, collapsibleState);
     this.id = `command-template-subgroup:${groupName}:${subgroupName}`;
     this.contextValue = `commandTemplateSubgroupItem:${groupName}:${subgroupName}`;
-    this.resourceUri = getSyntheticIconResourceUri(
-      groupName,
-      subgroupName,
-      undefined,
-      extension,
-    );
-    this.iconPath =
-      getBundledTemplateIconUri(subgroupName, iconType) ??
-      (shouldUseFolderIcon(iconType, extension)
-        ? new vscode.ThemeIcon('folder')
-        : vscode.ThemeIcon.File);
+    this.iconPath = getForcedResourceIconUri(resourceIconName, resourceIconType);
   }
 }
 
@@ -1000,21 +1084,13 @@ export class CommandTemplateCategoryItem extends vscode.TreeItem {
     public readonly categoryName: string,
     public readonly extension?: string,
     public readonly iconType?: string,
+    public readonly resourceIconName?: string,
+    public readonly resourceIconType?: string,
     collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
   ) {
     super(categoryName, collapsibleState);
     this.id = `command-template-category:${groupName}:${categoryName}`;
     this.contextValue = `commandTemplateCategoryItem:${groupName}:${categoryName}`;
-    this.resourceUri = getSyntheticIconResourceUri(
-      groupName,
-      categoryName,
-      undefined,
-      extension,
-    );
-    this.iconPath =
-      getBundledTemplateIconUri(categoryName, iconType) ??
-      (shouldUseFolderIcon(iconType, extension)
-        ? new vscode.ThemeIcon('folder')
-        : vscode.ThemeIcon.File);
+    this.iconPath = getForcedResourceIconUri(resourceIconName, resourceIconType);
   }
 }
