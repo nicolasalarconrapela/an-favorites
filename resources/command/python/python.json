@@ -1,0 +1,512 @@
+{
+  "language": "python",
+  "extension": ".py",
+  "iconType": "folder",
+  "descriptionKey": "catalog.python.description",
+  "catalog.python.description.es": "Configuracion de comandos Python organizada por areas funcionales en un unico archivo.",
+  "catalog.python.description.en": "Python command configuration organized by functional areas in a single file.",
+  "groups": [
+    {
+      "id": "python-core-workflow",
+      "nameKey": "groups.pythonCoreWorkflow.name",
+      "descriptionKey": "groups.pythonCoreWorkflow.description",
+      "groups.pythonCoreWorkflow.name.es": "Core Workflow",
+      "groups.pythonCoreWorkflow.name.en": "Core Workflow",
+      "groups.pythonCoreWorkflow.description.es": "Comandos base de Python para version, ayuda, ejecucion y gestion inicial del entorno.",
+      "groups.pythonCoreWorkflow.description.en": "Core Python commands for version, help, execution, and initial environment management.",
+      "iconType": "folder",
+      "commands": [
+        {
+          "id": "opensource:python-version",
+          "labelKey": "commands.pythonVersion.label",
+          "descriptionKey": "commands.pythonVersion.description",
+          "commands.pythonVersion.label.es": "python --version",
+          "commands.pythonVersion.label.en": "python --version",
+          "commands.pythonVersion.description.es": "Muestra la version de Python instalada y disponible en el entorno actual.",
+          "commands.pythonVersion.description.en": "Displays the installed Python version available in the current environment.",
+          "command": "python --version"
+        },
+        {
+          "id": "opensource:python-help",
+          "labelKey": "commands.pythonHelp.label",
+          "descriptionKey": "commands.pythonHelp.description",
+          "commands.pythonHelp.label.es": "python --help",
+          "commands.pythonHelp.label.en": "python --help",
+          "commands.pythonHelp.description.es": "Muestra la ayuda general del interprete de Python con las opciones disponibles.",
+          "commands.pythonHelp.description.en": "Displays the general Python interpreter help with the available options.",
+          "command": "python --help"
+        },
+        {
+          "id": "opensource:python-module-help",
+          "labelKey": "commands.pythonModuleHelp.label",
+          "descriptionKey": "commands.pythonModuleHelp.description",
+          "commands.pythonModuleHelp.label.es": "python -m pip --help",
+          "commands.pythonModuleHelp.label.en": "python -m pip --help",
+          "commands.pythonModuleHelp.description.es": "Muestra la ayuda del modulo pip ejecutado desde el interprete de Python actual.",
+          "commands.pythonModuleHelp.description.en": "Displays help for the pip module executed from the current Python interpreter.",
+          "command": "python -m pip --help"
+        },
+        {
+          "id": "opensource:python-run-main",
+          "labelKey": "commands.pythonRunMain.label",
+          "descriptionKey": "commands.pythonRunMain.description",
+          "commands.pythonRunMain.label.es": "python main.py",
+          "commands.pythonRunMain.label.en": "python main.py",
+          "commands.pythonRunMain.description.es": "Ejecuta el archivo main.py usando el interprete de Python activo.",
+          "commands.pythonRunMain.description.en": "Runs the main.py file using the active Python interpreter.",
+          "command": "python main.py"
+        },
+        {
+          "id": "opensource:python-module-run",
+          "labelKey": "commands.pythonModuleRun.label",
+          "descriptionKey": "commands.pythonModuleRun.description",
+          "commands.pythonModuleRun.label.es": "python -m package.module",
+          "commands.pythonModuleRun.label.en": "python -m package.module",
+          "commands.pythonModuleRun.description.es": "Ejecuta un modulo Python como script respetando el contexto de paquetes.",
+          "commands.pythonModuleRun.description.en": "Runs a Python module as a script while preserving package context.",
+          "command": "python -m package.module"
+        },
+        {
+          "id": "opensource:python-interactive",
+          "labelKey": "commands.pythonInteractive.label",
+          "descriptionKey": "commands.pythonInteractive.description",
+          "commands.pythonInteractive.label.es": "python",
+          "commands.pythonInteractive.label.en": "python",
+          "commands.pythonInteractive.description.es": "Abre el interprete interactivo de Python.",
+          "commands.pythonInteractive.description.en": "Opens the interactive Python interpreter.",
+          "command": "python"
+        }
+      ]
+    },
+    {
+      "id": "python-environment",
+      "nameKey": "groups.pythonEnvironment.name",
+      "descriptionKey": "groups.pythonEnvironment.description",
+      "groups.pythonEnvironment.name.es": "Environment",
+      "groups.pythonEnvironment.name.en": "Environment",
+      "groups.pythonEnvironment.description.es": "Comandos para crear, activar y mantener entornos virtuales de Python.",
+      "groups.pythonEnvironment.description.en": "Commands to create, activate, and maintain Python virtual environments.",
+      "iconType": "folder",
+      "subgroups": [
+        {
+          "id": "python-venv",
+          "nameKey": "subgroups.pythonVenv.name",
+          "descriptionKey": "subgroups.pythonVenv.description",
+          "subgroups.pythonVenv.name.es": "Virtual Environment",
+          "subgroups.pythonVenv.name.en": "Virtual Environment",
+          "subgroups.pythonVenv.description.es": "Comandos para trabajar con entornos virtuales usando venv.",
+          "subgroups.pythonVenv.description.en": "Commands to work with virtual environments using venv.",
+          "iconType": "folder",
+          "commands": [
+            {
+              "id": "opensource:python-create-venv",
+              "labelKey": "commands.pythonCreateVenv.label",
+              "descriptionKey": "commands.pythonCreateVenv.description",
+              "commands.pythonCreateVenv.label.es": "python -m venv .venv",
+              "commands.pythonCreateVenv.label.en": "python -m venv .venv",
+              "commands.pythonCreateVenv.description.es": "Crea un entorno virtual local en la carpeta .venv.",
+              "commands.pythonCreateVenv.description.en": "Creates a local virtual environment in the .venv folder.",
+              "command": "python -m venv .venv"
+            },
+            {
+              "id": "opensource:venv-activate-windows-powershell",
+              "labelKey": "commands.venvActivateWindowsPowerShell.label",
+              "descriptionKey": "commands.venvActivateWindowsPowerShell.description",
+              "commands.venvActivateWindowsPowerShell.label.es": ".\\.venv\\Scripts\\Activate.ps1",
+              "commands.venvActivateWindowsPowerShell.label.en": ".\\.venv\\Scripts\\Activate.ps1",
+              "commands.venvActivateWindowsPowerShell.description.es": "Activa el entorno virtual .venv en Windows usando PowerShell.",
+              "commands.venvActivateWindowsPowerShell.description.en": "Activates the .venv virtual environment on Windows using PowerShell.",
+              "command": ".\\.venv\\Scripts\\Activate.ps1"
+            },
+            {
+              "id": "opensource:venv-activate-windows-cmd",
+              "labelKey": "commands.venvActivateWindowsCmd.label",
+              "descriptionKey": "commands.venvActivateWindowsCmd.description",
+              "commands.venvActivateWindowsCmd.label.es": ".venv\\Scripts\\activate.bat",
+              "commands.venvActivateWindowsCmd.label.en": ".venv\\Scripts\\activate.bat",
+              "commands.venvActivateWindowsCmd.description.es": "Activa el entorno virtual .venv en Windows usando CMD.",
+              "commands.venvActivateWindowsCmd.description.en": "Activates the .venv virtual environment on Windows using CMD.",
+              "command": ".venv\\Scripts\\activate.bat"
+            },
+            {
+              "id": "opensource:venv-activate-linux-macos",
+              "labelKey": "commands.venvActivateLinuxMacos.label",
+              "descriptionKey": "commands.venvActivateLinuxMacos.description",
+              "commands.venvActivateLinuxMacos.label.es": "source .venv/bin/activate",
+              "commands.venvActivateLinuxMacos.label.en": "source .venv/bin/activate",
+              "commands.venvActivateLinuxMacos.description.es": "Activa el entorno virtual .venv en Linux o macOS.",
+              "commands.venvActivateLinuxMacos.description.en": "Activates the .venv virtual environment on Linux or macOS.",
+              "command": "source .venv/bin/activate"
+            },
+            {
+              "id": "opensource:venv-deactivate",
+              "labelKey": "commands.venvDeactivate.label",
+              "descriptionKey": "commands.venvDeactivate.description",
+              "commands.venvDeactivate.label.es": "deactivate",
+              "commands.venvDeactivate.label.en": "deactivate",
+              "commands.venvDeactivate.description.es": "Desactiva el entorno virtual activo.",
+              "commands.venvDeactivate.description.en": "Deactivates the active virtual environment.",
+              "command": "deactivate"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "python-dependencies",
+      "nameKey": "groups.pythonDependencies.name",
+      "descriptionKey": "groups.pythonDependencies.description",
+      "groups.pythonDependencies.name.es": "Dependencies",
+      "groups.pythonDependencies.name.en": "Dependencies",
+      "groups.pythonDependencies.description.es": "Comandos para instalar, actualizar, listar y exportar dependencias Python.",
+      "groups.pythonDependencies.description.en": "Commands to install, update, list, and export Python dependencies.",
+      "iconType": "folder",
+      "commands": [
+        {
+          "id": "opensource:pip-version",
+          "labelKey": "commands.pipVersion.label",
+          "descriptionKey": "commands.pipVersion.description",
+          "commands.pipVersion.label.es": "python -m pip --version",
+          "commands.pipVersion.label.en": "python -m pip --version",
+          "commands.pipVersion.description.es": "Muestra la version de pip asociada al interprete de Python actual.",
+          "commands.pipVersion.description.en": "Displays the pip version associated with the current Python interpreter.",
+          "command": "python -m pip --version"
+        },
+        {
+          "id": "opensource:pip-upgrade",
+          "labelKey": "commands.pipUpgrade.label",
+          "descriptionKey": "commands.pipUpgrade.description",
+          "commands.pipUpgrade.label.es": "python -m pip install --upgrade pip",
+          "commands.pipUpgrade.label.en": "python -m pip install --upgrade pip",
+          "commands.pipUpgrade.description.es": "Actualiza pip a la ultima version compatible disponible.",
+          "commands.pipUpgrade.description.en": "Upgrades pip to the latest compatible available version.",
+          "command": "python -m pip install --upgrade pip"
+        },
+        {
+          "id": "opensource:pip-install-package",
+          "labelKey": "commands.pipInstallPackage.label",
+          "descriptionKey": "commands.pipInstallPackage.description",
+          "commands.pipInstallPackage.label.es": "python -m pip install package-name",
+          "commands.pipInstallPackage.label.en": "python -m pip install package-name",
+          "commands.pipInstallPackage.description.es": "Instala un paquete Python desde el indice configurado.",
+          "commands.pipInstallPackage.description.en": "Installs a Python package from the configured package index.",
+          "command": "python -m pip install package-name"
+        },
+        {
+          "id": "opensource:pip-install-requirements",
+          "labelKey": "commands.pipInstallRequirements.label",
+          "descriptionKey": "commands.pipInstallRequirements.description",
+          "commands.pipInstallRequirements.label.es": "python -m pip install -r requirements.txt",
+          "commands.pipInstallRequirements.label.en": "python -m pip install -r requirements.txt",
+          "commands.pipInstallRequirements.description.es": "Instala las dependencias declaradas en requirements.txt.",
+          "commands.pipInstallRequirements.description.en": "Installs the dependencies declared in requirements.txt.",
+          "command": "python -m pip install -r requirements.txt"
+        },
+        {
+          "id": "opensource:pip-freeze",
+          "labelKey": "commands.pipFreeze.label",
+          "descriptionKey": "commands.pipFreeze.description",
+          "commands.pipFreeze.label.es": "python -m pip freeze",
+          "commands.pipFreeze.label.en": "python -m pip freeze",
+          "commands.pipFreeze.description.es": "Lista las dependencias instaladas con sus versiones exactas.",
+          "commands.pipFreeze.description.en": "Lists installed dependencies with their exact versions.",
+          "command": "python -m pip freeze"
+        },
+        {
+          "id": "opensource:pip-freeze-requirements",
+          "labelKey": "commands.pipFreezeRequirements.label",
+          "descriptionKey": "commands.pipFreezeRequirements.description",
+          "commands.pipFreezeRequirements.label.es": "python -m pip freeze > requirements.txt",
+          "commands.pipFreezeRequirements.label.en": "python -m pip freeze > requirements.txt",
+          "commands.pipFreezeRequirements.description.es": "Exporta las dependencias instaladas al archivo requirements.txt.",
+          "commands.pipFreezeRequirements.description.en": "Exports installed dependencies to the requirements.txt file.",
+          "command": "python -m pip freeze > requirements.txt"
+        },
+        {
+          "id": "opensource:pip-list",
+          "labelKey": "commands.pipList.label",
+          "descriptionKey": "commands.pipList.description",
+          "commands.pipList.label.es": "python -m pip list",
+          "commands.pipList.label.en": "python -m pip list",
+          "commands.pipList.description.es": "Muestra los paquetes instalados en el entorno Python actual.",
+          "commands.pipList.description.en": "Displays installed packages in the current Python environment.",
+          "command": "python -m pip list"
+        },
+        {
+          "id": "opensource:pip-uninstall-package",
+          "labelKey": "commands.pipUninstallPackage.label",
+          "descriptionKey": "commands.pipUninstallPackage.description",
+          "commands.pipUninstallPackage.label.es": "python -m pip uninstall package-name",
+          "commands.pipUninstallPackage.label.en": "python -m pip uninstall package-name",
+          "commands.pipUninstallPackage.description.es": "Desinstala un paquete Python del entorno actual.",
+          "commands.pipUninstallPackage.description.en": "Uninstalls a Python package from the current environment.",
+          "command": "python -m pip uninstall package-name"
+        }
+      ]
+    },
+    {
+      "id": "python-development",
+      "nameKey": "groups.pythonDevelopment.name",
+      "descriptionKey": "groups.pythonDevelopment.description",
+      "groups.pythonDevelopment.name.es": "Development",
+      "groups.pythonDevelopment.name.en": "Development",
+      "groups.pythonDevelopment.description.es": "Comandos para ejecucion, pruebas, calidad, formato y tipado en proyectos Python.",
+      "groups.pythonDevelopment.description.en": "Commands for execution, testing, quality, formatting, and typing in Python projects.",
+      "iconType": "folder",
+      "subgroups": [
+        {
+          "id": "python-run",
+          "nameKey": "subgroups.pythonRun.name",
+          "descriptionKey": "subgroups.pythonRun.description",
+          "subgroups.pythonRun.name.es": "Run",
+          "subgroups.pythonRun.name.en": "Run",
+          "subgroups.pythonRun.description.es": "Comandos para ejecutar scripts y aplicaciones Python.",
+          "subgroups.pythonRun.description.en": "Commands to run Python scripts and applications.",
+          "iconType": "folder",
+          "commands": [
+            {
+              "id": "opensource:python-run-script",
+              "labelKey": "commands.pythonRunScript.label",
+              "descriptionKey": "commands.pythonRunScript.description",
+              "commands.pythonRunScript.label.es": "python script.py",
+              "commands.pythonRunScript.label.en": "python script.py",
+              "commands.pythonRunScript.description.es": "Ejecuta un script Python concreto.",
+              "commands.pythonRunScript.description.en": "Runs a specific Python script.",
+              "command": "python script.py"
+            },
+            {
+              "id": "opensource:python-run-unbuffered",
+              "labelKey": "commands.pythonRunUnbuffered.label",
+              "descriptionKey": "commands.pythonRunUnbuffered.description",
+              "commands.pythonRunUnbuffered.label.es": "python -u script.py",
+              "commands.pythonRunUnbuffered.label.en": "python -u script.py",
+              "commands.pythonRunUnbuffered.description.es": "Ejecuta un script Python sin buffering de salida, util para logs en tiempo real.",
+              "commands.pythonRunUnbuffered.description.en": "Runs a Python script with unbuffered output, useful for real-time logs.",
+              "command": "python -u script.py"
+            },
+            {
+              "id": "opensource:python-run-module",
+              "labelKey": "commands.pythonRunModule.label",
+              "descriptionKey": "commands.pythonRunModule.description",
+              "commands.pythonRunModule.label.es": "python -m app",
+              "commands.pythonRunModule.label.en": "python -m app",
+              "commands.pythonRunModule.description.es": "Ejecuta el modulo app como punto de entrada del proyecto.",
+              "commands.pythonRunModule.description.en": "Runs the app module as the project entry point.",
+              "command": "python -m app"
+            }
+          ]
+        },
+        {
+          "id": "python-test",
+          "nameKey": "subgroups.pythonTest.name",
+          "descriptionKey": "subgroups.pythonTest.description",
+          "subgroups.pythonTest.name.es": "Test",
+          "subgroups.pythonTest.name.en": "Test",
+          "subgroups.pythonTest.description.es": "Comandos para pruebas unitarias y cobertura.",
+          "subgroups.pythonTest.description.en": "Commands for unit tests and coverage.",
+          "iconType": "folder",
+          "commands": [
+            {
+              "id": "opensource:pytest",
+              "labelKey": "commands.pytest.label",
+              "descriptionKey": "commands.pytest.description",
+              "commands.pytest.label.es": "python -m pytest",
+              "commands.pytest.label.en": "python -m pytest",
+              "commands.pytest.description.es": "Ejecuta los tests del proyecto usando pytest.",
+              "commands.pytest.description.en": "Runs project tests using pytest.",
+              "command": "python -m pytest"
+            },
+            {
+              "id": "opensource:pytest-verbose",
+              "labelKey": "commands.pytestVerbose.label",
+              "descriptionKey": "commands.pytestVerbose.description",
+              "commands.pytestVerbose.label.es": "python -m pytest -v",
+              "commands.pytestVerbose.label.en": "python -m pytest -v",
+              "commands.pytestVerbose.description.es": "Ejecuta los tests con salida detallada.",
+              "commands.pytestVerbose.description.en": "Runs tests with verbose output.",
+              "command": "python -m pytest -v"
+            },
+            {
+              "id": "opensource:pytest-one-file",
+              "labelKey": "commands.pytestOneFile.label",
+              "descriptionKey": "commands.pytestOneFile.description",
+              "commands.pytestOneFile.label.es": "python -m pytest tests/test_app.py",
+              "commands.pytestOneFile.label.en": "python -m pytest tests/test_app.py",
+              "commands.pytestOneFile.description.es": "Ejecuta los tests de un archivo concreto.",
+              "commands.pytestOneFile.description.en": "Runs tests from a specific file.",
+              "command": "python -m pytest tests/test_app.py"
+            },
+            {
+              "id": "opensource:coverage-pytest",
+              "labelKey": "commands.coveragePytest.label",
+              "descriptionKey": "commands.coveragePytest.description",
+              "commands.coveragePytest.label.es": "python -m pytest --cov=src",
+              "commands.coveragePytest.label.en": "python -m pytest --cov=src",
+              "commands.coveragePytest.description.es": "Ejecuta los tests generando cobertura sobre el paquete src.",
+              "commands.coveragePytest.description.en": "Runs tests and generates coverage for the src package.",
+              "command": "python -m pytest --cov=src"
+            },
+            {
+              "id": "opensource:unittest-discover",
+              "labelKey": "commands.unittestDiscover.label",
+              "descriptionKey": "commands.unittestDiscover.description",
+              "commands.unittestDiscover.label.es": "python -m unittest discover",
+              "commands.unittestDiscover.label.en": "python -m unittest discover",
+              "commands.unittestDiscover.description.es": "Descubre y ejecuta tests usando unittest.",
+              "commands.unittestDiscover.description.en": "Discovers and runs tests using unittest.",
+              "command": "python -m unittest discover"
+            }
+          ]
+        },
+        {
+          "id": "python-quality",
+          "nameKey": "subgroups.pythonQuality.name",
+          "descriptionKey": "subgroups.pythonQuality.description",
+          "subgroups.pythonQuality.name.es": "Quality",
+          "subgroups.pythonQuality.name.en": "Quality",
+          "subgroups.pythonQuality.description.es": "Comandos para linting, analisis estatico y comprobaciones de calidad.",
+          "subgroups.pythonQuality.description.en": "Commands for linting, static analysis, and quality checks.",
+          "iconType": "folder",
+          "commands": [
+            {
+              "id": "opensource:ruff-check",
+              "labelKey": "commands.ruffCheck.label",
+              "descriptionKey": "commands.ruffCheck.description",
+              "commands.ruffCheck.label.es": "python -m ruff check .",
+              "commands.ruffCheck.label.en": "python -m ruff check .",
+              "commands.ruffCheck.description.es": "Analiza el proyecto con Ruff para detectar errores de estilo, calidad y posibles problemas.",
+              "commands.ruffCheck.description.en": "Analyzes the project with Ruff to detect style, quality, and potential issues.",
+              "command": "python -m ruff check ."
+            },
+            {
+              "id": "opensource:ruff-check-fix",
+              "labelKey": "commands.ruffCheckFix.label",
+              "descriptionKey": "commands.ruffCheckFix.description",
+              "commands.ruffCheckFix.label.es": "python -m ruff check . --fix",
+              "commands.ruffCheckFix.label.en": "python -m ruff check . --fix",
+              "commands.ruffCheckFix.description.es": "Analiza el proyecto con Ruff y aplica correcciones automaticas cuando es seguro.",
+              "commands.ruffCheckFix.description.en": "Analyzes the project with Ruff and applies automatic fixes when safe.",
+              "command": "python -m ruff check . --fix"
+            },
+            {
+              "id": "opensource:mypy",
+              "labelKey": "commands.mypy.label",
+              "descriptionKey": "commands.mypy.description",
+              "commands.mypy.label.es": "python -m mypy src",
+              "commands.mypy.label.en": "python -m mypy src",
+              "commands.mypy.description.es": "Ejecuta comprobacion de tipos sobre el paquete src usando mypy.",
+              "commands.mypy.description.en": "Runs type checking on the src package using mypy.",
+              "command": "python -m mypy src"
+            }
+          ]
+        },
+        {
+          "id": "python-format",
+          "nameKey": "subgroups.pythonFormat.name",
+          "descriptionKey": "subgroups.pythonFormat.description",
+          "subgroups.pythonFormat.name.es": "Format",
+          "subgroups.pythonFormat.name.en": "Format",
+          "subgroups.pythonFormat.description.es": "Comandos para formatear codigo Python.",
+          "subgroups.pythonFormat.description.en": "Commands to format Python code.",
+          "iconType": "folder",
+          "commands": [
+            {
+              "id": "opensource:black-format",
+              "labelKey": "commands.blackFormat.label",
+              "descriptionKey": "commands.blackFormat.description",
+              "commands.blackFormat.label.es": "python -m black .",
+              "commands.blackFormat.label.en": "python -m black .",
+              "commands.blackFormat.description.es": "Formatea el codigo Python del proyecto usando Black.",
+              "commands.blackFormat.description.en": "Formats the project's Python code using Black.",
+              "command": "python -m black ."
+            },
+            {
+              "id": "opensource:black-check",
+              "labelKey": "commands.blackCheck.label",
+              "descriptionKey": "commands.blackCheck.description",
+              "commands.blackCheck.label.es": "python -m black . --check",
+              "commands.blackCheck.label.en": "python -m black . --check",
+              "commands.blackCheck.description.es": "Comprueba si el codigo cumple el formato de Black sin modificar archivos.",
+              "commands.blackCheck.description.en": "Checks whether the code follows Black formatting without modifying files.",
+              "command": "python -m black . --check"
+            },
+            {
+              "id": "opensource:ruff-format",
+              "labelKey": "commands.ruffFormat.label",
+              "descriptionKey": "commands.ruffFormat.description",
+              "commands.ruffFormat.label.es": "python -m ruff format .",
+              "commands.ruffFormat.label.en": "python -m ruff format .",
+              "commands.ruffFormat.description.es": "Formatea el codigo Python del proyecto usando Ruff Formatter.",
+              "commands.ruffFormat.description.en": "Formats the project's Python code using Ruff Formatter.",
+              "command": "python -m ruff format ."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "python-project-management",
+      "nameKey": "groups.pythonProjectManagement.name",
+      "descriptionKey": "groups.pythonProjectManagement.description",
+      "groups.pythonProjectManagement.name.es": "Project Management",
+      "groups.pythonProjectManagement.name.en": "Project Management",
+      "groups.pythonProjectManagement.description.es": "Comandos para inicializacion, instalacion editable y gestion de proyectos Python modernos.",
+      "groups.pythonProjectManagement.description.en": "Commands for initialization, editable installation, and management of modern Python projects.",
+      "iconType": "folder",
+      "subgroups": [
+        {
+          "id": "python-pyproject",
+          "nameKey": "subgroups.pythonPyproject.name",
+          "descriptionKey": "subgroups.pythonPyproject.description",
+          "subgroups.pythonPyproject.name.es": "pyproject.toml",
+          "subgroups.pythonPyproject.name.en": "pyproject.toml",
+          "subgroups.pythonPyproject.description.es": "Comandos habituales para proyectos basados en pyproject.toml.",
+          "subgroups.pythonPyproject.description.en": "Common commands for projects based on pyproject.toml.",
+          "iconType": "folder",
+          "commands": [
+            {
+              "id": "opensource:pip-install-editable",
+              "labelKey": "commands.pipInstallEditable.label",
+              "descriptionKey": "commands.pipInstallEditable.description",
+              "commands.pipInstallEditable.label.es": "python -m pip install -e .",
+              "commands.pipInstallEditable.label.en": "python -m pip install -e .",
+              "commands.pipInstallEditable.description.es": "Instala el proyecto actual en modo editable para desarrollo local.",
+              "commands.pipInstallEditable.description.en": "Installs the current project in editable mode for local development.",
+              "command": "python -m pip install -e ."
+            },
+            {
+              "id": "opensource:pip-install-editable-dev",
+              "labelKey": "commands.pipInstallEditableDev.label",
+              "descriptionKey": "commands.pipInstallEditableDev.description",
+              "commands.pipInstallEditableDev.label.es": "python -m pip install -e .[dev]",
+              "commands.pipInstallEditableDev.label.en": "python -m pip install -e .[dev]",
+              "commands.pipInstallEditableDev.description.es": "Instala el proyecto actual en modo editable incluyendo dependencias de desarrollo.",
+              "commands.pipInstallEditableDev.description.en": "Installs the current project in editable mode including development dependencies.",
+              "command": "python -m pip install -e .[dev]"
+            },
+            {
+              "id": "opensource:build-package",
+              "labelKey": "commands.buildPackage.label",
+              "descriptionKey": "commands.buildPackage.description",
+              "commands.buildPackage.label.es": "python -m build",
+              "commands.buildPackage.label.en": "python -m build",
+              "commands.buildPackage.description.es": "Genera los artefactos de distribucion del paquete Python.",
+              "commands.buildPackage.description.en": "Builds the distribution artifacts for the Python package.",
+              "command": "python -m build"
+            },
+            {
+              "id": "opensource:twine-check",
+              "labelKey": "commands.twineCheck.label",
+              "descriptionKey": "commands.twineCheck.description",
+              "commands.twineCheck.label.es": "python -m twine check dist/*",
+              "commands.twineCheck.label.en": "python -m twine check dist/*",
+              "commands.twineCheck.description.es": "Valida los artefactos generados antes de publicarlos.",
+              "commands.twineCheck.description.en": "Validates generated artifacts before publishing them.",
+              "command": "python -m twine check dist/*"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

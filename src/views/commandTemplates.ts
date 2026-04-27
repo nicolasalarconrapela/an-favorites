@@ -250,14 +250,22 @@ function getBundledTemplateIconUri(
     return undefined;
   }
 
-  const normalized = normalizeMaterialIconKey(iconName);
-  if (!normalized) {
-    return undefined;
-  }
-  const normalizedIconType = normalizeTemplateIconType(iconType);
-
   try {
     const fs = require('fs') as typeof import('fs');
+    const explicitIconPath = resolveExplicitIconPath(
+      templateIconBasePath,
+      iconName,
+      fs,
+    );
+    if (explicitIconPath) {
+      return vscode.Uri.file(explicitIconPath);
+    }
+
+    const normalized = resolveConfiguredIconAlias(normalizeMaterialIconKey(iconName));
+    if (!normalized) {
+      return undefined;
+    }
+    const normalizedIconType = normalizeTemplateIconType(iconType);
     const materialIconPath = getMaterialIconThemeIconPath(
       templateIconBasePath,
       normalized,
@@ -279,6 +287,47 @@ function getBundledTemplateIconUri(
   } catch {
     return undefined;
   }
+}
+
+function resolveExplicitIconPath(
+  extensionPath: string,
+  value: string,
+  fs: typeof import('fs'),
+): string | undefined {
+  const trimmed = value.trim();
+  const configuredPath = getConfiguredIconPath(trimmed);
+  const candidateValue = configuredPath ?? trimmed;
+  if (!configuredPath && !looksLikeIconPath(candidateValue)) {
+    return undefined;
+  }
+
+  const withoutFileScheme = candidateValue.startsWith('file://')
+    ? vscode.Uri.parse(candidateValue).fsPath
+    : candidateValue;
+  const candidates = path.isAbsolute(withoutFileScheme)
+    ? [withoutFileScheme]
+    : [
+        path.resolve(extensionPath, withoutFileScheme),
+        path.resolve(process.cwd(), withoutFileScheme),
+      ];
+
+  return candidates.find((candidate) => fs.existsSync(candidate));
+}
+
+function looksLikeIconPath(value: string): boolean {
+  if (value.startsWith('file://')) {
+    return true;
+  }
+
+  if (path.isAbsolute(value)) {
+    return true;
+  }
+
+  if (/[\\/]/.test(value)) {
+    return true;
+  }
+
+  return /\.(svg|png|webp)$/i.test(value);
 }
 
 function getMaterialIconThemeIconPath(
@@ -378,6 +427,24 @@ export function resolveTemplateIconType(
 
 function normalizeMaterialIconKey(value: string): string {
   return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function resolveConfiguredIconAlias(normalizedKey: string): string {
+  const aliases = vscode.workspace
+    .getConfiguration('anfavorites.commands')
+    .get<Record<string, string>>('templateIconAliases', {});
+  const configuredAlias = aliases[normalizedKey] ?? aliases[normalizedKey.toLowerCase()];
+
+  return configuredAlias ? normalizeMaterialIconKey(configuredAlias) : normalizedKey;
+}
+
+function getConfiguredIconPath(iconName: string): string | undefined {
+  const paths = vscode.workspace
+    .getConfiguration('anfavorites.commands')
+    .get<Record<string, string>>('templateIconPaths', {});
+  const normalizedKey = normalizeMaterialIconKey(iconName);
+
+  return paths[iconName] ?? paths[normalizedKey] ?? paths[normalizedKey.toLowerCase()];
 }
 
 function getMaterialIconThemeCandidates(

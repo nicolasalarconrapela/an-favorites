@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.3.39",
+  "version": "1.3.40",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -677,7 +677,7 @@
         }
       },
       {
-        "title": "%config.quickOpen.title%",
+        "title": "%config.commands.title%",
         "properties": {
           "anfavorites.commands.personalizedCommandsPath": {
             "type": "string",
@@ -685,6 +685,46 @@
             "scope": "window",
             "description": "%config.commands.personalizedCommandsPath.description%"
           },
+          "anfavorites.commands.templateIconAliases": {
+            "type": "object",
+            "default": {
+              "py": "python",
+              "py3": "python",
+              "python3": "python",
+              "python2": "python",
+              "pythonw": "python",
+              "ts": "typescript",
+              "js": "javascript",
+              "nodejs": "node",
+              "node-js": "node",
+              "k8s": "kubernetes",
+              "kubectl": "kubernetes",
+              "sh": "shell",
+              "bash": "shell",
+              "zsh": "shell",
+              "ps": "powershell",
+              "ps1": "powershell"
+            },
+            "additionalProperties": {
+              "type": "string"
+            },
+            "scope": "application",
+            "description": "%config.commands.templateIconAliases.description%"
+          },
+          "anfavorites.commands.templateIconPaths": {
+            "type": "object",
+            "default": {},
+            "additionalProperties": {
+              "type": "string"
+            },
+            "scope": "application",
+            "description": "%config.commands.templateIconPaths.description%"
+          }
+        }
+      },
+      {
+        "title": "%config.quickOpen.title%",
+        "properties": {
           "anfavorites.quickOpen.pathDetailLocation": {
             "type": "string",
             "default": "description",
