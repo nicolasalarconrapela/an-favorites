@@ -295,15 +295,13 @@ function resolveExplicitIconPath(
   fs: typeof import('fs'),
 ): string | undefined {
   const trimmed = value.trim();
-  const configuredPath = getConfiguredIconPath(trimmed);
-  const candidateValue = configuredPath ?? trimmed;
-  if (!configuredPath && !looksLikeIconPath(candidateValue)) {
+  if (!looksLikeIconPath(trimmed)) {
     return undefined;
   }
 
-  const withoutFileScheme = candidateValue.startsWith('file://')
-    ? vscode.Uri.parse(candidateValue).fsPath
-    : candidateValue;
+  const withoutFileScheme = trimmed.startsWith('file://')
+    ? vscode.Uri.parse(trimmed).fsPath
+    : trimmed;
   const candidates = path.isAbsolute(withoutFileScheme)
     ? [withoutFileScheme]
     : [
@@ -436,15 +434,6 @@ function resolveConfiguredIconAlias(normalizedKey: string): string {
   const configuredAlias = aliases[normalizedKey] ?? aliases[normalizedKey.toLowerCase()];
 
   return configuredAlias ? normalizeMaterialIconKey(configuredAlias) : normalizedKey;
-}
-
-function getConfiguredIconPath(iconName: string): string | undefined {
-  const paths = vscode.workspace
-    .getConfiguration('anfavorites.commands')
-    .get<Record<string, string>>('templateIconPaths', {});
-  const normalizedKey = normalizeMaterialIconKey(iconName);
-
-  return paths[iconName] ?? paths[normalizedKey] ?? paths[normalizedKey.toLowerCase()];
 }
 
 function getMaterialIconThemeCandidates(

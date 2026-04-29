@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.3.40",
+  "version": "1.3.41",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -679,12 +679,6 @@
       {
         "title": "%config.commands.title%",
         "properties": {
-          "anfavorites.commands.personalizedCommandsPath": {
-            "type": "string",
-            "default": "",
-            "scope": "window",
-            "description": "%config.commands.personalizedCommandsPath.description%"
-          },
           "anfavorites.commands.templateIconAliases": {
             "type": "object",
             "default": {
@@ -711,14 +705,38 @@
             "scope": "application",
             "description": "%config.commands.templateIconAliases.description%"
           },
-          "anfavorites.commands.templateIconPaths": {
+          "anfavorites.commands.pythonExecutable": {
+            "type": "string",
+            "default": "auto",
+            "examples": [
+              "auto",
+              "py",
+              "python3",
+              "C:\\\\Python312\\\\python.exe",
+              "/usr/local/bin/python3"
+            ],
+            "scope": "application",
+            "description": "%config.commands.pythonExecutable.description%"
+          },
+          "anfavorites.commands.pythonExecutablePath": {
+            "type": "string",
+            "default": "",
+            "scope": "application",
+            "description": "%config.commands.pythonExecutablePath.description%"
+          },
+          "anfavorites.commands.executableAliases": {
             "type": "object",
-            "default": {},
+            "default": {
+              "python": "python",
+              "py": "py",
+              "python3": "python3",
+              "pythonw": "pythonw"
+            },
             "additionalProperties": {
               "type": "string"
             },
             "scope": "application",
-            "description": "%config.commands.templateIconPaths.description%"
+            "description": "%config.commands.executableAliases.description%"
           }
         }
       },

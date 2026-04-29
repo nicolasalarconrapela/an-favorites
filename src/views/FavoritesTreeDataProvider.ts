@@ -56,6 +56,155 @@ export function resolveWorkspaceCwd(cwd?: string): string | undefined {
   return path.join(folders[0].uri.fsPath, cwd);
 }
 
+type ParsedShellCommand = {
+  leading: string;
+  executable: string;
+  rest: string;
+};
+
+const PYTHON_EXECUTABLE_KEYS = new Set(['python', 'py', 'python2', 'python3', 'pythonw']);
+
+function parseShellCommandExecutable(command: string): ParsedShellCommand | undefined {
+  const leadingMatch = command.match(/^\s*/);
+  const leading = leadingMatch?.[0] ?? '';
+  let index = leading.length;
+
+  if (index >= command.length) {
+    return undefined;
+  }
+
+  const quote = command[index] === '"' || command[index] === "'" ? command[index] : undefined;
+  if (quote) {
+    index += 1;
+    const start = index;
+    while (index < command.length && command[index] !== quote) {
+      index += 1;
+    }
+
+    const executable = command.slice(start, index);
+    const end = index < command.length ? index + 1 : index;
+    return executable ? { leading, executable, rest: command.slice(end) } : undefined;
+  }
+
+  const start = index;
+  while (index < command.length && !/\s/.test(command[index])) {
+    index += 1;
+  }
+
+  const executable = command.slice(start, index);
+  return executable ? { leading, executable, rest: command.slice(index) } : undefined;
+}
+
+function normalizeExecutableKey(value?: string): string | undefined {
+  const trimmed = value?.trim().replace(/^['"]|['"]$/g, '');
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const baseName = trimmed.split(/[\\/]/).pop() ?? trimmed;
+  return baseName.replace(/\.(exe|cmd|bat|ps1|sh)$/i, '').toLowerCase();
+}
+
+function isPathLikeExecutable(value: string): boolean {
+  return (
+    /^[a-z]:[\\/]/i.test(value) ||
+    value.startsWith('/') ||
+    value.startsWith('~/') ||
+    value.startsWith('./') ||
+    value.startsWith('../') ||
+    value.includes('\\') ||
+    value.includes('/') ||
+    /\.(exe|cmd|bat|ps1|sh)$/i.test(value)
+  );
+}
+
+function isPowerShellLikeShell(shellPath?: string): boolean {
+  const shellName = path.basename(shellPath ?? '').toLowerCase();
+  return shellName === 'powershell.exe' || shellName === 'pwsh.exe' || shellName === 'pwsh';
+}
+
+function formatExecutableReplacement(value: string): string {
+  const trimmed = value.trim();
+  if (
+    !trimmed ||
+    trimmed.startsWith('& ') ||
+    trimmed.startsWith('"') ||
+    trimmed.startsWith("'") ||
+    (!/\s/.test(trimmed) && !/[()]/.test(trimmed)) ||
+    !isPathLikeExecutable(trimmed)
+  ) {
+    return trimmed;
+  }
+
+  const escaped = trimmed.replace(/"/g, '\\"');
+  const quoted = `"${escaped}"`;
+  return process.platform === 'win32' && isPowerShellLikeShell(vscode.env.shell)
+    ? `& ${quoted}`
+    : quoted;
+}
+
+function getConfiguredExecutableAliases(): Record<string, string> {
+  const configured = vscode.workspace
+    .getConfiguration('anfavorites.commands')
+    .get<Record<string, unknown>>('executableAliases', {});
+  const aliases: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(configured)) {
+    const normalizedKey = normalizeExecutableKey(key);
+    if (!normalizedKey || typeof value !== 'string') {
+      continue;
+    }
+
+    const normalizedValue = value.trim();
+    if (normalizedValue) {
+      aliases[normalizedKey] = normalizedValue;
+    }
+  }
+
+  return aliases;
+}
+
+function resolveConfiguredPythonExecutable(executableKey: string): string | undefined {
+  if (!PYTHON_EXECUTABLE_KEYS.has(executableKey)) {
+    return undefined;
+  }
+
+  const commandsConfig = vscode.workspace.getConfiguration('anfavorites.commands');
+  const configured = commandsConfig.get<string>('pythonExecutable', 'auto').trim();
+
+  switch (configured) {
+    case 'custom': {
+      const customPath = commandsConfig.get<string>('pythonExecutablePath', '').trim();
+      return customPath || undefined;
+    }
+    case 'auto':
+      return process.platform === 'win32' ? 'py' : 'python3';
+    default:
+      return configured || undefined;
+  }
+}
+
+export function resolveCommandExecutable(command: string): string {
+  const parsed = parseShellCommandExecutable(command);
+  if (!parsed) {
+    return command;
+  }
+
+  const executableKey = normalizeExecutableKey(parsed.executable);
+  if (!executableKey) {
+    return command;
+  }
+
+  const replacement =
+    resolveConfiguredPythonExecutable(executableKey) ??
+    getConfiguredExecutableAliases()[executableKey];
+  if (!replacement) {
+    return command;
+  }
+
+  return `${parsed.leading}${formatExecutableReplacement(replacement)}${parsed.rest}`;
+}
+
 function getDefaultWorkspacePath(): string {
   const folders = vscode.workspace.workspaceFolders;
   if (!folders || folders.length === 0) {
@@ -63,15 +212,6 @@ function getDefaultWorkspacePath(): string {
   }
 
   return folders[0].uri.fsPath;
-}
-
-function resolveConfiguredCommandsPath(configuredPath: string): string {
-  if (path.isAbsolute(configuredPath)) {
-    return configuredPath;
-  }
-
-  const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
-  return path.join(workspaceRoot, configuredPath);
 }
 
 function resolveIconAlias(value?: string): string | undefined {
@@ -2229,38 +2369,13 @@ export class FavoritesTreeDataProvider
   }
 
   private loadPersonalizedCommands(): CommandFavoriteData[] {
-    const commandsConfig = vscode.workspace.getConfiguration('anfavorites.commands');
-    const configuredPath = commandsConfig
-      .get<string>('personalizedCommandsPath', '')
-      .trim();
-
-    if (!configuredPath) {
-      return this.normalizeCommands(
-        this.context.workspaceState.get<CommandFavoriteData[]>(
-          LOCAL_COMMANDS_STORAGE_KEY,
-          [],
-        ),
-        'local',
-      );
-    }
-
-    try {
-      const fs = require('fs') as typeof import('fs');
-      const resolvedPath = resolveConfiguredCommandsPath(configuredPath);
-      if (!fs.existsSync(resolvedPath)) {
-        return [];
-      }
-
-      const raw = fs.readFileSync(resolvedPath, 'utf8');
-      const fileCommands = JSON.parse(raw) as CommandFavoriteData[];
-      return this.normalizeCommands(fileCommands, 'local');
-    } catch (error) {
-      this.logger.warn('[commands] Failed to load Personalized commands file', {
-        configuredPath,
-        error,
-      });
-      return [];
-    }
+    return this.normalizeCommands(
+      this.context.workspaceState.get<CommandFavoriteData[]>(
+        LOCAL_COMMANDS_STORAGE_KEY,
+        [],
+      ),
+      'local',
+    );
   }
 
   private normalizeCommands(
@@ -2468,29 +2583,6 @@ export class FavoritesTreeDataProvider
   }
 
   private async saveCommands(): Promise<void> {
-    const commandsConfig = vscode.workspace.getConfiguration('anfavorites.commands');
-    const configuredPath = commandsConfig
-      .get<string>('personalizedCommandsPath', '')
-      .trim();
-
-    if (configuredPath) {
-      try {
-        const fs = require('fs') as typeof import('fs');
-        const resolvedPath = resolveConfiguredCommandsPath(configuredPath);
-        fs.mkdirSync(path.dirname(resolvedPath), { recursive: true });
-        fs.writeFileSync(
-          resolvedPath,
-          JSON.stringify(this.localCommands, null, 2),
-          'utf8',
-        );
-      } catch (error) {
-        this.logger.error('[commands] Failed to save Personalized commands file', {
-          configuredPath,
-          error,
-        });
-      }
-    }
-
     await Promise.all([
       this.context.workspaceState.update(
         LOCAL_COMMANDS_STORAGE_KEY,
@@ -2717,13 +2809,15 @@ export class FavoritesTreeDataProvider
       `[commands] runCommand -> "${data.label}" background=${data.background} cwd=${resolvedCwd ?? '(none)'}`,
     );
 
+    const commandLine = resolveCommandExecutable(data.command);
+
     if (data.background) {
       const task = new vscode.Task(
         { type: 'anfavorites-command', id: data.id },
         vscode.TaskScope.Workspace,
         data.label,
         'AnFavorites',
-        new vscode.ShellExecution(data.command, {
+        new vscode.ShellExecution(commandLine, {
           cwd: resolvedCwd,
         }),
       );
@@ -2751,7 +2845,7 @@ export class FavoritesTreeDataProvider
         name: data.label,
         cwd: resolvedCwd,
       });
-      terminal.sendText(data.command);
+      terminal.sendText(commandLine);
       terminal.show();
       this.logger.debug(
         `[commands] Foreground terminal created: "${data.label}"`,

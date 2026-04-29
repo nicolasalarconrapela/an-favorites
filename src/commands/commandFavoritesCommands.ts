@@ -5,6 +5,7 @@ import {
   FavoritesTreeDataProvider,
   CommandItem,
   CommandSectionItem,
+  resolveCommandExecutable,
   resolveWorkspaceCwd,
 } from '../views/FavoritesTreeDataProvider';
 import { t } from '../utils/l10n';
@@ -1348,7 +1349,7 @@ async function runPreviewStep(
             name: t('Test Command'),
             cwd: resolvedCwd,
           });
-          terminal.sendText(val);
+          terminal.sendText(resolveCommandExecutable(val));
           terminal.show();
           return;
         }
