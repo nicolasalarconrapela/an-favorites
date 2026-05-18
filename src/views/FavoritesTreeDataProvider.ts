@@ -62,7 +62,48 @@ type ParsedShellCommand = {
   rest: string;
 };
 
-const PYTHON_EXECUTABLE_KEYS = new Set(['python', 'py', 'python2', 'python3', 'pythonw']);
+const PYTHON_EXECUTABLE_KEYS = new Set(['python', 'py', 'py3', 'python2', 'python3', 'pythonw']);
+const DEFAULT_LANGUAGE_EXECUTABLE_KEYS: Record<string, string[]> = {
+  python: ['python', 'py', 'py3', 'python2', 'python3', 'pythonw'],
+  node: ['node'],
+  javascript: ['node'],
+  typescript: ['node'],
+  java: ['java'],
+  go: ['go'],
+  rust: ['cargo', 'rustc'],
+  dotnet: ['dotnet'],
+  php: ['php'],
+  ruby: ['ruby'],
+  shell: ['sh', 'bash', 'zsh'],
+  powershell: ['pwsh', 'powershell'],
+  docker: ['docker'],
+  kubernetes: ['kubectl', 'helm'],
+};
+
+const DEFAULT_LANGUAGE_EXECUTABLE_ALIASES: Record<string, string> = {
+  python: 'auto',
+  node: 'node',
+  javascript: 'node',
+  typescript: 'node',
+  java: 'java',
+  go: 'go',
+  rust: 'cargo',
+  dotnet: 'dotnet',
+  php: 'php',
+  ruby: 'ruby',
+  shell: process.platform === 'win32' ? 'bash' : 'sh',
+  powershell: process.platform === 'win32' ? 'powershell' : 'pwsh',
+  docker: 'docker',
+  kubernetes: 'kubectl',
+};
+
+type LanguageExecutableSetting = {
+  language?: string;
+  alias?: string;
+  path?: string;
+  executable?: string;
+  executablePath?: string;
+};
 
 function parseShellCommandExecutable(command: string): ParsedShellCommand | undefined {
   const leadingMatch = command.match(/^\s*/);
@@ -103,6 +144,11 @@ function normalizeExecutableKey(value?: string): string | undefined {
 
   const baseName = trimmed.split(/[\\/]/).pop() ?? trimmed;
   return baseName.replace(/\.(exe|cmd|bat|ps1|sh)$/i, '').toLowerCase();
+}
+
+function normalizeLanguageKey(value?: string): string | undefined {
+  const normalized = value?.trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '-');
+  return normalized || undefined;
 }
 
 function isPathLikeExecutable(value: string): boolean {
@@ -164,6 +210,166 @@ function getConfiguredExecutableAliases(): Record<string, string> {
   return aliases;
 }
 
+function readLanguageExecutableSetting(
+  language?: string,
+): LanguageExecutableSetting | undefined {
+  const languageKey = normalizeLanguageKey(language);
+  if (!languageKey) {
+    return undefined;
+  }
+
+  const configured = vscode.workspace
+    .getConfiguration('anfavorites.commands')
+    .get<unknown>('languageExecutables', []);
+
+  if (Array.isArray(configured)) {
+    const row = configured.find((item) => {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) {
+        return false;
+      }
+
+      const rowLanguage = (item as Record<string, unknown>).language;
+      return (
+        typeof rowLanguage === 'string' &&
+        normalizeLanguageKey(rowLanguage) === languageKey
+      );
+    }) as Record<string, unknown> | undefined;
+
+    if (row) {
+      return {
+        language: languageKey,
+        alias:
+          typeof row.alias === 'string'
+            ? row.alias
+            : typeof row.executable === 'string'
+              ? row.executable
+              : undefined,
+        path:
+          typeof row.path === 'string'
+            ? row.path
+            : typeof row.executablePath === 'string'
+              ? row.executablePath
+              : undefined,
+      };
+    }
+
+    const fallbackAlias = DEFAULT_LANGUAGE_EXECUTABLE_ALIASES[languageKey];
+    return fallbackAlias ? { language: languageKey, alias: fallbackAlias } : undefined;
+  }
+
+  if (!configured || typeof configured !== 'object') {
+    const fallbackAlias = DEFAULT_LANGUAGE_EXECUTABLE_ALIASES[languageKey];
+    return fallbackAlias ? { language: languageKey, alias: fallbackAlias } : undefined;
+  }
+
+  const value = (configured as Record<string, unknown>)[languageKey];
+
+  if (typeof value === 'string') {
+    return { language: languageKey, alias: value };
+  }
+
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    const fallbackAlias = DEFAULT_LANGUAGE_EXECUTABLE_ALIASES[languageKey];
+    return fallbackAlias ? { language: languageKey, alias: fallbackAlias } : undefined;
+  }
+
+  const record = value as Record<string, unknown>;
+  return {
+    language: languageKey,
+    alias:
+      typeof record.alias === 'string'
+        ? record.alias
+        : typeof record.executable === 'string'
+          ? record.executable
+          : undefined,
+    path:
+      typeof record.path === 'string'
+        ? record.path
+        : typeof record.executablePath === 'string'
+          ? record.executablePath
+          : undefined,
+  };
+}
+
+function hasExplicitLanguageExecutableSetting(language?: string): boolean {
+  const languageKey = normalizeLanguageKey(language);
+  if (!languageKey) {
+    return false;
+  }
+
+  const inspected = vscode.workspace
+    .getConfiguration('anfavorites.commands')
+    .inspect<unknown>('languageExecutables');
+  const configuredValues = [
+    inspected?.globalValue,
+    inspected?.workspaceValue,
+    inspected?.workspaceFolderValue,
+  ];
+
+  return configuredValues.some((value) => {
+    if (Array.isArray(value)) {
+      return value.some(
+        (item) =>
+          !!item &&
+          typeof item === 'object' &&
+          !Array.isArray(item) &&
+          normalizeLanguageKey(String((item as Record<string, unknown>).language ?? '')) ===
+            languageKey,
+      );
+    }
+
+    return (
+      !!value &&
+      typeof value === 'object' &&
+      Object.prototype.hasOwnProperty.call(value, languageKey)
+    );
+  });
+}
+
+function shouldApplyLanguageExecutable(
+  language: string | undefined,
+  executableKey: string,
+): boolean {
+  const languageKey = normalizeLanguageKey(language);
+  if (!languageKey) {
+    return false;
+  }
+
+  const executableKeys = DEFAULT_LANGUAGE_EXECUTABLE_KEYS[languageKey] ?? [languageKey];
+  return executableKeys.includes(executableKey);
+}
+
+function resolveConfiguredLanguageExecutable(
+  language: string | undefined,
+  executableKey: string,
+): string | undefined {
+  if (!shouldApplyLanguageExecutable(language, executableKey)) {
+    return undefined;
+  }
+
+  const languageKey = normalizeLanguageKey(language);
+  if (languageKey === 'python' && !hasExplicitLanguageExecutableSetting(languageKey)) {
+    return undefined;
+  }
+
+  const setting = readLanguageExecutableSetting(languageKey);
+  const alias = setting?.alias?.trim();
+
+  if (alias === 'custom') {
+    return setting?.path?.trim() || undefined;
+  }
+
+  if (alias === 'auto') {
+    if (languageKey === 'python') {
+      return process.platform === 'win32' ? 'py' : 'python3';
+    }
+
+    return DEFAULT_LANGUAGE_EXECUTABLE_ALIASES[languageKey ?? ''] ?? executableKey;
+  }
+
+  return alias || setting?.path?.trim() || undefined;
+}
+
 function resolveConfiguredPythonExecutable(executableKey: string): string | undefined {
   if (!PYTHON_EXECUTABLE_KEYS.has(executableKey)) {
     return undefined;
@@ -184,7 +390,7 @@ function resolveConfiguredPythonExecutable(executableKey: string): string | unde
   }
 }
 
-export function resolveCommandExecutable(command: string): string {
+export function resolveCommandExecutable(command: string, language?: string): string {
   const parsed = parseShellCommandExecutable(command);
   if (!parsed) {
     return command;
@@ -196,6 +402,7 @@ export function resolveCommandExecutable(command: string): string {
   }
 
   const replacement =
+    resolveConfiguredLanguageExecutable(language, executableKey) ??
     resolveConfiguredPythonExecutable(executableKey) ??
     getConfiguredExecutableAliases()[executableKey];
   if (!replacement) {
@@ -2809,7 +3016,7 @@ export class FavoritesTreeDataProvider
       `[commands] runCommand -> "${data.label}" background=${data.background} cwd=${resolvedCwd ?? '(none)'}`,
     );
 
-    const commandLine = resolveCommandExecutable(data.command);
+    const commandLine = resolveCommandExecutable(data.command, data.language);
 
     if (data.background) {
       const task = new vscode.Task(

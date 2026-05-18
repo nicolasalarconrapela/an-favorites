@@ -1237,6 +1237,7 @@ async function promptOpenSourceTemplate(
 async function runPreviewStep(
   title: string,
   command: string,
+  language: string,
   cwd: string | undefined,
   background: boolean,
 ): Promise<PreviewResult | Back> {
@@ -1349,7 +1350,7 @@ async function runPreviewStep(
             name: t('Test Command'),
             cwd: resolvedCwd,
           });
-          terminal.sendText(resolveCommandExecutable(val));
+          terminal.sendText(resolveCommandExecutable(val, language));
           terminal.show();
           return;
         }
@@ -1496,6 +1497,7 @@ async function promptCommandFlow(
             TOTAL,
           ),
           stepCommand,
+          stepLanguage,
           cwd,
           stepBackground,
         );
