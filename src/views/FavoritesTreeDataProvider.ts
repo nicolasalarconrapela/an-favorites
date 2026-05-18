@@ -6,6 +6,7 @@ import { applyCollisionLabels } from '../utils/collisionUtils';
 import { isExcludedPath } from '../utils/exclusionUtils';
 import { runWithConcurrency } from '../utils/concurrency';
 import { t } from '../utils/l10n';
+import { resolveCommandExecutable as resolveRuntimeCommandExecutable } from '../services/runtimeManagerService';
 import {
   CommandTemplateCategoryItem,
   CommandTemplateGroupItem,
@@ -391,25 +392,7 @@ function resolveConfiguredPythonExecutable(executableKey: string): string | unde
 }
 
 export function resolveCommandExecutable(command: string, language?: string): string {
-  const parsed = parseShellCommandExecutable(command);
-  if (!parsed) {
-    return command;
-  }
-
-  const executableKey = normalizeExecutableKey(parsed.executable);
-  if (!executableKey) {
-    return command;
-  }
-
-  const replacement =
-    resolveConfiguredLanguageExecutable(language, executableKey) ??
-    resolveConfiguredPythonExecutable(executableKey) ??
-    getConfiguredExecutableAliases()[executableKey];
-  if (!replacement) {
-    return command;
-  }
-
-  return `${parsed.leading}${formatExecutableReplacement(replacement)}${parsed.rest}`;
+  return resolveRuntimeCommandExecutable(command, language);
 }
 
 function getDefaultWorkspacePath(): string {
@@ -807,6 +790,20 @@ export class CommandLanguageItem extends vscode.TreeItem {
   }
 }
 
+export class CommandCenterItem extends vscode.TreeItem {
+  constructor() {
+    super('Command Center', vscode.TreeItemCollapsibleState.None);
+    this.id = 'command-center';
+    this.contextValue = 'commandCenterItem';
+    this.iconPath = new vscode.ThemeIcon('settings-gear');
+    this.command = {
+      command: 'anfavorites.openCommandCenter',
+      title: 'Open Command Center',
+    };
+    this.tooltip = 'Configure command runtimes';
+  }
+}
+
 export class GroupItem extends vscode.TreeItem {
   constructor(
     public readonly groupName: string,
@@ -916,6 +913,7 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
+      | CommandCenterItem
       | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
@@ -928,6 +926,7 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
+      | CommandCenterItem
       | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
@@ -945,6 +944,7 @@ export class FavoritesTreeDataProvider
     globals: new CommandSectionItem('globals'),
     opensource: new CommandSectionItem('opensource'),
   } as const;
+  private readonly commandCenterItem = new CommandCenterItem();
 
   private readonly disposables: vscode.Disposable[] = [];
   private _onDidChangeTreeData: vscode.EventEmitter<
@@ -952,6 +952,7 @@ export class FavoritesTreeDataProvider
     | FavoriteItem
     | WorkspaceItem
     | CommandItem
+    | CommandCenterItem
     | CommandSectionItem
     | CommandScopeItem
     | CommandLanguageItem
@@ -966,6 +967,7 @@ export class FavoritesTreeDataProvider
     | FavoriteItem
     | WorkspaceItem
     | CommandItem
+    | CommandCenterItem
     | CommandSectionItem
     | CommandScopeItem
     | CommandLanguageItem
@@ -982,6 +984,7 @@ export class FavoritesTreeDataProvider
     | FavoriteItem
     | WorkspaceItem
     | CommandItem
+    | CommandCenterItem
     | CommandSectionItem
     | CommandScopeItem
     | CommandLanguageItem
@@ -1217,6 +1220,7 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
+      | CommandCenterItem
       | CommandSectionItem
       | CommandScopeItem
       | CommandTemplateGroupItem
@@ -1261,6 +1265,7 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
+      | CommandCenterItem
       | CommandSectionItem
       | CommandScopeItem
       | CommandTemplateCategoryItem
@@ -1342,6 +1347,7 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
+      | CommandCenterItem
       | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
@@ -1358,6 +1364,7 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
+      | CommandCenterItem
       | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
@@ -1518,6 +1525,7 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
+      | CommandCenterItem
       | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
@@ -1529,6 +1537,7 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
+      | CommandCenterItem
       | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
@@ -1541,9 +1550,7 @@ export class FavoritesTreeDataProvider
     if (!element) {
       const rootItems: (GroupItem | CommandSectionItem)[] = [];
       rootItems.push(this.commandSectionItems.favorites);
-      if (this.getCommands().length > 0) {
-        rootItems.push(this.commandSectionItems.commands);
-      }
+      rootItems.push(this.commandSectionItems.commands);
       return Promise.resolve(rootItems);
     }
 
@@ -1572,10 +1579,12 @@ export class FavoritesTreeDataProvider
           }
         }
         const sections: (
+          | CommandCenterItem
           | CommandSectionItem
           | CommandLanguageItem
           | CommandTemplateGroupItem
         )[] = [];
+        sections.push(this.commandCenterItem);
         if (this.localCommands.length > 0) {
           sections.push(this.commandSectionItems.personalized);
         }
@@ -3016,7 +3025,7 @@ export class FavoritesTreeDataProvider
       `[commands] runCommand -> "${data.label}" background=${data.background} cwd=${resolvedCwd ?? '(none)'}`,
     );
 
-    const commandLine = resolveCommandExecutable(data.command, data.language);
+    const commandLine = resolveRuntimeCommandExecutable(data.command, data.language);
 
     if (data.background) {
       const task = new vscode.Task(

@@ -5,10 +5,10 @@ import {
   FavoritesTreeDataProvider,
   CommandItem,
   CommandSectionItem,
-  resolveCommandExecutable,
   resolveWorkspaceCwd,
 } from '../views/FavoritesTreeDataProvider';
 import { t } from '../utils/l10n';
+import { resolveCommandExecutable } from '../services/runtimeManagerService';
 
 // Directories excluded from the directory picker
 const EXCLUDED_DIRS = new Set([
@@ -1418,7 +1418,7 @@ async function promptCommandFlow(
   let stepScope: 'local' | 'global' = FIXED_SCOPE ?? existing?.scope ?? 'local';
   const stepLanguage = existing?.language ?? 'generic';
   const stepTemplateSourceId = existing?.templateSourceId;
-  let stepCommand = existing?.command ?? '';
+  const stepCommand = existing?.command ?? '';
   let stepCwd: string | null = existing?.cwd ?? null;
   let stepBackground = existing?.background ?? false;
 

@@ -19,6 +19,8 @@ import { FavoritesTreeDataProvider } from '../views/FavoritesTreeDataProvider';
 import { registerCommandFavoritesCommands } from '../commands/commandFavoritesCommands';
 import { MRUService } from '../services/mruService';
 import { SharedStorageService } from '../services/sharedStorageService';
+import { RuntimeManagerService } from '../services/runtimeManagerService';
+import { CommandCenterPanel } from '../panels/CommandCenterPanel';
 import {
   disposeCollisionIndex,
   invalidateCollisionIndex,
@@ -63,6 +65,7 @@ export function activate(context: vscode.ExtensionContext): void {
   logger.debug('━━━ Extension activation started ━━━');
 
   const sharedStorage = new SharedStorageService(context, logger);
+  const runtimeManager = new RuntimeManagerService();
   const telemetry = new TelemetryService();
   const mruService = new MRUService(context, logger);
   activationTrace.step('servicios base creados');
@@ -200,6 +203,12 @@ export function activate(context: vscode.ExtensionContext): void {
 
   registerCommandFavoritesCommands(context, favoritesProvider, logger);
   logger.debug('[activate] commandFavorites commands registered.');
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('anfavorites.openCommandCenter', () => {
+      CommandCenterPanel.open(context, runtimeManager);
+    }),
+  );
 
   // Register Get Started command
   context.subscriptions.push(
