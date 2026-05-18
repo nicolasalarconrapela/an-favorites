@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import {
+  CustomRuntimeInput,
   RuntimeId,
   RuntimeManagerService,
   RuntimePreference,
@@ -12,6 +13,8 @@ type WebviewMessage =
       runtimeId: RuntimeId;
       preference: RuntimePreference;
     }
+  | { type: 'addCustomRuntime'; runtime: CustomRuntimeInput }
+  | { type: 'removeCustomRuntime'; runtimeId: RuntimeId }
   | { type: 'resetRuntime'; runtimeId: RuntimeId }
   | { type: 'testRuntime'; runtimeId: RuntimeId };
 
@@ -74,6 +77,18 @@ export class CommandCenterPanel {
         );
         this.postState();
         return;
+      case 'addCustomRuntime':
+        try {
+          await this.runtimeManager.addCustomRuntime(message.runtime);
+          this.postState();
+        } catch (error) {
+          await vscode.window.showErrorMessage(String(error));
+        }
+        return;
+      case 'removeCustomRuntime':
+        await this.runtimeManager.removeCustomRuntime(message.runtimeId);
+        this.postState();
+        return;
       case 'resetRuntime':
         await this.runtimeManager.resetRuntime(message.runtimeId);
         this.postState();
@@ -129,6 +144,12 @@ export class CommandCenterPanel {
 
     header {
       margin-bottom: 20px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: flex-start;
+      margin-bottom: 12px;
     }
 
     h1 {
@@ -225,6 +246,25 @@ export class CommandCenterPanel {
       margin-bottom: 12px;
     }
 
+    .runtime-form {
+      display: none;
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 6px;
+      background: var(--vscode-sideBar-background);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .runtime-form.open {
+      display: block;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
     .actions {
       display: flex;
       gap: 8px;
@@ -266,6 +306,41 @@ export class CommandCenterPanel {
       <h1>Runtime Manager</h1>
       <p class="subtitle">Choose the command AnFavorites sends to the terminal for each runtime.</p>
     </header>
+    <div class="toolbar">
+      <button id="addRuntimeButton" type="button">Add Runtime</button>
+    </div>
+    <section id="runtimeForm" class="runtime-form" aria-label="Add custom runtime">
+      <div class="form-grid">
+        <div class="field">
+          <label for="runtimeId">Runtime id</label>
+          <input id="runtimeId" type="text" placeholder="java">
+        </div>
+        <div class="field">
+          <label for="runtimeLabel">Name</label>
+          <input id="runtimeLabel" type="text" placeholder="Java">
+        </div>
+        <div class="field">
+          <label for="runtimeAliases">Aliases</label>
+          <input id="runtimeAliases" type="text" placeholder="java, exec">
+        </div>
+        <div class="field">
+          <label for="runtimeDefault">Default command</label>
+          <input id="runtimeDefault" type="text" placeholder="java">
+        </div>
+        <div class="field">
+          <label for="runtimeTest">Test argument</label>
+          <input id="runtimeTest" type="text" placeholder="-version">
+        </div>
+        <div class="field">
+          <label for="runtimeLanguages">Language keys</label>
+          <input id="runtimeLanguages" type="text" placeholder="java">
+        </div>
+      </div>
+      <div class="actions">
+        <button id="saveRuntimeButton" type="button">Save Runtime</button>
+        <button id="cancelRuntimeButton" class="secondary" type="button">Cancel</button>
+      </div>
+    </section>
     <section id="runtimeGrid" class="grid" aria-live="polite">
       <p class="empty">Loading runtimes...</p>
     </section>
@@ -274,6 +349,48 @@ export class CommandCenterPanel {
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
     const grid = document.getElementById('runtimeGrid');
+    const addRuntimeButton = document.getElementById('addRuntimeButton');
+    const runtimeForm = document.getElementById('runtimeForm');
+    const saveRuntimeButton = document.getElementById('saveRuntimeButton');
+    const cancelRuntimeButton = document.getElementById('cancelRuntimeButton');
+    const runtimeIdInput = document.getElementById('runtimeId');
+    const runtimeLabelInput = document.getElementById('runtimeLabel');
+    const runtimeAliasesInput = document.getElementById('runtimeAliases');
+    const runtimeDefaultInput = document.getElementById('runtimeDefault');
+    const runtimeTestInput = document.getElementById('runtimeTest');
+    const runtimeLanguagesInput = document.getElementById('runtimeLanguages');
+
+    addRuntimeButton.addEventListener('click', () => {
+      runtimeForm.classList.add('open');
+      runtimeIdInput.focus();
+    });
+
+    cancelRuntimeButton.addEventListener('click', () => {
+      clearRuntimeForm();
+      runtimeForm.classList.remove('open');
+    });
+
+    saveRuntimeButton.addEventListener('click', () => {
+      const id = runtimeIdInput.value.trim();
+      const aliases = runtimeAliasesInput.value.trim();
+      if (!id || !aliases) {
+        return;
+      }
+
+      vscode.postMessage({
+        type: 'addCustomRuntime',
+        runtime: {
+          id,
+          label: runtimeLabelInput.value.trim(),
+          aliases,
+          defaultCommand: runtimeDefaultInput.value.trim(),
+          testArgument: runtimeTestInput.value.trim(),
+          languageKeys: runtimeLanguagesInput.value.trim(),
+        },
+      });
+      clearRuntimeForm();
+      runtimeForm.classList.remove('open');
+    });
 
     window.addEventListener('message', (event) => {
       if (event.data?.type === 'state') {
@@ -321,10 +438,12 @@ export class CommandCenterPanel {
         item.textContent = option.label;
         select.appendChild(item);
       }
-      const customOption = document.createElement('option');
-      customOption.value = 'custom';
-      customOption.textContent = 'Custom path or command';
-      select.appendChild(customOption);
+      if (runtime.allowCustomCommand) {
+        const customOption = document.createElement('option');
+        customOption.value = 'custom';
+        customOption.textContent = 'Custom path or command';
+        select.appendChild(customOption);
+      }
       select.value = runtime.selectedCommand;
       commandField.append(commandLabel, select);
 
@@ -338,9 +457,13 @@ export class CommandCenterPanel {
       input.placeholder = placeholderFor(runtime.id);
       input.disabled = select.value !== 'custom';
       customField.append(customLabel, input);
+      customField.style.display =
+        runtime.allowCustomCommand && select.value === 'custom' ? '' : 'none';
 
       select.addEventListener('change', () => {
         input.disabled = select.value !== 'custom';
+        customField.style.display =
+          runtime.allowCustomCommand && select.value === 'custom' ? '' : 'none';
         save(runtime.id, select.value, input.value);
       });
       let inputSaveTimer;
@@ -369,6 +492,18 @@ export class CommandCenterPanel {
         vscode.postMessage({ type: 'resetRuntime', runtimeId: runtime.id });
       });
       actions.append(testButton, resetButton);
+      if (!runtime.readonly) {
+        const removeButton = document.createElement('button');
+        removeButton.className = 'secondary';
+        removeButton.textContent = 'Remove';
+        removeButton.addEventListener('click', () => {
+          vscode.postMessage({
+            type: 'removeCustomRuntime',
+            runtimeId: runtime.id,
+          });
+        });
+        actions.append(removeButton);
+      }
 
       card.append(header, commandField, customField, actions);
       return card;
@@ -395,6 +530,15 @@ export class CommandCenterPanel {
       if (runtimeId === 'maven') return './mvnw';
       if (runtimeId === 'gradle') return './gradlew';
       return 'Command or executable path';
+    }
+
+    function clearRuntimeForm() {
+      runtimeIdInput.value = '';
+      runtimeLabelInput.value = '';
+      runtimeAliasesInput.value = '';
+      runtimeDefaultInput.value = '';
+      runtimeTestInput.value = '';
+      runtimeLanguagesInput.value = '';
     }
 
     vscode.postMessage({ type: 'ready' });

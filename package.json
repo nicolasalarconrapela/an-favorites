@@ -2,7 +2,7 @@
   "name": "an-favorites",
   "displayName": "AnFavorites",
   "description": "Application for managing favorites",
-  "version": "1.3.44",
+  "version": "1.3.45",
   "publisher": "AnAppWilos",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -692,6 +692,77 @@
           "anfavorites.commands.commandCenter": {
             "scope": "application",
             "markdownDescription": "%config.commands.commandCenter.description%"
+          },
+          "anfavorites.commands.runtimes": {
+            "type": "object",
+            "default": {},
+            "scope": "application",
+            "description": "%config.commands.runtimes.description%"
+          },
+          "anfavorites.commands.customRuntimes": {
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "label",
+                "aliases",
+                "defaultCommand"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "aliases": {
+                  "type": "string"
+                },
+                "defaultCommand": {
+                  "type": "string"
+                },
+                "testArgument": {
+                  "type": "string"
+                },
+                "languageKeys": {
+                  "type": "string"
+                }
+              }
+            },
+            "scope": "application",
+            "description": "%config.commands.customRuntimes.description%"
+          },
+          "anfavorites.commands.aliases.python": {
+            "type": "string",
+            "default": "py, python, py3, python3, exec",
+            "scope": "application",
+            "description": "%config.commands.aliases.python.description%"
+          },
+          "anfavorites.commands.aliases.node": {
+            "type": "string",
+            "default": "node, nodejs, exec",
+            "scope": "application",
+            "description": "%config.commands.aliases.node.description%"
+          },
+          "anfavorites.commands.aliases.java": {
+            "type": "string",
+            "default": "java, exec",
+            "scope": "application",
+            "description": "%config.commands.aliases.java.description%"
+          },
+          "anfavorites.commands.aliases.maven": {
+            "type": "string",
+            "default": "mvn, mvnw, exec",
+            "scope": "application",
+            "description": "%config.commands.aliases.maven.description%"
+          },
+          "anfavorites.commands.aliases.gradle": {
+            "type": "string",
+            "default": "gradle, gradlew, exec",
+            "scope": "application",
+            "description": "%config.commands.aliases.gradle.description%"
           }
         }
       },

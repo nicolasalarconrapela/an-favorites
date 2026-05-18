@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-export type RuntimeId = 'python' | 'node' | 'java' | 'maven' | 'gradle';
+export type RuntimeId = string;
 
 export type RuntimeStatus = 'default' | 'custom' | 'incomplete';
 
@@ -18,6 +18,25 @@ export interface RuntimeDefinition {
   testArgument: string;
   executableKeys: string[];
   languageKeys: string[];
+  readonly?: boolean;
+}
+
+export interface CustomRuntimeInput {
+  id: string;
+  label: string;
+  aliases: string;
+  defaultCommand: string;
+  testArgument: string;
+  languageKeys: string;
+}
+
+export interface CustomRuntimeSetting {
+  id?: string;
+  label?: string;
+  aliases?: string[] | string;
+  defaultCommand?: string;
+  testArgument?: string;
+  languageKeys?: string[] | string;
 }
 
 export interface RuntimePreference {
@@ -25,10 +44,18 @@ export interface RuntimePreference {
   customCommand?: string;
 }
 
+export interface RuntimeAliasesSetting {
+  language?: string;
+  runtime?: string;
+  aliases?: string[] | string;
+  types?: string[] | string;
+}
+
 export interface RuntimeState extends RuntimeDefinition {
   selectedCommand: string;
   customCommand: string;
   activeCommand: string;
+  allowCustomCommand: boolean;
   status: RuntimeStatus;
 }
 
@@ -47,7 +74,10 @@ type LanguageExecutableSetting = {
 };
 
 const RUNTIMES_CONFIG_KEY = 'runtimes';
+const RUNTIME_ALIASES_CONFIG_KEY = 'runtimeAliases';
+const CUSTOM_RUNTIMES_CONFIG_KEY = 'customRuntimes';
 const CUSTOM_COMMAND = 'custom';
+const EXEC_ALIAS = 'exec';
 
 export const RUNTIME_DEFINITIONS: RuntimeDefinition[] = [
   {
@@ -151,16 +181,21 @@ const DEFAULT_LANGUAGE_EXECUTABLE_KEYS: Record<string, string[]> = {
 
 export class RuntimeManagerService {
   getRuntimeStates(): RuntimeState[] {
-    return RUNTIME_DEFINITIONS.map((definition) =>
+    return this.getRuntimeDefinitions().map((definition) =>
       this.getRuntimeState(definition.id),
     );
   }
 
   getRuntimeState(runtimeId: RuntimeId): RuntimeState {
-    const definition = getRuntimeDefinition(runtimeId);
+    const definition = this.getRuntimeDefinition(runtimeId);
     const preference = this.getRuntimePreference(runtimeId);
     const selectedCommand = preference.command?.trim() || definition.defaultCommand;
     const customCommand = preference.customCommand?.trim() ?? '';
+    const configuredAliases = this.getConfiguredRuntimeAliases(runtimeId);
+    const allowCustomCommand =
+      selectedCommand === CUSTOM_COMMAND ||
+      configuredAliases.length === 0 ||
+      configuredAliases.some((alias) => isCustomAlias(alias));
     const activeCommand =
       selectedCommand === CUSTOM_COMMAND ? customCommand : selectedCommand;
     const status: RuntimeStatus =
@@ -177,6 +212,7 @@ export class RuntimeManagerService {
       selectedCommand,
       customCommand,
       activeCommand,
+      allowCustomCommand,
       status,
     };
   }
@@ -185,8 +221,10 @@ export class RuntimeManagerService {
     runtimeId: RuntimeId,
     preference: RuntimePreference,
   ): Promise<void> {
-    const definition = getRuntimeDefinition(runtimeId);
-    const selectedCommand = preference.command?.trim() || definition.defaultCommand;
+    const definition = this.getRuntimeDefinition(runtimeId);
+    const selectedCommand = normalizeRuntimeCommand(
+      preference.command?.trim() || definition.defaultCommand,
+    );
     const customCommand = preference.customCommand?.trim() ?? '';
     const runtimes = this.getConfiguredRuntimes();
 
@@ -202,6 +240,47 @@ export class RuntimeManagerService {
     const runtimes = this.getConfiguredRuntimes();
     delete runtimes[runtimeId];
     await this.updateRuntimes(runtimes);
+  }
+
+  async addCustomRuntime(input: CustomRuntimeInput): Promise<void> {
+    const id = normalizeCustomRuntimeId(input.id);
+    if (!id) {
+      throw new Error('Runtime id is required.');
+    }
+
+    if (RUNTIME_DEFINITIONS.some((definition) => definition.id === id)) {
+      throw new Error(`Runtime "${id}" already exists.`);
+    }
+
+    const aliases = uniqueAliases(parseRuntimeAliases(input.aliases));
+    const defaultCommand =
+      input.defaultCommand.trim() ||
+      aliases.find((alias) => !isCustomAlias(alias)) ||
+      id;
+    const runtime: CustomRuntimeSetting = {
+      id,
+      label: input.label.trim() || id,
+      aliases: aliases.join(', '),
+      defaultCommand,
+      testArgument: input.testArgument.trim() || '--version',
+      languageKeys:
+        uniqueAliases(parseRuntimeAliases(input.languageKeys)).join(', ') || id,
+    };
+    const customRuntimes = this.getConfiguredCustomRuntimeSettings().filter(
+      (item) => normalizeCustomRuntimeId(item.id) !== id,
+    );
+    customRuntimes.push(runtime);
+    await this.updateCustomRuntimes(customRuntimes);
+  }
+
+  async removeCustomRuntime(runtimeId: RuntimeId): Promise<void> {
+    const customRuntimes = this.getConfiguredCustomRuntimeSettings().filter(
+      (item) => normalizeCustomRuntimeId(item.id) !== runtimeId,
+    );
+    await Promise.all([
+      this.updateCustomRuntimes(customRuntimes),
+      this.resetRuntime(runtimeId),
+    ]);
   }
 
   testRuntime(runtimeId: RuntimeId): void {
@@ -254,8 +333,8 @@ export class RuntimeManagerService {
     language: string | undefined,
     executableKey: string,
   ): string | undefined {
-    const runtime = RUNTIME_DEFINITIONS.find((definition) => {
-      if (!definition.executableKeys.includes(executableKey)) {
+    const runtime = this.getRuntimeDefinitions().find((definition) => {
+      if (!this.getRuntimeExecutableKeys(definition.id).includes(executableKey)) {
         return false;
       }
 
@@ -275,7 +354,9 @@ export class RuntimeManagerService {
       !!inspected?.workspaceValue?.[runtime.id] ||
       !!inspected?.workspaceFolderValue?.[runtime.id];
 
-    return hasExplicitRuntime ? this.getRuntimeState(runtime.id).activeCommand : undefined;
+    return hasExplicitRuntime || !runtime.readonly
+      ? this.getRuntimeState(runtime.id).activeCommand
+      : undefined;
   }
 
   private resolveConfiguredLanguageExecutable(
@@ -287,13 +368,20 @@ export class RuntimeManagerService {
       return undefined;
     }
 
-    const executableKeys = DEFAULT_LANGUAGE_EXECUTABLE_KEYS[languageKey] ?? [languageKey];
+    const executableKeys = uniqueAliases([
+      ...(DEFAULT_LANGUAGE_EXECUTABLE_KEYS[languageKey] ?? [languageKey]),
+      ...this.getRuntimeDefinitions().flatMap((definition) =>
+        definition.languageKeys.includes(languageKey)
+          ? this.getRuntimeExecutableKeys(definition.id)
+          : [],
+      ),
+    ]);
     if (!executableKeys.includes(executableKey)) {
       return undefined;
     }
 
-    const runtime = RUNTIME_DEFINITIONS.find((definition) =>
-      definition.executableKeys.includes(executableKey),
+    const runtime = this.getRuntimeDefinitions().find((definition) =>
+      this.getRuntimeExecutableKeys(definition.id).includes(executableKey),
     );
     if (!runtime) {
       return undefined;
@@ -320,7 +408,7 @@ export class RuntimeManagerService {
   private resolveConfiguredPythonExecutable(
     executableKey: string,
   ): string | undefined {
-    if (!getRuntimeDefinition('python').executableKeys.includes(executableKey)) {
+    if (!this.getRuntimeExecutableKeys('python').includes(executableKey)) {
       return undefined;
     }
 
@@ -335,7 +423,7 @@ export class RuntimeManagerService {
         return customPath || undefined;
       }
       case 'auto':
-        return getRuntimeDefinition('python').defaultCommand;
+        return this.getRuntimeDefinition('python').defaultCommand;
       default:
         return configured || undefined;
     }
@@ -343,6 +431,125 @@ export class RuntimeManagerService {
 
   private getRuntimePreference(runtimeId: RuntimeId): RuntimePreference {
     return this.getConfiguredRuntimes()[runtimeId] ?? {};
+  }
+
+  private getRuntimeDefinition(runtimeId: RuntimeId): RuntimeDefinition {
+    const baseDefinition = this.getBaseRuntimeDefinition(runtimeId);
+    const configuredOptions = this.getConfiguredRuntimeOptions(baseDefinition);
+
+    return {
+      ...baseDefinition,
+      options: configuredOptions,
+      executableKeys: this.getRuntimeExecutableKeys(runtimeId),
+    };
+  }
+
+  private getConfiguredRuntimeOptions(
+    definition: RuntimeDefinition,
+  ): RuntimeOption[] {
+    const configuredAliases = this.getConfiguredRuntimeAliases(definition.id);
+    const sourceAliases =
+      configuredAliases.length > 0
+        ? configuredAliases
+        : definition.options.map((option) => option.command);
+    const options = uniqueAliases(sourceAliases)
+      .filter((alias) => !isCustomAlias(alias))
+      .map((alias) => ({ label: alias, command: alias }));
+    const preference = this.getRuntimePreference(definition.id);
+    const selectedCommand = normalizeRuntimeCommand(preference.command);
+
+    if (
+      selectedCommand &&
+      selectedCommand !== CUSTOM_COMMAND &&
+      !options.some((option) => option.command === selectedCommand)
+    ) {
+      options.push({ label: selectedCommand, command: selectedCommand });
+    }
+
+    return options.length > 0 ? options : definition.options;
+  }
+
+  private getRuntimeExecutableKeys(runtimeId: RuntimeId): string[] {
+    const definition = this.getBaseRuntimeDefinition(runtimeId);
+    return uniqueAliases([
+      ...definition.executableKeys,
+      ...this.getConfiguredRuntimeAliases(runtimeId),
+    ]).filter((alias) => !isCustomAlias(alias));
+  }
+
+  private getConfiguredRuntimeAliases(runtimeId: RuntimeId): string[] {
+    const visualAliases = this.getConfiguredVisualRuntimeAliases(runtimeId);
+    if (visualAliases.length > 0) {
+      return visualAliases;
+    }
+
+    const configured = vscode.workspace
+      .getConfiguration('anfavorites.commands')
+      .get<RuntimeAliasesSetting[]>(RUNTIME_ALIASES_CONFIG_KEY, []);
+
+    if (!Array.isArray(configured)) {
+      return [];
+    }
+
+    const aliases: string[] = [];
+    for (const row of configured) {
+      if (!row || typeof row !== 'object') {
+        continue;
+      }
+
+      const rowRuntime = normalizeCustomRuntimeId(row.runtime ?? row.language);
+      if (rowRuntime !== runtimeId) {
+        continue;
+      }
+
+      const rowAliases = parseRuntimeAliases(row.aliases ?? row.types);
+      aliases.push(...rowAliases);
+    }
+
+    return uniqueAliases(aliases);
+  }
+
+  private getConfiguredVisualRuntimeAliases(runtimeId: RuntimeId): string[] {
+    const configured = vscode.workspace
+      .getConfiguration('anfavorites.commands.aliases')
+      .get<string>(runtimeId, '');
+
+    return uniqueAliases(parseRuntimeAliases(configured));
+  }
+
+  private getRuntimeDefinitions(): RuntimeDefinition[] {
+    return [
+      ...RUNTIME_DEFINITIONS.map((definition) => ({
+        ...definition,
+        readonly: true,
+      })),
+      ...this.getConfiguredCustomRuntimeDefinitions(),
+    ];
+  }
+
+  private getBaseRuntimeDefinition(runtimeId: RuntimeId): RuntimeDefinition {
+    const definition = this.getRuntimeDefinitions().find(
+      (item) => item.id === runtimeId,
+    );
+    if (!definition) {
+      throw new Error(`Unknown runtime: ${runtimeId}`);
+    }
+
+    return definition;
+  }
+
+  private getConfiguredCustomRuntimeDefinitions(): RuntimeDefinition[] {
+    return this.getConfiguredCustomRuntimeSettings()
+      .map((runtime) => normalizeCustomRuntime(runtime))
+      .filter((runtime): runtime is RuntimeDefinition => !!runtime);
+  }
+
+  private getConfiguredCustomRuntimeSettings(): CustomRuntimeSetting[] {
+    const configured = vscode.workspace
+      .getConfiguration('anfavorites.commands')
+      .get<CustomRuntimeSetting[]>(CUSTOM_RUNTIMES_CONFIG_KEY, []);
+
+    return Array.isArray(configured) ? configured : [];
   }
 
   private getConfiguredRuntimes(): Record<string, RuntimePreference> {
@@ -360,21 +567,40 @@ export class RuntimeManagerService {
       .getConfiguration('anfavorites.commands')
       .update(RUNTIMES_CONFIG_KEY, runtimes, getRuntimeConfigurationTarget());
   }
-}
 
-function getRuntimeDefinition(runtimeId: RuntimeId): RuntimeDefinition {
-  const definition = RUNTIME_DEFINITIONS.find((item) => item.id === runtimeId);
-  if (!definition) {
-    throw new Error(`Unknown runtime: ${runtimeId}`);
+  private async updateCustomRuntimes(
+    runtimes: CustomRuntimeSetting[],
+  ): Promise<void> {
+    await vscode.workspace
+      .getConfiguration('anfavorites.commands')
+      .update(
+        CUSTOM_RUNTIMES_CONFIG_KEY,
+        runtimes,
+        getCustomRuntimeConfigurationTarget(),
+      );
   }
-
-  return definition;
 }
 
 function getRuntimeConfigurationTarget(): vscode.ConfigurationTarget {
   const inspected = vscode.workspace
     .getConfiguration('anfavorites.commands')
     .inspect<Record<string, RuntimePreference>>(RUNTIMES_CONFIG_KEY);
+
+  if (inspected?.workspaceFolderValue !== undefined) {
+    return vscode.ConfigurationTarget.WorkspaceFolder;
+  }
+
+  if (inspected?.workspaceValue !== undefined) {
+    return vscode.ConfigurationTarget.Workspace;
+  }
+
+  return vscode.ConfigurationTarget.Global;
+}
+
+function getCustomRuntimeConfigurationTarget(): vscode.ConfigurationTarget {
+  const inspected = vscode.workspace
+    .getConfiguration('anfavorites.commands')
+    .inspect<CustomRuntimeSetting[]>(CUSTOM_RUNTIMES_CONFIG_KEY);
 
   if (inspected?.workspaceFolderValue !== undefined) {
     return vscode.ConfigurationTarget.WorkspaceFolder;
@@ -606,6 +832,88 @@ function hasExplicitLanguageExecutableSetting(language?: string): boolean {
       Object.prototype.hasOwnProperty.call(value, languageKey)
     );
   });
+}
+
+function normalizeCustomRuntime(
+  runtime: CustomRuntimeSetting,
+): RuntimeDefinition | undefined {
+  const id = normalizeCustomRuntimeId(runtime.id);
+  if (!id) {
+    return undefined;
+  }
+
+  const aliases = uniqueAliases(parseRuntimeAliases(runtime.aliases));
+  const defaultCommand =
+    runtime.defaultCommand?.trim() ||
+    aliases.find((alias) => !isCustomAlias(alias)) ||
+    id;
+  const executableKeys = uniqueAliases([defaultCommand, ...aliases]).filter(
+    (alias) => !isCustomAlias(alias),
+  );
+
+  return {
+    id,
+    label: runtime.label?.trim() || id,
+    defaultCommand,
+    options: executableKeys.map((alias) => ({ label: alias, command: alias })),
+    testArgument: runtime.testArgument?.trim() || '--version',
+    executableKeys,
+    languageKeys:
+      uniqueAliases(parseRuntimeAliases(runtime.languageKeys)).length > 0
+        ? uniqueAliases(parseRuntimeAliases(runtime.languageKeys))
+        : [id],
+    readonly: false,
+  };
+}
+
+function normalizeCustomRuntimeId(value?: string): RuntimeId | undefined {
+  return value?.trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-|-$/g, '') || undefined;
+}
+
+function normalizeRuntimeCommand(value?: string): string {
+  const normalized = value?.trim();
+  if (!normalized) {
+    return '';
+  }
+
+  return isCustomAlias(normalized) ? CUSTOM_COMMAND : normalized;
+}
+
+function isCustomAlias(value: string): boolean {
+  const normalized = value.trim().toLowerCase();
+  return normalized === CUSTOM_COMMAND || normalized === EXEC_ALIAS;
+}
+
+function uniqueAliases(values: string[]): string[] {
+  const seen = new Set<string>();
+  const aliases: string[] = [];
+
+  for (const value of values) {
+    const normalized = normalizeRuntimeCommand(value);
+    if (!normalized || seen.has(normalized)) {
+      continue;
+    }
+
+    seen.add(normalized);
+    aliases.push(normalized);
+  }
+
+  return aliases;
+}
+
+function parseRuntimeAliases(value: string[] | string | undefined): string[] {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value !== 'string') {
+    return [];
+  }
+
+  return value
+    .split(',')
+    .map((alias) => alias.trim())
+    .filter(Boolean);
 }
 
 const runtimeManagerService = new RuntimeManagerService();
