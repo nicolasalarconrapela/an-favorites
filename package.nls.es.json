@@ -43,7 +43,7 @@
   "config.search.title": "Búsqueda",
   "config.commands.title": "Command",
   "config.quickOpen.title": "Quick Open",
-  "config.commands.runtimes.description": "Preferencias de comandos de runtime gestionadas desde AnFavorites Command Center.",
+  "config.commands.commandCenter.description": "Configura los runtimes de comandos desde el panel dedicado de AnFavorites.\n\n[Abrir Command Center](command:anfavorites.openCommandCenter)",
   "config.commands.templateIconAliases.description": "Mapa de alias usado para resolver iconos de comandos template. Claves como `py` pueden apuntar a iconos empaquetados como `python`.",
   "config.commands.languageExecutables.description": "Filas de configuración de ejecutables. Cada fila tiene un lenguaje de comando, un alias seleccionado desde el desplegable y una ruta opcional al .exe usada cuando el alias es `custom`.",
   "config.commands.languageExecutables.row.title": "Ejecutable por lenguaje",
