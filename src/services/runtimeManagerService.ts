@@ -56,6 +56,8 @@ export interface RuntimeState extends RuntimeDefinition {
   customCommand: string;
   activeCommand: string;
   allowCustomCommand: boolean;
+  enabled: boolean;
+  disabledReason?: string;
   status: RuntimeStatus;
 }
 
@@ -104,7 +106,7 @@ export const RUNTIME_DEFINITIONS: RuntimeDefinition[] = [
     ],
     testArgument: '--version',
     executableKeys: ['node', 'nodejs'],
-    languageKeys: ['node', 'javascript', 'typescript'],
+    languageKeys: ['node', 'javascript', 'typescript', 'angular'],
   },
   {
     id: 'java',
@@ -180,13 +182,16 @@ const DEFAULT_LANGUAGE_EXECUTABLE_KEYS: Record<string, string[]> = {
 };
 
 export class RuntimeManagerService {
-  getRuntimeStates(): RuntimeState[] {
+  getRuntimeStates(availableLanguages?: string[]): RuntimeState[] {
     return this.getRuntimeDefinitions().map((definition) =>
-      this.getRuntimeState(definition.id),
+      this.getRuntimeState(definition.id, availableLanguages),
     );
   }
 
-  getRuntimeState(runtimeId: RuntimeId): RuntimeState {
+  getRuntimeState(
+    runtimeId: RuntimeId,
+    availableLanguages?: string[],
+  ): RuntimeState {
     const definition = this.getRuntimeDefinition(runtimeId);
     const preference = this.getRuntimePreference(runtimeId);
     const selectedCommand = preference.command?.trim() || definition.defaultCommand;
@@ -206,6 +211,7 @@ export class RuntimeManagerService {
         : selectedCommand === definition.defaultCommand
           ? 'default'
           : 'custom';
+    const enabled = isRuntimeAvailable(definition, availableLanguages);
 
     return {
       ...definition,
@@ -213,6 +219,10 @@ export class RuntimeManagerService {
       customCommand,
       activeCommand,
       allowCustomCommand,
+      enabled,
+      disabledReason: enabled
+        ? undefined
+        : 'No matching command language is currently available.',
       status,
     };
   }
@@ -914,6 +924,26 @@ function parseRuntimeAliases(value: string[] | string | undefined): string[] {
     .split(',')
     .map((alias) => alias.trim())
     .filter(Boolean);
+}
+
+function isRuntimeAvailable(
+  definition: RuntimeDefinition,
+  availableLanguages?: string[],
+): boolean {
+  const normalizedLanguages = new Set(
+    (availableLanguages ?? [])
+      .map((language) => normalizeLanguageKey(language))
+      .filter((language): language is string => !!language),
+  );
+
+  if (normalizedLanguages.size === 0) {
+    return true;
+  }
+
+  return definition.languageKeys.some((languageKey) => {
+    const normalizedLanguageKey = normalizeLanguageKey(languageKey);
+    return !!normalizedLanguageKey && normalizedLanguages.has(normalizedLanguageKey);
+  });
 }
 
 const runtimeManagerService = new RuntimeManagerService();

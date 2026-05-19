@@ -2790,6 +2790,17 @@ export class FavoritesTreeDataProvider
     ];
   }
 
+  getAvailableCommandLanguages(): string[] {
+    return Array.from(
+      new Set(
+        this.getCommands()
+          .map((command) => command.templateGroup ?? command.language)
+          .filter((language) => language && language !== 'generic')
+          .map((language) => language.trim().toLowerCase()),
+      ),
+    ).sort();
+  }
+
   getCommandsByScope(
     scope: CommandFavoriteData['scope'],
   ): CommandFavoriteData[] {

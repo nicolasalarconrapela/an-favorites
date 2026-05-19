@@ -26,6 +26,7 @@ export class CommandCenterPanel {
   private constructor(
     private readonly panel: vscode.WebviewPanel,
     private readonly runtimeManager: RuntimeManagerService,
+    private readonly getAvailableLanguages: () => string[],
   ) {
     this.panel.onDidDispose(() => this.dispose(), undefined, this.disposables);
     this.panel.webview.onDidReceiveMessage(
@@ -40,6 +41,7 @@ export class CommandCenterPanel {
   static open(
     context: vscode.ExtensionContext,
     runtimeManager: RuntimeManagerService,
+    getAvailableLanguages: () => string[],
   ): void {
     if (CommandCenterPanel.currentPanel) {
       CommandCenterPanel.currentPanel.panel.reveal(vscode.ViewColumn.One);
@@ -61,6 +63,7 @@ export class CommandCenterPanel {
     CommandCenterPanel.currentPanel = new CommandCenterPanel(
       panel,
       runtimeManager,
+      getAvailableLanguages,
     );
     panel.webview.html = CommandCenterPanel.currentPanel.getHtml(panel.webview);
   }
@@ -102,7 +105,10 @@ export class CommandCenterPanel {
   private postState(): void {
     void this.panel.webview.postMessage({
       type: 'state',
-      runtimes: this.runtimeManager.getRuntimeStates(),
+      runtimes: this.runtimeManager.getRuntimeStates(
+        this.getAvailableLanguages(),
+      ),
+      availableLanguages: this.getAvailableLanguages(),
     });
   }
 
@@ -179,6 +185,10 @@ export class CommandCenterPanel {
       min-width: 0;
     }
 
+    .card.disabled {
+      opacity: 0.58;
+    }
+
     .card-header {
       display: flex;
       justify-content: space-between;
@@ -214,6 +224,12 @@ export class CommandCenterPanel {
     .badge.incomplete {
       border-color: var(--vscode-inputValidation-warningBorder);
       color: var(--vscode-editorWarning-foreground);
+      background: transparent;
+    }
+
+    .badge.disabled {
+      border-color: var(--vscode-disabledForeground);
+      color: var(--vscode-disabledForeground);
       background: transparent;
     }
 
@@ -408,6 +424,9 @@ export class CommandCenterPanel {
     function createRuntimeCard(runtime) {
       const card = document.createElement('article');
       card.className = 'card';
+      if (!runtime.enabled) {
+        card.classList.add('disabled');
+      }
 
       const header = document.createElement('div');
       header.className = 'card-header';
@@ -420,11 +439,18 @@ export class CommandCenterPanel {
       active.textContent = runtime.activeCommand
         ? 'Active command: ' + runtime.activeCommand
         : 'Active command: not configured';
-      titleWrap.append(title, active);
+      if (!runtime.enabled && runtime.disabledReason) {
+        const reason = document.createElement('div');
+        reason.className = 'active';
+        reason.textContent = runtime.disabledReason;
+        titleWrap.append(title, active, reason);
+      } else {
+        titleWrap.append(title, active);
+      }
 
       const badge = document.createElement('span');
-      badge.className = 'badge ' + runtime.status;
-      badge.textContent = statusLabel(runtime.status);
+      badge.className = 'badge ' + (runtime.enabled ? runtime.status : 'disabled');
+      badge.textContent = runtime.enabled ? statusLabel(runtime.status) : 'Disabled';
       header.append(titleWrap, badge);
 
       const commandField = document.createElement('div');
@@ -445,6 +471,7 @@ export class CommandCenterPanel {
         select.appendChild(customOption);
       }
       select.value = runtime.selectedCommand;
+      select.disabled = !runtime.enabled;
       commandField.append(commandLabel, select);
 
       const customField = document.createElement('div');
@@ -455,13 +482,13 @@ export class CommandCenterPanel {
       input.type = 'text';
       input.value = runtime.customCommand || '';
       input.placeholder = placeholderFor(runtime.id);
-      input.disabled = select.value !== 'custom';
+      input.disabled = !runtime.enabled || select.value !== 'custom';
       customField.append(customLabel, input);
       customField.style.display =
         runtime.allowCustomCommand && select.value === 'custom' ? '' : 'none';
 
       select.addEventListener('change', () => {
-        input.disabled = select.value !== 'custom';
+        input.disabled = !runtime.enabled || select.value !== 'custom';
         customField.style.display =
           runtime.allowCustomCommand && select.value === 'custom' ? '' : 'none';
         save(runtime.id, select.value, input.value);
@@ -482,6 +509,7 @@ export class CommandCenterPanel {
       actions.className = 'actions';
       const testButton = document.createElement('button');
       testButton.textContent = 'Test';
+      testButton.disabled = !runtime.enabled;
       testButton.addEventListener('click', () => {
         vscode.postMessage({ type: 'testRuntime', runtimeId: runtime.id });
       });

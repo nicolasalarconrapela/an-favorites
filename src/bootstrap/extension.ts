@@ -206,7 +206,9 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(
     vscode.commands.registerCommand('anfavorites.openCommandCenter', () => {
-      CommandCenterPanel.open(context, runtimeManager);
+      CommandCenterPanel.open(context, runtimeManager, () =>
+        favoritesProvider.getAvailableCommandLanguages(),
+      );
     }),
   );
 
