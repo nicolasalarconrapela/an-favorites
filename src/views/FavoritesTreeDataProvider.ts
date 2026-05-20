@@ -790,20 +790,6 @@ export class CommandLanguageItem extends vscode.TreeItem {
   }
 }
 
-export class CommandCenterItem extends vscode.TreeItem {
-  constructor() {
-    super('Command Center', vscode.TreeItemCollapsibleState.None);
-    this.id = 'command-center';
-    this.contextValue = 'commandCenterItem';
-    this.iconPath = new vscode.ThemeIcon('settings-gear');
-    this.command = {
-      command: 'anfavorites.openCommandCenter',
-      title: 'Open Command Center',
-    };
-    this.tooltip = 'Configure command runtimes';
-  }
-}
-
 export class GroupItem extends vscode.TreeItem {
   constructor(
     public readonly groupName: string,
@@ -913,7 +899,6 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
-      | CommandCenterItem
       | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
@@ -926,7 +911,6 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
-      | CommandCenterItem
       | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
@@ -944,15 +928,12 @@ export class FavoritesTreeDataProvider
     globals: new CommandSectionItem('globals'),
     opensource: new CommandSectionItem('opensource'),
   } as const;
-  private readonly commandCenterItem = new CommandCenterItem();
-
   private readonly disposables: vscode.Disposable[] = [];
   private _onDidChangeTreeData: vscode.EventEmitter<
     | GroupItem
     | FavoriteItem
     | WorkspaceItem
     | CommandItem
-    | CommandCenterItem
     | CommandSectionItem
     | CommandScopeItem
     | CommandLanguageItem
@@ -967,7 +948,6 @@ export class FavoritesTreeDataProvider
     | FavoriteItem
     | WorkspaceItem
     | CommandItem
-    | CommandCenterItem
     | CommandSectionItem
     | CommandScopeItem
     | CommandLanguageItem
@@ -984,7 +964,6 @@ export class FavoritesTreeDataProvider
     | FavoriteItem
     | WorkspaceItem
     | CommandItem
-    | CommandCenterItem
     | CommandSectionItem
     | CommandScopeItem
     | CommandLanguageItem
@@ -1220,7 +1199,6 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
-      | CommandCenterItem
       | CommandSectionItem
       | CommandScopeItem
       | CommandTemplateGroupItem
@@ -1265,7 +1243,6 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
-      | CommandCenterItem
       | CommandSectionItem
       | CommandScopeItem
       | CommandTemplateCategoryItem
@@ -1347,7 +1324,6 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
-      | CommandCenterItem
       | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
@@ -1364,7 +1340,6 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
-      | CommandCenterItem
       | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
@@ -1525,7 +1500,6 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
-      | CommandCenterItem
       | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
@@ -1537,7 +1511,6 @@ export class FavoritesTreeDataProvider
       | FavoriteItem
       | WorkspaceItem
       | CommandItem
-      | CommandCenterItem
       | CommandSectionItem
       | CommandScopeItem
       | CommandLanguageItem
@@ -1579,12 +1552,10 @@ export class FavoritesTreeDataProvider
           }
         }
         const sections: (
-          | CommandCenterItem
           | CommandSectionItem
           | CommandLanguageItem
           | CommandTemplateGroupItem
         )[] = [];
-        sections.push(this.commandCenterItem);
         if (this.localCommands.length > 0) {
           sections.push(this.commandSectionItems.personalized);
         }
